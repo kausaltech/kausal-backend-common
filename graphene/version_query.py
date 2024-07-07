@@ -20,5 +20,5 @@ class ServerDeployment(graphene.ObjectType):
 class Query(graphene.ObjectType):
     server_deployment = graphene.Field(ServerDeployment, required=True)
 
-    def resolve_server_version(self, info):
+    def resolve_server_deployment(self, info):
         return ServerDeployment()
