@@ -1,36 +1,48 @@
+from __future__ import annotations
+
+import gc
 import time
 from typing import Any
-from loguru import logger
-from django.db import connections
+
 from django.core.cache import caches
+from django.db import connections
+from loguru import logger
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 
 def check_database():
     conn = connections['default']
-    conn_age = None
-    now = time.monotonic()
+    conn_time_left = None
+    start = time.monotonic()
     try:
         with conn.cursor() as cursor:
             if not cursor.db.is_usable():
                 logger.error("Database connection unusable")
                 return dict(status='fail')
             if cursor.db.close_at is not None:
-                conn_age = now - cursor.db.close_at
+                conn_time_left = round(cursor.db.close_at - start, 1)
     except Exception:
         logger.exception("Database health check error")
         return dict(status='fail')
-    return dict(status='pass', conn_age=conn_age)
+    latency = round((time.monotonic() - start) * 1000000)
+    return dict(status='pass', conn_time_left=conn_time_left, latency_us=latency)
 
 
 def check_cache() -> dict:
+    start = time.monotonic()
     cache = caches['default']
     resp = cache.get_or_set('health-check', default='checked', timeout=1)
+    latency = round((time.monotonic() - start) * 1000000)
     if resp == 'checked':
-        return dict(status='pass')
+        return dict(status='pass', latency_us=latency)
     logger.error("Cache check failed (cache returned '%s' instead of '%s')" % resp)
     return dict(status='fail')
+
+
+def check_garbage_collection() -> dict:
+    nr_unreachable = gc.collect()
+    return dict(status='pass')
 
 
 @api_view(['GET'])
