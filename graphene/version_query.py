@@ -1,5 +1,10 @@
+from __future__ import annotations
+
 import os
+
 import graphene
+
+from kausal_common.deployment import get_deployment_build_id, get_deployment_git_rev
 
 
 class ServerDeployment(graphene.ObjectType):
@@ -8,10 +13,10 @@ class ServerDeployment(graphene.ObjectType):
     deployment_type = graphene.String()
 
     def resolve_build_id(self, info):
-        return os.environ.get('BUILD_ID', None)
+        return get_deployment_build_id()
 
     def resolve_git_revision(self, info):
-        return os.environ.get('GIT_REV', None)
+        return get_deployment_git_rev()
 
     def resolve_deployment_type(self, info):
         return os.environ.get('DEPLOYMENT_TYPE', None)
