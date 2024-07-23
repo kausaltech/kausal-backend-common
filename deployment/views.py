@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import gc
 import time
 from typing import Any
@@ -36,13 +37,16 @@ def check_cache() -> dict:
     latency = round((time.monotonic() - start) * 1000000)
     if resp == 'checked':
         return dict(status='pass', latency_us=latency)
-    logger.error("Cache check failed (cache returned '%s' instead of '%s')" % resp)
+    logger.error("Cache check failed (cache returned '%s' instead of '%s')" % (resp, 'checked'))
     return dict(status='fail')
 
 
 def check_garbage_collection() -> dict:
     nr_unreachable = gc.collect()
-    return dict(status='pass')
+    # if nr_unreachable:
+    #     logger.error("Garbage collection identified %d unreachable objects" % nr_unreachable)
+    #     return dict(status='fail')
+    return dict(status='pass', nr_unreachable=nr_unreachable)
 
 
 @api_view(['GET'])
@@ -55,13 +59,11 @@ def health_view(request):
 
     checks['database'] = check_database()
     checks['cache'] = check_cache()
+    checks['gc'] =  check_garbage_collection()
     resp = {
         'status': 'pass',
-
         'checks': checks,
+        'pid': os.getpid(),
     }
 
-    return Response({
-        'status': 'pass',
-        'checks': checks,
-    })
+    return Response(resp)

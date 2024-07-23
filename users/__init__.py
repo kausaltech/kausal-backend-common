@@ -11,6 +11,8 @@ UserOrAnon: TypeAlias = "User | AnonymousUser"
 
 
 def user_or_none(user: UserOrAnon | None) -> User | None:
+    from users.models import User
+
     if isinstance(user, User):
         return user
     return None
