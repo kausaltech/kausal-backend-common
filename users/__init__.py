@@ -8,3 +8,9 @@ if TYPE_CHECKING:
 
 
 UserOrAnon: TypeAlias = "User | AnonymousUser"
+
+
+def user_or_none(user: UserOrAnon | None) -> User | None:
+    if isinstance(user, User):
+        return user
+    return None
