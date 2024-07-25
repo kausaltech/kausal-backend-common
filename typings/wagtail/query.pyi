@@ -4,9 +4,10 @@ from django.db.models.query import BaseIterable, ModelIterable, QuerySet
 from wagtail.models.sites import Site as Site
 from wagtail.search.queryset import SearchableQuerySetMixin as SearchableQuerySetMixin
 from wagtail.models import Page as Page
+from treebeard.mp_tree import MP_Node
 
 
-M = TypeVar('M', bound=Model)
+M = TypeVar('M', bound=MP_Node)
 
 class TreeQuerySet(QuerySet[M]):
     def descendant_of_q(self, other: M, inclusive: bool = ...) -> Q: ...
