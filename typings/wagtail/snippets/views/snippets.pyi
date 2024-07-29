@@ -1,8 +1,7 @@
-from typing import Any, ClassVar, Dict, List, Optional, Type, TypeVar
+from typing import Any, ClassVar, Dict, Generic, List, Optional, Type, TypeVar
 from django.db.models import Model, QuerySet
 from django.forms import BaseModelForm
 from django.http import HttpRequest, HttpResponse
-from django.utils.functional import cached_property
 from wagtail.admin.ui.tables import Column
 from wagtail.admin.views import generic
 from wagtail.admin.views.generic import models as generic_models
@@ -10,25 +9,26 @@ from wagtail.admin.views.generic import history, preview, base, mixins, lock, wo
 
 from wagtail.admin.viewsets.model import ModelViewSet
 from wagtail.admin.panels import ObjectList
+from wagtail.snippets.views.chooser import SnippetChooserViewSet
 
 M = TypeVar('M', bound=Model)
 QS = TypeVar('QS', bound=QuerySet)
+ReqT = TypeVar('ReqT', bound=HttpRequest)
 
 def get_snippet_model_from_url_params(app_name: str, model_name: str) -> Type[Model]: ...
 
-class ModelIndexView[M: Model, QS: QuerySet](base.BaseListingView[M, QS]):
+class ModelIndexView(base.BaseListingView[M, QS, ReqT]):
     page_title: ClassVar[str]
     header_icon: ClassVar[str]
     index_url_name: ClassVar[str]
     default_ordering: ClassVar[str]
     snippet_types: List[Dict[str, Any]]
     columns: List[Column]
-    def setup(self, request: HttpRequest, *args: Any, **kwargs: Any) -> None: ...
-    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse: ...
     def get_breadcrumbs_items(self) -> List[Dict[str, str]]: ...
     def get_list_url(self, type: Dict[str, Any]) -> str: ...
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]: ...
     def get_template_names(self) -> List[str]: ...
+
 
 class IndexView[M: Model, QS: QuerySet](mixins.IndexViewOptionalFeaturesMixin[QS], generic_models.IndexView[M, QS]):
     view_name: ClassVar[str]
@@ -100,7 +100,7 @@ class WorkflowHistoryDetailView(generic.PermissionCheckedMixin, history.Workflow
     pass
 
 
-class SnippetViewSet[M: Model](ModelViewSet[M]):
+class SnippetViewSet(ModelViewSet[M, QS, ReqT]):
     model: Type[M]
     chooser_per_page: ClassVar[int]
     admin_url_namespace: ClassVar[Optional[str]]
@@ -129,7 +129,7 @@ class SnippetViewSet[M: Model](ModelViewSet[M]):
     workflow_preview_view_class: ClassVar[Type[WorkflowPreviewView]]
     workflow_history_view_class: ClassVar[Type[WorkflowHistoryView]]
     workflow_history_detail_view_class: ClassVar[Type[WorkflowHistoryDetailView]]
-    chooser_viewset_class: ClassVar[Type[Any]]
+    chooser_viewset_class: ClassVar[Type[SnippetChooserViewSet]]
     template_prefix: ClassVar[str]
     model_opts: Any
     app_label: str
@@ -192,7 +192,7 @@ class SnippetViewSet[M: Model](ModelViewSet[M]):
     menu_icon: ClassVar[str]
     menu_order: ClassVar[int]
     breadcrumbs_items: ClassVar[List[Dict[str, str]]]
-    def get_queryset(self, request: HttpRequest) -> Optional[QuerySet[M]]: ...
+    def get_queryset(self, request: ReqT) -> Optional[QS]: ...
     index_template_name: ClassVar[str]
     index_results_template_name: ClassVar[str]
     create_template_name: ClassVar[str]

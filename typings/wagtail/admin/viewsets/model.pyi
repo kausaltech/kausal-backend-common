@@ -1,9 +1,11 @@
-from typing import Any, Callable, ClassVar, Dict, List, Optional, Type, Union
+# pyright: basic, reportGeneralTypeIssues=false
+from typing import Any, Callable, ClassVar, Dict, Generic, List, Optional, Type, TypeVar, Union
 from django.db import models
 from django.db.models import Model, QuerySet
-from django.forms import ModelForm
+from django.forms import BaseModelForm, ModelForm
 from django.http import HttpRequest, HttpResponse
 from django.urls import URLPattern
+from wagtail.admin.forms import WagtailAdminModelForm
 from wagtail.admin.panels import ObjectList
 from wagtail.admin.ui.tables import Column
 from wagtail.admin.views import generic
@@ -13,12 +15,18 @@ from wagtail.admin.views.generic.history import HistoryView
 from wagtail.admin.views.generic.usage import UsageView
 
 
-class ModelViewSet[M: Model](ViewSet):
+M = TypeVar('M', bound=Model)
+QS = TypeVar('QS', bound=QuerySet, default=QuerySet[M])
+ReqT = TypeVar('ReqT', bound=HttpRequest, default=HttpRequest)
+MF = TypeVar('MF', bound=BaseModelForm, default=WagtailAdminModelForm)
+
+
+class ModelViewSet(Generic[M, QS, ReqT, MF], ViewSet):
     add_to_reference_index: ClassVar[bool]
-    index_view_class: ClassVar[Type[generic.IndexView]]
-    add_view_class: ClassVar[Type[generic.CreateView]]
-    edit_view_class: ClassVar[Type[generic.EditView]]
-    delete_view_class: ClassVar[Type[generic.DeleteView]]
+    index_view_class: ClassVar[Type[generic.IndexView[M, QS]]]
+    add_view_class: ClassVar[Type[generic.CreateView[M, MF]]]
+    edit_view_class: ClassVar[Type[generic.EditView[M, MF]]]
+    delete_view_class: ClassVar[Type[generic.DeleteView[M]]]
     history_view_class: ClassVar[Type[HistoryView]]
     usage_view_class: ClassVar[Type[UsageView]]
     copy_view_class: ClassVar[Type[generic.CopyView]]

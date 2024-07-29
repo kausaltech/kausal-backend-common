@@ -1,5 +1,4 @@
-from typing import Any, ClassVar, Dict, List, NamedTuple, Optional, Tuple, Type, Union
-from django.db import models
+from typing import Any, ClassVar, Dict, Generic, List, NamedTuple, Optional, Tuple, Type, TypeVar, Union
 from django.db.models import Model, QuerySet
 from django.db.models.options import Options
 from django.http import HttpRequest
@@ -10,6 +9,11 @@ from django.views.generic.list import BaseListView
 from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.ui.tables import Column, Table
 from wagtail.admin.widgets import Button
+
+
+M = TypeVar('M', bound=Model)
+QS = TypeVar('QS', bound=QuerySet)
+ReqT = TypeVar('ReqT', bound=HttpRequest)
 
 
 class WagtailAdminTemplateMixin(TemplateResponseMixin, ContextMixin):
@@ -33,31 +37,30 @@ class WagtailAdminTemplateMixin(TemplateResponseMixin, ContextMixin):
     def get_template_names(self) -> List[str]: ...
 
 
-class BaseObjectMixin[M: Model, QS: QuerySet]:
+class BaseObjectMixin(Generic[M, QS, ReqT]):
     model: Optional[Type[M]]
     pk_url_kwarg: str
     pk: Any
     object: M
     model_opts: Options[M]
 
-    def setup(self, request: HttpRequest, *args: Any, **kwargs: Any) -> None: ...
+    def setup(self, request: ReqT, *args: Any, **kwargs: Any) -> None: ...
     def get_pk(self) -> Any: ...
     def get_base_object_queryset(self) -> QS: ...
     def get_object(self) -> M: ...
 
 
-class BaseOperationView[M: Model, QS: QuerySet](BaseObjectMixin[M, QS], View):
+class BaseOperationView(BaseObjectMixin[M, QS, ReqT], View):
     success_message: Optional[str]
     success_message_extra_tags: str
     success_url_name: Optional[str]
     next_url: Optional[str]
 
-    def setup(self, request: HttpRequest, *args: Any, **kwargs: Any) -> None: ...
     def perform_operation(self) -> None: ...
     def get_success_message(self) -> Optional[str]: ...
     def add_success_message(self) -> None: ...
     def get_success_url(self) -> str: ...
-    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> Any: ...
+    def post(self, request: ReqT, *args: Any, **kwargs: Any) -> Any: ...
 
 
 class ActiveFilter(NamedTuple):
@@ -67,8 +70,7 @@ class ActiveFilter(NamedTuple):
     removed_filter_url: str
 
 
-class BaseListingView[M: Model, QS: QuerySet](WagtailAdminTemplateMixin, BaseListView[M]): # pyright: ignore
-    template_name: str
+class BaseListingView[M: Model, QS: QuerySet, ReqT: HttpRequest](WagtailAdminTemplateMixin, BaseListView[M]): # pyright: ignore
     results_template_name: str
     results_only: bool
     table_class: Type[Table]
@@ -95,7 +97,6 @@ class BaseListingView[M: Model, QS: QuerySet](WagtailAdminTemplateMixin, BaseLis
     def is_explicitly_ordered(self) -> bool: ...
     def get_ordering(self) -> Optional[str]: ...
     def order_queryset(self, queryset: QS) -> QS: ...
-    def get_base_queryset(self) -> QS: ...
     def get_queryset(self) -> QS: ...
     def get_table_kwargs(self) -> Dict[str, Any]: ...
     def get_table(self, object_list: List[Any]) -> Table: ...
