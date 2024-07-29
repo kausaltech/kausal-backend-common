@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import sys
 import warnings
 import traceback
@@ -17,6 +18,8 @@ from rich.logging import RichHandler
 from rich.text import Text, TextType
 from rich.traceback import Traceback
 from loguru import logger
+
+from kausal_common.deployment import env_bool
 
 if TYPE_CHECKING:
     from rich.console import Console, RenderableType
@@ -254,15 +257,21 @@ def showwarning(message: Warning | str, category: Type[Warning], filename: str, 
     with log_warning.contextualize(category=cat_str):
         log_warning.warning(message)
 
-warnings.showwarning = showwarning
+if env_bool('LOG_WARNINGS', default=True):
+    warnings.showwarning = showwarning
+
+loguru_logging = logging.getLogger()
 
 
 def loguru_make_record(message: loguru.Message):
     record = message.record
     msg = str(message)
     exc = record["exception"]
-    log_rec = logging.getLogger().makeRecord(
-        record["name"] or '',
+    extra = record.get('extra', {})
+    name = extra.pop('name', record['name'] or '')
+
+    log_rec = loguru_logging.makeRecord(
+        name,
         record["level"].no,
         record["file"].path,
         record["line"],
