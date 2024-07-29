@@ -1,8 +1,12 @@
 from __future__ import annotations
+
+import tracemalloc
 from tracemalloc import Snapshot
 
+from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 from rich import print
 
 
@@ -13,15 +17,18 @@ previous_snap: Snapshot | None = None
 @permission_classes([])
 def memory_trace(request):
     global previous_snap
-    import tracemalloc
-    import gc
-    before = [x / 1024 / 1024 for x in tracemalloc.get_traced_memory()]
-    gc.collect()
-    after = [x / 1024 / 1024 for x in tracemalloc.get_traced_memory()]
+
+    if not settings.DEBUG:
+        raise PermissionDenied()
+
+    if not tracemalloc.is_tracing():
+        tracemalloc.start(10)
+
     snap = tracemalloc.take_snapshot()
     if previous_snap:
         stats = snap.compare_to(previous_snap, 'traceback')
         for s in stats[0:10]:
+            print('\n')
             print(s)
             for line in s.traceback.format(most_recent_first=True):
                 print(line)
@@ -30,7 +37,5 @@ def memory_trace(request):
     previous_snap = snap
 
     return Response({
-        'before': {'current': before[0], 'peak': before[1]},
-        'after': {'current': after[0], 'peak': after[1]},
         'stats': [str(s) for s in stats[:10]] if stats else None
     })
