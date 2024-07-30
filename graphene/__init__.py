@@ -79,6 +79,35 @@ class DjangoNode(DjangoObjectType, Generic[M]):
     _meta: DjangoObjectTypeOptions
 
     @classmethod
+    def _resolve_i18n_fields(cls):
+        # Set default resolvers for i18n fields
+        i18n_field = get_i18n_field(cls._meta.model)
+        if i18n_field is None:
+            return
+        fields = cls._meta.fields
+        for translated_field_name in i18n_field.fields:
+            # translated_field_name is only in fields if it is in *Node.Meta.fields
+            field = fields.get(translated_field_name)
+            if field is not None and field.resolver is None and not hasattr(cls, 'resolve_%s' % translated_field_name):
+                resolver = functools.partial(resolve_i18n_field, translated_field_name)
+                only = [translated_field_name, i18n_field.name]
+                select_related=[]
+                default_language_field = i18n_field.default_language_field
+                if default_language_field:
+                    parsed_default_language_field = default_language_field.split(LOOKUP_SEP)
+                    only.append(default_language_field)
+                    if len(parsed_default_language_field) > 1:
+                        related_path = parsed_default_language_field[:-1]
+                        select_related.append(LOOKUP_SEP.join(related_path))
+                hints = dict(
+                    only=only,
+                    select_related=select_related
+                )
+                apply_hints = gql_optimizer.resolver_hints(**hints)
+                field.resolver = apply_hints(resolver)
+
+
+    @classmethod
     def __init_subclass_with_meta__(cls, **kwargs: Any):
         if 'name' not in kwargs:
             # Remove the trailing 'Node' from the object types
@@ -96,31 +125,8 @@ class DjangoNode(DjangoObjectType, Generic[M]):
             kwargs['description'] = trim_docstring(model.__doc__)
 
         super().__init_subclass_with_meta__(**kwargs)
+        cls._resolve_i18n_fields()
 
-        # Set default resolvers for i18n fields
-        i18n_field = get_i18n_field(cls._meta.model)
-        if i18n_field is not None:
-            fields = cls._meta.fields
-            for translated_field_name in i18n_field.fields:
-                # translated_field_name is only in fields if it is in *Node.Meta.fields
-                field = fields.get(translated_field_name)
-                if field is not None and field.resolver is None and not hasattr(cls, 'resolve_%s' % translated_field_name):
-                    resolver = functools.partial(resolve_i18n_field, translated_field_name)
-                    only = [translated_field_name, i18n_field.name]
-                    select_related=[]
-                    default_language_field = i18n_field.default_language_field
-                    if default_language_field:
-                        parsed_default_language_field = default_language_field.split(LOOKUP_SEP)
-                        only.append(default_language_field)
-                        if len(parsed_default_language_field) > 1:
-                            related_path = parsed_default_language_field[:-1]
-                            select_related.append(LOOKUP_SEP.join(related_path))
-                    hints = dict(
-                        only=only,
-                        select_related=select_related
-                    )
-                    apply_hints = gql_optimizer.resolver_hints(**hints)
-                    field.resolver = apply_hints(resolver)
 
     class Meta:
         abstract = True
