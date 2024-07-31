@@ -1,3 +1,42 @@
+check_direnv() {
+    echo "🔍 Checking for direnv..."
+
+    if command -v direnv >/dev/null 2>&1; then
+        print_success "direnv found in PATH"
+        echo "  📍 Path: $(command -v direnv)"
+        return
+    else
+        print_error "direnv not found in PATH"
+        read -p "Would you like to install direnv? (Y/n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+            echo "Installing direnv..."
+            if curl -sfL https://direnv.net/install.sh | bash; then
+                print_success "direnv installed successfully"
+                echo "  📍 Path: $(command -v direnv)"
+            else
+                print_error "Failed to install direnv"
+                exit 1
+            fi
+        else
+            print_warning "direnv is required but not installed"
+            exit 1
+        fi
+    fi
+
+    echo -e "${BLUE}ℹ️ To complete direnv setup, you need to add a hook to your shell.${NC}"
+    echo -e "${BLUE}   Please visit the following link for instructions:${NC}"
+    echo -e "${GREEN}   https://direnv.net/docs/hook.html${NC}"
+    echo -e "${BLUE}   After adding the hook, restart your shell or source your shell configuration file.${NC}"
+
+    read -p "Have you installed the direnv hook? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_warning "direnv hook not installed. Please install it and run this script again."
+        exit 1
+    fi
+}
+
 check_direnvrc() {
     echo "🔍 Checking for direnv configuration..."
 
@@ -8,26 +47,16 @@ check_direnvrc() {
 layout_python-uv() {
     local python=${1:-python3}
     [[ $# -gt 0 ]] && shift
-    unset PYTHONHOME
-    if [[ -n $VIRTUAL_ENV ]]; then
-        VIRTUAL_ENV=$(realpath "${VIRTUAL_ENV}")
-    else
-        local python_version
-        python_version=$("$python" -c "import platform; print(platform.python_version())")
-        if [[ -z $python_version ]]; then
-            log_error "Could not detect Python version"
-            return 1
-        fi
-        VIRTUAL_ENV=$PWD/.direnv/python-venv-$python_version
-    fi
-    export VIRTUAL_ENV
+
+    VIRTUAL_ENV=$PWD/.venv
     if [[ ! -d $VIRTUAL_ENV ]]; then
         log_status "no venv found; creating $VIRTUAL_ENV"
         uv venv "$VIRTUAL_ENV"
-        echo '!*' > "$VIRTUAL_ENV"/lib/python*/site-packages/.rgignore
+        SPS="$VIRTUAL_ENV"/lib/python*/site-packages
+        for SP in $SPS ; do
+            echo '!*' > $SP/.rgignore
+        done
     fi
-    PATH="${VIRTUAL_ENV}/bin:${PATH}"
-    export PATH
     source "${VIRTUAL_ENV}/bin/activate"
 }
 EOF
@@ -80,5 +109,5 @@ EOF
     return 0
 }
 
+check_direnv
 check_direnvrc
-

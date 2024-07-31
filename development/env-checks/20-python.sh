@@ -1,3 +1,46 @@
+ensure_python_available() {
+    local required_version="$1"
+    local available_versions
+
+    echo "🔍 Checking for Python $required_version availability..."
+
+    # Get the list of installed Python versions
+    available_versions=$(uv python list --only-installed | grep '^cpython-' | awk '{print $1}' | cut -d'-' -f2)
+
+    # Check if the required version is available
+    if echo "$available_versions" | grep -q "^$required_version"; then
+        print_success "Python $required_version is available"
+        return 0
+    fi
+
+    # If not found, try to find a compatible version
+    for version in $available_versions; do
+        if [[ "$version" == "$required_version"* ]]; then
+            print_success "Compatible Python version $version is available"
+            return 0
+        fi
+    done
+
+    print_warning "Python $required_version is not available"
+
+    # Prompt user to install the required version
+    read -p "Would you like to install Python $required_version now? (Y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+        echo "Installing Python $required_version..."
+        if uv python install "$required_version"; then
+            print_success "Python $required_version installed successfully"
+            return 0
+        else
+            print_error "Failed to install Python $required_version"
+            return 1
+        fi
+    else
+        print_warning "Python $required_version not installed"
+        return 1
+    fi
+}
+
 check_python_version() {
     echo "📊 Checking Python version requirement..."
 
@@ -29,21 +72,22 @@ check_python_version() {
         fi
     else
         print_error "Python version does not meet the minimum requirement"
-        echo -e "${BLUE}ℹ️ The required Python version can be installed using uv.${NC}"
-        read -p "Would you like to install Python ${REQUIRED_VERSION} now? (Y/n) " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-            echo "Installing Python ${REQUIRED_VERSION}..."
-            if uv python install "${REQUIRED_VERSION}"; then
-                print_success "Python ${REQUIRED_VERSION} installed successfully"
-                echo -e "${BLUE}ℹ️ Please update your .envrc file to use the new Python version.${NC}"
-                echo -e "${BLUE}ℹ️ Then, reload the environment:${NC}"
-                echo -e "${GREEN}   direnv allow${NC}"
+        if ensure_python_available ${REQUIRED_VERSION}; then
+            read -p "Would you like to create a new virtual environment with Python ${REQUIRED_VERSION}? (Y/n) " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+                echo "Creating new virtual environment..."
+                if uv venv .venv; then
+                    print_success "Virtual environment created successfully"
+                    source .venv/bin/activate
+                else
+                    print_error "Failed to create virtual environment"
+                fi
             else
-                print_error "Failed to install Python ${REQUIRED_VERSION}"
+                print_warning "Virtual environment not created"
             fi
         else
-            echo -e "${YELLOW}⚠ Python version mismatch not resolved${NC}"
+            print_error "Unable to ensure required Python version is available"
         fi
     fi
 }
@@ -63,7 +107,6 @@ check_envrc() {
             echo "$required_layout" > "$envrc"
             print_success ".envrc file created with '$required_layout'"
             direnv allow
-            direnv reload
         else
             print_warning ".envrc file not created"
         fi
@@ -88,7 +131,7 @@ check_envrc() {
     done < "$envrc"
 
     # Create a unified diff
-    diff=$(diff -u "$envrc" <(echo "$new_content"))
+    diff=$(diff -u "$envrc" <(echo -n "$new_content"))
 
     # Show the diff and ask for confirmation
     echo "Proposed changes to .envrc:"
@@ -96,22 +139,27 @@ check_envrc() {
     read -p "Would you like to apply these changes? (Y/n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        echo "$new_content" > "$envrc"
+        echo -n "$new_content" > "$envrc"
         print_success ".envrc file updated"
         direnv allow
-        direnv reload
     else
         print_warning "Changes not applied to .envrc"
     fi
 }
 
-check_package_versions() {
+check_venv() {
     # Check if running in a virtual environment
     if [ -n "$VIRTUAL_ENV" ]; then
         print_success "🐍 Virtual environment is active"
         echo "  🏠 Virtual environment path: $VIRTUAL_ENV"
+
+        # Check if $VIRTUAL_ENV is under the current directory
+        if [[ ! "$VIRTUAL_ENV" == "$(pwd)"/* ]]; then
+            print_error "Virtual environment is not located under the current directory"
+            exit 1
+        fi
     else
-        print_error "❌ No virtual environment is active"
+        print_error "No virtual environment is active"
         exit 1
     fi
 
@@ -121,11 +169,21 @@ check_package_versions() {
         print_success "🐍 Python interpreter found"
         echo "  📍 Python path: $PYTHON_PATH"
         echo "  🏷️  Python version: $(python --version)"
+
+        # Check if the Python interpreter is from the virtual environment
+        if [[ "$PYTHON_PATH" == "$VIRTUAL_ENV"/* ]]; then
+            print_success "Python interpreter is from the active virtual environment"
+        else
+            print_error "Python interpreter is not from the active virtual environment"
+            exit 1
+        fi
     else
-        print_error "❌ Python interpreter not found in PATH"
+        print_error "Python interpreter not found in PATH"
         exit 1
     fi
+}
 
+check_package_versions() {
     echo "📦 Checking installed package versions..."
 
     # Extract requirements files from pyproject.toml
@@ -192,4 +250,5 @@ check_package_versions() {
 
 check_python_version
 check_envrc
+check_venv
 check_package_versions
