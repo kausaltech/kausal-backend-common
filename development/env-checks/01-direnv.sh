@@ -45,18 +45,25 @@ check_direnvrc() {
 
     local function_content=$(cat << 'EOF'
 layout_python-uv() {
-    local python=${1:-python3}
     [[ $# -gt 0 ]] && shift
 
     VIRTUAL_ENV=$PWD/.venv
     if [[ ! -d $VIRTUAL_ENV ]]; then
         log_status "no venv found; creating $VIRTUAL_ENV"
         uv venv "$VIRTUAL_ENV"
-        SPS="$VIRTUAL_ENV"/lib/python*/site-packages
-        for SP in $SPS ; do
-            echo '!*' > $SP/.rgignore
-        done
     fi
+
+    SPS="$VIRTUAL_ENV"/lib/python*/site-packages
+    for SP in $SPS; do
+        if [ -d "$SP" ]; then
+            RGIGNORE_FILE="$SP/.rgignore"
+            if [ ! -f "$RGIGNORE_FILE" ]; then
+                log_status "Creating .rgignore file in $SP"
+                echo '!*' > "$RGIGNORE_FILE"
+            fi
+        fi
+    done
+
     source "${VIRTUAL_ENV}/bin/activate"
 }
 EOF
