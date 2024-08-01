@@ -74,11 +74,18 @@ def check_ram_usage(pre_gc: MemoryLimit | None = None) -> dict:
             limit=cram.max_usage_mib,
         )
 
+    process = MemoryLimit.from_psutil()
+    out['process'] = dict(
+        current=process.current_mib
+    )
+
     process = psutil.Process(os.getpid())
     parent = process.parent()
     workers = []
     total_ram = 0
-    if parent is not None and (parent.name() == 'gunicorn' or parent.name().startswith('uwsgi')):
+    known_parent_prefices = ('gunicorn', 'uwsgi', 'python')
+    is_coordinator = any(parent.name().startswith(pfx) for pfx in known_parent_prefices) if parent else False
+    if is_coordinator:
         for child in parent.children(recursive=True):
             mem = MemoryLimit.from_psutil(child.pid)
             workers.append(dict(pid=child.pid, ram=mem.current_mib))
