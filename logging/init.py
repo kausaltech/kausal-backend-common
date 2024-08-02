@@ -57,6 +57,7 @@ def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
             'django.template': level('WARNING'),
             'django.utils.autoreload': level('INFO'),
             'django': level('DEBUG'),
+            'environ': level('INFO'),
             'blib2to3': level('INFO'),
             'generic': level('DEBUG'),
             'parso': level('WARNING'),
