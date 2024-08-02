@@ -33,6 +33,22 @@ def strip_sensitive_cookies(req: dict):
     return
 
 
+_in_interactive_mode: bool | None = None
+
+def is_in_interactive_mode():
+    global _in_interactive_mode
+    if _in_interactive_mode is not None:
+        return
+
+    try:
+        get_ipython().__class__.__name__  # type: ignore  # noqa
+    except Exception:
+        _in_interactive_mode = False
+    else:
+        _in_interactive_mode = True
+    return _in_interactive_mode
+
+
 def before_send_transaction(event: Event, hint: Hint):
     req: dict = event.get('request', None) or {}
     if not req:
@@ -49,6 +65,12 @@ def before_send_transaction(event: Event, hint: Hint):
     return event
 
 
+def before_send(event: Event, hint: Hint):
+    if is_in_interactive_mode():
+        return None
+    return event
+
+
 def init_sentry(dsn: str, deployment_type: str, enable_perf_tracing: bool = False):
     sentry_sdk.init(
         dsn=dsn,
@@ -60,5 +82,6 @@ def init_sentry(dsn: str, deployment_type: str, enable_perf_tracing: bool = Fals
         environment=os.getenv('SENTRY_ENVIRONMENT', None) or deployment_type,
         server_name=os.getenv('NODE_NAME', None),
         before_send_transaction=before_send_transaction,
+        before_send=before_send,
     )
     ignore_logger('uwsgi-req')
