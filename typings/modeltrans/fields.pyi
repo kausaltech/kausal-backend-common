@@ -12,13 +12,12 @@ class TranslatedVirtualField:
     concrete: Literal[False]
 
 
-
-
 class TranslationField(JSONField):
     description: str
     fields: Sequence[str]
     default_language_field: str | None
 
+    @classmethod
     def __new__(
         cls,
         fields: Sequence[str] | None = ...,
