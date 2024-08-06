@@ -1,18 +1,17 @@
 from __future__ import annotations
 
 import logging
-import os
 import sys
 import warnings
 import traceback
 from datetime import UTC, datetime
 from logging import LogRecord, StreamHandler
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, List, Optional, Sequence, Type, Union
+from typing import TYPE_CHECKING, Callable, List, Optional, Sequence, Type, Union, cast
 
 from logfmter.formatter import Logfmter
 import loguru
-from rich.console import ConsoleRenderable
+from rich.console import ConsoleRenderable, Console
 from rich.containers import Renderables
 from rich.logging import RichHandler
 from rich.text import Text, TextType
@@ -103,19 +102,30 @@ class LogRender:
 
 
 ISO_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
+RICH_TIME_FORMAT = '%H:%M:%S.%f'
+
+
+log_console: Console | None = None
+
+def get_rich_log_console() -> Console:
+    global log_console
+
+    if log_console is None:
+        log_console = Console(stderr=True)
+    return log_console
 
 
 class RichLogHandler(RichHandler):
     _log_render: LogRender  # type: ignore[assignment]
 
     def __init__(self):
-        super().__init__(log_time_format='%Y-%m-%d %H:%M:%S.%f')
+        super().__init__(log_time_format=RICH_TIME_FORMAT, console=get_rich_log_console(), rich_tracebacks=True)
         lr = self._log_render
         self._log_render = LogRender(
             show_time=lr.show_time,
             show_level=lr.show_level,
             show_path=lr.show_path,
-            time_format=ISO_FORMAT,
+            time_format=RICH_TIME_FORMAT,
             omit_repeated_times=lr.omit_repeated_times,
             level_width=None,
         )
@@ -124,41 +134,43 @@ class RichLogHandler(RichHandler):
     def format(self, record: LogRecord) -> str:
         return super().format(record)
 
-    def render_message(self, record: LogRecord, message: str) -> ConsoleRenderable:
-        extra: dict[str, Any] = getattr(record, 'extra', {})
-        markup = extra.pop('markup', False)
-        if markup:
-            setattr(record, 'markup', True)
-            def with_style(style: str, msg: str):
-                return '[%s]%s[/]' % (style, msg)
-        else:
-            def with_style(style: str, msg: str):
-                return msg
-        scope_parts = []
-        instance_id = extra.get('instance')
-        if instance_id:
-            scope_parts.append(with_style('scope.key', instance_id))
-        instance_obj_id = extra.get('instance_obj_id')
-        if instance_obj_id:
-            scope_parts.append(with_style('log.path', instance_obj_id))
+    def add_extra(self, msg: Text, record: LogRecord):
+        extra = {}
+        if hasattr(record, '_extra_keys'):
+            extra_keys = getattr(record, '_extra_keys', None)
+            if extra_keys:
+                extra = {key: getattr(record, key) for key in extra_keys if hasattr(record, key)}
+            delattr(record, '_extra_keys')
 
-        ctx_id = extra.get('context')
-        if ctx_id:
-            scope_parts.append('[scope.key.special]%s[/]' % ctx_id)
+        scope_parts: list[Text] = []
+        def add_scope(style: str, key: str):
+            if key not in extra:
+                return
+            val = extra.pop(key)
+            text = Text.assemble((key, 'log.path'), '=', (val, style))
+            scope_parts.append(text)
 
-        session_id = extra.get('session')
-        if session_id:
-            scope_parts.append('sess [json.key]%s[/]' % session_id)
+        add_scope('scope.key', 'tenant')
+        add_scope('scope.key', 'instance')
+        add_scope('inspect.attr.dunder', 'instance_obj_id')
+        add_scope('inspect.attr.dunder', 'context')
+        add_scope('json.key', 'session')
 
         if scope_parts:
+            out = Text()
             record.highlighter = None
-            message = r'[log.path]\[[/]%s[log.path]][/] %s' % (':'.join(scope_parts), message)
-        tenant_id = extra.get('tenant', None)
-        if tenant_id:
-            message = '[%s] %s' % (extra['tenant'], message)
-        if 'session' in extra:
-            message = '<%s> %s' % (extra['session'], message)
+            for part in scope_parts:
+                out.append_text(part)
+                out.append(' ')
+            out.append_text(msg)
+            msg = out
+
+        return msg
+
+    def render_message(self, record: LogRecord, message: str) -> ConsoleRenderable:
         ret = super().render_message(record, message)
+        if isinstance(ret, Text):
+            ret = self.add_extra(ret, record)
         return ret
 
     def render(
@@ -210,6 +222,8 @@ class LogFmtFormatter(Logfmter):
         markup = getattr(record, 'markup', None)
         if isinstance(markup, bool) and markup:
             delattr(record, 'markup')
+        if hasattr(record, '_extra_keys'):
+            delattr(record, '_extra_keys')
         if markup and isinstance(record.msg, str):
             try:
                 record.msg = Text.from_markup(record.msg).plain
@@ -260,17 +274,43 @@ def showwarning(message: Warning | str, category: Type[Warning], filename: str, 
 if env_bool('LOG_WARNINGS', default=True):
     warnings.showwarning = showwarning
 
-loguru_logging = logging.getLogger()
+
+class LoguruLogRecord(LogRecord):
+    def set_extra_keys(self, keys: list[str] | None):
+        self._extra_keys = keys
+
+    def pop_extra_keys(self) -> list[str] | None:
+        if not hasattr(self, '_extra_keys'):
+            return None
+        keys = getattr(self, '_extra_keys')
+        delattr(self, '_extra_keys')
+        return keys
+
+logging.setLogRecordFactory(LoguruLogRecord)
 
 
-def loguru_make_record(message: loguru.Message):
-    record = message.record
-    msg = str(message)
+class LoguruLogger(logging.Logger):
+    def makeRecord(self, *args, **kwargs):
+        rec = cast(LoguruLogRecord, super().makeRecord(*args, **kwargs))
+        extra = args[8]
+        if extra is not None and isinstance(extra, dict):
+            rec.extra_keys = list(extra.keys())
+            setattr(rec, '_extra_keys', list(extra.keys()))
+        return rec
+
+
+
+def loguru_make_record(record: loguru.Record, strip_markup: bool = False):
     exc = record["exception"]
     extra = record.get('extra', {})
     name = extra.pop('name', record['name'] or '')
 
-    log_rec = loguru_logging.makeRecord(
+    msg = record['message']
+    # We shouldn't pass `rich` markup
+    if strip_markup and extra.pop('markup', False):
+        msg = Text.from_markup(msg).plain
+
+    log_rec = LoguruLogRecord(
         name,
         record["level"].no,
         record["file"].path,
@@ -279,8 +319,8 @@ def loguru_make_record(message: loguru.Message):
         (),
         (exc.type, exc.value, exc.traceback) if exc else None, # type: ignore
         func=record["function"],
-        extra=record["extra"],
     )
+    log_rec.set_extra_keys(list(record['extra'].keys()))
     if exc:
         log_rec.exc_text = "\n"
     return log_rec
@@ -291,12 +331,16 @@ logfmt_formatter = LogFmtFormatter()
 
 
 def loguru_rich_sink(message: loguru.Message):
-    rec = loguru_make_record(message)
-    rich_handler.handle(rec)
+    rec = loguru_make_record(message.record)
+    rich_handler.acquire()
+    try:
+        rich_handler.emit(rec)
+    finally:
+        rich_handler.release()
 
 
 def loguru_logfmt_sink(message: loguru.Message):
-    rec = loguru_make_record(message)
+    rec = loguru_make_record(message.record, strip_markup=True)
     sys.stderr.write(logfmt_formatter.format(rec) + '\n')
     sys.stderr.flush()
 
@@ -313,6 +357,9 @@ class LoguruLoggingHandler(logging.Handler):
             if depth == 10:
                 break
 
-        extra = getattr(record, 'extra', {})
-        log = logger.opt(depth=depth + 1, exception=record.exc_info).bind(**extra)
+        log = logger.opt(depth=depth + 1, exception=record.exc_info)
+        extra_keys: list[str] | None = getattr(record, '_extra_keys', None)
+        if extra_keys:
+            extra = {key: getattr(record, key) for key in extra_keys if hasattr(record, key)}
+            log = log.bind(**extra)
         log.log(record.levelname, record.getMessage())

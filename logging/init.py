@@ -1,17 +1,21 @@
 from __future__ import annotations
 
+import logging
+import os
 from logging.config import dictConfig
-from typing import Callable, Literal, TYPE_CHECKING, Optional, Protocol
+from typing import TYPE_CHECKING, Literal, Protocol
 
 from loguru import logger
 
-from .handler import loguru_logfmt_sink, loguru_rich_sink
+from kausal_common.deployment import env_bool
+
+from .handler import LoguruLogger, get_rich_log_console, loguru_logfmt_sink, loguru_rich_sink
 
 if TYPE_CHECKING:
-    from logging.config import _Level, _LoggerConfiguration, _DictConfigArgs
+    from logging.config import _DictConfigArgs, _LoggerConfiguration
 
 type LogFormat = Literal['rich', 'logfmt']
-
+type _Level = int | str
 
 class GetHandler(Protocol):
     def __call__(self, level: _Level, handler: str | None = None) -> _LoggerConfiguration: ...
@@ -90,11 +94,16 @@ def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
     }
     return config
 
+
 def _init_logging(format: LogFormat, log_sql_queries: bool = False):
+    import sys
+
+    from loguru._colorama import should_colorize
+
     if format == 'logfmt':
         loguru_handlers = [dict(sink=loguru_logfmt_sink, format="{message}")]
     else:
-        loguru_handlers = [dict(sink=loguru_rich_sink, format="{message}")]
+        loguru_handlers = [dict(sink=loguru_rich_sink, format="{message}", colorize=should_colorize(sys.stdout))]
 
     # This configures loguru
     logger.configure(handlers=loguru_handlers)
@@ -117,6 +126,8 @@ def _init_logging(format: LogFormat, log_sql_queries: bool = False):
         from wagtail.utils.deprecation import RemovedInWagtail70Warning
         warnings.filterwarnings(action='ignore', category=RemovedInWagtail70Warning)
 
+    logging.setLoggerClass(LoguruLogger)
+
     return level
 
 
@@ -125,13 +136,18 @@ def init_logging_django(format: LogFormat, log_sql_queries: bool = False):
     conf = get_logging_conf(level)
     return conf
 
+def _should_use_logfmt():
+    if env_bool('KUBERNETES_LOGGING', False) or env_bool('KUBERNETES_MODE', False):
+        return True
+    console = get_rich_log_console()
+    if not console.is_terminal or console.is_dumb_terminal:
+        return True
+    return False
+
 
 def init_logging(format: LogFormat | None = None):
     if format is None:
-        from rich import get_console
-
-        console = get_console()
-        format = 'logfmt' if not console.is_terminal or console.is_dumb_terminal else 'rich'
+        format = 'logfmt' if _should_use_logfmt() else 'rich'
     level: GetHandler = _init_logging(format)
     conf = get_logging_conf(level)
     dictConfig(conf)
