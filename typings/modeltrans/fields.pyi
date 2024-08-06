@@ -1,7 +1,7 @@
-from typing import Literal, Sequence
 from collections.abc import Generator
-from django.db.models import JSONField, Field
+from typing import Literal, Self, Sequence
 
+from django.db.models import Field, JSONField
 
 class TranslatedVirtualField:
     original_field: Field
@@ -25,8 +25,8 @@ class TranslationField(JSONField):
         required_languages: list[str] | dict | None = ...,
         virtual_fields: bool = ...,
         fallback_language_field: str | None = ...,
-        *args, **kwargs
-    ) -> TranslationField: ...
+        *args, **kwargs,
+    ) -> Self: ...
 
     def __init__(
         self,
@@ -35,6 +35,6 @@ class TranslationField(JSONField):
         required_languages: list[str] | dict | None = ...,
         virtual_fields: bool = ...,
         fallback_language_field: str | None = ...,
-        *args, **kwargs
+        *args, **kwargs,
     ) -> None: ...
     def get_translated_fields(self) -> Generator[TranslatedVirtualField, None, None]: ...
