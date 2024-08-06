@@ -1,17 +1,19 @@
+# shellcheck shell=bash
+
 check_reviewdog() {
-    echo "🐶 Checking for reviewdog..."
+    print_check "Checking for reviewdog..." "🐶"
 
     # Check if reviewdog exists in ./bin
     if [ -x "./bin/reviewdog" ]; then
         print_success "reviewdog found in ./bin"
-        echo "  📍 Path: ./bin/reviewdog"
+        print_findings "Path" "./bin/reviewdog"
         return 0
     fi
 
     # Check if reviewdog exists in PATH
     if command -v reviewdog >/dev/null 2>&1; then
         print_success "reviewdog found in PATH"
-        echo "  📍 Path: $(command -v reviewdog)"
+        print_findings "Path" "$(command -v reviewdog)"
         return 0
     fi
 
@@ -19,12 +21,7 @@ check_reviewdog() {
     print_error "reviewdog not found in ./bin or in PATH"
 
     # Prompt user to install reviewdog, defaulting to yes
-    read -p "Would you like to install reviewdog? (Y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Nn]$ ]]; then
-        print_error "reviewdog is required but not installed"
-        return 1
-    else
+    if prompt_user "Would you like to install reviewdog?" ; then
         echo "Installing reviewdog..."
         if curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s; then
             print_success "reviewdog installed successfully"
@@ -34,11 +31,11 @@ check_reviewdog() {
             print_error "Failed to install reviewdog"
             return 1
         fi
+    else
+        print_error "reviewdog is required but not installed"
+        return 1
     fi
 }
-
-check_reviewdog
-
 
 check_git_hooks() {
     echo "🔗 Checking git hooks..."
@@ -66,4 +63,5 @@ check_git_hooks() {
     return 0
 }
 
+check_reviewdog
 check_git_hooks

@@ -1,79 +1,82 @@
+# shellcheck shell=bash
+
 ensure_python_available() {
-    local required_version="$1"
+    local REQUIRED_PYTHON_VERSION="$1"
     local available_versions
 
-    echo "🔍 Checking for Python $required_version availability..."
+    echo "🔍 Checking for Python $REQUIRED_PYTHON_VERSION availability..."
 
     # Get the list of installed Python versions
     available_versions=$(uv python list --only-installed | grep '^cpython-' | awk '{print $1}' | cut -d'-' -f2)
 
     # Check if the required version is available
-    if echo "$available_versions" | grep -q "^$required_version"; then
-        print_success "Python $required_version is available"
+    if echo "$available_versions" | grep -q "^$REQUIRED_PYTHON_VERSION"; then
+        print_success "Python $REQUIRED_PYTHON_VERSION is available"
         return 0
     fi
 
     # If not found, try to find a compatible version
     for version in $available_versions; do
-        if [[ "$version" == "$required_version"* ]]; then
+        if [[ "$version" == "$REQUIRED_PYTHON_VERSION"* ]]; then
             print_success "Compatible Python version $version is available"
             return 0
         fi
     done
 
-    print_warning "Python $required_version is not available"
+    print_warning "Python $REQUIRED_PYTHON_VERSION is not available"
 
     # Prompt user to install the required version
-    read -p "Would you like to install Python $required_version now? (Y/n) " -n 1 -r
+    read -p "Would you like to install Python $REQUIRED_PYTHON_VERSION now? (Y/n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        echo "Installing Python $required_version..."
-        if uv python install "$required_version"; then
-            print_success "Python $required_version installed successfully"
+        echo "Installing Python $REQUIRED_PYTHON_VERSION..."
+        if uv python install "$REQUIRED_PYTHON_VERSION"; then
+            print_success "Python $REQUIRED_PYTHON_VERSION installed successfully"
             return 0
         else
-            print_error "Failed to install Python $required_version"
+            print_error "Failed to install Python $REQUIRED_PYTHON_VERSION"
             return 1
         fi
     else
-        print_warning "Python $required_version not installed"
+        print_warning "Python $REQUIRED_PYTHON_VERSION not installed"
         return 1
     fi
 }
 
-check_python_version() {
-    echo "📊 Checking Python version requirement..."
+read_python_version() {
+    print_check "Checking Python version requirement" "📊"
 
     # Check if pyproject.toml exists
     if [ ! -f "pyproject.toml" ]; then
         print_error "pyproject.toml not found"
-        return
+        exit 1
     fi
 
     # Extract the Python version requirement from pyproject.toml
-    REQUIRED_VERSION=$(grep "requires-python" pyproject.toml | sed -E 's/.*>= *([0-9]+\.[0-9]+).*/\1/')
-    if [ -z "$REQUIRED_VERSION" ]; then
+    REQUIRED_PYTHON_VERSION=$(grep "requires-python" pyproject.toml | sed -E 's/.*>= *([0-9]+\.[0-9]+).*/\1/')
+    if [ -z "$REQUIRED_PYTHON_VERSION" ]; then
         print_error "Could not find or parse 'requires-python' in pyproject.toml"
-        return
+        exit 1
     fi
+    echo "  🏷️  Required Python version: >=${REQUIRED_PYTHON_VERSION}"
+}
 
+check_python_version() {
     # Get the current Python version
     CURRENT_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-
-    echo "  🏷️  Required Python version: >=${REQUIRED_VERSION}"
     echo "  🐍 Current Python version: ${CURRENT_VERSION}"
 
     # Compare versions
-    if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$CURRENT_VERSION" | sort -V | head -n1)" = "$REQUIRED_VERSION" ]; then
-        if [ "$REQUIRED_VERSION" = "$CURRENT_VERSION" ]; then
+    if [ "$(printf '%s\n' "$REQUIRED_PYTHON_VERSION" "$CURRENT_VERSION" | sort -V | head -n1)" = "$REQUIRED_PYTHON_VERSION" ]; then
+        if [ "$REQUIRED_PYTHON_VERSION" = "$CURRENT_VERSION" ]; then
             print_success "Python version matches the requirement"
         else
             print_success "Python version exceeds the minimum requirement"
         fi
     else
         print_error "Python version does not meet the minimum requirement"
-        if ensure_python_available ${REQUIRED_VERSION}; then
-            read -p "Would you like to create a new virtual environment with Python ${REQUIRED_VERSION}? (Y/n) " -n 1 -r
+        if ensure_python_available ${REQUIRED_PYTHON_VERSION}; then
+            read -p "Would you like to create a new virtual environment with Python ${REQUIRED_PYTHON_VERSION}? (Y/n) " -n 1 -r
             echo
             if [[ ! $REPLY =~ ^[Nn]$ ]]; then
                 echo "Creating new virtual environment..."
@@ -142,6 +145,7 @@ check_envrc() {
         echo -n "$new_content" > "$envrc"
         print_success ".envrc file updated"
         direnv allow
+        eval "$(direnv export bash)"
     else
         print_warning "Changes not applied to .envrc"
     fi
@@ -168,7 +172,7 @@ check_venv() {
     if [ -n "$PYTHON_PATH" ]; then
         print_success "🐍 Python interpreter found"
         echo "  📍 Python path: $PYTHON_PATH"
-        echo "  🏷️  Python version: $(python --version)"
+        echo "  🏷️ Python version: $(python --version)"
 
         # Check if the Python interpreter is from the virtual environment
         if [[ "$PYTHON_PATH" == "$VIRTUAL_ENV"/* ]]; then
@@ -184,7 +188,7 @@ check_venv() {
 }
 
 check_package_versions() {
-    echo "📦 Checking installed package versions..."
+    print_check "Checking installed package versions..." "📦"
 
     # Extract requirements files from pyproject.toml
     REQ_FILES=$(grep -E "^(dependencies|optional-dependencies\.dev)" pyproject.toml | sed -n 's/.*\[\([^]]*\)\].*/\1/p' | tr -d '"' | tr ',' ' ')
@@ -193,7 +197,7 @@ check_package_versions() {
         return 1
     fi
 
-    echo "  📄 Requirements files: $(echo $REQ_FILES | xargs echo)"
+    echo -e "  📄 Requirements files: ${DIM}$(echo $REQ_FILES | xargs echo)${NC}"
 
     # Check if `uv` command (a new Python package manager) is available in path
     echo "📦 Checking for uv..."
@@ -232,8 +236,7 @@ check_package_versions() {
         echo
         if [[ ! $REPLY =~ ^[Nn]$ ]]; then
             echo "Fixing package mismatches..."
-            uv pip sync $REQ_FILES
-            if [ $? -eq 0 ]; then
+            if uv pip sync $REQ_FILES; then
                 print_success "Package mismatches resolved"
             else
                 print_error "Failed to resolve package mismatches"
@@ -248,7 +251,7 @@ check_package_versions() {
     fi
 }
 
-check_python_version
-check_envrc
+read_python_version
 check_venv
+check_python_version
 check_package_versions
