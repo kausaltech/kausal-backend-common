@@ -13,7 +13,7 @@ check_direnv() {
     find_direnv="command -v direnv"
     if $find_direnv >/dev/null 2>&1; then
         print_success "direnv found in PATH"
-        print_findings "Path: $($find_direnv)"
+        print_findings "Path" "$($find_direnv)"
         return
     else
         print_error "direnv not found in PATH"
@@ -26,7 +26,7 @@ check_direnv() {
                 if ! $find_direnv >/dev/null 2>&1; then
                     direnv_hook_instructions_fail
                 fi
-                print_findings "Path: $($find_direnv)"
+                print_findings "Path" "$($find_direnv)"
             else
                 print_error "Failed to install direnv"
                 exit 1

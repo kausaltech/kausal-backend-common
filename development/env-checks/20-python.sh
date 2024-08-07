@@ -152,14 +152,15 @@ check_envrc() {
 }
 
 check_venv() {
+    print_check "Checking for Python virtual env" "🏠"
     # Check if running in a virtual environment
     if [ -n "$VIRTUAL_ENV" ]; then
         print_success "🐍 Virtual environment is active"
-        echo "  🏠 Virtual environment path: $VIRTUAL_ENV"
+        print_findings "Virtual environment path" "$VIRTUAL_ENV"
 
         # Check if $VIRTUAL_ENV is under the current directory
-        if [[ ! "$VIRTUAL_ENV" == "$(pwd)"/* ]]; then
-            print_error "Virtual environment is not located under the current directory"
+        if [[ "$VIRTUAL_ENV" != "$(pwd)"/.venv ]]; then
+            print_error "Virtual environment must be in '$(pwd)/.venv'"
             exit 1
         fi
     else
@@ -251,7 +252,60 @@ check_package_versions() {
     fi
 }
 
+check_other_venvs() {
+    print_check "Checking for other Python virtual environments..." "🔍"
+
+    local current_venv="${VIRTUAL_ENV##*/}"
+    local ignore_marker=".kausal_ignore"
+    local venvs_found=0
+    local venvs_removed=0
+    local venv_dirs=()
+
+    # Find all directories containing pyvenv.cfg and store them in an array
+    while IFS= read -r venv_dir; do
+        venv_name="${venv_dir##*/}"
+        if [[ "$venv_name" != "$current_venv" ]]; then
+            venv_dirs+=("$venv_dir")
+            ((venvs_found++))
+        fi
+    done < <(find . -type f -name pyvenv.cfg -print0 | xargs -0 -n1 dirname | sort -u)
+
+    for venv_dir in "${venv_dirs[@]}"; do
+        venv_name="${venv_dir##*/}"
+
+        # Check if the ignore marker exists
+        if [[ -f "$venv_dir/$ignore_marker" ]]; then
+            print_warning "Ignored virtual environment found: $venv_name"
+            continue
+        fi
+
+        print_findings "Found non-standard virtual environment" "$venv_name"
+
+        if ! prompt_user "Do you want to remove this virtual environment?"; then
+            if prompt_user "Do you want to ignore this virtual environment in future checks?"; then
+                touch "$venv_dir/$ignore_marker"
+                print_success "Marked $venv_name to be ignored in future checks"
+            else
+                print_warning "Virtual environment $venv_name left unchanged"
+            fi
+            continue
+        fi
+
+        if rm -rf "$venv_dir"; then
+            print_success "Removed virtual environment: $venv_name"
+            ((venvs_removed++))
+        else
+            print_error "Failed to remove virtual environment: $venv_name"
+        fi
+    done
+
+    if [[ $venvs_found -eq 0 ]]; then
+        print_success "No other virtual environments found"
+    fi
+}
+
 read_python_version
 check_venv
 check_python_version
 check_package_versions
+check_other_venvs
