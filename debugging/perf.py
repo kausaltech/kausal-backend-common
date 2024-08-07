@@ -1,8 +1,7 @@
 import enum
+import inspect
 import threading
 import time
-import inspect
-
 
 pc_data = threading.local()
 
@@ -22,7 +21,7 @@ class PerfCounter:
     shown_level: int = Level.INFO.value
 
     @classmethod
-    def change_level(cls, level: Level):
+    def change_level(cls, level: Level) -> None:
         cls.shown_level = level.value
 
     def __init__(self, tag: str | None = None, show_time_to_last: bool = False, level: Level = Level.INFO):

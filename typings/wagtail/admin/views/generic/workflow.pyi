@@ -2,7 +2,10 @@ from _typeshed import Incomplete
 from django.views import View
 from wagtail.admin import messages as messages
 from wagtail.admin.modal_workflow import render_modal_workflow as render_modal_workflow
-from wagtail.admin.utils import get_latest_str as get_latest_str, get_valid_next_url_from_request as get_valid_next_url_from_request
+from wagtail.admin.utils import (
+    get_latest_str as get_latest_str,
+    get_valid_next_url_from_request as get_valid_next_url_from_request,
+)
 from wagtail.admin.views.generic.base import BaseObjectMixin as BaseObjectMixin
 from wagtail.models import Task as Task, TaskState as TaskState, WorkflowState as WorkflowState
 

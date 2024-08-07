@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 
 class OrderedModel(models.Model):
     """Like wagtailorderable.models.Orderable, but with additional functionality in filter_siblings()."""
+
     order = models.PositiveIntegerField(default=0, editable=True, verbose_name=_('order'))
     sort_order_field = 'order'
     order_on_create: int | None

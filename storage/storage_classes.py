@@ -1,6 +1,5 @@
 from django.core.files import File
-from django.core.files.storage import Storage
-from django.core.files.storage import FileSystemStorage
+from django.core.files.storage import FileSystemStorage, Storage
 from django.utils.deconstruct import deconstructible
 from storages.backends.s3boto3 import S3Boto3Storage
 from storages.utils import setting
@@ -26,6 +25,7 @@ class MediaFilesS3Storage(S3Boto3Storage):
 @deconstructible
 class LocalMediaStorageWithS3Fallback(Storage):
     """Storage that writes everything to disk and reads files from disk, falling back to S3."""
+
     def __init__(self, **settings):
         self.s3_storage = MediaFilesS3Storage(**settings)
         self.fs_storage = FileSystemStorage()

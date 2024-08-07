@@ -1,7 +1,7 @@
 from typing import Generic, Literal, Self, TypeVar
-from _typeshed import Incomplete
-from django.db.models import QuerySet, Model
 
+from _typeshed import Incomplete
+from django.db.models import Model, QuerySet
 
 M = TypeVar('M', bound=Model, default=Model)
 QS = TypeVar('QS', bound=QuerySet[Model], default=QuerySet[Model])

@@ -1,4 +1,5 @@
 from typing import TypeVar
+
 from graphene import Field
 
 T = TypeVar('T', bound=Field)

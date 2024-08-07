@@ -5,10 +5,9 @@ from tracemalloc import Snapshot
 
 from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 from rich import print
-
 
 previous_snap: Snapshot | None = None
 
@@ -37,5 +36,5 @@ def memory_trace(request):
     previous_snap = snap
 
     return Response({
-        'stats': [str(s) for s in stats[:10]] if stats else None
+        'stats': [str(s) for s in stats[:10]] if stats else None,
     })

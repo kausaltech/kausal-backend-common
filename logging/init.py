@@ -27,13 +27,13 @@ def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
         'disable_existing_loggers': False,
         'formatters': {
             'verbose': {
-                'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+                'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s',
             },
             'simple': {
-                'format': '%(levelname)s %(name)s %(asctime)s %(message)s'
+                'format': '%(levelname)s %(name)s %(asctime)s %(message)s',
             },
             'plain': {
-                'format': '%(message)s'
+                'format': '%(message)s',
             },
         },
         'handlers': {
@@ -44,7 +44,7 @@ def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
             'console': {
                 'level': 'DEBUG',
                 'class': 'logging.StreamHandler',
-                'formatter': 'simple'
+                'formatter': 'simple',
             },
             'loguru': {
                 'level': 'DEBUG',
@@ -89,7 +89,7 @@ def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
             's3fs': level('INFO'),
             'celery.utils': level('INFO'),
             '': level('DEBUG'),
-        }
+        },
 
     }
     return config

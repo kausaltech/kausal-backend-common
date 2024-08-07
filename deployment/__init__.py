@@ -1,8 +1,8 @@
 import os
 from typing import Sequence
-from loguru import logger
-import environ
 
+import environ
+from loguru import logger
 
 deployment_log = logger.bind(name='deployment')
 
@@ -53,19 +53,22 @@ def env_bool(env_var: str, default: bool) -> bool:
     to determine true and false values.
 
     Args:
+    ----
         env_var (str): The name of the environment variable to check.
         default (bool): The default value to return if the environment
                         variable is not set or its value is not recognized.
 
     Returns:
+    -------
         bool: The boolean interpretation of the environment variable's value,
               or the default value if the variable is not set or not recognized.
 
     Note:
+    ----
         - True values: 'true', 'on', 'ok', 'y', 'yes', '1' (case-insensitive)
         - False values: 'false', 'off', 'n', 'no', '0' (case-insensitive)
-    """
 
+    """
     if default:
         is_false = _check_env_match(env_var, BOOLEAN_FALSE_STRINGS)
         return not is_false

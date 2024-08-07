@@ -1,11 +1,10 @@
 import sys
 import types
-from typing import cast
 import warnings
+from typing import cast
 
 import rich
 from rich.traceback import Traceback
-
 
 console = rich.get_console()
 
@@ -24,7 +23,6 @@ def warn_with_traceback(message, category, filename, lineno, file=None, line=Non
 
     tbp = Traceback.from_exception(type(exc), exc, traceback=tb, max_frames=20)
     console.print(tbp)
-    return
 
 
 def register_warning_handler():

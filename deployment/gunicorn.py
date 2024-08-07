@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
 from loguru import logger
 
 from kausal_common.telemetry import init_telemetry

@@ -4,8 +4,8 @@ import os
 import typing
 from urllib.parse import urlparse
 
-from django.urls import reverse
 import sentry_sdk
+from django.urls import reverse
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import ignore_logger
 
@@ -23,7 +23,7 @@ def strip_sensitive_cookies(req: dict):
         hdr['Cookie'] = '[Filtered]'
     cookies: dict = req.get('cookies') or {}
     remove_cookies: list[str] = []
-    for key in cookies.keys():
+    for key in cookies:
         lkey = key.lower()
         if 'token' in lkey or 'session' in lkey:
             remove_cookies.append(key)
@@ -38,7 +38,7 @@ _in_interactive_mode: bool | None = None
 def is_in_interactive_mode():
     global _in_interactive_mode
     if _in_interactive_mode is not None:
-        return
+        return None
 
     try:
         get_ipython().__class__.__name__  # type: ignore  # noqa
@@ -55,7 +55,7 @@ def before_send_transaction(event: Event, hint: Hint):
         return event
 
     healthcheck_path = reverse('healthcheck')
-    url_string = req.get('url', None)
+    url_string = req.get('url')
     if url_string:
         url = urlparse(url_string)
         if url.path == healthcheck_path:

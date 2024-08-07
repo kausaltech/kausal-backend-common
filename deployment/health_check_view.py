@@ -1,20 +1,22 @@
 from __future__ import annotations
 
-import os
 import gc
+import os
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+import psutil
+import sentry_sdk
 from django.core.cache import caches
 from django.db import connections
-from django.http import HttpRequest
 from loguru import logger
-import psutil
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-import sentry_sdk
 
 from .limits import MemoryLimit
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest
 
 
 def check_database():
@@ -76,7 +78,7 @@ def check_ram_usage(pre_gc: MemoryLimit | None = None) -> dict:
 
     process = MemoryLimit.from_psutil()
     out['process'] = dict(
-        current=process.current_mib
+        current=process.current_mib,
     )
 
     process = psutil.Process(os.getpid())

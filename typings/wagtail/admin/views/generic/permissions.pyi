@@ -4,7 +4,7 @@ from wagtail.permission_policies import BasePermissionPolicy
 
 class PermissionCheckedMixin:
     permission_policy: BasePermissionPolicy
-    permission_required: Optional[str]
+    permission_required: str | None
     any_permission_required: Iterable[str] | None
 
     def dispatch(self, request, *args, **kwargs): ...

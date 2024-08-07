@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from gunicorn.glogging import Logger as BaseLogger
-from gunicorn.http.message import Request
-from gunicorn.http.wsgi import Response
 from loguru import logger
 
+if TYPE_CHECKING:
+    from datetime import timedelta
+
+    from gunicorn.http.message import Request
+    from gunicorn.http.wsgi import Response
 
 access_log = logger.bind(name='gunicorn.access')
 error_log = logger.bind(name='gunicorn.error')

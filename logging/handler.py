@@ -2,26 +2,26 @@ from __future__ import annotations
 
 import logging
 import sys
-import warnings
 import traceback
+import warnings
 from datetime import UTC, datetime
 from logging import LogRecord, StreamHandler
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Sequence, Type, Union, cast
 
-from logfmter.formatter import Logfmter
 import loguru
-from rich.console import ConsoleRenderable, Console
+from logfmter.formatter import Logfmter
+from loguru import logger
+from rich.console import Console
 from rich.containers import Renderables
 from rich.logging import RichHandler
 from rich.text import Text, TextType
-from rich.traceback import Traceback
-from loguru import logger
 
 from kausal_common.deployment import env_bool
 
 if TYPE_CHECKING:
-    from rich.console import Console, RenderableType
+    from rich.console import ConsoleRenderable, RenderableType
+    from rich.traceback import Traceback
 
 FormatTimeCallable = Callable[[datetime], Text]
 
@@ -32,9 +32,9 @@ class LogRender:
         show_time: bool = True,
         show_level: bool = False,
         show_path: bool = True,
-        time_format: Union[str, FormatTimeCallable] = "[%x %X]",
+        time_format: str | FormatTimeCallable = "[%x %X]",
         omit_repeated_times: bool = True,
-        level_width: Optional[int] = 8,
+        level_width: int | None = 8,
     ) -> None:
         self.show_time = show_time
         self.show_level = show_level
@@ -42,19 +42,19 @@ class LogRender:
         self.time_format = time_format
         self.omit_repeated_times = omit_repeated_times
         self.level_width = level_width
-        self._last_time: Optional[Text] = None
+        self._last_time: Text | None = None
 
     def __call__(
         self,
-        console: "Console",
-        renderables: Sequence["ConsoleRenderable"],
+        console: Console,
+        renderables: Sequence[ConsoleRenderable],
         name: str,
-        log_time: Optional[datetime] = None,
-        time_format: Optional[Union[str, FormatTimeCallable]] = None,
+        log_time: datetime | None = None,
+        time_format: str | FormatTimeCallable | None = None,
         level: TextType = "",
-        path: Optional[str] = None,
-        line_no: Optional[int] = None,
-        link_path: Optional[str] = None,
+        path: str | None = None,
+        line_no: int | None = None,
+        link_path: str | None = None,
     ) -> Renderables:
         from rich.table import Table
 
@@ -67,7 +67,7 @@ class LogRender:
         output.add_column(ratio=1, style="log.message", overflow="fold")
         if self.show_path and path:
             output.add_column(style="log.path")
-        row: List["RenderableType"] = []
+        row: list[RenderableType] = []
         if self.show_time:
             log_time = log_time or console.get_datetime()
             time_format = time_format or self.time_format
@@ -92,7 +92,7 @@ class LogRender:
         if self.show_path and path:
             path_text = Text()
             path_text.append(
-                name, style=f"link file://{link_path}#{line_no}" if link_path else ""
+                name, style=f"link file://{link_path}#{line_no}" if link_path else "",
             )
             row.append(path_text)
 
@@ -177,18 +177,22 @@ class RichLogHandler(RichHandler):
         self,
         *,
         record: LogRecord,
-        traceback: Optional[Traceback],
-        message_renderable: "ConsoleRenderable",
-    ) -> "ConsoleRenderable":
-        """Render log for display.
+        traceback: Traceback | None,
+        message_renderable: ConsoleRenderable,
+    ) -> ConsoleRenderable:
+        """
+        Render log for display.
 
         Args:
+        ----
             record (LogRecord): logging Record.
             traceback (Optional[Traceback]): Traceback instance or None for no Traceback.
             message_renderable (ConsoleRenderable): Renderable (typically Text) containing log message contents.
 
         Returns:
+        -------
             ConsoleRenderable: Renderable to display log.
+
         """
         path = Path(record.pathname).name
         level = self.get_level_text(record)
@@ -265,7 +269,7 @@ class UwsgiReqLogHandler(StreamHandler):
 showwarning_ = warnings.showwarning
 log_warning = logger.opt(depth=2)
 
-def showwarning(message: Warning | str, category: Type[Warning], filename: str, lineno: int, file=None, line=None):
+def showwarning(message: Warning | str, category: type[Warning], filename: str, lineno: int, file=None, line=None):
     cat_str = '%s.%s' % (category.__module__, category.__name__)
 
     with log_warning.contextualize(category=cat_str):
@@ -282,7 +286,7 @@ class LoguruLogRecord(LogRecord):
     def pop_extra_keys(self) -> list[str] | None:
         if not hasattr(self, '_extra_keys'):
             return None
-        keys = getattr(self, '_extra_keys')
+        keys = self._extra_keys
         delattr(self, '_extra_keys')
         return keys
 
@@ -295,7 +299,7 @@ class LoguruLogger(logging.Logger):
         extra = args[8]
         if extra is not None and isinstance(extra, dict):
             rec.extra_keys = list(extra.keys())
-            setattr(rec, '_extra_keys', list(extra.keys()))
+            rec._extra_keys = list(extra.keys())
         return rec
 
 

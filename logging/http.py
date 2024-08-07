@@ -1,12 +1,11 @@
-from contextlib import contextmanager
 import os
+from contextlib import contextmanager
 from typing import cast
 
-from django.http import HttpRequest
-from loguru import logger
 import nanoid
 import sentry_sdk
-
+from django.http import HttpRequest
+from loguru import logger
 
 ID_ALPHABET = '346789ABCDEFGHJKLMNPQRTUVWXYabcdefghijkmnpqrtwxyz'
 
@@ -28,5 +27,5 @@ def start_request(request: HttpRequest):
     pod_name = os.getenv("POD_NAME", None)
     if pod_name:
         sentry_sdk.set_tag("cluster_pod", pod_name)
-    with logger.contextualize(**{"correlation_id": request.correlation_id}):
+    with logger.contextualize(correlation_id=request.correlation_id):
         yield

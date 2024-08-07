@@ -1,12 +1,9 @@
-from typing import Callable, overload, TypeVar
+from typing import Callable, TypeVar, overload
 
-
-FN = TypeVar("FN", bound=Callable)
-
-
+_FN = TypeVar("_FN", bound=Callable)
 
 @overload
-def register(hook_name: str) -> Callable[[FN], FN]: ...
+def register(hook_name: str) -> Callable[[_FN], _FN]: ...
 
 @overload
 def register(hook_name: str, fn: Callable, order: int = ...) -> None: ...

@@ -1,18 +1,21 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from django.conf import settings
-from django.db import models
-from modeltrans.fields import TranslationField
 from modeltrans.translator import get_i18n_field
 from modeltrans.utils import get_instance_field_value
+
+if TYPE_CHECKING:
+    from django.db import models
+    from modeltrans.fields import TranslationField
 
 
 def get_language_from_default_language_field(
     instance: models.Model,
-    i18n_field: TranslationField | None = None
+    i18n_field: TranslationField | None = None,
 ):
     """Return the primary language from the default language field"""
-
     if not i18n_field:
         i18n_field = get_i18n_field(instance._meta.model)  # pyright: ignore
 

@@ -1,7 +1,8 @@
 from typing import Generic, Literal, Sequence, TypeVar
-from django.utils.functional import cached_property as cached_property
-from django.db.models import Model, QuerySet
+
 from django.contrib.auth.models import AbstractUser
+from django.db.models import Model, QuerySet
+from django.utils.functional import cached_property as cached_property
 from wagtail.coreutils import resolve_model_string as resolve_model_string
 
 M = TypeVar('M', bound=Model)
@@ -45,7 +46,7 @@ class BaseDjangoAuthPermissionPolicy(BasePermissionPolicy[M, QS, U, UserQS]):
     def model_name(self) -> str: ...
 
 class ModelPermissionPolicy(BaseDjangoAuthPermissionPolicy[M, QS, U, UserQS]):
-    pass
+    ...
 
 class OwnershipPermissionPolicy(BaseDjangoAuthPermissionPolicy[M, QS, U, UserQS]):
     owner_field_name: str

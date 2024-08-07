@@ -1,19 +1,13 @@
-from typing import TypeVar
-from django.db.models.fields.related import ForeignKey, ManyToManyField, ManyToManyDescriptor
+from django.db.models import Model
+from django.db.models.fields.related import ForeignKey, ManyToManyDescriptor, ManyToManyField
 
-# __set__ value type
-_ST = TypeVar("_ST")
-# __get__ return type
-_GT = TypeVar("_GT")
+class ParentalKey[M: Model](ForeignKey[M, M]):  # pyright: ignore
+    ...
 
 
-class ParentalKey(ForeignKey[_GT, _ST]):  # pyright: ignore
-    pass
-
-
-class ParentalManyToManyField(ManyToManyField[_ST, _GT]):  # pyright: ignore
-    pass
+class ParentalManyToManyField[M: Model, Through: Model](ManyToManyField[M, Through]):
+    ...
 
 
 class ParentalManyToManyDescriptor(ManyToManyDescriptor):
-    pass
+    ...

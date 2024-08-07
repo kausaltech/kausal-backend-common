@@ -1,4 +1,5 @@
 import os
+
 try:
     from opentelemetry import trace
 except ImportError:
@@ -11,13 +12,13 @@ def init_telemetry():
     if trace is None:
         return
 
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.resources import SERVICE_NAME, SERVICE_VERSION, Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import (
         BatchSpanProcessor,
         ConsoleSpanExporter,
     )
-    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
     provider = TracerProvider(
         resource=Resource.create({
@@ -29,11 +30,11 @@ def init_telemetry():
     if oltp_traces_endpoint:
         exporter = OTLPSpanExporter('http://127.0.0.1:4317')
         provider.add_span_processor(
-            BatchSpanProcessor(exporter)
+            BatchSpanProcessor(exporter),
         )
     elif env_bool('OTEL_EXPORTER_CONSOLE', False):
         provider.add_span_processor(
-            BatchSpanProcessor(ConsoleSpanExporter())
+            BatchSpanProcessor(ConsoleSpanExporter()),
         )
 
     # Sets the global default tracer provider

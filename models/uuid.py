@@ -1,10 +1,9 @@
 import re
 from uuid import uuid4
 
+from django.contrib.postgres.functions import RandomUUID
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.contrib.postgres.functions import RandomUUID
-
 
 UUID_PATTERN = re.compile(r'^[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}$', re.IGNORECASE)
 

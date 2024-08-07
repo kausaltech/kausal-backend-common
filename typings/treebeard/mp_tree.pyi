@@ -1,9 +1,8 @@
 from typing import ClassVar, Self, TypeVar
-from django.db.models import Model, QuerySet, Manager
+
 from django.db import models
+from django.db.models import Manager, Model, QuerySet
 from treebeard.models import Node as Node
-
-
 
 class MP_NodeManager[M: MP_Node](models.Manager[M]): ...
 

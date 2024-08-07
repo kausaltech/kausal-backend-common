@@ -1,9 +1,9 @@
 import json
+
 from django.http import HttpRequest
 from django.utils.text import slugify
 from graphene_django.views import GraphQLView
 from graphql import GraphQLError
-
 
 counter = 0
 

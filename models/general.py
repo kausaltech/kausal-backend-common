@@ -8,7 +8,7 @@ class HasPublicFields(Protocol):
 def public_fields(
     model: HasPublicFields,
     add_fields: Iterable[str] | None = None,
-    remove_fields: Iterable[str] | None = None
+    remove_fields: Iterable[str] | None = None,
 ) -> list[str]:
     fields: list[str] = []
     if 'id' not in model.public_fields:

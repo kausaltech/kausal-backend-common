@@ -1,5 +1,5 @@
 from django.contrib.gis.db.backends.postgis.base import (
-    DatabaseWrapper as PostgisDatabaseWrapper
+    DatabaseWrapper as PostgisDatabaseWrapper,
 )
 from django.db import close_old_connections, connection as db_connection
 from psycopg.errors import InterfaceError

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from django.db.models import (
     ForeignKey as DjangoForeignKey,
-    JSONField,  # noqa: F401
+    JSONField,
     ManyToManyField as DjangoManyToManyField,
     Model,
 )
@@ -18,6 +18,6 @@ type ManyToManyField[To: Model, Through: Model] = DjangoManyToManyField[To, Thro
 
 if TYPE_CHECKING:
     from django.db.models.fields.related_descriptors import RelatedManager  # pyright: ignore
-    from django.db.models.manager import RelatedManager  # type: ignore  # noqa: F811
+    from django.db.models.manager import RelatedManager  # type: ignore  # noqa: F401, F811
 else:
     monkeypatch_generic_support(JSONField)

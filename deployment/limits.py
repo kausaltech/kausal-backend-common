@@ -32,11 +32,11 @@ class MemoryLimit:
     def as_dict(self):
         return {
             'current_usage_mib': self.current_mib,
-            'limit_mib': self.max_usage
+            'limit_mib': self.max_usage,
         }
 
     @classmethod
-    def from_cgroup(cls) -> 'MemoryLimit | None':
+    def from_cgroup(cls) -> MemoryLimit | None:
         cgroup_path = Path("/sys/fs/cgroup")
         if not cgroup_path.exists():
             return None
@@ -58,7 +58,7 @@ class MemoryLimit:
             return None
 
     @classmethod
-    def from_psutil(cls, pid: int | None = None) -> 'MemoryLimit':
+    def from_psutil(cls, pid: int | None = None) -> MemoryLimit:
         process = psutil.Process(pid or os.getpid())
         memory_info = process.memory_info()
         current_usage = memory_info.rss  # Resident Set Size

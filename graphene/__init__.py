@@ -6,20 +6,23 @@ import typing
 from typing import Any, Generic, Type, TypeVar
 
 import graphene_django_optimizer as gql_optimizer
-from django.contrib.auth.models import AnonymousUser
 from django.db.models import Model
 from django.db.models.constants import LOOKUP_SEP
 from graphene.utils.trim_docstring import trim_docstring
 from graphene_django import DjangoObjectType
-from graphene_django.types import DjangoObjectTypeOptions
 from graphql import GraphQLResolveInfo
-from graphql.language.ast import OperationDefinitionNode
-from modeltrans.fields import TranslationField
 from modeltrans.translator import get_i18n_field
 from wagtail.models import WSGIRequest
 
 from kausal_common.i18n.helpers import get_language_from_default_language_field
-from users.models import User
+
+if typing.TYPE_CHECKING:
+    from django.contrib.auth.models import AnonymousUser
+    from graphene_django.types import DjangoObjectTypeOptions
+    from graphql.language.ast import OperationDefinitionNode
+    from modeltrans.fields import TranslationField
+
+    from users.models import User
 
 UserOrAnon: typing.TypeAlias = 'User | AnonymousUser'
 
@@ -79,7 +82,7 @@ class DjangoNode(DjangoObjectType, Generic[M]):
     _meta: DjangoObjectTypeOptions
 
     @classmethod
-    def _resolve_i18n_fields(cls):
+    def _resolve_i18n_fields(cls) -> None:
         # Set default resolvers for i18n fields
         i18n_field = get_i18n_field(cls._meta.model)
         if i18n_field is None:
@@ -101,14 +104,14 @@ class DjangoNode(DjangoObjectType, Generic[M]):
                         select_related.append(LOOKUP_SEP.join(related_path))
                 hints = dict(
                     only=only,
-                    select_related=select_related
+                    select_related=select_related,
                 )
                 apply_hints = gql_optimizer.resolver_hints(**hints)
                 field.resolver = apply_hints(resolver)
 
 
     @classmethod
-    def __init_subclass_with_meta__(cls, **kwargs: Any):
+    def __init_subclass_with_meta__(cls, **kwargs: Any) -> None:
         if 'name' not in kwargs:
             # Remove the trailing 'Node' from the object types
             name = cls.__name__
@@ -118,7 +121,7 @@ class DjangoNode(DjangoObjectType, Generic[M]):
                 name = re.sub(r'Node$', '', name)
             kwargs['name'] = name
 
-        model: Type[M] = kwargs['model']
+        model: type[M] = kwargs['model']
         assert model.__doc__ is not None
         is_autogen = re.match(r'^\w+\([\w_, ]+\)$', model.__doc__)
         if 'description' not in kwargs and not cls.__doc__ and not is_autogen:

@@ -1,13 +1,29 @@
 from _typeshed import Incomplete
 from django.utils.functional import cached_property as cached_property
 from django.views.generic import TemplateView
-from wagtail.admin.filters import DateRangePickerWidget as DateRangePickerWidget, MultipleUserFilter as MultipleUserFilter, WagtailFilterSet as WagtailFilterSet
+from wagtail.admin.filters import (
+    DateRangePickerWidget as DateRangePickerWidget,
+    MultipleUserFilter as MultipleUserFilter,
+    WagtailFilterSet as WagtailFilterSet,
+)
 from wagtail.admin.ui.tables import Column as Column, DateColumn as DateColumn, UserColumn as UserColumn
 from wagtail.admin.utils import get_latest_str as get_latest_str
-from wagtail.admin.views.generic.base import BaseListingView as BaseListingView, BaseObjectMixin as BaseObjectMixin, WagtailAdminTemplateMixin as WagtailAdminTemplateMixin
+from wagtail.admin.views.generic.base import (
+    BaseListingView as BaseListingView,
+    BaseObjectMixin as BaseObjectMixin,
+    WagtailAdminTemplateMixin as WagtailAdminTemplateMixin,
+)
 from wagtail.admin.views.generic.permissions import PermissionCheckedMixin as PermissionCheckedMixin
 from wagtail.admin.widgets.button import HeaderButton as HeaderButton
-from wagtail.models import BaseLogEntry as BaseLogEntry, DraftStateMixin as DraftStateMixin, PreviewableMixin as PreviewableMixin, Revision as Revision, RevisionMixin as RevisionMixin, TaskState as TaskState, WorkflowState as WorkflowState
+from wagtail.models import (
+    BaseLogEntry as BaseLogEntry,
+    DraftStateMixin as DraftStateMixin,
+    PreviewableMixin as PreviewableMixin,
+    Revision as Revision,
+    RevisionMixin as RevisionMixin,
+    TaskState as TaskState,
+    WorkflowState as WorkflowState,
+)
 
 def get_actions_for_filter(queryset): ...
 
