@@ -1,11 +1,6 @@
 import os
 from typing import Sequence
 
-import environ
-from loguru import logger
-
-deployment_log = logger.bind(name='deployment')
-
 
 def get_deployment_build_id() -> str | None:
     return os.getenv('BUILD_ID', None)
@@ -16,7 +11,10 @@ def get_deployment_git_rev() -> str | None:
 
 
 def run_deployment_checks():
+    from loguru import logger
     from django.core import checks
+
+    deployment_log = logger.bind(name='deployment')
 
     msgs: list[checks.CheckMessage] = checks.run_checks(include_deployment_checks=True)
     LEVEL_MAP = {
