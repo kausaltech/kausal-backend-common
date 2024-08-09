@@ -1,5 +1,10 @@
+import environ
 import os
-from typing import Sequence
+import re
+from pathlib import Path
+from typing import Sequence, Union
+
+ENV_VARIABLE_PATTERN = re.compile(r'[A-Z][A-Z0-9_]*')
 
 
 def get_deployment_build_id() -> str | None:
@@ -73,3 +78,22 @@ def env_bool(env_var: str, default: bool) -> bool:
     else:
         is_true = _check_env_match(env_var, BOOLEAN_TRUE_STRINGS)
         return is_true
+
+
+def set_secret_file_vars(env: environ.Env, directory: Union[str, Path]) -> None:
+    """
+    Scan a directory for files that could be valid environment variables
+    and set corresponding *_FILE variables in the environ.Env instance.
+
+    :param env: An instance of environ.Env
+    :param directory: The directory to scan for secret files (str or Path)
+    """
+    directory = Path(directory)
+
+    if not directory.is_dir():
+        raise ValueError(f"The provided path '{directory}' is not a valid directory.")
+
+    for file_path in directory.iterdir():
+        if file_path.is_file() and ENV_VARIABLE_PATTERN.fullmatch(file_path.name):
+            env_var_name = f"{file_path.name}_FILE"
+            env.ENVIRON[env_var_name] = str(file_path)
