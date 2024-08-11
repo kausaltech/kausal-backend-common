@@ -24,8 +24,7 @@ if typing.TYPE_CHECKING:
 
     from users.models import User
 
-UserOrAnon: typing.TypeAlias = 'User | AnonymousUser'
-
+type UserOrAnon = 'User | AnonymousUser'
 
 class GQLContext(WSGIRequest):
     user: UserOrAnon

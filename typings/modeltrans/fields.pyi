@@ -3,12 +3,13 @@ from typing import Literal, Self, Sequence
 
 from django.db.models import Field, JSONField
 
-class TranslatedVirtualField:
+class TranslatedVirtualField(Field):
     original_field: Field
     language: str | None
     default_language_field: str | None
     blank: bool
     null: bool
+    serialize: bool
     concrete: Literal[False]
 
 

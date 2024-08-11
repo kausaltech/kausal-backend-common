@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from typing import Any, Literal, Self, Sequence, Tuple
+from typing import Any, Literal, Self, Sequence
 
 from _typeshed import Incomplete
 from django.db import models
@@ -39,7 +39,7 @@ class StreamField(models.Field):
         max_num: int | None = None,
         block_counts: dict[str, dict[str, int]] | None = None,
         **kwargs,
-    ) -> None: ...
+    ) -> Self: ...
 
     def __init__(
         self,
