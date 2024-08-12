@@ -5,6 +5,6 @@ class KausalCommonConfig(AppConfig):
     name = 'kausal_common'
 
     def ready(self) -> None:
-        from kausal_common.typings.monkey import monkeypatch_generic_support
+        from kausal_common.development.monkey import monkeypatch_generic_support
         monkeypatch_generic_support()
         return super().ready()

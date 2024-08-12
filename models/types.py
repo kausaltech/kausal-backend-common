@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from functools import cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Iterable, Self, TypeAlias, cast, overload
+from typing import TYPE_CHECKING, Any, Generic, Self, TypeAlias, cast
 
 from django.db.models import (
     ForeignKey,
     JSONField,
     Manager,
     ManyToManyField as DjangoManyToManyField,
-    ManyToOneRel,
     Model,
     QuerySet,
 )
@@ -16,22 +14,18 @@ from django.db.models.fields.related_descriptors import ReverseManyToOneDescript
 from modeltrans.manager import MultilingualManager, MultilingualQuerySet
 from typing_extensions import TypeVar
 
-from ..typings.monkey import monkeypatch_generic_support
+from ..development.monkey import monkeypatch_generic_support
 
 type NullableModel[M: Model] = M | None
 
 
 _ST = TypeVar("_ST")
-# __get__ return type
 _GT = TypeVar("_GT", default=_ST)
 
-
-#class ParentalKey(ForeignKey[_ST, _GT]): ...  # pyright: ignore
 
 FK: TypeAlias = ForeignKey[_ST, _GT]  # type: ignore  # noqa: UP040
 
 _To = TypeVar("_To", bound=Model)
-# __get__ return type
 _Through = TypeVar("_Through", default=Any)
 
 M2M: TypeAlias = DjangoManyToManyField[_To, _Through]  # noqa: UP040  # pyright: ignore
@@ -41,7 +35,7 @@ if not TYPE_CHECKING:
     monkeypatch_generic_support(JSONField)
 
 _M = TypeVar("_M", bound=Model, covariant=True)  # noqa: PLC0105
-_QS = TypeVar("_QS", bound=QuerySet[Model, Model], default=QuerySet[_M, _M])  # noqa: PLC0105
+_QS = TypeVar("_QS", bound=QuerySet[Model, Model], default=QuerySet[_M, _M])
 
 
 class ModelQuerySet(QuerySet[_M, _M]):
@@ -87,7 +81,7 @@ class ModelManager(Generic[_M, _QS], Manager[_M]):
         return self.get_queryset()
 
 
-_MLQS = TypeVar("_MLQS", bound=MultilingualQuerySet, default=MultilingualQuerySet[_M])  # noqa: PLC0105
+_MLQS = TypeVar("_MLQS", bound=MultilingualQuerySet, default=MultilingualQuerySet[_M])
 
 class MLModelManager(MultilingualManager[_M], ModelManager[_M, _MLQS]):
     if TYPE_CHECKING:

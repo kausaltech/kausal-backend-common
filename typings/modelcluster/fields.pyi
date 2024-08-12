@@ -22,5 +22,5 @@ class ParentalManyToManyField(ManyToManyField[_M, _Through]):
 type PM2M[M: Model] = ParentalKey[M, M]
 
 
-class ParentalManyToManyDescriptor[_M, _Through](ManyToManyDescriptor[_M, _Through]):  # pyright: ignore
+class ParentalManyToManyDescriptor(ManyToManyDescriptor[_M, _Through]):  # type: ignore[type-var]
     ...
