@@ -5,7 +5,7 @@ check_uv() {
     local find_uv="command -v uv"
     if $find_uv >/dev/null 2>&1; then
         print_success "uv found in PATH"
-        print_findings "Path" "$(find_uv)"
+        print_findings "Path" "$($find_uv)"
         return
     fi
 
@@ -26,7 +26,7 @@ check_uv() {
             print_error "uv installed, but not found in PATH. Please configure your shell according to the instructions above, and restart your terminal."
             exit 1
         fi
-        echo "  📍 Path: $find_uv"
+        echo "  📍 Path: $($find_uv)"
     else
         print_error "Failed to install uv"
         exit 1

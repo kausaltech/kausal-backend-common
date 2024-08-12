@@ -279,7 +279,7 @@ check_other_venvs() {
             continue
         fi
 
-        print_findings "Found non-standard virtual environment" "$venv_name"
+        print_findings "Found non-standard virtual environment" "$venv_dir"
 
         if ! prompt_user "Do you want to remove this virtual environment?"; then
             if prompt_user "Do you want to ignore this virtual environment in future checks?"; then
