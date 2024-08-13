@@ -95,12 +95,12 @@ def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
     return config
 
 
-def _init_logging(format: LogFormat, log_sql_queries: bool = False):
+def _init_logging(log_format: LogFormat, log_sql_queries: bool = False):  # noqa: ANN202
     import sys
 
     from loguru._colorama import should_colorize
 
-    if format == 'logfmt':
+    if log_format == 'logfmt':
         loguru_handlers = [dict(sink=loguru_logfmt_sink, format="{message}")]
     else:
         loguru_handlers = [dict(sink=loguru_rich_sink, format="{message}", colorize=should_colorize(sys.stdout))]
@@ -128,16 +128,24 @@ def _init_logging(format: LogFormat, log_sql_queries: bool = False):
 
     logging.setLoggerClass(LoguruLogger)
 
+    if log_format == 'rich':
+        from rich.traceback import install
+
+        from .traceback import patch_traceback
+
+        patch_traceback()
+        install()
+
     return level
 
 
-def init_logging_django(format: LogFormat, log_sql_queries: bool = False):
-    level: GetHandler = _init_logging(format, log_sql_queries=log_sql_queries)
+def init_logging_django(log_format: LogFormat, log_sql_queries: bool = False):
+    level: GetHandler = _init_logging(log_format, log_sql_queries=log_sql_queries)
     conf = get_logging_conf(level)
     return conf
 
-def _should_use_logfmt():
-    if env_bool('KUBERNETES_LOGGING', False) or env_bool('KUBERNETES_MODE', False):
+def _should_use_logfmt() -> bool:
+    if env_bool('KUBERNETES_LOGGING', default=False) or env_bool('KUBERNETES_MODE', default=False):
         return True
     console = get_rich_log_console()
     if not console.is_terminal or console.is_dumb_terminal:
@@ -145,9 +153,9 @@ def _should_use_logfmt():
     return False
 
 
-def init_logging(format: LogFormat | None = None):
-    if format is None:
-        format = 'logfmt' if _should_use_logfmt() else 'rich'
-    level: GetHandler = _init_logging(format)
+def init_logging(log_format: LogFormat | None = None):
+    if log_format is None:
+        log_format = 'logfmt' if _should_use_logfmt() else 'rich'
+    level: GetHandler = _init_logging(log_format)
     conf = get_logging_conf(level)
     dictConfig(conf)
