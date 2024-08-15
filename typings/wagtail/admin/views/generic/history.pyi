@@ -1,4 +1,3 @@
-from _typeshed import Incomplete
 from django.utils.functional import cached_property as cached_property
 from django.views.generic import TemplateView
 from wagtail.admin.filters import (
@@ -24,6 +23,8 @@ from wagtail.models import (
     TaskState as TaskState,
     WorkflowState as WorkflowState,
 )
+
+from _typeshed import Incomplete
 
 def get_actions_for_filter(queryset): ...
 

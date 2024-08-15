@@ -1,8 +1,9 @@
-from _typeshed import Incomplete
 from django.views.generic import View
 from wagtail.admin.panels import get_edit_handler as get_edit_handler
 from wagtail.models import PreviewableMixin as PreviewableMixin, RevisionMixin as RevisionMixin
 from wagtail.utils.decorators import xframe_options_sameorigin_override as xframe_options_sameorigin_override
+
+from _typeshed import Incomplete
 
 class PreviewOnEdit(View):
     model: Incomplete

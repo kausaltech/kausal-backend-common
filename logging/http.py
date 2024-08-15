@@ -2,9 +2,10 @@ import os
 from contextlib import contextmanager
 from typing import cast
 
+from django.http import HttpRequest
+
 import nanoid
 import sentry_sdk
-from django.http import HttpRequest
 from loguru import logger
 
 ID_ALPHABET = '346789ABCDEFGHJKLMNPQRTUVWXYabcdefghijkmnpqrtwxyz'

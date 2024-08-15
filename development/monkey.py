@@ -6,18 +6,21 @@ def _monkeypatch_one_class(kls: type) -> None:
 
 
 def _monkeypath_init() -> None:
-    import django_stubs_ext
     from django.db.models import ManyToManyField
     from django.db.models.fields.json import JSONField
     from modelcluster.fields import ParentalKey, ParentalManyToManyField
-    from treebeard.mp_tree import MP_Node
+    from wagtail.admin.panels import Panel
     from wagtail.admin.viewsets.model import ModelViewSet
     from wagtail.permission_policies.base import ModelPermissionPolicy
+
+    import django_stubs_ext
+    from treebeard.models import Node
 
     django_stubs_ext.monkeypatch([
         ModelViewSet, ModelPermissionPolicy,
         ParentalKey, ParentalManyToManyField,
-        JSONField, ManyToManyField, MP_Node
+        JSONField, ManyToManyField, Node,
+        Panel,
     ], include_builtins=True)
 
 

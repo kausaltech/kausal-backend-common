@@ -1,7 +1,4 @@
-import django_filters
-from _typeshed import Incomplete
 from django.utils.functional import cached_property as cached_property
-from django_filters.widgets import SuffixedMultiWidget
 from wagtail.admin.models import popular_tags_for_model as popular_tags_for_model
 from wagtail.admin.utils import get_user_display_name as get_user_display_name
 from wagtail.admin.widgets import (
@@ -10,6 +7,10 @@ from wagtail.admin.widgets import (
     FilteredSelect as FilteredSelect,
 )
 from wagtail.coreutils import get_content_languages as get_content_languages, get_content_type_label as get_content_type_label
+
+import django_filters
+from _typeshed import Incomplete
+from django_filters.widgets import SuffixedMultiWidget
 
 class DateRangePickerWidget(SuffixedMultiWidget):
     template_name: str

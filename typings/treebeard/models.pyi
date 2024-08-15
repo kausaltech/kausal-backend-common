@@ -1,7 +1,8 @@
 from typing import Generic, Literal, Self
 
-from _typeshed import Incomplete
 from django.db.models import Model, QuerySet
+
+from _typeshed import Incomplete
 from typing_extensions import TypeVar
 
 #M = TypeVar('M', bound=Model, default=Model)

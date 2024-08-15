@@ -2,6 +2,7 @@ from typing import Any
 
 from django.db.models import Model
 from django.db.models.fields.related import ForeignKey, ManyToManyDescriptor, ManyToManyField
+
 from typing_extensions import TypeVar
 
 _M = TypeVar('_M', bound=Model)

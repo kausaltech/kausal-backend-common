@@ -1,7 +1,6 @@
 from collections.abc import Generator
 from typing import Any, Literal, Self, Sequence
 
-from _typeshed import Incomplete
 from django.db import models
 from wagtail.blocks import Block as Block, BlockField as BlockField, StreamBlock as StreamBlock, StreamValue as StreamValue
 from wagtail.rich_text import (
@@ -9,6 +8,8 @@ from wagtail.rich_text import (
     extract_references_from_rich_text as extract_references_from_rich_text,
     get_text_for_indexing as get_text_for_indexing,
 )
+
+from _typeshed import Incomplete
 
 class RichTextField(models.TextField):
     editor: str

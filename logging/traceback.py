@@ -37,7 +37,7 @@ def patch_traceback():
 
     if _is_patched:
         return True
-    Traceback._render_stack = _render_stack_with_links
+    Traceback._render_stack = _render_stack_with_links  # type: ignore[method-assign]
     return True
 
 

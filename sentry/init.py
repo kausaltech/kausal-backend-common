@@ -4,8 +4,9 @@ import os
 import typing
 from urllib.parse import urlparse
 
-import sentry_sdk
 from django.urls import reverse
+
+import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import ignore_logger
 

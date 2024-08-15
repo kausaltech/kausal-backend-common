@@ -1,8 +1,9 @@
-import environ
 import os
 import re
 from pathlib import Path
 from typing import Sequence, Union
+
+import environ
 
 ENV_VARIABLE_PATTERN = re.compile(r'[A-Z][A-Z0-9_]*')
 
@@ -16,8 +17,9 @@ def get_deployment_git_rev() -> str | None:
 
 
 def run_deployment_checks():
-    from loguru import logger
     from django.core import checks
+
+    from loguru import logger
 
     deployment_log = logger.bind(name='deployment')
 

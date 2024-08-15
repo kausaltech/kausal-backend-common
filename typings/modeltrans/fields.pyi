@@ -12,6 +12,9 @@ class TranslatedVirtualField(Field):
     serialize: bool
     concrete: Literal[False]
 
+    @property
+    def original_name(self) -> str: ...
+
 
 class TranslationField(JSONField):
     description: str

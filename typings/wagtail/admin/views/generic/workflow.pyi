@@ -1,4 +1,3 @@
-from _typeshed import Incomplete
 from django.views import View
 from wagtail.admin import messages as messages
 from wagtail.admin.modal_workflow import render_modal_workflow as render_modal_workflow
@@ -8,6 +7,8 @@ from wagtail.admin.utils import (
 )
 from wagtail.admin.views.generic.base import BaseObjectMixin as BaseObjectMixin
 from wagtail.models import Task as Task, TaskState as TaskState, WorkflowState as WorkflowState
+
+from _typeshed import Incomplete
 
 class BaseWorkflowFormView(BaseObjectMixin, View):
     redirect_url_name: Incomplete

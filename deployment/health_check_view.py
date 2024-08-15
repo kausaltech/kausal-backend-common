@@ -5,13 +5,14 @@ import os
 import time
 from typing import TYPE_CHECKING, Any
 
-import psutil
-import sentry_sdk
 from django.core.cache import caches
 from django.db import connections
-from loguru import logger
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+
+import psutil
+import sentry_sdk
+from loguru import logger
 
 from .limits import MemoryLimit
 
