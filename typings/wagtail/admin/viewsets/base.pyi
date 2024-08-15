@@ -1,4 +1,4 @@
-from typing import Any, Callable, ClassVar, Dict, List, Optional, Type
+from typing import Any, Callable, ClassVar
 
 from django.http.response import HttpResponseBase
 from django.urls import URLPattern
@@ -10,8 +10,6 @@ class ViewSet(WagtailMenuRegisterable):
     icon: ClassVar[str]
     url_prefix: ClassVar[str]
     url_namespace: ClassVar[str]
-    menu_icon: ClassVar[str]
-    menu_url: ClassVar[str]
 
     def __init__(self, name: str | None = None, **kwargs: Any) -> None: ...
     def get_common_view_kwargs(self, **kwargs: Any) -> dict[str, Any]: ...

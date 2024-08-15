@@ -7,6 +7,7 @@ from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+
 from rich import print
 
 previous_snap: Snapshot | None = None

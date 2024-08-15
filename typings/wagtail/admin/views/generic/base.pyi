@@ -1,4 +1,5 @@
-from typing import Any, ClassVar, Dict, Generic, List, NamedTuple, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, ClassVar, Generic, NamedTuple, NotRequired, Sequence, TypedDict
+from typing_extensions import TypeVar
 
 from django.db.models import Model, QuerySet
 from django.db.models.options import Options
@@ -7,54 +8,62 @@ from django.utils.functional import cached_property
 from django.views import View
 from django.views.generic.base import ContextMixin, TemplateResponseMixin
 from django.views.generic.list import BaseListView
+from django_stubs_ext import StrOrPromise
 from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.ui.tables import Column, Table
 from wagtail.admin.widgets import Button
 
-M = TypeVar('M', bound=Model)
-QS = TypeVar('QS', bound=QuerySet)
-ReqT = TypeVar('ReqT', bound=HttpRequest)
+_Model = TypeVar('_Model', bound=Model, default=Model)
+_ReqT = TypeVar('_ReqT', bound=HttpRequest, default=HttpRequest)
+_QS = TypeVar('_QS', bound=QuerySet, default=QuerySet)
+_PKT = TypeVar('_PKT', default=Any)
+
+
+class BreadcrumbItem(TypedDict):
+    url: StrOrPromise
+    label: StrOrPromise
+    sublabel: NotRequired[StrOrPromise]
 
 
 class WagtailAdminTemplateMixin(TemplateResponseMixin, ContextMixin):
-    page_title: ClassVar[str]
-    page_subtitle: ClassVar[str]
+    page_title: ClassVar[StrOrPromise]
+    page_subtitle: ClassVar[StrOrPromise]
     header_icon: ClassVar[str]
     _show_breadcrumbs: bool
-    breadcrumbs_items: ClassVar[list[dict[str, Any]]]
+    breadcrumbs_items: ClassVar[Sequence[BreadcrumbItem]]
     template_name: str
-    header_buttons: ClassVar[list[Button]]
-    header_more_buttons: list[Any]
+    header_buttons: ClassVar[Sequence[Button]]
+    header_more_buttons: ClassVar[Sequence[Button]]
 
-    def get_page_title(self) -> str: ...
-    def get_page_subtitle(self) -> str: ...
-    def get_header_title(self) -> str: ...
+    def get_page_title(self) -> StrOrPromise: ...
+    def get_page_subtitle(self) -> StrOrPromise: ...
+    def get_header_title(self) -> StrOrPromise: ...
     def get_header_icon(self) -> str: ...
-    def get_breadcrumbs_items(self) -> list[dict[str, Any]]: ...
+    def get_breadcrumbs_items(self) -> Sequence[BreadcrumbItem]: ...
     def get_header_buttons(self) -> list[Any]: ...
     def get_header_more_buttons(self) -> list[Any]: ...
-    def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
     def get_template_names(self) -> list[str]: ...
 
 
-class BaseObjectMixin(Generic[M, QS, ReqT]):
-    model: type[M] | None
+
+
+class BaseObjectMixin(Generic[_Model, _PKT]):
+    # model: type[ModelT]
     pk_url_kwarg: str
-    pk: Any
-    object: M
-    model_opts: Options[M]
+    pk: _PKT
+    object: _Model
+    model_opts: Options[_Model]
 
-    def setup(self, request: ReqT, *args: Any, **kwargs: Any) -> None: ...
-    def get_pk(self) -> Any: ...
-    def get_base_object_queryset(self) -> QS: ...
-    def get_object(self) -> M: ...
+    def get_pk(self) -> _PKT: ...
+    def get_base_object_queryset(self) -> QuerySet: ...
+    def get_object(self) -> _Model: ...
 
-
-class BaseOperationView(BaseObjectMixin[M, QS, ReqT], View):
+class BaseOperationView[ReqT: HttpRequest](BaseObjectMixin, View):
     success_message: str | None
     success_message_extra_tags: str
     success_url_name: str | None
     next_url: str | None
+    request: ReqT
 
     def perform_operation(self) -> None: ...
     def get_success_message(self) -> str | None: ...
@@ -62,15 +71,13 @@ class BaseOperationView(BaseObjectMixin[M, QS, ReqT], View):
     def get_success_url(self) -> str: ...
     def post(self, request: ReqT, *args: Any, **kwargs: Any) -> Any: ...
 
-
 class ActiveFilter(NamedTuple):
     auto_id: str
     field_label: str
     value: Any
     removed_filter_url: str
 
-
-class BaseListingView[M: Model, QS: QuerySet, ReqT: HttpRequest](WagtailAdminTemplateMixin, BaseListView[M]): # pyright: ignore
+class BaseListingView[M: Model](WagtailAdminTemplateMixin, BaseListView[M]):
     results_template_name: str
     results_only: bool
     table_class: type[Table]
@@ -87,7 +94,7 @@ class BaseListingView[M: Model, QS: QuerySet, ReqT: HttpRequest](WagtailAdminTem
     @cached_property
     def is_filtering(self) -> bool: ...
     def get_filterset_kwargs(self) -> dict[str, Any]: ...
-    def filter_queryset(self, queryset: QS) -> QS: ...
+    def filter_queryset[QS: QuerySet](self, queryset: QS) -> QS: ...
     def get_url_without_filter_param(self, param: str | list[str] | tuple[str, ...]) -> str: ...
     def get_url_without_filter_param_value(self, param: str, value: Any) -> str: ...
     @cached_property
@@ -96,8 +103,8 @@ class BaseListingView[M: Model, QS: QuerySet, ReqT: HttpRequest](WagtailAdminTem
     @cached_property
     def is_explicitly_ordered(self) -> bool: ...
     def get_ordering(self) -> str | None: ...
-    def order_queryset(self, queryset: QS) -> QS: ...
-    def get_queryset(self) -> QS: ...
+    def order_queryset[QS: QuerySet](self, queryset: QS) -> QS: ...
+    def get_queryset(self) -> QuerySet: ...
     def get_table_kwargs(self) -> dict[str, Any]: ...
     def get_table(self, object_list: list[Any]) -> Table: ...
     @cached_property

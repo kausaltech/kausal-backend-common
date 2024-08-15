@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from logging.config import dictConfig
 from typing import TYPE_CHECKING, Literal, Protocol
 
@@ -95,7 +94,7 @@ def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
     return config
 
 
-def _init_logging(log_format: LogFormat, log_sql_queries: bool = False):  # noqa: ANN202
+def _init_logging(log_format: LogFormat, log_sql_queries: bool = False):
     import sys
 
     from loguru._colorama import should_colorize
@@ -139,11 +138,6 @@ def _init_logging(log_format: LogFormat, log_sql_queries: bool = False):  # noqa
     return level
 
 
-def init_logging_django(log_format: LogFormat, log_sql_queries: bool = False):
-    level: GetHandler = _init_logging(log_format, log_sql_queries=log_sql_queries)
-    conf = get_logging_conf(level)
-    return conf
-
 def _should_use_logfmt() -> bool:
     if env_bool('KUBERNETES_LOGGING', default=False) or env_bool('KUBERNETES_MODE', default=False):
         return True
@@ -152,6 +146,15 @@ def _should_use_logfmt() -> bool:
         return True
     return False
 
+def _autodetect_log_format() -> LogFormat:
+    return 'logfmt' if _should_use_logfmt() else 'rich'
+
+def init_logging_django(log_format: LogFormat | None = None, log_sql_queries: bool = False):
+    if log_format is None:
+        log_format = _autodetect_log_format()
+    level: GetHandler = _init_logging(log_format, log_sql_queries=log_sql_queries)
+    conf = get_logging_conf(level)
+    return conf
 
 def init_logging(log_format: LogFormat | None = None):
     if log_format is None:

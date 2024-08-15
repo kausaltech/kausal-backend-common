@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import re
-from uuid import uuid4
 
 from django.contrib.postgres.functions import RandomUUID
 from django.db import models

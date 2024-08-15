@@ -1,49 +1,53 @@
-from typing import Any, ClassVar, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, ClassVar, Generic, TypedDict, TypeVar
 
 from django.db.models import Model, QuerySet
 from django.forms import BaseModelForm
-from django.http import HttpRequest, HttpResponse
-from wagtail.admin.panels import ObjectList
-from wagtail.admin.ui.tables import Column
+from django.http import HttpResponse
+from django.http.request import HttpRequest
+from wagtail.admin.forms import WagtailAdminModelForm
+from wagtail.admin.ui.components import MediaContainer
 from wagtail.admin.views import generic
 from wagtail.admin.views.generic import base, history, lock, mixins, models as generic_models, preview, workflow
 from wagtail.admin.viewsets.model import ModelViewSet
 from wagtail.snippets.views.chooser import SnippetChooserViewSet
 
-M = TypeVar('M', bound=Model)
-QS = TypeVar('QS', bound=QuerySet)
-ReqT = TypeVar('ReqT', bound=HttpRequest)
-
 def get_snippet_model_from_url_params(app_name: str, model_name: str) -> type[Model]: ...
 
-class ModelIndexView(base.BaseListingView[M, QS, ReqT]):
-    page_title: ClassVar[str]
-    header_icon: ClassVar[str]
-    index_url_name: ClassVar[str]
-    default_ordering: ClassVar[str]
-    snippet_types: list[dict[str, Any]]
-    columns: list[Column]
-    def get_breadcrumbs_items(self) -> list[dict[str, str]]: ...
-    def get_list_url(self, type: dict[str, Any]) -> str: ...
+
+_Model = TypeVar('_Model', bound=Model, default=Model)
+_QS = TypeVar('_QS', bound=QuerySet, default=QuerySet)
+_Form = TypeVar('_Form', bound=BaseModelForm, default=WagtailAdminModelForm)
+
+
+class SnippetType(TypedDict):
+    name: str
+    count: int
+    model: type[Model]
+
+class ModelIndexView[M: Model](base.BaseListingView[M]):
+    snippet_types: list[SnippetType]
+    def get_list_url(self, _type: dict[str, Any]) -> str: ...
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
     def get_template_names(self) -> list[str]: ...
 
 
-class IndexView[M: Model, QS: QuerySet](mixins.IndexViewOptionalFeaturesMixin[QS], generic_models.IndexView[M, QS]):
+class IndexView(Generic[_Model, _QS], mixins.IndexViewOptionalFeaturesMixin, generic_models.IndexView[_Model]):
     view_name: ClassVar[str]
-    def get_base_queryset(self) -> QS: ...
-    def get_list_buttons(self, instance: M) -> list[Any]: ...
+    def get_base_queryset(self) -> _QS: ...
 
-class CreateView[M: Model, QS: QuerySet, F: BaseModelForm](mixins.CreateEditViewOptionalFeaturesMixin[M, QS, F], generic_models.CreateView[M, F]):
+
+class CreateView[M: Model, F: BaseModelForm](
+    mixins.CreateEditViewOptionalFeaturesMixin[M, F], generic_models.CreateView[M, F],
+):
     view_name: ClassVar[str]
     def run_before_hook(self) -> HttpResponse | None: ...
     def run_after_hook(self) -> HttpResponse | None: ...
-    def get_side_panels(self) -> Any: ...
+    def get_side_panels(self) -> MediaContainer: ...
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
 
-class CopyView[M: Model, QS: QuerySet, F: BaseModelForm](generic.CopyViewMixin[M], CreateView[M, QS, F]): ...
+class CopyView[M: Model, F: BaseModelForm](generic.CopyViewMixin[M], CreateView[M, F]): ...
 
-class EditView[M: Model, QS: QuerySet, F: BaseModelForm](generic.CreateEditViewOptionalFeaturesMixin[M, QS, F], generic.EditView[M, F]):
+class EditView(generic.CreateEditViewOptionalFeaturesMixin[_Model, _Form], generic.EditView[_Model, _Form]):
     view_name: ClassVar[str]
     def run_before_hook(self) -> HttpResponse | None: ...
     def run_after_hook(self) -> HttpResponse | None: ...
@@ -98,9 +102,8 @@ class WorkflowHistoryView(generic.PermissionCheckedMixin, history.WorkflowHistor
 class WorkflowHistoryDetailView(generic.PermissionCheckedMixin, history.WorkflowHistoryDetailView):
     ...
 
-
-class SnippetViewSet(ModelViewSet[M, QS, ReqT]):
-    model: type[M]
+class SnippetViewSet(Generic[_Model, _Form], ModelViewSet[_Model, _Form]):
+    model: type[_Model]
     chooser_per_page: ClassVar[int]
     admin_url_namespace: ClassVar[str | None]
     base_url_path: ClassVar[str | None]
@@ -184,29 +187,15 @@ class SnippetViewSet(ModelViewSet[M, QS, ReqT]):
     def redirect_to_usage_view(self) -> Any: ...
     @property
     def chooser_viewset(self) -> Any: ...
-    list_display: ClassVar[list[str]]
     icon: ClassVar[str]
-    menu_label: ClassVar[str]
-    menu_name: ClassVar[str]
-    menu_icon: ClassVar[str]
-    menu_order: ClassVar[int]
-    breadcrumbs_items: ClassVar[list[dict[str, str]]]
-    def get_queryset(self, request: ReqT) -> QS | None: ...
-    index_template_name: ClassVar[str]
-    index_results_template_name: ClassVar[str]
-    create_template_name: ClassVar[str]
-    edit_template_name: ClassVar[str]
-    delete_template_name: ClassVar[str]
-    history_template_name: ClassVar[str]
-    inspect_template_name: ClassVar[str]
+    breadcrumbs_items: ClassVar[list[base.BreadcrumbItem]]
+    def get_queryset[ReqT: HttpRequest](self, request: ReqT) -> QuerySet | None: ...
     def get_admin_url_namespace(self) -> str: ...
     def get_admin_base_path(self) -> str: ...
     def get_chooser_admin_url_namespace(self) -> str: ...
     def get_chooser_admin_base_path(self) -> str: ...
     @property
     def url_finder_class(self) -> type[Any]: ...
-    def get_urlpatterns(self) -> list[Any]: ...
-    def get_edit_handler(self) -> ObjectList: ...
     def register_chooser_viewset(self) -> None: ...
     def register_model_check(self) -> None: ...
     def register_snippet_model(self) -> None: ...

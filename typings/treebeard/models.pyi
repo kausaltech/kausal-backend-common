@@ -1,20 +1,20 @@
-from typing import Generic, Literal, Self
-
-from _typeshed import Incomplete
-from django.db.models import Model, QuerySet
+from typing import Any, Generic, Literal, Mapping, Self
 from typing_extensions import TypeVar
 
-#M = TypeVar('M', bound=Model, default=Model)
-QS = TypeVar('QS', bound=QuerySet, default=QuerySet)  # noqa: PYI001
+from django.db.models import Model, QuerySet
+
+from _typeshed import Incomplete
+
+QS = TypeVar('QS', bound=QuerySet, default=QuerySet)
 
 
 class Node(Model, Generic[QS]):
     @classmethod
     def add_root(cls, **kwargs) -> Self: ...
     @classmethod
-    def get_foreign_keys(cls): ...
+    def get_foreign_keys(cls) -> Mapping[str, Model]: ...
     @classmethod
-    def load_bulk(cls, bulk_data, parent: Incomplete | None = ..., keep_ids: bool = ...): ...
+    def load_bulk(cls, bulk_data, parent: Self | None = ..., keep_ids: bool = ...) -> list[Any]: ...
     @classmethod
     def dump_bulk(cls, parent: Incomplete | None = ..., keep_ids: bool = ...) -> None: ...
     @classmethod

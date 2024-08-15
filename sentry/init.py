@@ -4,8 +4,9 @@ import os
 import typing
 from urllib.parse import urlparse
 
-import sentry_sdk
 from django.urls import reverse
+
+import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import ignore_logger
 
@@ -41,7 +42,7 @@ def is_in_interactive_mode():
         return None
 
     try:
-        get_ipython().__class__.__name__  # type: ignore  # noqa
+        get_ipython().__class__.__name__  # type: ignore
     except Exception:
         _in_interactive_mode = False
     else:

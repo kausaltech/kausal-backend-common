@@ -1,8 +1,9 @@
 # pyright: basic, reportGeneralTypeIssues=false
-from typing import Any, Callable, ClassVar, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, ClassVar, Generic, Sequence, TypeVar
 
 from django.db import models
-from django.db.models import Model, QuerySet
+from django.db.models import Model
+from django.db.models.options import Options
 from django.forms import BaseModelForm, ModelForm
 from django.http import HttpRequest, HttpResponse
 from django.urls import URLPattern
@@ -13,20 +14,18 @@ from wagtail.admin.views import generic
 from wagtail.admin.views.generic.history import HistoryView
 from wagtail.admin.views.generic.usage import UsageView
 from wagtail.admin.viewsets.base import ViewSet, ViewSetGroup
-from wagtail.permissions import ModelPermissionPolicy
+from wagtail.permission_policies.base import BasePermissionPolicy
 
-M = TypeVar('M', bound=Model)
-QS = TypeVar('QS', bound=QuerySet, default=QuerySet[M])
-ReqT = TypeVar('ReqT', bound=HttpRequest, default=HttpRequest)
-MF = TypeVar('MF', bound=BaseModelForm, default=WagtailAdminModelForm)
+_Model = TypeVar('_Model', bound=Model, default=Model)
+_Form = TypeVar('_Form', bound=BaseModelForm, default=WagtailAdminModelForm)
 
 
-class ModelViewSet(Generic[M, QS, ReqT, MF], ViewSet):
+class ModelViewSet(Generic[_Model, _Form], ViewSet):
     add_to_reference_index: ClassVar[bool]
-    index_view_class: ClassVar[type[generic.IndexView[M, QS]]]
-    add_view_class: ClassVar[type[generic.CreateView[M, MF]]]
-    edit_view_class: ClassVar[type[generic.EditView[M, MF]]]
-    delete_view_class: ClassVar[type[generic.DeleteView[M]]]
+    index_view_class: ClassVar[type[generic.IndexView]]
+    add_view_class: ClassVar[type[generic.CreateView]]
+    edit_view_class: ClassVar[type[generic.EditView]]
+    delete_view_class: ClassVar[type[generic.DeleteView]]
     history_view_class: ClassVar[type[HistoryView]]
     usage_view_class: ClassVar[type[UsageView]]
     copy_view_class: ClassVar[type[generic.CopyView]]
@@ -39,11 +38,13 @@ class ModelViewSet(Generic[M, QS, ReqT, MF], ViewSet):
     inspect_view_fields: ClassVar[list[str]]
     inspect_view_fields_exclude: ClassVar[list[str]]
     copy_view_enabled: ClassVar[bool]
-    model: type[M]
-    model_opts: Any
+    model: type[_Model]
+    model_opts: Options[_Model]
     app_label: str
     model_name: str
-    permission_policy: ClassVar[type[ModelPermissionPolicy]]
+
+    @property
+    def permission_policy(self) -> BasePermissionPolicy: ...
 
     def __init__(self, name: str | None = None, **kwargs: Any) -> None: ...
     def get_common_view_kwargs(self, **kwargs: Any) -> dict[str, Any]: ...
@@ -87,7 +88,7 @@ class ModelViewSet(Generic[M, QS, ReqT, MF], ViewSet):
     delete_template_name: ClassVar[str | list[str]]
     history_template_name: ClassVar[str | list[str]]
     inspect_template_name: ClassVar[str | list[str]]
-    list_display: ClassVar[list[str | Column]]
+    list_display: ClassVar[Sequence[str | Column]]
     list_filter: ClassVar[list[str] | dict[str, list[str]]]
     filterset_class: ClassVar[Any]
     search_fields: ClassVar[list[str] | None]
@@ -95,8 +96,7 @@ class ModelViewSet(Generic[M, QS, ReqT, MF], ViewSet):
     list_export: ClassVar[list[str]]
     export_headings: ClassVar[dict[str, str]]
     export_filename: ClassVar[str]
-    menu_label: ClassVar[str]
-    menu_item_class: ClassVar[Any]
+
     def formfield_for_dbfield(self, db_field: models.Field, **kwargs: Any) -> Any: ...
     def get_form_class(self, for_update: bool = False) -> type[ModelForm]: ...
     def get_form_fields(self) -> list[str] | None: ...
@@ -104,7 +104,7 @@ class ModelViewSet(Generic[M, QS, ReqT, MF], ViewSet):
     def get_edit_handler(self) -> ObjectList | None: ...
     _edit_handler: ClassVar[ObjectList | None]
     @property
-    def url_finder_class(self) -> Any: ...
+    def url_finder_class(self) -> type[Any]: ...
     def register_admin_url_finder(self) -> None: ...
     def register_reference_index(self) -> None: ...
     def get_urlpatterns(self) -> list[URLPattern]: ...
@@ -113,4 +113,3 @@ class ModelViewSet(Generic[M, QS, ReqT, MF], ViewSet):
 
 class ModelViewSetGroup(ViewSetGroup):
     def get_app_label_from_subitems(self) -> str: ...
-    menu_label: ClassVar[str]

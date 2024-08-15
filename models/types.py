@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, TypeAlias, overload
+from typing import TYPE_CHECKING, Any, Callable, Generic, TypeAlias, overload
+from typing_extensions import TypeVar
 
 from django.db.models import (
     ForeignKey,
@@ -13,9 +14,19 @@ from django.db.models import (
 )
 from modeltrans.manager import MultilingualManager, MultilingualQuerySet
 
-from typing_extensions import TypeVar
-
 from ..development.monkey import monkeypatch_generic_support
+
+if TYPE_CHECKING:
+    # These should only be used in typing scope.
+    from typing import type_check_only
+
+    from django.db.models.fields.related_descriptors import (
+        ManyToManyDescriptor,
+        RelatedManager,
+        ReverseManyToOneDescriptor,
+        ReverseOneToOneDescriptor,
+    )
+
 
 type NullableModel[M: Model] = M | None
 
@@ -26,33 +37,32 @@ _Through = TypeVar("_Through", default=Any)
 #
 # Type annotation helpers for foreign relationships
 #
+
+
+type FK[To: Model | None] = ForeignKey[To, To]
+
+
 if TYPE_CHECKING:
-    # These should only be used in typing scope.
-    from django.db.models.fields.related_descriptors import RelatedManager, ReverseManyToOneDescriptor, ReverseOneToOneDescriptor
-
-    type FK[To: Model | None] = ForeignKey[To, To]
-
+    @type_check_only
     class RelatedManagerQS[To: Model, QS: QuerySet](RelatedManager[To]):  # pyright: ignore
+        @type_check_only
         def get_queryset(self) -> QS: ...
 
-
+    @type_check_only
     class ReverseManyToOneDescriptorQS[To: Model, QS: QuerySet](ReverseManyToOneDescriptor[To]):
         @overload    # type: ignore
-        def __get__(self, instance: Model, cls: Any = ...) -> RelatedManagerQS[_To, QS]: ...  # noqa: ANN401  # type: ignore
+        def __get__(self, instance: Model, cls: Any = ...) -> RelatedManagerQS[_To, QS]: ...  # type: ignore
 
-    type RevMany[To: Model] = ReverseManyToOneDescriptor[To]
-    type RevManyQS[To: Model, QS: QuerySet] = ReverseManyToOneDescriptorQS[To, QS]
+type RevMany[To: Model] = ReverseManyToOneDescriptor[To]
+type RevManyQS[To: Model, QS: QuerySet] = ReverseManyToOneDescriptorQS[To, QS]
+type RevManyToMany[To: Model, Through: Model] = ManyToManyDescriptor[To, Through]
 
-    type OneToOne[To: Model | None] = OneToOneField[To, To]
-    type RevOne[From: Model, To: Model] = ReverseOneToOneDescriptor[From, To]
+type OneToOne[To: Model | None] = OneToOneField[To, To]
+type RevOne[From: Model, To: Model] = ReverseOneToOneDescriptor[From, To]
 
-    M2M: TypeAlias = ManyToManyField[_To, _Through]  # noqa: UP040  # pyright: ignore
+M2M: TypeAlias = ManyToManyField[_To, _Through]  # pyright: ignore
 
-
-if not TYPE_CHECKING:
-    monkeypatch_generic_support(JSONField)
-
-_M = TypeVar("_M", bound=Model, covariant=True)  # noqa: PLC0105
+_M = TypeVar("_M", bound=Model, covariant=True)
 _QS = TypeVar("_QS", bound=QuerySet[Model, Model], default=QuerySet[_M, _M])
 
 
@@ -131,3 +141,10 @@ def manager_from_mlqs[_M: Model, _MLQS: MultilingualQuerySet](qs: type[_MLQS]) -
 
 if TYPE_CHECKING:
     type MLMM[_M: Model, _MLQS: MultilingualQuerySet] = MLModelManager[_M, _MLQS]
+
+
+type GetDisplayMethod = Callable[[], str]
+
+
+if not TYPE_CHECKING:
+    monkeypatch_generic_support(JSONField)

@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 from django.core.files import File
 from django.core.files.storage import FileSystemStorage, Storage
 from django.utils.deconstruct import deconstructible
+
 from storages.backends.s3boto3 import S3Boto3Storage
 from storages.utils import setting
 

@@ -7,7 +7,7 @@ import warnings
 from datetime import UTC, datetime
 from logging import LogRecord, StreamHandler
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Optional, Sequence, Type, Union, cast
+from typing import TYPE_CHECKING, Callable, Sequence, cast
 
 import loguru
 from logfmter.formatter import Logfmter

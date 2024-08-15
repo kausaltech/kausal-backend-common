@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable
 
 from django.db.models import Model
 from modeltrans.conf import get_available_languages as get_available_languages, get_default_language as get_default_language

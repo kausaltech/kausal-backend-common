@@ -1,8 +1,11 @@
-import environ
+from __future__ import annotations
+
 import os
 import re
 from pathlib import Path
 from typing import Sequence, Union
+
+import environ
 
 ENV_VARIABLE_PATTERN = re.compile(r'[A-Z][A-Z0-9_]*')
 
@@ -16,8 +19,9 @@ def get_deployment_git_rev() -> str | None:
 
 
 def run_deployment_checks():
-    from loguru import logger
     from django.core import checks
+
+    from loguru import logger
 
     deployment_log = logger.bind(name='deployment')
 
@@ -80,7 +84,7 @@ def env_bool(env_var: str, default: bool) -> bool:
         return is_true
 
 
-def set_secret_file_vars(env: environ.Env, directory: Union[str, Path]) -> None:
+def set_secret_file_vars(env: environ.Env, directory: str | Path) -> None:
     """
     Scan a directory for files that could be valid environment variables
     and set corresponding *_FILE variables in the environ.Env instance.

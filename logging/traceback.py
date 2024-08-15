@@ -33,11 +33,11 @@ def _render_stack_with_links(self: Traceback, stack: Stack) -> Group:
 
 
 def patch_traceback():
-    global _is_patched  # noqa: PLW0602
+    global _is_patched
 
     if _is_patched:
         return True
-    Traceback._render_stack = _render_stack_with_links
+    Traceback._render_stack = _render_stack_with_links  # type: ignore[method-assign]
     return True
 
 

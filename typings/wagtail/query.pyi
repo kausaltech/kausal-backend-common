@@ -3,10 +3,11 @@ from typing import Self, Sequence, Type, TypeVar
 
 from django.db.models import Q
 from django.db.models.query import BaseIterable, ModelIterable, QuerySet
-from treebeard.mp_tree import MP_Node
 from wagtail.models import Page as Page
 from wagtail.models.sites import Site as Site
 from wagtail.search.queryset import SearchableQuerySetMixin as SearchableQuerySetMixin
+
+from treebeard.mp_tree import MP_Node
 
 _M = TypeVar('_M', bound=MP_Node)
 

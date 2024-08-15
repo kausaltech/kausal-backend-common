@@ -5,7 +5,6 @@ import re
 import typing
 from typing import Any, Generic, Type, TypeVar
 
-import graphene_django_optimizer as gql_optimizer
 from django.db.models import Model
 from django.db.models.constants import LOOKUP_SEP
 from graphene.utils.trim_docstring import trim_docstring
@@ -13,6 +12,8 @@ from graphene_django import DjangoObjectType
 from graphql import GraphQLResolveInfo
 from modeltrans.translator import get_i18n_field
 from wagtail.models import WSGIRequest
+
+import graphene_django_optimizer as gql_optimizer
 
 from kausal_common.i18n.helpers import get_language_from_default_language_field
 

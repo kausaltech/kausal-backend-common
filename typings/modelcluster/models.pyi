@@ -1,7 +1,6 @@
 # ruff: noqa: FBT001, FBT002
-from typing import Any, Self, Sequence, TypeVar
+from typing import Any, Self, Sequence
 
-from _typeshed import Incomplete
 from django.db import models
 
 from .fields import ParentalKey
