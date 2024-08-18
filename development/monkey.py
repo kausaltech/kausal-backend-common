@@ -1,5 +1,7 @@
 from typing import Sequence
 
+from wagtail.admin.views.generic.base import BaseObjectMixin
+
 
 def _monkeypatch_one_class(kls: type) -> None:
     kls.__class_getitem__ = classmethod(lambda cls, *args, **kwargs: cls)  # type: ignore  # noqa: ARG005
@@ -20,7 +22,7 @@ def _monkeypath_init() -> None:
         ModelViewSet, ModelPermissionPolicy,
         ParentalKey, ParentalManyToManyField,
         JSONField, ManyToManyField, Node,
-        Panel,
+        Panel, Panel.BoundPanel, BaseObjectMixin
     ], include_builtins=True)
 
 

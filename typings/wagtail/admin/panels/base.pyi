@@ -1,16 +1,15 @@
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, NotRequired, Protocol, Self, TypedDict, Unpack, overload, type_check_only
-from django.http import HttpRequest
-from django.utils.safestring import SafeString
+from typing import Any, ClassVar, Generic, Protocol, Self, TypedDict, Unpack, overload, type_check_only
 from typing_extensions import TypeVar
 
 from django.db.models import Model
 from django.forms import ModelForm
-from django_stubs_ext import StrOrPromise
-from wagtail.admin.forms.models import \
-    WagtailAdminDraftStateFormMixin as WagtailAdminDraftStateFormMixin
-from wagtail.admin.forms.models import \
-    WagtailAdminModelForm as WagtailAdminModelForm
+from django.http import HttpRequest
+from django.utils.safestring import SafeString
+from wagtail.admin.forms.models import (
+    WagtailAdminDraftStateFormMixin as WagtailAdminDraftStateFormMixin,
+    WagtailAdminModelForm as WagtailAdminModelForm,
+)
 from wagtail.admin.ui.components import Component as Component
 from wagtail.blocks import StreamValue as StreamValue
 from wagtail.coreutils import safe_snake_case as safe_snake_case
@@ -18,9 +17,7 @@ from wagtail.models import DraftStateMixin as DraftStateMixin
 from wagtail.rich_text import RichText as RichText
 from wagtail.utils.text import text_from_html as text_from_html
 
-from aplans.types import WatchAdminRequest
-
-
+from django_stubs_ext import StrOrPromise
 
 class PanelComparison[Obj](Protocol):
     is_field: bool
@@ -33,10 +30,10 @@ class PanelComparison[Obj](Protocol):
 _FC = TypeVar('_FC', bound=ModelForm, default=ModelForm)
 
 @overload
-def get_form_for_model(model: type[Model], **kwargs) -> type[WagtailAdminModelForm]: ...
+def get_form_for_model[M: Model](model: type[M], **kwargs) -> type[WagtailAdminModelForm[M]]: ...
 
 @overload
-def get_form_for_model(model: type[Model], form_class: type[_FC], **kwargs) -> type[_FC]:  # noqa: D418
+def get_form_for_model[FormT: ModelForm](model: type[Model], form_class: type[FormT], **kwargs) -> type[FormT]:
     """
     Construct a ModelForm subclass using the given model and base form class. Any additional
     keyword arguments are used to populate the form's Meta class.
@@ -45,11 +42,11 @@ def get_form_for_model(model: type[Model], form_class: type[_FC], **kwargs) -> t
 
 type PanelContext = dict[str, Any]
 
-_Req = TypeVar('_Req', bound=HttpRequest, default=HttpRequest)
 _Model = TypeVar('_Model', bound=Model, default=Model)
 _Panel_co = TypeVar('_Panel_co', bound=Panel, covariant=True)
 _BPModel = TypeVar('_BPModel', bound=Model, default=Model)
-
+_Panel_Form = TypeVar('_Panel_Form', bound=ModelForm, default=WagtailAdminModelForm)
+_BPPanel_Form = TypeVar('_BPPanel_Form', bound=ModelForm, default=WagtailAdminModelForm)
 
 @type_check_only
 class PanelInitArgs(TypedDict, total=False):
@@ -61,7 +58,7 @@ class PanelInitArgs(TypedDict, total=False):
     attrs: dict[str, str]
 
 
-class Panel(Generic[_Model]):
+class Panel(Generic[_Model, _Panel_Form]):
     """
     Defines part (or all) of the edit form interface for pages and other models
     within the Wagtail admin. Each model has an associated top-level panel definition
@@ -121,10 +118,10 @@ class Panel(Generic[_Model]):
     def get_bound_panel(
         self,
         instance: _Model | None = None,
-        request: _Req | None = None,
-        form: _FC | None = None,
+        request: HttpRequest | None = None,
+        form: _Panel_Form | None = None,
         prefix: str = 'panel',
-    ) -> Panel.BoundPanel[Panel, _FC, _Model, _Req]:  # pyright: ignore
+    ) -> Panel.BoundPanel[Panel, _Panel_Form, _Model]:
         """
         Return a ``BoundPanel`` instance that can be rendered onto the template as a component. By default, this creates an instance
         of the panel class's inner ``BoundPanel`` class, which must inherit from ``Panel.BoundPanel``.
@@ -160,18 +157,18 @@ class Panel(Generic[_Model]):
         to generate a safer display value.
         """
 
-    class BoundPanel(Generic[_Panel_co, _FC, _BPModel, _Req], Component):
+    class BoundPanel(Generic[_Panel_co, _BPPanel_Form, _BPModel], Component):
         """
         A template component for a panel that has been associated with a model instance, form, and request.
         """
         panel: _Panel_co
         instance: _BPModel
         request: HttpRequest
-        form: _FC
+        form: _BPPanel_Form
         prefix: str
         heading: StrOrPromise
         help_text: StrOrPromise
-        def __init__(self, panel: _Panel_co, instance: _Model, request: _Req, form: _FC, prefix: str) -> None: ...
+        def __init__(self, panel: _Panel_co, instance: _Model, request: HttpRequest, form: _FC, prefix: str) -> None: ...
         @property
         def classname(self): ...
         @property
