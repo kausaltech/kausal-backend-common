@@ -30,7 +30,6 @@ if TYPE_CHECKING:
 
 type NullableModel[M: Model] = M | None
 
-
 _To = TypeVar("_To", bound=Model)
 _Through = TypeVar("_Through", default=Any)
 
@@ -40,7 +39,6 @@ _Through = TypeVar("_Through", default=Any)
 
 
 type FK[To: Model | None] = ForeignKey[To, To]
-
 
 if TYPE_CHECKING:
     @type_check_only

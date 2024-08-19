@@ -12,7 +12,7 @@ class PanelGroupOwnInitArgs(TypedDict, total=False):
 
 
 @type_check_only
-class PanelGroupAllInitArgs(PanelInitArgs, PanelGroupOwnInitArgs): ...
+class PanelGroupInitArgs(PanelInitArgs, PanelGroupOwnInitArgs): ...
 
 
 _PPanel_co = TypeVar('_PPanel_co', bound=PanelGroup, covariant=True)
@@ -26,7 +26,7 @@ class PanelGroup(Panel[_Model, _Panel_Form]):
     children: Sequence[Panel[Any]]
     permission: str | None
 
-    def __init__(self, children: Sequence[Panel[Any]] = (), *args, **kwargs: Unpack[PanelGroupAllInitArgs]) -> None: ...
+    def __init__(self, children: Sequence[Panel[Any]] = (), *args, **kwargs: Unpack[PanelGroupInitArgs]) -> None: ...
     @cached_property
     def child_identifiers(self) -> list[str]:
         """

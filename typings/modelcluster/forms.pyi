@@ -25,12 +25,12 @@ class BaseTransientModelFormSet(BaseModelFormSet[_M, _ModelFormT]):
     def save_existing_objects(self, commit: bool = True): ...
 
 
-F = TypeVar('F', bound=Callable[..., Any])
+_F = TypeVar('_F', bound=Callable[..., Any])
 
 @type_check_only
-class copy_signature(Generic[F]):
-    def __init__(self, target: F) -> None: ...
-    def __call__(self, wrapped: Callable[..., Any]) -> F: ...
+class copy_signature(Generic[_F]):  # noqa: N801
+    def __init__(self, target: _F) -> None: ...
+    def __call__(self, wrapped: Callable[..., Any]) -> _F: ...
 
 @copy_signature(modelformset_factory)
 def transientmodelformset_factory(*args, **kwargs): ...
@@ -64,7 +64,7 @@ class ClusterFormMetaclass(ModelFormMetaclass):
 
 
 class ClusterForm(ModelForm[_M], metaclass=ClusterFormMetaclass):
-    formsets: Mapping[str, type[BaseModelFormSet]]
+    formsets: Mapping[str, BaseModelFormSet]
 
 
 @copy_signature(modelform_factory)

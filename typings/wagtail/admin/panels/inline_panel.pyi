@@ -28,7 +28,7 @@ class InlinePanelOwnInitArgs(TypedDict, total=False):
 
 
 @type_check_only
-class InlinePanelAllInitArgs(PanelInitArgs, InlinePanelOwnInitArgs): ...
+class InlinePanelInitArgs(PanelInitArgs, InlinePanelOwnInitArgs): ...
 
 
 
@@ -38,11 +38,12 @@ class InlinePanel(Generic[_Model, _RelatedModel], Panel[_Model]):
     label: StrOrPromise
     min_num: int | None
     max_num: int | None
+    db_field: ManyToOneRel
 
     def __init__(
         self,
         relation_name: str,
-        **kwargs: Unpack[InlinePanelAllInitArgs],
+        **kwargs: Unpack[InlinePanelInitArgs],
     ) -> None: ...
 
     @cached_property
@@ -50,9 +51,6 @@ class InlinePanel(Generic[_Model, _RelatedModel], Panel[_Model]):
 
     @cached_property
     def child_edit_handler(self) -> MultiFieldPanel[_RelatedModel]: ...
-
-    @property
-    def db_field(self) -> ManyToOneRel: ...
 
     class BoundPanel(
         Generic[_IPPanel_co, _ChildForm, _ChildFormSet, _ChildModel, _BPModel],
