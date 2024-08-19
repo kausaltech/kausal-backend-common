@@ -6,9 +6,9 @@ from dataclasses import dataclass, field
 
 
 @dataclass
-class SubclassContext[ValueT]:
-    container_type: type[ValueT]
+class SingleValueContext[ValueT]:
     context_name: str
+    container_type: type[ValueT]
 
     _context_var: ContextVar[ValueT] = field(init=False)
 
@@ -31,6 +31,9 @@ class SubclassContext[ValueT]:
     def get(self) -> ValueT:
         return self._context_var.get()
 
+
+@dataclass
+class SubclassableContext(SingleValueContext):
     def get_as_type[SubClassT](self, klass: type[SubClassT]) -> SubClassT:
         val = self.get()
         if not isinstance(val, klass):
