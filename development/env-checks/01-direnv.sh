@@ -64,57 +64,29 @@ layout_python-uv() {
 EOF
 )"
 
-append_direnvrc_config() {
-    local direnvrc="$1"
+check_direnv_lib() {
+    print_check "Checking for direnv library file" "⚙️"
 
-}
+    local direnv_lib="$HOME/.config/direnv/lib/python-uv.sh"
 
-check_direnvrc() {
-    print_check "Checking for direnv configuration" "⚙️"
-
-    local direnvrc="$HOME/.direnvrc"
-    local function_name="layout_python-uv"
-
-    # Check if $HOME/.direnvrc exists
-    if [[ -f "$direnvrc" ]]; then
-        print_success "$direnvrc exists"
-
-        # Check if layout_python-uv function is present
-        if grep -q "$function_name" "$direnvrc"; then
-            print_success "layout_python-uv function found in $direnvrc"
-        else
-            print_warning "layout_python-uv function not found in $direnvrc"
-
-            # Prompt user to add the function
-            if prompt_user "Would you like to add the layout_python-uv function to $direnvrc?" ; then
-                echo "$DIRENV_UV_LAYOUT" >> "$direnvrc"
-                # shellcheck disable=SC2320 disable=SC2181
-                if [[ $? -eq 0 ]]; then
-                    print_success "layout_python-uv function added to $direnvrc"
-                else
-                    print_error "Failed to add layout_python-uv function to $direnvrc"
-                    return 1
-                fi
-            else
-                print_error "layout_python-uv function not added to $direnvrc"
-                exit 1
-            fi
-        fi
+    if [[ -f "$direnv_lib" ]]; then
+        print_success "$direnv_lib exists"
     else
-        print_warning "$direnvrc does not exist"
+        print_warning "$direnv_lib does not exist"
 
         # Prompt user to create the file and add the function
-        if prompt_user "Would you like to create $direnvrc and add the layout_python-uv function?" ; then
-            echo "$DIRENV_UV_LAYOUT" > "$direnvrc"
+        if prompt_user "Would you like to create $direnv_lib and add the layout_python-uv function?" ; then
+            mkdir -p $(dirname "$direnv_lib")
+            echo "$DIRENV_UV_LAYOUT" > "$direnv_lib"
             # shellcheck disable=SC2320 disable=SC2181
             if [[ $? -eq 0 ]]; then
-                print_success "$direnvrc created with layout_python-uv function"
+                print_success "$direnv_lib created with layout_python-uv function"
             else
-                print_error "Failed to create $direnvrc"
+                print_error "Failed to create $direnv_lib"
                 exit 1
             fi
         else
-            print_error "$direnvrc not created; you'll need to set it up yourself"
+            print_error "$direnv_lib not created; you'll need to set it up yourself"
             exit 1
         fi
     fi
@@ -123,4 +95,4 @@ check_direnvrc() {
 }
 
 check_direnv
-check_direnvrc
+check_direnv_lib
