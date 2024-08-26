@@ -96,6 +96,18 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
   LIBRARY_PATH=$(cat /etc/ld.so.conf.d/uv-python.conf) \
   ${PIP_INSTALL} -r ${app_path}/requirements-prod.txt -r ${app_path}/requirements.txt
 
+# If uWSGI is installed, check that it actually starts, and if not, purge the uv cache
+# and try again. uWSGI might be compiled with an old libc version.
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
+  if which uwsgi 2>&1 > /dev/null ; then \
+    if ! uwsgi --version > /dev/null ; then \
+      ${UV_BIN} cache clean uwsgi && \
+      LIBRARY_PATH=$(cat /etc/ld.so.conf.d/uv-python.conf) \
+        ${PIP_INSTALL} --no-binary uwsgi --reinstall-package uwsgi uwsgi ; \
+        uwsgi --version ; \
+    fi \
+  fi
+
 # Install extra dependencies
 COPY requirements-kausal.txt ${app_path}/
 RUN --mount=type=secret,id=EXTRA_PYPI_INDEX \
