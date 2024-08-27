@@ -33,13 +33,11 @@
 	},
 	"Create Graphene resolver method": {
 		"scope": "python",
-		"prefix": "graphene-resolver",
+		"prefix": "gres",
 		"body": [
 			"\t@staticmethod",
 			"\tdef resolve_${1:field}(root: ${2:Root}, info: GQLInfo):",
 			"\t\t$0pass\n"
 		]
 	}
-
-
 }
