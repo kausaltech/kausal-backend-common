@@ -2,17 +2,27 @@ from __future__ import annotations
 
 import os
 
-try:
-    from opentelemetry import trace
-except ImportError:
-    trace = None
-
 from kausal_common.deployment import env_bool
 
+_otel_initialized = False
+
+def _should_init_otel() -> bool:
+    return bool(os.getenv('OTEL_EXPORTER_OTLP_TRACES_ENDPOINT'))
 
 def init_telemetry():
-    if trace is None:
-        return
+    global _otel_initialized
+
+    if _otel_initialized:
+        return True
+
+    oltp_traces_endpoint = os.getenv('OTEL_EXPORTER_OTLP_TRACES_ENDPOINT')
+    if not oltp_traces_endpoint:
+        return False
+
+    try:
+        from opentelemetry import trace
+    except ImportError:
+        return False
 
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.resources import SERVICE_NAME, SERVICE_VERSION, Resource
@@ -42,16 +52,21 @@ def init_telemetry():
     # Sets the global default tracer provider
     trace.set_tracer_provider(provider)
 
+    _otel_initialized = True
+
 
 def init_django_telemetry():
     if not otel_enabled():
         return
 
     from opentelemetry.instrumentation.django import DjangoInstrumentor
+    from opentelemetry.instrumentation.threading import ThreadingInstrumentor
 
     init_telemetry()
     DjangoInstrumentor().instrument()
+    ThreadingInstrumentor().instrument()
 
 
 def otel_enabled() -> bool:
-    return trace is not None
+    return _should_init_otel()
+
