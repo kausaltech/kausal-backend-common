@@ -140,8 +140,19 @@ def manager_from_mlqs[_M: Model, _MLQS: MultilingualQuerySet](qs: type[_MLQS]) -
 if TYPE_CHECKING:
     type MLMM[_M: Model, _MLQS: MultilingualQuerySet] = MLModelManager[_M, _MLQS]
 
+    _F = TypeVar('_F', bound=Callable[..., Any])
+
+    class copy_signature(Generic[_F]):  # noqa: N801
+        def __init__(self, target: _F) -> None: ...
+        def __call__(self, wrapped: Callable[..., Any]) -> _F: ...
+else:
+    def copy_signature(_):
+        return lambda x: x
+
 
 type GetDisplayMethod = Callable[[], str]
+
+
 
 
 if not TYPE_CHECKING:
