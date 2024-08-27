@@ -3,7 +3,7 @@ from __future__ import annotations
 import gc
 import os
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from django.core.cache import caches
 from django.db import connections
@@ -82,8 +82,8 @@ def check_ram_usage(pre_gc: MemoryLimit | None = None) -> dict:
         current=process.current_mib,
     )
 
-    process = psutil.Process(os.getpid())
-    parent = process.parent()
+    worker_process = psutil.Process(os.getpid())
+    parent = worker_process.parent()
     workers = []
     total_ram = 0
     known_parent_prefices = ('gunicorn', 'uwsgi', 'python')
@@ -91,13 +91,25 @@ def check_ram_usage(pre_gc: MemoryLimit | None = None) -> dict:
     if is_coordinator:
         for child in parent.children(recursive=True):
             mem = MemoryLimit.from_psutil(child.pid)
-            workers.append(dict(pid=child.pid, ram=mem.current_mib))
+            workers.append(dict(pid=child.pid, rss_mib=mem.current_mib))
             total_ram += mem.current_mib
     if workers:
         out['workers'] = workers
-        out['workers_total'] = total_ram
+        out['workers_total_mib'] = total_ram
 
     return out
+
+
+type HealthCheckFunction = Callable[[], dict[str, Any] | None]
+
+
+health_check_hooks: list[HealthCheckFunction] = []
+
+
+def add_health_check_hook(func: HealthCheckFunction):
+    if func in health_check_hooks:
+        return
+    health_check_hooks.append(func)
 
 
 @api_view(['GET'])
