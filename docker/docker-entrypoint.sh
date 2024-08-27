@@ -7,7 +7,7 @@ wait_for_it=/scripts/wait-for-it.sh
 
 # Wait for the database to get ready when not running in Kubernetes.
 # In Kube, the migrations will be handled through a job.
-if [ "$KUBERNETES_MODE" != "1" ] && [ "$1" = 'uwsgi' -o "$1" = 'celery' -o "$1" = 'runserver' ]; then
+if [ "$KUBERNETES_MODE" != "1" ] && [ "$1" = 'uwsgi' -o "$1" = 'celery' -o "$1" = 'runserver' -o "$1" = 'gunicorn' ]; then
     echo "Waiting for database to get ready..."
     $wait_for_it $DB_ENDPOINT
 
@@ -33,6 +33,8 @@ fi
 if [ "$1" = 'uwsgi' ]; then
     # Log to stdout
     exec uwsgi --ini /uwsgi.ini $EXTRA_UWSGI_ARGS
+elif [ "$1" = 'gunicorn' ]; then
+    exec gunicorn -c /code/kausal_common/docker/gunicorn.conf.py
 elif [ "$1" = 'celery' ]; then
     CELERY_ARGS=""
     if [ "$2" = "worker" -a "$KUBERNETES_MODE" = "1" ] ; then

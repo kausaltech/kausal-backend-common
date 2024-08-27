@@ -11,30 +11,32 @@ ARG runtime_deps="libpq5 postgresql-client gettext \
     libproj25 ^libgdal3[2-9]$ libjpeg6[2345]-turbo$ libtiff6 libxml2 libffi8 libxslt1.1 \
     libwebp7 libvoikko1 voikko-fi curl \
     iputils-ping inetutils-telnet redis-tools restic procps git \
-    ca-certificates media-types nano"
+    ca-certificates media-types nano less"
 ARG build_time_deps="libpq-dev build-essential \
     zlib1g-dev libjpeg-dev libtiff-dev libopenjp2-7-dev libwebp-dev \
     binutils libproj-dev libgdal-dev \
     libxml2-dev libxslt1-dev libffi-dev"
 
-#ARG node_install_url="https://deb.nodesource.com/setup_lts.x"
 ARG app_path=/code
 ARG app_user_uid=1000
 ARG app_user_gid=1000
 ARG docker_dir=./kausal_common/docker
 
-RUN userdel -r ubuntu
+# Ubuntu nowadays adds a `ubuntu` user with id 1000, which conflicts
+# with our hard-coded uid. Remove the user if it exists.
+RUN if id -u ubuntu > /dev/null 2>&1 ; then userdel -r ubuntu ; fi
 
 ENV VIRTUAL_ENV=/venv
 ENV UV_HOME=/opt/uv
 ENV NVM_DIR=/opt/nvm
 ENV PATH=/venv/bin:$PATH
-ENV DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki
+ENV DEBIAN_FRONTEND=noninteractive TZ=UTC
 
 RUN mkdir -p ${app_path}
 # Set up APT package caching
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
+# Upgrade .deb packages, and install runtime deps.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt update && apt upgrade -y && apt install --no-install-recommends -y \
@@ -62,6 +64,7 @@ RUN \
 #
 FROM base AS builder
 
+# Install build-time deps, and clean the cache from stale packages.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt update && apt install --no-install-recommends -y \
@@ -78,12 +81,13 @@ ENV \
 
 WORKDIR ${app_path}
 
-COPY pyproject.toml ${app_path}/
+COPY --chown=${app_user_uid}:${app_user_gid} \
+  .python-version pyproject.toml ${app_path}/
 
 RUN --mount=type=cache,target=/cache \
   ${UV_BIN} python install
 RUN --mount=type=cache,target=/cache \
-${UV_BIN} venv --link-mode=copy --python-preference only-managed ${VIRTUAL_ENV}
+  ${UV_BIN} venv --link-mode=copy --python-preference only-managed ${VIRTUAL_ENV}
 
 RUN \
   echo ${UV_HOME}/*/lib | tee /etc/ld.so.conf.d/uv-python.conf && \
@@ -91,7 +95,8 @@ RUN \
 
 COPY requirements.txt requirements-prod.txt ${app_path}/
 ENV CC=gcc
-ENV PIP_INSTALL="$UV_BIN pip install --link-mode=copy --compile-bytecode"
+# TODO: Should '--compile-bytecode' be included below?
+ENV PIP_INSTALL="$UV_BIN pip install --link-mode=copy"
 RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
   LIBRARY_PATH=$(cat /etc/ld.so.conf.d/uv-python.conf) \
   ${PIP_INSTALL} -r ${app_path}/requirements-prod.txt -r ${app_path}/requirements.txt
@@ -112,12 +117,13 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
 COPY requirements-kausal.txt ${app_path}/
 RUN --mount=type=secret,id=EXTRA_PYPI_INDEX \
     if [ -f /run/secrets/EXTRA_PYPI_INDEX ] ; then \
-        export PIP_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX) && \
-        ${PIP_INSTALL} --extra-index-url "$(cat /run/secrets/EXTRA_PYPI_INDEX)" -r ${app_path}/requirements-kausal.txt ; \
+        UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX) \
+        ${PIP_INSTALL} -r ${app_path}/requirements-kausal.txt ; \
     fi
 
+# Install node
 COPY package.json package-lock.json ${app_path}/
-RUN npm install
+RUN npm ci
 
 ARG INSTALL_DEV_DEPS
 COPY requirements-dev.txt ${app_path}/
@@ -160,10 +166,15 @@ ENV STATIC_ROOT=${STATIC_ROOT}
 ARG MEDIA_ROOT=/srv/media
 ENV MEDIA_ROOT=${MEDIA_ROOT}
 
-RUN mkdir -p ${MEDIA_ROOT} ${STATIC_ROOT}
+ARG DVC_CACHE_DIR=/cache/dvc
+ENV DVC_CACHE_DIR=${DVC_CACHE_DIR}
 
 RUN groupadd -g ${app_user_gid} user && useradd --no-log-init -m -d /home/user -g ${app_user_gid} -u ${app_user_uid} user
-RUN chown -R user:user /srv/media /srv/static && chown user:user ${app_path}
+RUN chown ${app_user_uid}:${app_user_gid} ${app_path}
+
+RUN \
+  mkdir -p ${MEDIA_ROOT} ${STATIC_ROOT} ${DVC_CACHE_DIR} && \
+  chown ${app_user_uid}:${app_user_gid} ${MEDIA_ROOT} ${STATIC_ROOT} ${DVC_CACHE_DIR}
 
 # Compile bytecode for venv
 RUN cd ${VIRTUAL_ENV} && python -m compileall
@@ -179,7 +190,12 @@ RUN ./manage.py compilemessages
 # Run the system checks to import more code and pre-generate the .pyc files
 RUN ./manage.py check
 
-RUN pybabel compile -D notifications -d locale
+RUN if [ -d notifications ] ; then pybabel compile -D notifications -d locale ; fi
+
+RUN \
+  if which dvc 2>&1 > /dev/null ; then \
+    dvc cache dir --global ${DVC_CACHE_DIR} ; \
+  fi
 
 COPY --from=caddy /usr/bin/caddy /usr/bin/caddy
 COPY ${docker_dir}/Caddyfile /etc/caddy/
