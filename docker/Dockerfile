@@ -177,13 +177,13 @@ RUN \
   chown ${app_user_uid}:${app_user_gid} ${MEDIA_ROOT} ${STATIC_ROOT} ${DVC_CACHE_DIR}
 
 # Compile bytecode for venv
-RUN cd ${VIRTUAL_ENV} && python -m compileall
+RUN cd ${VIRTUAL_ENV} && python -m compileall -q
 
 # Switch to the app user
 USER user
 
 # Pre-generate the .pyc bytecode files
-RUN python -m compileall
+RUN python -m compileall -q
 
 RUN ./manage.py collectstatic --no-input
 RUN ./manage.py compilemessages
@@ -208,7 +208,7 @@ ARG DJANGO_PROJECT
 
 RUN if [ -z "$DJANGO_PROJECT" ] ; then echo "DJANGO_PROJECT build arg is not set." ; exit 1 ; fi
 
-ENV UWSGI_MODULE=${DJANGO_PROJECT}.wsgi DJANGO_SETTINGS_MODULE=${DJANGO_PROJECT}.settings
+ENV UWSGI_MODULE=${DJANGO_PROJECT}.wsgi DJANGO_SETTINGS_MODULE=${DJANGO_PROJECT}.settings CELERY_APPLICATION=${DJANGO_PROJECT}
 ARG CADDY_PORT=6000
 ENV CADDY_PORT=${CADDY_PORT}
 ENV LC_CTYPE=C.UTF-8

@@ -24,23 +24,23 @@ if [ "$KUBERNETES_MODE" != "1" ] && [ "$1" = 'uwsgi' -o "$1" = 'celery' -o "$1" 
     if [ -d '/docker-entrypoint.d' ]; then
         for scr in /docker-entrypoint.d/*.sh ; do
             echo "Running $scr"
-            /bin/bash $scr
+            /bin/bash "$scr"
         done
     fi
     EXTRA_UWSGI_ARGS="--socket :8001"
 fi
 
 if [ "$1" = 'uwsgi' ]; then
-    # Log to stdout
+    # shellcheck disable=SC2086
     exec uwsgi --ini /uwsgi.ini $EXTRA_UWSGI_ARGS
 elif [ "$1" = 'gunicorn' ]; then
     exec gunicorn -c /code/kausal_common/docker/gunicorn.conf.py
 elif [ "$1" = 'celery' ]; then
     CELERY_ARGS=""
-    if [ "$2" = "worker" -a "$KUBERNETES_MODE" = "1" ] ; then
+    if [ "$2" = "worker" ] && [ "$KUBERNETES_MODE" = "1" ] ; then
       CELERY_ARGS="--concurrency=2"
     fi
-    exec celery -A aplans "$2" -l INFO $CELERY_ARGS
+    exec celery -A "${CELERY_APPLICATION}" "$2" -l INFO $CELERY_ARGS
 elif [ "$1" = 'runserver' ]; then
     cd /code
     exec python manage.py runserver 0.0.0.0:8000
