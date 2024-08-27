@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from logging.config import dictConfig
+import os
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from loguru import logger
@@ -138,9 +139,20 @@ def _init_logging(log_format: LogFormat, log_sql_queries: bool = False):
     return level
 
 
+def _running_in_app_server() -> bool:
+    try:
+        import uwsgi  # noqa  # type: ignore[import-not-found]
+        return True
+    except ImportError:
+        pass
+    if os.getenv('SERVER_SOFTWARE', None):
+        return True
+    return False
+
 def _should_use_logfmt() -> bool:
     if env_bool('KUBERNETES_LOGGING', default=False) or env_bool('KUBERNETES_MODE', default=False):
         return True
+
     console = get_rich_log_console()
     if not console.is_terminal or console.is_dumb_terminal:
         return True

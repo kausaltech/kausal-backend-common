@@ -7,7 +7,7 @@ import warnings
 from datetime import UTC, datetime
 from logging import LogRecord, StreamHandler
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Sequence, cast
+from typing import TYPE_CHECKING, Any, Callable, Sequence, cast
 
 import loguru
 from logfmter.formatter import Logfmter
@@ -215,11 +215,14 @@ class RichLogHandler(RichHandler):
 
 class LogFmtFormatter(Logfmter):
     def __init__(self):
-        keys = ['time', 'level', 'name']
         mapping = {
             'time': 'asctime',
             'level': 'levelname',
+            'thread.id': 'thread',
+            'thread.name': 'threadName',
+            'process.pid': 'process',
         }
+        keys = ['time', 'level', 'name', 'process.pid', 'thread.id', 'thread.name']
         super().__init__(keys=keys, mapping=mapping, datefmt=ISO_FORMAT)
 
     def format(self, record: LogRecord) -> str:
@@ -280,15 +283,19 @@ if env_bool('LOG_WARNINGS', default=True):
 
 
 class LoguruLogRecord(LogRecord):
-    def set_extra_keys(self, keys: list[str] | None):
-        self._extra_keys = keys
-
     def pop_extra_keys(self) -> list[str] | None:
         if not hasattr(self, '_extra_keys'):
             return None
         keys = self._extra_keys
         delattr(self, '_extra_keys')
         return keys
+
+    def set_extra(self, extra: dict[str, Any]):
+        self._extra_keys = list(extra.keys())
+        for key, val in extra.items():
+            if (key in ["message", "asctime"]) or (key in self.__dict__):
+                raise KeyError("Attempt to overwrite %r in LogRecord" % key)
+            setattr(self, key, val)
 
 logging.setLogRecordFactory(LoguruLogRecord)
 
@@ -311,7 +318,7 @@ def loguru_make_record(record: loguru.Record, strip_markup: bool = False):
 
     msg = record['message']
     # We shouldn't pass `rich` markup
-    if strip_markup and extra.pop('markup', False):
+    if strip_markup and extra.get('markup', False):
         msg = Text.from_markup(msg).plain
 
     log_rec = LoguruLogRecord(
@@ -324,7 +331,7 @@ def loguru_make_record(record: loguru.Record, strip_markup: bool = False):
         (exc.type, exc.value, exc.traceback) if exc else None, # type: ignore
         func=record["function"],
     )
-    log_rec.set_extra_keys(list(record['extra'].keys()))
+    log_rec.set_extra(record['extra'])
     if exc:
         log_rec.exc_text = "\n"
     return log_rec
