@@ -16,15 +16,15 @@ def _monkeypath_init() -> None:
     from modelcluster.fields import ParentalKey, ParentalManyToManyField
     from wagtail.admin.panels import Panel
     from wagtail.admin.viewsets.model import ModelViewSet
-    from wagtail.permission_policies.base import ModelPermissionPolicy
+    from wagtail.permission_policies.base import BasePermissionPolicy
 
     from treebeard.models import Node
 
     django_stubs_ext.monkeypatch([
-        ModelViewSet, ModelPermissionPolicy,
-        ParentalKey, ParentalManyToManyField,
+        ModelViewSet, ParentalKey, ParentalManyToManyField,
         JSONField, ManyToManyField, Node,
         Panel, Panel.BoundPanel, BaseObjectMixin,
+        BasePermissionPolicy
     ], include_builtins=True)
 
 
