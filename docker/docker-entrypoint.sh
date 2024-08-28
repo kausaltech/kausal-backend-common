@@ -47,7 +47,7 @@ esac
 
 if [ $needs_db -eq 1 ]; then
     wait_for_db
-    if [ $needs_migrations -eq -1 ]; then
+    if [ $needs_migrations -eq 1 ]; then
         echo "Running database migrations..."
         python manage.py migrate --no-input
         if [ "$TEST_MODE" == "1" ]; then

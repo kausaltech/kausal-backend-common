@@ -168,13 +168,16 @@ ENV MEDIA_ROOT=${MEDIA_ROOT}
 
 ARG DVC_CACHE_DIR=/cache/dvc
 ENV DVC_CACHE_DIR=${DVC_CACHE_DIR}
+ARG PINT_CACHE_DIR=/cache/pint
+ENV PINT_CACHE_DIR=${PINT_CACHE_DIR}
+
 
 RUN groupadd -g ${app_user_gid} user && useradd --no-log-init -m -d /home/user -g ${app_user_gid} -u ${app_user_uid} user
 RUN chown ${app_user_uid}:${app_user_gid} ${app_path}
 
 RUN \
-  mkdir -p ${MEDIA_ROOT} ${STATIC_ROOT} ${DVC_CACHE_DIR} && \
-  chown ${app_user_uid}:${app_user_gid} ${MEDIA_ROOT} ${STATIC_ROOT} ${DVC_CACHE_DIR}
+  mkdir -p ${MEDIA_ROOT} ${STATIC_ROOT} ${DVC_CACHE_DIR} ${PINT_CACHE_DIR} && \
+  chown -R ${app_user_uid}:${app_user_gid} ${MEDIA_ROOT} ${STATIC_ROOT} ${DVC_CACHE_DIR} ${PINT_CACHE_DIR}
 
 # Compile bytecode for venv
 RUN cd ${VIRTUAL_ENV} && python -m compileall -q
