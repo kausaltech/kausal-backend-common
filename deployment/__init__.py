@@ -3,9 +3,10 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Sequence, Union
+from typing import TYPE_CHECKING, Sequence
 
-import environ
+if TYPE_CHECKING:
+    import environ
 
 ENV_VARIABLE_PATTERN = re.compile(r'[A-Z][A-Z0-9_]*')
 
@@ -26,7 +27,7 @@ def run_deployment_checks():
     deployment_log = logger.bind(name='deployment')
 
     msgs: list[checks.CheckMessage] = checks.run_checks(include_deployment_checks=True)
-    LEVEL_MAP = {
+    level_map = {
         checks.DEBUG: 'DEBUG',
         checks.INFO: 'INFO',
         checks.WARNING: 'WARNING',
@@ -36,13 +37,13 @@ def run_deployment_checks():
 
     for msg in msgs:
         msg.hint = None
-        deployment_log.log(LEVEL_MAP.get(msg.level, 'WARNING'), str(msg))
+        deployment_log.log(level_map.get(msg.level, 'WARNING'), str(msg))
 
 
 BOOLEAN_TRUE_STRINGS = ('true', 'on', 'ok', 'y', 'yes', '1')
 BOOLEAN_FALSE_STRINGS = ('false', 'off', 'n', 'no', '0')
 
-def _check_env_match(env_var: str, matches: Sequence[str]):
+def _check_env_match(env_var: str, matches: Sequence[str]) -> bool:
     val = os.getenv(env_var, None)
     if val is None:
         return False
@@ -79,9 +80,8 @@ def env_bool(env_var: str, default: bool) -> bool:
     if default:
         is_false = _check_env_match(env_var, BOOLEAN_FALSE_STRINGS)
         return not is_false
-    else:
-        is_true = _check_env_match(env_var, BOOLEAN_TRUE_STRINGS)
-        return is_true
+    is_true = _check_env_match(env_var, BOOLEAN_TRUE_STRINGS)
+    return is_true
 
 
 def set_secret_file_vars(env: environ.Env, directory: str | Path) -> None:

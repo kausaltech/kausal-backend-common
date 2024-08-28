@@ -95,7 +95,7 @@ def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
     return config
 
 
-def _init_logging(log_format: LogFormat, log_sql_queries: bool = False):
+def _init_logging(log_format: LogFormat, log_sql_queries: bool = False) -> GetHandler:
     import sys
 
     from loguru._colorama import should_colorize
