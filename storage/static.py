@@ -6,8 +6,6 @@ from typing import TYPE_CHECKING, Any
 
 from django.contrib.staticfiles.storage import ManifestStaticFilesStorage as DjangoManifestStorage
 
-from kausal_common.models.types import copy_signature
-
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
@@ -21,7 +19,6 @@ class ManifestStaticFilesStorage(DjangoManifestStorage):
     It skips processing these files to avoid double-hashing.
     """
 
-    @copy_signature(DjangoManifestStorage.__init__)
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
