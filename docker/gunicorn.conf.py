@@ -1,7 +1,10 @@
-import os
-import multiprocessing
-from kausal_common.deployment.gunicorn import get_gunicorn_hooks
+from __future__ import annotations  # noqa: INP001
 
+import multiprocessing
+import os
+
+from kausal_common.deployment import env_bool
+from kausal_common.deployment.gunicorn import get_gunicorn_hooks
 
 bind = "0.0.0.0:8000"
 #workers = min(multiprocessing.cpu_count() * 2 + 1, 4)
@@ -10,9 +13,10 @@ threads = multiprocessing.cpu_count() * 2 + 1
 wsgi_app = 'paths.wsgi:application'
 forwarded_allow_ips = '*'
 
-KUBE_MODE = os.getenv('KUBERNETES_MODE', '') == '1'
+KUBE_MODE = env_bool('KUBERNETES_MODE', default=False)
+TEST_MODE = env_bool('TEST_MODE', default=False)
 
-if KUBE_MODE:
+if KUBE_MODE or TEST_MODE:
     preload_app = True
 
 if KUBE_MODE or os.getenv('KUBERNETES_LOGGING', '') == '1':
