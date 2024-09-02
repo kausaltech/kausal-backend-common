@@ -10,7 +10,7 @@ bind = "0.0.0.0:8000"
 #workers = min(multiprocessing.cpu_count() * 2 + 1, 4)
 workers = 2
 threads = multiprocessing.cpu_count() * 2 + 1
-wsgi_app = 'paths.wsgi:application'
+wsgi_app = '%s.wsgi:application' % os.environ['DJANGO_PROJECT']
 forwarded_allow_ips = '*'
 
 KUBE_MODE = env_bool('KUBERNETES_MODE', default=False)
