@@ -88,6 +88,8 @@ def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
             'aiobotocore': level('INFO'),
             's3fs': level('INFO'),
             'celery.utils': level('INFO'),
+            'inotify': level('INFO'),
+            'fsspec': level('INFO'),
             '': level('DEBUG'),
         },
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import sys
+import threading
 import traceback
 import warnings
 from datetime import UTC, datetime
@@ -245,9 +246,10 @@ class LogFmtFormatter(Logfmter):
             del ret['taskName']
         if 'extra' in ret:
             del ret['extra']
+        ret['thread.id'] = threading.get_native_id()
         return ret
 
-    def formatTime(self, record, datefmt=None):
+    def formatTime(self, record: logging.LogRecord, datefmt=None) -> str:
         return datetime.fromtimestamp(record.created, UTC).strftime(ISO_FORMAT)
 
 
@@ -263,9 +265,8 @@ class UwsgiReqLogHandler(StreamHandler):
 
     def emit(self, record: LogRecord) -> None:
         # Only emit health check logs only for 5 mins after starting
-        if ' path=/healthz' in record.msg:
-            if record.relativeCreated > 5 * 60 * 1000:
-                return
+        if ' path=/healthz' in record.msg and record.relativeCreated > 5 * 60 * 1000:
+            return
         print(self.format(record))
 
 
@@ -303,6 +304,7 @@ logging.setLogRecordFactory(LoguruLogRecord)
 class LoguruLogger(logging.Logger):
     def makeRecord(self, *args, **kwargs):
         rec = cast(LoguruLogRecord, super().makeRecord(*args, **kwargs))
+
         extra = args[8]
         if extra is not None and isinstance(extra, dict):
             rec.extra_keys = list(extra.keys())
