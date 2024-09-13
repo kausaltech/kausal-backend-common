@@ -33,15 +33,9 @@ def _render_stack_with_links(self: Traceback, stack: Stack) -> Group:
 
 
 def patch_traceback():
-    global _is_patched
+    global _is_patched  # noqa: PLW0602
 
     if _is_patched:
         return True
     Traceback._render_stack = _render_stack_with_links  # type: ignore[method-assign]
     return True
-
-
-def test_traceback():
-    from actions.models import Action
-    act = Action.objects.get(id='abcde')
-    return act

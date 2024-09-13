@@ -13,6 +13,8 @@ from django.db.models import (
     QuerySet,
 )
 from modeltrans.manager import MultilingualManager, MultilingualQuerySet
+from wagtail.models import Page, PageManager
+from wagtail.query import PageQuerySet
 
 from ..development.monkey import monkeypatch_generic_support
 
@@ -49,7 +51,7 @@ if TYPE_CHECKING:
     @type_check_only
     class ReverseManyToOneDescriptorQS[To: Model, QS: QuerySet](ReverseManyToOneDescriptor[To]):
         @overload    # type: ignore
-        def __get__(self, instance: Model, cls: Any = ...) -> RelatedManagerQS[_To, QS]: ...  # type: ignore
+        def __get__(self, instance: Model, cls: Any = ...) -> RelatedManagerQS[_To, QS]: ...  # type: ignore  # noqa: ANN401
 
 type RevMany[To: Model] = ReverseManyToOneDescriptor[To]
 type RevManyQS[To: Model, QS: QuerySet] = ReverseManyToOneDescriptorQS[To, QS]
@@ -58,10 +60,10 @@ type RevManyToMany[To: Model, Through: Model] = ManyToManyDescriptor[To, Through
 type OneToOne[To: Model | None] = OneToOneField[To, To]
 type RevOne[From: Model, To: Model] = ReverseOneToOneDescriptor[From, To]
 
-M2M: TypeAlias = ManyToManyField[_To, _Through]  # pyright: ignore
+M2M: TypeAlias = ManyToManyField[_To, _Through]  # pyright: ignore  # noqa: UP040
 
-_M = TypeVar("_M", bound=Model, covariant=True)
-_QS = TypeVar("_QS", bound=QuerySet[Model, Model], default=QuerySet[_M, _M])
+_M = TypeVar("_M", bound=Model, covariant=True)  # noqa: PLC0105
+_QS = TypeVar("_QS", bound=QuerySet[Model, Model], default=QuerySet[_M, _M], covariant=True)  # noqa: PLC0105
 
 
 class ModelManager(Generic[_M, _QS], Manager[_M]):
@@ -128,6 +130,13 @@ class MLModelManager(MultilingualManager[_M], ModelManager[_M, _MLQS]):
         @classmethod
         def from_queryset(cls, queryset_class: type[_MLQS], class_name: str | None = None) -> type[MLModelManager[_M, _MLQS]]: ...  # type: ignore[override]
         def get_queryset(self) -> _MLQS: ...  # type: ignore[override]
+
+_PageT = TypeVar('_PageT', bound=Page, covariant=True)  # noqa: PLC0105
+_PageQS = TypeVar('_PageQS', bound=PageQuerySet, default=PageQuerySet[_PageT], covariant=True)  # noqa: PLC0105
+
+class PageModelManager(ModelManager[_PageT, _PageQS], PageManager[_PageT]):  # pyright: ignore
+    if TYPE_CHECKING:
+        def get_queryset(self) -> _PageQS: ...
 
 
 def manager_from_qs[_M: Model, _QS: QuerySet](qs: type[_QS]) -> ModelManager[_M, _QS]:  # pyright: ignore

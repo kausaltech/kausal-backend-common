@@ -3,6 +3,10 @@ from __future__ import annotations
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 @dataclass
@@ -16,7 +20,7 @@ class SingleValueContext[ValueT]:
         self._context_var = ContextVar(self.context_name)
 
     @contextmanager
-    def activate(self, value: ValueT):
+    def activate(self, value: ValueT) -> Generator[None, None, None]:
         """
         Set this context as the currently active one.
 

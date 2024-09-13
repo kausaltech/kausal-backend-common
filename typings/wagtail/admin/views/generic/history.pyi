@@ -1,5 +1,8 @@
+from typing import ClassVar
+
 from django.utils.functional import cached_property as cached_property
 from django.views.generic import TemplateView
+from django_stubs_ext import StrOrPromise
 from wagtail.admin.filters import (
     DateRangePickerWidget as DateRangePickerWidget,
     MultipleUserFilter as MultipleUserFilter,
@@ -40,7 +43,7 @@ class ActionColumn(Column):
     user_can_unschedule: Incomplete
     revision_enabled: Incomplete
     draftstate_enabled: Incomplete
-    def __init__(self, *args, object, url_names, user_can_unschedule, **kwargs) -> None: ...
+    def __init__(self, *args, object, url_names, user_can_unschedule, **kwargs) -> None: ...  # noqa: A002
     @cached_property
     def cell_template_name(self): ...
     def get_status(self, instance, parent_context): ...
@@ -53,9 +56,9 @@ class LogEntryUserColumn(UserColumn):
 
 class HistoryView(PermissionCheckedMixin, BaseObjectMixin, BaseListingView):
     any_permission_required: Incomplete
-    page_title: Incomplete
+    page_title: ClassVar[StrOrPromise]
     results_template_name: str
-    header_icon: str
+    header_icon: ClassVar[str]
     is_searchable: bool
     paginate_by: int
     filterset_class = HistoryFilterSet
@@ -96,8 +99,8 @@ class WorkflowHistoryDetailView(BaseObjectMixin, WagtailAdminTemplateMixin, Temp
     template_name: str
     workflow_state_url_kwarg: str
     workflow_history_url_name: Incomplete
-    page_title: Incomplete
-    header_icon: str
+    page_title: ClassVar[StrOrPromise]
+    header_icon: ClassVar[str]
     object_icon: str
     @cached_property
     def workflow_state(self): ...

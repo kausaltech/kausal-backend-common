@@ -1,20 +1,24 @@
-from typing import TypeVar
+# ruff: noqa: N801
+from typing import Generic, TypeVar
 
 from django.db import models
-from django.db.models import QuerySet
+from django.db.models import Manager, QuerySet
+from django.db.models.query import _Model, _Row
 
 from treebeard.models import Node as Node
 
-class MP_NodeQuerySet[M: MP_Node](QuerySet[M]): ...
+_MPN_co = TypeVar('_MPN_co', bound=MP_Node, covariant=True)
+
+class MP_NodeQuerySet(QuerySet[_Model, _Model]):
+    def delete(self, *args, **kwargs): ...
+
+_MPN_QS = TypeVar('_MPN_QS', bound=MP_NodeQuerySet, default=MP_NodeQuerySet)
+
+class MP_NodeManager(Manager[_Model]):
+    def get_queryset(self) -> QuerySet: ...
 
 
-class MP_NodeManager[M: MP_Node](models.Manager[M]): ...
-
-
-_MPN_Mgr = TypeVar('_MPN_Mgr', bound=MP_NodeManager, covariant=True)
-
-
-class MP_Node[QS: MP_NodeQuerySet](Node[QS]):
+class MP_Node(Generic[_MPN_QS], Node[_MPN_QS]):
     steplen: int
     alphabet: str
     node_order_by: list[str]

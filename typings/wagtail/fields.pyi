@@ -1,7 +1,9 @@
 from collections.abc import Generator
-from typing import Any, Literal, Self, Sequence
+from typing import Any, Generic, Literal, Self, Sequence
+from typing_extensions import TypeVar
 
 from django.db import models
+from django.db.models.expressions import Combinable
 from wagtail.blocks import Block as Block, BlockField as BlockField, StreamBlock as StreamBlock, StreamValue as StreamValue
 from wagtail.rich_text import (
     RichTextMaxLengthValidator as RichTextMaxLengthValidator,
@@ -11,7 +13,10 @@ from wagtail.rich_text import (
 
 from _typeshed import Incomplete
 
-class RichTextField(models.TextField):
+_RTF_ST = TypeVar('_RTF_ST', default=str | Combinable)
+_RTF_GT = TypeVar('_RTF_GT', default=str)
+
+class RichTextField(Generic[_RTF_ST, _RTF_GT], models.TextField[_RTF_ST, _RTF_GT]):
     editor: str
     features: Sequence[str] | None
 

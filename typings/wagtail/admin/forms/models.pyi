@@ -13,9 +13,15 @@ from wagtail.admin.forms.tags import TagField as TagField
 from wagtail.models import Page as Page
 from wagtail.utils.registry import ModelFieldRegistry as ModelFieldRegistry
 
-from permissionedforms import PermissionedForm, PermissionedFormMetaclass, PermissionedFormOptionsMixin
+from permissionedforms import PermissionedForm, PermissionedFormMetaclass, PermissionedFormOptionsMixin  # type: ignore
 
 registry: ModelFieldRegistry
+
+type DBFieldT = type[DBField]
+
+FORM_FIELD_OVERRIDES: dict[DBFieldT, dict]
+DIRECT_FORM_FIELD_OVERRIDES: dict[DBFieldT, dict]
+
 
 def register_form_field_override(
     db_field_class: type[DBField], to: type[Model] | None = None, override: dict[str, Any] = ..., exact_class: bool = False,

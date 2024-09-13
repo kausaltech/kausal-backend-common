@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import logging
-from logging.config import dictConfig
 import os
+from logging.config import dictConfig
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from loguru import logger
 
 from kausal_common.deployment import env_bool
+from kausal_common.logging.warnings import register_warning_handler
 
 from .handler import LoguruLogger, get_rich_log_console, loguru_logfmt_sink, loguru_rich_sink
 
@@ -127,6 +128,9 @@ def _init_logging(log_format: LogFormat, log_sql_queries: bool = False) -> GetHa
 
         from wagtail.utils.deprecation import RemovedInWagtail70Warning
         warnings.filterwarnings(action='ignore', category=RemovedInWagtail70Warning)
+
+    if env_bool('LOG_WARNING_TRACEBACK', default=False):
+        register_warning_handler()
 
     logging.setLoggerClass(LoguruLogger)
 

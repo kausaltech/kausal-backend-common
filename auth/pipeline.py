@@ -1,17 +1,24 @@
-from typing import cast
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, cast
+
+from loguru import logger
 from sentry_sdk import capture_exception
 from social_core.backends.oauth import OAuthAuth
-from wagtail.users.models import UserProfile
-from loguru import logger
+
 from kausal_common.auth.msgraph import get_user_photo
+from kausal_common.deployment import env_bool
+
 from users.base import uuid_to_username
 from users.models import User
 
+if TYPE_CHECKING:
+    from social_django import BaseAuth
 
 logger = logger.bind(name='auth.pipeline')
 
 
-def log_login_attempt(backend, details, *args, **kwargs):
+def log_login_attempt(backend: BaseAuth, details: dict[str, Any], *args, **kwargs):
     response = kwargs.get('response', {})
     request = kwargs['request']
 
@@ -33,7 +40,7 @@ def log_login_attempt(backend, details, *args, **kwargs):
             id_parts.append('sub=%s' % sub)
 
     logger.info('Login attempt (%s)' % ', '.join(id_parts))
-    if 'id_token' in response:
+    if 'id_token' in response and env_bool('SSO_DEBUG_LOG', default=False):
         logger.debug('ID token: %s' % response['id_token'])
 
     if isinstance(backend, OAuthAuth):
@@ -43,38 +50,39 @@ def log_login_attempt(backend, details, *args, **kwargs):
             logger.warning('Login failed with invalid state: %s' % str(e))
 
 
-def get_username(details, backend, response, *args, **kwargs):
-    """Sets the `username` argument.
+def get_username(details: dict[str, Any], backend, response, *args, **kwargs):
+    """
+    Set the `username` argument.
 
     If the user exists already, use the existing username. Otherwise
     generate username from the `new_uuid` using the
-    `helusers.utils.uuid_to_username` function.
+    `uuid_to_username` function.
     """
 
     user = details.get('user')
     if not user:
         user_uuid = kwargs.get('uid')
         if not user_uuid:
-            return
+            return None
 
         username = uuid_to_username(user_uuid)
     else:
         username = user.username
 
     return {
-        'username': username
+        'username': username,
     }
 
 
-def find_user_by_email(backend, details, user=None, social=None, *args, **kwargs):
+def find_user_by_email(backend, details, user=None, social=None, *args, **kwargs) -> dict[str, Any] | None:
     if user is not None:
-        return
+        return None
 
     details['email'] = details['email'].lower()
     try:
         user = User.objects.get(email=details['email'])
     except User.DoesNotExist:
-        return
+        return None
 
     return {
         'user': user,
