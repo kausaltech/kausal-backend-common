@@ -167,6 +167,25 @@ class InstanceSpecificRole[M: Model](Role, abc.ABC):
 
         return group
 
+    def assign_user(self, obj: M, user: User) -> bool:
+        obj_group = self.get_existing_instance_group(obj)
+        if obj_group is None:
+            logger.warning("Unable to assign user to group; no group exists for object '%s' and role '%s'" % (str(obj), self.id))
+            return False
+        if obj_group in user.groups.all():
+            return False
+        user.groups.add(obj_group)
+        return True
+
+    def unassign_user(self, obj: M, user: User) -> bool:
+        obj_group = self.get_existing_instance_group(obj)
+        if obj_group is None:
+            return False
+        if obj_group not in user.groups.all():
+            return False
+        user.groups.remove(obj_group)
+        return True
+
 
 class AdminRole[M: Model](InstanceSpecificRole[M], abc.ABC):
     model_perms = [
@@ -176,3 +195,40 @@ class AdminRole[M: Model](InstanceSpecificRole[M], abc.ABC):
     ]
 
     page_perms = set(PAGE_PERMISSION_CODENAMES)
+
+
+class RoleRegistry:
+    def __init__(self):
+        self.roles: dict[str, InstanceSpecificRole] = {}
+
+    def register(self, role: InstanceSpecificRole):
+        """Register a role in the role registry."""
+        from .roles import InstanceSpecificRole
+
+        if not isinstance(role, InstanceSpecificRole):
+            msg = f"Only InstanceSpecificRole instances can be registered. Got {role}"
+            raise TypeError(msg)
+
+        if role.id in self.roles:
+            msg = f"Role with id '{role.id}' is already registered"
+            raise ValueError(msg)
+
+        self.roles[role.id] = role
+
+    def get_role(self, role_id: str) -> InstanceSpecificRole:
+        """Get a role by its ID."""
+        if role_id not in self.roles:
+            msg = f"No role registered with id '{role_id}'"
+            raise KeyError(msg)
+        return self.roles[role_id]
+
+    def get_all_roles(self) -> list[InstanceSpecificRole]:
+        """Get all registered roles."""
+        return list(self.roles.values())
+
+
+role_registry = RoleRegistry()
+
+
+def register_role(role: InstanceSpecificRole):
+    return role_registry.register(role)

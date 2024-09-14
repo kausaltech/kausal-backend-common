@@ -17,11 +17,11 @@ class Node(Model, Generic[_QS]):
 
     @overload
     @classmethod
-    def add_root(cls, **kwargs: Unpack[_InstanceKwargs[Self]]) -> None: ...
+    def add_root(cls, **kwargs: Unpack[_InstanceKwargs[Self]]) -> Self: ...
 
     @overload
     @classmethod
-    def add_root(cls, **kwargs) -> None:
+    def add_root(cls, **kwargs) -> Self:
         """
         Adds a root node to the tree. The new root node will be the new
         rightmost root node. If you want to insert a root node at a specific

@@ -160,8 +160,7 @@ else:
 
 
 type GetDisplayMethod = Callable[[], str]
-
-
+type QS[M: Model] = QuerySet[M, M]
 
 
 if not TYPE_CHECKING:

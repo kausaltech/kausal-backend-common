@@ -1,15 +1,15 @@
 from collections.abc import Sequence
 from typing import Any, Generic, TypeAlias, TypeVar
+
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Model, QuerySet
 from django.utils.functional import cached_property
 
-
 _Model = TypeVar('_Model', bound=Model, default=Model)
 _UserT = TypeVar('_UserT', bound=AbstractBaseUser, default=AbstractBaseUser)
 _PermT = TypeVar('_PermT', default=Any)
-_AnyUser: TypeAlias = _UserT | AnonymousUser
+_AnyUser: TypeAlias = _UserT | AnonymousUser  # noqa: UP040
 
 class BasePermissionPolicy(Generic[_Model, _UserT, _PermT]):
     """
@@ -38,7 +38,7 @@ class BasePermissionPolicy(Generic[_Model, _UserT, _PermT]):
 
     def check_model(self, model: str | type[_Model]) -> None: ...
 
-    def get_all_permissions_for_user(self, user: _AnyUser) -> set[_PermT]:
+    def get_all_permissions_for_user(self, user: AnonymousUser | _UserT) -> set[_PermT]:
         """
         Return a set of all permissions that the given user has on this model.
 
@@ -46,7 +46,6 @@ class BasePermissionPolicy(Generic[_Model, _UserT, _PermT]):
         permission objects defined by the policy, which are not necessarily
         model instances.
         """
-        ...
 
     def get_cached_permissions_for_user(self, user: _AnyUser) -> set[_PermT]:
         """
@@ -56,70 +55,60 @@ class BasePermissionPolicy(Generic[_Model, _UserT, _PermT]):
         This can be useful for the other methods to perform efficient queries
         against the set of permissions that the user has.
         """
-        ...
 
-    def user_has_permission(self, user: _AnyUser, action: str) -> bool:
+    def user_has_permission(self, user: AnonymousUser | _UserT, action: str) -> bool:
         """
         Return whether the given user has permission to perform the given action
         on some or all instances of this model
         """
-        ...
 
-    def user_has_any_permission(self, user: _AnyUser, actions: Sequence[str]) -> bool:
+    def user_has_any_permission(self, user: AnonymousUser | _UserT, actions: Sequence[str]) -> bool:
         """
         Return whether the given user has permission to perform any of the given actions
         on some or all instances of this model
         """
-        ...
 
     def users_with_any_permission(self, actions: Sequence[str]) -> QuerySet[_UserT, _UserT]:
         """
         Return a queryset of users who have permission to perform any of the given actions
         on some or all instances of this model
         """
-        ...
 
     def users_with_permission(self, action: str) -> QuerySet[_UserT, _UserT]:
         """
         Return a queryset of users who have permission to perform the given action on
         some or all instances of this model
         """
-        ...
 
     def user_has_permission_for_instance(self, user: _UserT, action: str, instance: _Model) -> bool:
         """
         Return whether the given user has permission to perform the given action on the
         given model instance
         """
-        ...
 
     def user_has_any_permission_for_instance(self, user: _UserT, actions: Sequence[str], instance: _Model) -> bool:
         """
         Return whether the given user has permission to perform any of the given actions
         on the given model instance
         """
-        ...
 
     def instances_user_has_any_permission_for(self, user: _UserT, actions: Sequence[str]) -> QuerySet[_Model, _Model]:
         """
         Return a queryset of all instances of this model for which the given user has
         permission to perform any of the given actions
         """
-        ...
 
     def instances_user_has_permission_for(self, user: _UserT, action: str) -> QuerySet[_Model, _Model]:
         """
         Return a queryset of all instances of this model for which the given user has
         permission to perform the given action
         """
-        ...
 
     def users_with_any_permission_for_instance(self, actions: Sequence[str], instance: _Model) -> QuerySet[_UserT, _UserT]:
         """
         Return a queryset of all users who have permission to perform any of the given
         actions on the given model instance
         """
-        ...
 
     def users_with_permission_for_instance(self, action, instance: _Model) -> QuerySet[_UserT, _UserT]:
         ...
@@ -181,7 +170,7 @@ class ModelPermissionPolicy(BaseDjangoAuthPermissionPolicy[_Model, _UserT, _Perm
     A permission policy that enforces permissions at the model level, by consulting
     the standard django.contrib.auth permission model directly
     """
-    def user_has_permission(self, user: _AnyUser, action: str) -> bool: ...
+    def user_has_permission(self, user: AnonymousUser | _UserT, action: str) -> bool: ...
 
     def users_with_any_permission(self, actions: Sequence[str]) -> QuerySet[_UserT, _UserT]: ...
 
