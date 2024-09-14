@@ -23,7 +23,7 @@ from django.db.models.deletion import Collector
 from django.db.models.fields import NOT_PROVIDED, Field
 from django.db.models.fields.related import RelatedField
 from django.utils.functional import Promise
-from pydantic import BaseModel, ConfigDict, IPvAnyAddress, Json
+from pydantic import BaseModel, ConfigDict, IPvAnyAddress, Json, PrivateAttr
 from pydantic.fields import FieldInfo
 from pydantic.v1.fields import Required
 
@@ -34,7 +34,8 @@ BaseModel.model_config['protected_namespaces'] = ()
 from diffsync import Adapter, DiffSyncModel
 from diffsync.diff import Diff, DiffElement
 from diffsync.enum import DiffSyncActions, DiffSyncFlags, DiffSyncModelFlags
-from diffsync.exceptions import ObjectNotCreated
+from diffsync.exceptions import ObjectNotCreated, ObjectNotFound
+from diffsync.helpers import DiffSyncDiffer
 from diffsync.store import BaseStore
 from diffsync.store.local import LocalStore
 from loguru import logger as log
@@ -195,7 +196,7 @@ def _convert_field(field: Field, schema_name: str) -> tuple[PythonType, FieldInf
         else:
             mapped_type = get_internal_type(field)
             if mapped_type is None:
-                logger.warning(
+                log.warning(
                     "%s is currently unhandled, defaulting to str.", field.__class__,
                 )
                 python_type = str
@@ -319,13 +320,14 @@ class SiblingIds(NamedTuple):
     next: str | None
 
 SIBLING_ORDER_ATTRIBUTE = 'sibling_order'
-TREE_PARENT_ATTRIBUTE = 'parent'
 
 class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
     _model: ClassVar[type[_ModelT]]  # type: ignore[misc]
     _django_fields: ClassVar[DjangoModelFields]
     _allow_related_model_deletion: ClassVar[bool] = False
     _is_orderable: ClassVar[bool] = False
+    _parent_key: ClassVar[str | None] = None
+    _parent_type: ClassVar[str | None] = None
     model_flags: DiffSyncModelFlags = DiffSyncModelFlags.NATURAL_DELETION_ORDER
 
     sibling_order: int | None = None
@@ -334,12 +336,13 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
     _instance: _ModelT | None = None
     _instance_pk: int | None = None
     _parent_id: str | None = None
-    _parent_type: type[DjangoDiffModel] | None = None
+    _parent_model: type[DjangoDiffModel] | None = None
+    _children_changed: set[str] = PrivateAttr(default_factory=set)
 
     model_config = ConfigDict(extra='allow', protected_namespaces=())
 
     @classmethod
-    def __pydantic_init_subclass__(cls, **kwargs) -> None:
+    def __pydantic_init_subclass__(cls, **kwargs) -> None:  # noqa: C901
         if not hasattr(cls, '_model'):
             return
         include_fields = list(set(cls._identifiers) | set(cls._attributes))
@@ -349,11 +352,20 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         internal_attrs = []
         mp_model = cls._mpnode_or_none()
         if mp_model:
-            if TREE_PARENT_ATTRIBUTE not in cls._attributes:
-                msg = f"{cls._model!r} is an MP_Node, but '{TREE_PARENT_ATTRIBUTE}' is not in _attributes"
+            if not cls._parent_key:
+                msg = f"{cls._model!r} is an MP_Node, but _parent_key is not set"
+                raise AttributeError(msg)
+            if cls._parent_key not in cls._attributes:
+                msg = f"{cls._model!r} is an MP_Node, but '{cls._parent_key}' is not in _attributes"
                 raise AttributeError(msg)
             if not mp_model.node_order_by:
                 cls._is_orderable = True
+            if cls._parent_type is None:
+                cls._parent_type = cls._modelname
+            else:
+                assert cls._parent_type == cls._modelname
+        elif cls._parent_key and not cls._parent_type:
+            raise AttributeError("'_parent_type' is not set")
 
         if hasattr(cls._model, 'sort_order_field'):
             cls._is_orderable = True
@@ -435,22 +447,100 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         return kwargs
 
     @classmethod
+    def get_mpnode_root_instance(cls, instance: _ModelT) -> _ModelT | None:  # noqa: ARG003
+        return None
+
+    @classmethod
+    def _create_mpnode(
+        cls, adapter: DjangoAdapter, instance: _ModelT, parent_id: str | None, sibling_order: int | None,
+    ) -> _ModelT:
+        parent = adapter.get(cls, str(parent_id)) if parent_id else None
+        root_obj = cls.get_mpnode_root_instance(instance)
+        parent_obj = parent.get_django_instance() if parent else cls.get_mpnode_root_instance(instance)
+        assert isinstance(instance, MP_Node)
+        assert parent_obj is None or isinstance(parent_obj, MP_Node)
+
+        if not cls._is_orderable:
+            assert sibling_order is None
+            if parent_obj is None:
+                child_obj = instance.add_root(instance=instance)
+            else:
+                assert isinstance(parent_obj, type(instance))
+                child_obj = parent_obj.add_child(instance=instance)
+                parent_obj.save()
+            return cast(_ModelT, child_obj)
+
+        # Orderable mptree
+        if parent is not None:
+            assert sibling_order is not None
+            assert parent_obj is not None
+            siblings = parent.get_children(cls, ordered=True)
+            if len(siblings) == 0:
+                child_obj = parent_obj.add_child(instance=instance)
+            else:
+                left_sibling = siblings[sibling_order - 1]
+                sibling_obj = left_sibling.get_django_instance()
+                assert isinstance(sibling_obj, MP_Node)
+                child_obj = sibling_obj.add_sibling(pos='right', instance=instance)
+        elif root_obj is None:
+            child_obj = instance.add_root(instance=instance)
+        else:
+            assert isinstance(root_obj, MP_Node)
+            child_obj = root_obj.add_child(instance=instance)
+
+        return cast(_ModelT, child_obj)
+
+    @classmethod
+    def create_django_instance(cls, adapter: DjangoAdapter, create_kwargs: dict) -> _ModelT:
+        model = cls._model
+        mp_model = cls._mpnode_or_none()
+        parent_id = None
+        sibling_order: int | None = None
+
+        if cls._is_orderable:
+            sibling_order = create_kwargs.pop(SIBLING_ORDER_ATTRIBUTE)
+            if not mp_model:
+                sort_field = getattr(model, 'sort_order_field')  # noqa: B009
+                create_kwargs[sort_field] = sibling_order
+
+        if mp_model:
+            parent_key = cls._parent_key
+            parent_id = create_kwargs.pop(parent_key)
+
+        instance = model(**create_kwargs)
+
+        if mp_model:
+            return cls._create_mpnode(adapter, instance, parent_id, sibling_order)
+
+        instance.save()
+        return instance
+
+    @classmethod
     def create(cls, adapter: Adapter, ids: dict, attrs: dict) -> Self | None:
+        self = super().create(adapter, ids, attrs)
+        assert self is not None
+
+        if cls._parent_key:
+            assert cls._parent_key in attrs
+            # parent_id = attrs[cls._parent_key]
+            # self._parent_id = str(parent_id) if parent_id is not None else None
+            # assert cls._parent_type is not None
+            # if self._parent_id:
+            #     parent = adapter.get(cls._parent_type, self._parent_id)
+            #     parent.add_child(self)
+
         if not isinstance(adapter, DjangoAdapter):
-            return super().create(adapter, ids, attrs)
+            return self
 
         create_kwargs = cls.get_create_kwargs(adapter, ids, attrs)
         try:
-            obj = adapter.create_instance(cls, create_kwargs)
+            obj = cls.create_django_instance(adapter, create_kwargs)
             obj_pk = obj.pk
             cls.create_related(adapter, ids, attrs, obj)
         except Exception as e:
             msg = f"Unable to create a new {cls._model._meta.label} instance with ids {ids}"
             raise ObjectNotCreated(msg) from e
 
-        self = super().create(adapter, ids, attrs)
-        if self is None:
-            return None
         self._instance = obj
         self._instance_pk = obj_pk
         return self
@@ -470,17 +560,23 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         self._convert_enums(kwargs)
         return kwargs
 
-    """
-    def _get_sibling_order(self) -> int:
-        sort_order = 0
-        ss = self.sibling_ids
-        assert isinstance(self.adapter, TypedAdapter)
-        while ss.prev is not None:
-            sibling = self.adapter.get(type(self), ss.prev)
-            ss = sibling.sibling_ids
-            sort_order += 1
-        return sort_order
-    """
+    def change_parent(self, old_parent: DjangoDiffModel, new_parent: DjangoDiffModel):
+        assert self.get_type() in old_parent._children
+        assert self.get_type() in new_parent._children
+        old_parent.remove_child(self)
+        old_parent._children_changed.add(self.get_type())
+        new_parent.add_child(self)
+        new_parent._children_changed.add(self.get_type())
+        if not self._mpnode_or_none():
+            return
+
+        child_obj = self._instance
+        assert isinstance(child_obj, MP_Node)
+        parent_obj = new_parent._instance
+        assert type(parent_obj) is type(child_obj)
+        assert isinstance(parent_obj, MP_Node)
+        #siblings = new_parent.get_children(type(self), ordered=True)
+        child_obj.move(parent_obj, 'last-child')
 
     def update(self, attrs: dict) -> Self | None:
         if not isinstance(self.adapter, DjangoAdapter):
@@ -496,19 +592,35 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         # else:
         #     parent_changed = False
 
-        if self._mpnode_or_none() and TREE_PARENT_ATTRIBUTE in update_kwargs:
-            new_parent_id = update_kwargs.pop(TREE_PARENT_ATTRIBUTE, None)
-            assert self._parent_type is not None
+        new_parent: DjangoDiffModel | None
+        old_parent: DjangoDiffModel | None
+
+        if self._parent_key and self._parent_key in update_kwargs:
+            new_parent_id = update_kwargs[self._parent_key]
+            if new_parent_id is None:
+                raise NotImplementedError()
+            else:  # noqa: RET506
+                new_parent_id = str(new_parent_id)
+            if self._mpnode_or_none():
+                # For MP_Nodes, the parent key is not a real DB column
+                update_kwargs.pop(self._parent_key)
+            assert self._parent_model is not None
             assert self._parent_id is not None
-            raise Exception("Not supported")  # FIXME
-            new_parent, old_parent = self.adapter.get_by_uids([new_parent_id, self._parent_id], self._parent_type)
+            new_parent = self.adapter.get(self._parent_model, new_parent_id)
+            old_parent = self.adapter.get(self._parent_model, self._parent_id)
+        else:
+            new_parent = old_parent = None
 
         if self._is_orderable:
             sibling_order = update_kwargs.pop(SIBLING_ORDER_ATTRIBUTE, None)
             if sibling_order is not None:
-                assert self._parent_type is not None
+                assert self._parent_model is not None
                 assert self._parent_id is not None
-                _parent = self.adapter.get(self._parent_type, self._parent_id)
+                parent = self.adapter.get(self._parent_model, self._parent_id)
+                parent._children_changed.add(self.get_type())
+                log.debug("Sort order changed for %s:%s (parent %s:%s)" % (
+                    self.get_type(), self.get_unique_id(), parent.get_type(), parent.get_unique_id(),
+                ))
                 # FIXME: Should we reorder the "children" attribute?
 
         if update_kwargs:
@@ -517,7 +629,10 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
 
             obj.save(update_fields=update_kwargs.keys(), force_update=True)
 
-        return super().update(attrs)
+        ret = super().update(attrs)
+        if new_parent and old_parent:
+            self.change_parent(old_parent, new_parent)
+        return ret
 
     def get_delete_collector[CollT: Collector](self, instance: _ModelT, collector: type[CollT]) -> CollT:
         coll = collector(using=router.db_for_write(type(instance), instance=instance))
@@ -539,14 +654,16 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
     def delete(self) -> Self | None:
         if not isinstance(self.adapter, DjangoAdapter):
             return super().delete()
-        assert self._instance_pk is not None
         instance = self._model._default_manager.get(pk=self._instance_pk)
         if not self.is_object_deletion_allowed(instance):
             return None
         obj_count, related = instance.delete()
-        # if related and not self._allow_related_model_deletion:
-        #     msg = f"Deletion of {self.get_type()}: {self.get_unique_id()} resulted in deletion of other objects: {related}"
-        #     raise ObjectNotDeleted(msg)
+        if related:
+            related_objs_str = '; '.join('%s: %d' % (key, val) for key, val in related.items())
+            related_str = 'with related objects: %s' % related_objs_str
+        else:
+            related_str = 'with no related objects'
+        log.info("Deleted %s:%s %s" % (self.get_type(), self.get_unique_id(), related_str))
         return super().delete()
 
     def get_children[ChildT: DjangoDiffModel](self, child_type: type[ChildT], ordered: bool = False) -> list[ChildT]:
@@ -561,27 +678,26 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
             children = sorted(children, key=lambda x: getattr(x, SIBLING_ORDER_ATTRIBUTE))
         return children
 
-    def add_child(self, child: DiffSyncModel) -> None:
+    def add_child(self, child: DiffSyncModel, initial: bool = False) -> None:
         super().add_child(child)
-        if not isinstance(child, DjangoDiffModel) or not child._is_orderable:
+        if not isinstance(child, DjangoDiffModel):
             return
 
-        if child.sibling_order is None:
-            type_str = child.get_type()
-            children_ids = getattr(self, self._children[type_str])
-            child.sibling_order = len(children_ids) - 1
         child._parent_id = self.get_unique_id()
-        child._parent_type = type(self)
+        child._parent_model = type(self)
+        if initial:
+            if child._is_orderable and child.sibling_order is None:
+                type_str = child.get_type()
+                children_ids = getattr(self, self._children[type_str])
+                child.sibling_order = len(children_ids) - 1
+            return
+
+        self._children_changed.add(child.get_type())
 
     def remove_child(self, child: DiffSyncModel) -> None:
         super().remove_child(child)
         assert isinstance(child, DjangoDiffModel)
-        if not child._is_orderable:
-            return
-
-        # Re-order the siblings
-        for order, sibling in enumerate(self.get_children(type(child), ordered=True)):
-            sibling.sibling_order = order
+        self._children_changed.add(child.get_type())
 
 
 class TypedAdapter(Adapter):
@@ -608,6 +724,46 @@ class TypedAdapter(Adapter):
 
     def get_all(self, obj: str | DiffSyncModel | type[DiffSyncModel]) -> Sequence[DiffSyncModel]:  # pyright: ignore
         return super().get_all(obj)
+
+class MergingSyncDiffer(DiffSyncDiffer):
+    parent_changes: set[tuple[str, str]]
+
+    def __init__(
+            self,
+            src_diffsync: Adapter,
+            dst_diffsync: Adapter,
+            flags: DiffSyncFlags,
+            diff_class: type[Diff] = Diff,
+            callback: Callable[[str, int, int], None] | None = None,
+        ):
+        self.parent_changes = set()
+        super().__init__(src_diffsync, dst_diffsync, flags, diff_class, callback)
+
+    def diff_object_pair(self, src_obj: DiffSyncModel | None, dst_obj: DiffSyncModel | None) -> DiffElement | None:
+        parent_changed = False
+        if src_obj is not None and dst_obj is None:
+            # Try to detect parent moves
+            unique_id = src_obj.get_unique_id()
+            try:
+                dst_obj = self.dst_diffsync.get(src_obj.get_type(), unique_id)
+                if isinstance(dst_obj, DjangoDiffModel):
+                    assert dst_obj._parent_key is not None
+                self.parent_changes.add((dst_obj.get_type(), dst_obj.get_unique_id()))
+                parent_changed = True
+            except ObjectNotFound:
+                dst_obj = None
+        elif src_obj is None and dst_obj is not None:
+            type_id = (dst_obj.get_type(), dst_obj.get_unique_id())
+            if type_id in self.parent_changes:
+                return None
+
+        el = super().diff_object_pair(src_obj, dst_obj)
+        if parent_changed:
+            assert el is not None
+            attr_diffs = el.get_attrs_diffs().get('+', {})
+            if isinstance(dst_obj, DjangoDiffModel):
+                assert dst_obj._parent_key in attr_diffs
+        return el
 
 type ParentChildGroup = tuple[type[DjangoDiffModel], str, str]
 
@@ -670,6 +826,34 @@ class DjangoAdapter(TypedAdapter):
         assert self.transaction_started
         transaction.set_rollback(rollback=True)
 
+    def diff_from(
+        self,
+        source: Adapter,
+        diff_class: type[Diff] = Diff,
+        flags: DiffSyncFlags = DiffSyncFlags.NONE,
+        callback: Callable[[str, int, int], None] | None = None,
+    ) -> Diff:
+        """
+        Generate a Diff describing the difference from the other DiffSync to this one.
+
+        Args:
+        ----
+            source: Object to diff against.
+            diff_class: Diff or subclass thereof to use for diff calculation and storage.
+            flags: Flags influencing the behavior of this diff operation.
+            callback: Function with parameters (stage, current, total), to be called at intervals as the
+                calculation of the diff proceeds.
+
+        """
+        differ = MergingSyncDiffer(
+            src_diffsync=source,
+            dst_diffsync=self,
+            flags=flags,
+            diff_class=diff_class,
+            callback=callback,
+        )
+        return differ.calculate_diffs()
+
     def sync_from(
         self,
         source: Adapter,
@@ -682,56 +866,6 @@ class DjangoAdapter(TypedAdapter):
         with transaction.atomic():
             return super().sync_from(source, diff_class, flags, callback, diff)
 
-    def _create_mpnode[M: Model](
-        self, cls: type[DjangoDiffModel[M]], instance: M, parent_id: str | None, sibling_order: int | None,
-    ) -> M:
-        parent = self.get(cls, parent_id) if parent_id else None
-        assert isinstance(instance, MP_Node)
-        if not cls._is_orderable:
-            assert sibling_order is None
-            if parent is None:
-                instance.add_root(instance=instance)
-            else:
-                parent_obj = parent.get_django_instance()
-                assert isinstance(parent_obj, MP_Node)
-                instance = cast(M, parent_obj.add_child(instance=instance))
-                parent_obj.save()
-            return instance
-
-        # Orderable mptree
-        if parent is not None:
-            assert sibling_order is not None
-            left_sibling = parent.get_children(cls, ordered=True)[sibling_order - 1]
-            sibling_obj = left_sibling.get_django_instance()
-            assert isinstance(sibling_obj, MP_Node)
-            instance = cast(M, sibling_obj.add_sibling(pos='right', instance=instance))
-        else:
-            instance = cast(M, instance.add_root(instance=instance))
-        return instance
-
-    def create_instance[M: Model](self, cls: type[DjangoDiffModel[M]], create_kwargs: dict) -> M:
-        model = cast(type[M], cls._model)  # pyright: ignore
-        mp_model = cls._mpnode_or_none()
-        parent_id = None
-        sibling_order: int | None = None
-
-        if cls._is_orderable:
-            sibling_order = create_kwargs.pop(SIBLING_ORDER_ATTRIBUTE)
-            if not mp_model:
-                sort_field = getattr(model, 'sort_order_field')  # noqa: B009
-                create_kwargs[sort_field] = sibling_order
-
-        if mp_model:
-            parent_id = create_kwargs.pop(TREE_PARENT_ATTRIBUTE)
-
-        instance = model(**create_kwargs)
-
-        if mp_model:
-            return self._create_mpnode(cls, instance, parent_id, sibling_order)
-
-        instance.save()
-        return instance
-
     def get_model_class(self, type_str: str) -> type[DjangoDiffModel]:
         cls = getattr(self, type_str)
         assert issubclass(cls, DjangoDiffModel)
@@ -740,28 +874,22 @@ class DjangoAdapter(TypedAdapter):
     def _process_diff_element(
         self, el: DiffElement, parent: DjangoDiffModel | None, group: str, parents: set[ParentChildGroup], indent: int,
     ) -> None:
-        model = cast(DjangoDiffModel, getattr(self, el.type))
+        model = getattr(self, el.type)
+        assert issubclass(model, DjangoDiffModel)
+
         if el.action == DiffSyncActions.DELETE:
             if model._is_orderable and parent is not None:
                 parents.add((type(parent), parent.get_unique_id(), group))
             return
 
+        obj = self.get(model, el.keys)
+        if obj._children and obj._children_changed:
+            for key in obj._children_changed:
+                parents.add((model, obj.get_unique_id(), key))
+
         if not el.has_diffs(include_children=True):
             return
 
-        obj = self.get(el.type, el.keys)
-        # print(' ' * indent, el.has_diffs(), '%s: %s' % (obj.get_type(), obj.get_unique_id()), el.get_attrs_diffs().get('+'))
-        attrs = el.get_attrs_diffs().get('+', {})
-
-        check_tree = False
-        if model._mpnode_or_none() and TREE_PARENT_ATTRIBUTE in attrs:
-            check_tree = True
-        if model._is_orderable and SIBLING_ORDER_ATTRIBUTE in attrs:
-            check_tree = True
-        if parent is not None and check_tree:
-            parents.add((type(parent), parent.get_unique_id(), group))
-
-        assert isinstance(obj, DjangoDiffModel)
         self._process_diff(el.child_diff, obj, parents, indent + 1)
 
     def _process_diff(self, diff: Diff, parent: DjangoDiffModel | None, parents: set[ParentChildGroup], indent: int) -> None:
@@ -769,28 +897,39 @@ class DjangoAdapter(TypedAdapter):
             for child in diff.children[group].values():
                 self._process_diff_element(child, parent, group, parents, indent)
 
-    def _reorder_mptree(self, parent: MP_Node, children: list[DjangoDiffModel[MP_Node]]) -> None:
-        db_pks: list[int] = list(parent.get_children().values_list('pk', flat=True))
+    def _reorder_mptree(
+        self,
+        parent: MP_Node | None,
+        child_model: type[MP_Node],
+        child_type: type[DjangoDiffModel[MP_Node]],
+        children: list[DjangoDiffModel[MP_Node]],
+    ) -> None:
+        if parent:
+            siblings = parent.get_children()
+        else:
+            # Not re-arranging root nodes
+            return
+        db_pks: list[int] = list(siblings.values_list('pk', flat=True))
         new_db_pks: list[int] = [cast(int, child._instance_pk) for child in children]
-        assert len(db_pks) == len(new_db_pks)
-        assert set(db_pks) == set(new_db_pks)
-        #for order, db_child in enumerate(db_children):
-        #    db_by_pk[db_child.pk] = db_child
-        #    setattr(db_child, '_old_order', order)
 
-        mgr = parent.__class__.objects
+        mgr = child_model._default_manager
         nr_changes = 0
         for order, new_pk in enumerate(new_db_pks):
-            if new_pk == db_pks[order]:
+            if new_pk in db_pks:
+                old_pk = None
+            else:
+                old_pk = db_pks[order]
+            if new_pk == old_pk:
                 continue
 
             nr_changes += 1
             db_child = mgr.get(pk=new_pk)
-            db_pks.remove(new_pk)
+            if old_pk is not None:
+                db_pks.remove(new_pk)
             if order == 0:
                 db_child.move(parent, 'first-child')
             else:
-                db_child.move(mgr.get(pk=db_pks[order - 1]), 'right')
+                db_child.move(mgr.get(pk=new_db_pks[order - 1]), 'right')
             db_pks.insert(order, new_pk)
 
         if nr_changes:
@@ -809,15 +948,17 @@ class DjangoAdapter(TypedAdapter):
             setattr(obj, order_field, order)
             obj.save(update_fields=[order_field])
 
-    def order_children(self, parent: DjangoDiffModel, group: str):
+    def reorder_children(self, parent: DjangoDiffModel, group: str):
         child_type = getattr(self, group)
         assert issubclass(child_type, DjangoDiffModel)
         child_model = child_type._model  # pyright: ignore
         children = parent.get_children(child_type, ordered=True)
-
-        if parent._mpnode_or_none() and child_type._mpnode_or_none():
-            parent_obj = parent.get_django_instance()
-            self._reorder_mptree(parent_obj, children)
+        if child_type._mpnode_or_none():
+            if type(parent) is not child_type:
+                parent_obj = parent.get_mpnode_root_instance(parent.get_django_instance())
+            else:
+                parent_obj = parent.get_django_instance()
+            self._reorder_mptree(parent_obj, child_model, child_type, children)
         else:
             self._reorder_sorted(child_model, [cast(int, child._instance_pk) for child in children])
 
@@ -829,9 +970,12 @@ class DjangoAdapter(TypedAdapter):
         trees_to_check: set[type[MP_Node]] = set()
         for parent_type, parent_id, group in parents:
             parent = self.get(parent_type, parent_id)
-            log.debug("Re-ordering children under %s:%s (group %s)" % (parent_type, parent_id, group))
-            self.order_children(parent, group)
             child_type = getattr(self, group)
+            if not child_type._is_orderable:
+                continue
+
+            log.debug("Re-ordering children under %s:%s (group %s)" % (parent_type._modelname, parent_id, group))
+            self.reorder_children(parent, group)
             assert issubclass(child_type, DjangoDiffModel)
             mp_model = child_type._mpnode_or_none()
             if mp_model:
