@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 import functools
 import re
 import typing
-from typing import Any, Generic, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Type, TypeVar
 
 from django.db.models import Model
 from django.db.models.constants import LOOKUP_SEP
+from graphene import Field, Interface
 from graphene.utils.trim_docstring import trim_docstring
 from graphene_django import DjangoObjectType
 from graphql import GraphQLResolveInfo
@@ -78,6 +80,14 @@ def resolve_i18n_field(field_name, obj, info):
 M = TypeVar('M', bound=Model)
 
 
+class DjangoNodeMeta:
+    model: type[Model]
+    name: str
+    description: str
+    fields: dict[str, Field] | Iterable[str]
+    interfaces: Iterable[type[Interface]]
+
+
 class DjangoNode(DjangoObjectType, Generic[M]):
     _meta: DjangoObjectTypeOptions
 
@@ -130,6 +140,8 @@ class DjangoNode(DjangoObjectType, Generic[M]):
         super().__init_subclass_with_meta__(**kwargs)
         cls._resolve_i18n_fields()
 
-
-    class Meta:
-        abstract = True
+    if TYPE_CHECKING:
+        Meta: Any
+    else:
+        class Meta:
+            abstract = True
