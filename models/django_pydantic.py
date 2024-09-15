@@ -416,7 +416,7 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         return self
 
     @classmethod
-    def create_related(cls, _adapter: DjangoAdapter, _ids: dict, _attrs: dict, _instance: _ModelT, /) -> None:
+    def create_related(cls, adapter: DjangoAdapter, ids: dict, attrs: dict, instance: _ModelT, /) -> None:
         """
         Create related objects if there are any.
 

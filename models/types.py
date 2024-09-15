@@ -45,7 +45,6 @@ type FK[To: Model | None] = ForeignKey[To, To]
 if TYPE_CHECKING:
     @type_check_only
     class RelatedManagerQS[To: Model, QS: QuerySet](RelatedManager[To]):  # pyright: ignore
-        @type_check_only
         def get_queryset(self) -> QS: ...
 
     @type_check_only

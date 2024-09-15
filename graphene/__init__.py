@@ -1,26 +1,27 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
 import functools
 import re
 import typing
-from typing import TYPE_CHECKING, Any, Generic, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from django.db.models import Model
 from django.db.models.constants import LOOKUP_SEP
-from graphene import Field, Interface
+from django.http import HttpRequest
 from graphene.utils.trim_docstring import trim_docstring
 from graphene_django import DjangoObjectType
 from graphql import GraphQLResolveInfo
 from modeltrans.translator import get_i18n_field
-from wagtail.models import WSGIRequest
 
 import graphene_django_optimizer as gql_optimizer
 
 from kausal_common.i18n.helpers import get_language_from_default_language_field
 
 if typing.TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from django.contrib.auth.models import AnonymousUser
+    from graphene import Field, Interface
     from graphene_django.types import DjangoObjectTypeOptions
     from graphql.language.ast import OperationDefinitionNode
     from modeltrans.fields import TranslationField
@@ -29,7 +30,7 @@ if typing.TYPE_CHECKING:
 
 type UserOrAnon = 'User | AnonymousUser'
 
-class GQLContext(WSGIRequest):
+class GQLContext(HttpRequest):
     user: UserOrAnon
     graphql_query_language: str
 
