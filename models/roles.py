@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import abc
+from dataclasses import dataclass, field
 from functools import cache, cached_property
-from typing import TYPE_CHECKING, ClassVar, Literal, Protocol
+from typing import TYPE_CHECKING, ClassVar, Literal, Protocol, overload
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -170,11 +171,11 @@ class InstanceSpecificRole[M: Model](Role, abc.ABC):
     def assign_user(self, obj: M, user: User) -> bool:
         obj_group = self.get_existing_instance_group(obj)
         if obj_group is None:
-            logger.warning("Unable to assign user to group; no group exists for object '%s' and role '%s'" % (str(obj), self.id))
-            return False
+            obj_group = self.create_or_update_instance_group(obj)
         if obj_group in user.groups.all():
             return False
         user.groups.add(obj_group)
+        logger.info("Assign role %s for user %s" % (str(self.get_instance_group_name(obj)), user))
         return True
 
     def unassign_user(self, obj: M, user: User) -> bool:
@@ -184,6 +185,7 @@ class InstanceSpecificRole[M: Model](Role, abc.ABC):
         if obj_group not in user.groups.all():
             return False
         user.groups.remove(obj_group)
+        logger.info("Unassign role %s for user %s" % (str(self.get_instance_group_name(obj)), user))
         return True
 
 
@@ -232,3 +234,25 @@ role_registry = RoleRegistry()
 
 def register_role(role: InstanceSpecificRole):
     return role_registry.register(role)
+
+
+@dataclass
+class UserPermissionCache:
+    user: User
+    instance_roles: dict[str, set[int]] = field(default_factory=dict)
+
+    @overload
+    def has_instance_role[M: Model](self, role: InstanceSpecificRole[M], obj: M) -> bool: ...
+
+    @overload
+    def has_instance_role(self, role: str, obj: Model) -> bool: ...
+
+    def has_instance_role(self, role: str | InstanceSpecificRole, obj: Model) -> bool:
+        if isinstance(role, str):
+            role = role_registry.get_role(role)
+        if not isinstance(obj, role.model):
+            raise TypeError("%s is not an instance of %s" % (obj, role.model))
+        if role.id in self.instance_roles:
+            return obj.pk in self.instance_roles
+        self.instance_roles[role.id] = set(obj.pk for obj in role.get_instances_for_user(self.user))
+        return True
