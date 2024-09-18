@@ -567,12 +567,12 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         old_parent._children_changed.add(self.get_type())
         new_parent.add_child(self)
         new_parent._children_changed.add(self.get_type())
-        if not self._mpnode_or_none():
+        if not self._mpnode_or_none() or not new_parent._mpnode_or_none():
             return
 
         child_obj = self._instance
         assert isinstance(child_obj, MP_Node)
-        parent_obj = new_parent._instance
+        parent_obj = new_parent.get_django_instance()
         assert type(parent_obj) is type(child_obj)
         assert isinstance(parent_obj, MP_Node)
         #siblings = new_parent.get_children(type(self), ordered=True)
@@ -915,7 +915,7 @@ class DjangoAdapter(TypedAdapter):
         mgr = child_model._default_manager
         nr_changes = 0
         for order, new_pk in enumerate(new_db_pks):
-            if new_pk in db_pks:
+            if new_pk not in db_pks:
                 old_pk = None
             else:
                 old_pk = db_pks[order]
