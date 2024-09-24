@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from django.conf import settings
+
 from gunicorn.glogging import Logger as BaseLogger
 from loguru import logger
 
@@ -25,10 +27,10 @@ class Logger(BaseLogger):
         status: int | None = resp.status_code
         level = 'INFO'
         if isinstance(status, int):
-            if status >= 400 and status < 500:
-                level = 'WARNING'
-            elif status >= 500:
+            if status >= 500 and settings.DEBUG:
                 level = 'ERROR'
+            if status >= 400:
+                level = 'WARNING'
         remote_addr = req.remote_addr
         if isinstance(remote_addr, tuple):
             remote_addr = ':'.join(str(x) for x in remote_addr)
