@@ -91,6 +91,7 @@ def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
             'celery.utils': level('INFO'),
             'inotify': level('INFO'),
             'fsspec': level('INFO'),
+            'oauthlib.oauth2.rfc6749.endpoints': level('INFO'),
             '': level('DEBUG'),
         },
 
