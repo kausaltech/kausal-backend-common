@@ -7,10 +7,8 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from django.db.models import Model
 from django.db.models.constants import LOOKUP_SEP
-from django.http import HttpRequest
 from graphene.utils.trim_docstring import trim_docstring
 from graphene_django import DjangoObjectType
-from graphql import GraphQLResolveInfo
 from modeltrans.translator import get_i18n_field
 
 import graphene_django_optimizer as gql_optimizer
@@ -19,25 +17,29 @@ from kausal_common.i18n.helpers import get_language_from_default_language_field
 
 if typing.TYPE_CHECKING:
     from collections.abc import Iterable
+    from typing import type_check_only
 
     from django.contrib.auth.models import AnonymousUser
+    from django.http import HttpRequest
     from graphene import Field, Interface
     from graphene_django.types import DjangoObjectTypeOptions
-    from graphql.language.ast import OperationDefinitionNode
+    from graphql import GraphQLResolveInfo
     from modeltrans.fields import TranslationField
 
     from users.models import User
 
 type UserOrAnon = 'User | AnonymousUser'
 
-class GQLContext(HttpRequest):
-    user: UserOrAnon
-    graphql_query_language: str
+if TYPE_CHECKING:
+    @type_check_only
+    class GQLContext(HttpRequest):
+        user: UserOrAnon  # type: ignore[override]
+        graphql_query_language: str
 
 
-class GQLInfo(GraphQLResolveInfo):
-    context: GQLContext
-    operation: OperationDefinitionNode
+    @type_check_only
+    class GQLInfo(GraphQLResolveInfo):
+        context: GQLContext  # type: ignore[override]
 
 
 class ModelWithI18n(Model):
@@ -122,7 +124,7 @@ class DjangoNode(DjangoObjectType, Generic[M]):
 
 
     @classmethod
-    def __init_subclass_with_meta__(cls, **kwargs: Any) -> None:
+    def __init_subclass_with_meta__(cls, **kwargs: Any) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]
         if 'name' not in kwargs:
             # Remove the trailing 'Node' from the object types
             name = cls.__name__
