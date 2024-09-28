@@ -197,6 +197,9 @@ check_package_versions() {
         print_error "No requirements files found in pyproject.toml"
         return 1
     fi
+    if [ -f "requirements-local.txt" ]; then
+        REQ_FILES="$REQ_FILES requirements-local.txt"
+    fi
 
     echo -e "  📄 Requirements files: ${DIM}$(echo $REQ_FILES | xargs echo)${NC}"
 
