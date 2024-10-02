@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import logging
-import os
+from dataclasses import dataclass
 from logging.config import dictConfig
-from typing import TYPE_CHECKING, Literal, Protocol
+from typing import TYPE_CHECKING, Literal, Protocol, Any
+import warnings
+
+from django.conf import settings
 
 from loguru import logger
 
@@ -18,14 +21,48 @@ if TYPE_CHECKING:
 type LogFormat = Literal['rich', 'logfmt']
 type _Level = int | str
 
+
 class GetHandler(Protocol):
     def __call__(self, level: _Level, handler: str | None = None) -> _LoggerConfiguration: ...
 
 
-def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
+@dataclass
+class UserLoggingOptions:
+    """Allow developers to add useful debug info and filter extra noise in their local environments."""
+
+    sql_queries: bool = False
+    people_verbose: bool = True
+    django_runserver_minimize_noise: bool = False
+    django_runserver_requests_media: bool = True
+    django_runserver_requests_static: bool = True
+    django_runserver_requests_favicon: bool = True
+    django_runserver_errors_media: bool = True
+    django_runserver_errors_static: bool = True
+    django_runserver_errors_favicon: bool = True
+    django_runserver_requests_broken_pipe: bool = True
+
+    def __post__init__(self):
+        if not self.django_runserver_minimize_noise:
+            return
+        self.django_runserver_requests_media = False
+        self.django_runserver_requests_static = False
+        self.django_runserver_requests_favicon = False
+        self.django_runserver_errors_media = False
+        self.django_runserver_errors_favicon = False
+        self.django_runserver_requests_broken_pipe = False
+        # static errors might indicate bugs
+        self.django_runserver_errors_static = True
+
+
+def get_logging_conf(
+    level: GetHandler,
+    options: UserLoggingOptions,
+):
+    filters = _get_filters(options)
     config: _DictConfigArgs = {
         'version': 1,
         'disable_existing_loggers': False,
+        'filters': filters,
         'formatters': {
             'verbose': {
                 'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s',
@@ -51,6 +88,7 @@ def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
                 'level': 'DEBUG',
                 'class': 'kausal_common.logging.handler.LoguruLoggingHandler',
                 'formatter': 'plain',
+                'filters': filters.keys(),
             },
             'uwsgi-req': {
                 'level': 'DEBUG',
@@ -58,7 +96,7 @@ def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
             },
         },
         'loggers': {
-            'django.db': level('DEBUG' if log_sql_queries else 'INFO'),
+            'django.db': level('DEBUG' if options.sql_queries else 'INFO'),
             'django.template': level('WARNING'),
             'django.utils.autoreload': level('INFO'),
             'django': level('DEBUG'),
@@ -92,11 +130,41 @@ def get_logging_conf(level: GetHandler, log_sql_queries: bool = False):
             'inotify': level('INFO'),
             'fsspec': level('INFO'),
             'oauthlib.oauth2.rfc6749.endpoints': level('INFO'),
+            'people.models': level('INFO' if options.people_verbose else 'WARNING'),
             '': level('DEBUG'),
         },
 
     }
     return config
+
+
+def _get_filters(options: UserLoggingOptions) -> dict[str, Any]:
+    filters: dict[str, Any] = {}
+    for key, substring in (
+        ('django_runserver_requests_media', settings.MEDIA_URL),
+        ('django_runserver_requests_static', settings.STATIC_URL),
+        ('django_runserver_requests_favicon', '/favicon.ico'),
+    ):
+        if getattr(options, key, True):
+            continue
+        filters[key] = {
+            '()': 'kausal_common.logging.filters.SkipDjangoMatchingPathsFilter',
+            'filter_broken_pipe': options.django_runserver_requests_broken_pipe is False,
+            'match_str_prefix': substring,
+        }
+
+    for key, substring in (
+        ('django_runserver_errors_media', settings.MEDIA_URL),
+        ('django_runserver_errors_static', settings.STATIC_URL),
+        ('django_runserver_errors_favicon', '/favicon.ico'),
+    ):
+        if getattr(options, key, True):
+            continue
+        filters[key] = {
+            '()': 'kausal_common.logging.filters.SkipDjangoMatchingPathsErrorLogFilter',
+            'match_str_prefix': substring,
+        }
+    return filters
 
 
 def _init_logging(log_format: LogFormat) -> GetHandler:
@@ -157,16 +225,35 @@ def _should_use_logfmt() -> bool:
 def _autodetect_log_format() -> LogFormat:
     return 'logfmt' if _should_use_logfmt() else 'rich'
 
-def init_logging_django(log_format: LogFormat | None = None, log_sql_queries: bool = False):
+def init_logging_django(
+        log_format: LogFormat | None = None,
+        log_sql_queries: bool | None = None,
+        options: UserLoggingOptions | None = None,
+):
     if log_format is None:
         log_format = _autodetect_log_format()
-    level: GetHandler = _init_logging(log_format)
-    conf = get_logging_conf(level, log_sql_queries=log_sql_queries)
+        level: GetHandler = _init_logging(log_format)
+    if options is None:
+        options = UserLoggingOptions()
+    if log_sql_queries is not None:
+        warnings.warn(
+            "Parameter log_sql_queries is deprecated. Please use the options parameter instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        options.sql_queries = log_sql_queries
+
+    conf = get_logging_conf(level, options)
     return conf
 
-def init_logging(log_format: LogFormat | None = None):
+def init_logging(
+        log_format: LogFormat | None = None,
+        options: UserLoggingOptions | None = None,
+):
     if log_format is None:
         log_format = 'logfmt' if _should_use_logfmt() else 'rich'
     level: GetHandler = _init_logging(log_format)
-    conf = get_logging_conf(level)
+    if options is None:
+        options = UserLoggingOptions()
+    conf = get_logging_conf(level, options)
     dictConfig(conf)
