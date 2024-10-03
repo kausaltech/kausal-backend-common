@@ -32,6 +32,18 @@
 			"del _${1:ModelName}Manager",
 		]
 	},
+	"Create queryset and manager": {
+		"scope": "python",
+		"prefix": "qsmgr",
+		"body": [
+			"class ${1:ModelName}QuerySet(QuerySet['${1}']):",
+			"    pass\n",
+			"_${1:ModelName}Manager = models.Manager.from_queryset(${1:ModelName}QuerySet)",
+			"class ${1:ModelName}Manager(ModelManager['${1}', ${1}QuerySet], _${1:ModelName}Manager):  # pyright: ignore",
+			"    \"\"\"Model manager for ${1:ModelName}.\"\"\"",
+			"del _${1:ModelName}Manager",
+		]
+	},
 	"Create Graphene resolver method": {
 		"scope": "python",
 		"prefix": "gres",
