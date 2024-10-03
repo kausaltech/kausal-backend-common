@@ -232,7 +232,7 @@ def init_logging_django(
 ):
     if log_format is None:
         log_format = _autodetect_log_format()
-        level: GetHandler = _init_logging(log_format)
+    level: GetHandler = _init_logging(log_format)
     if options is None:
         options = UserLoggingOptions()
     if log_sql_queries is not None:
