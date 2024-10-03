@@ -10,13 +10,14 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum
 from types import UnionType
-from typing import Any, ClassVar, Generic, NamedTuple, Self, TypeVar, cast, overload
+from typing import Any, ClassVar, Generator, Generic, NamedTuple, Self, TypeVar, cast, overload
 from uuid import UUID
 
 from django.contrib.admin.utils import NestedObjects
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import FieldDoesNotExist
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import router, transaction
 from django.db.models import ForeignObjectRel, Model
 from django.db.models.deletion import Collector
@@ -521,7 +522,7 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         assert self is not None
 
         if cls._parent_key:
-            assert cls._parent_key in attrs
+            assert (cls._parent_key in attrs) ^ (cls._parent_key in ids)
             # parent_id = attrs[cls._parent_key]
             # self._parent_id = str(parent_id) if parent_id is not None else None
             # assert cls._parent_type is not None
@@ -545,13 +546,13 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         self._instance_pk = obj_pk
         return self
 
-    def update_related(self, attrs: dict) -> None:
+    def update_related(self, obj: _ModelT, attrs: dict) -> None:
         """
         Update related objects if there are any.
 
         This will be implemented in a subclass.
         """
-        raise NotImplementedError
+        pass
 
     def get_update_kwargs(self, attrs: dict) -> dict:
         """Get the field values for updating a Django instance."""
@@ -629,9 +630,12 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
 
             obj.save(update_fields=update_kwargs.keys(), force_update=True)
 
+        self.update_related(obj, attrs)
+
         ret = super().update(attrs)
         if new_parent and old_parent:
             self.change_parent(old_parent, new_parent)
+
         return ret
 
     def get_delete_collector[CollT: Collector](self, instance: _ModelT, collector: type[CollT]) -> CollT:
@@ -699,6 +703,26 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         assert isinstance(child, DjangoDiffModel)
         self._children_changed.add(child.get_type())
 
+    def get_excludes(self) -> set[str]:
+        excludes = {'adapter', 'model_flags', 'sibling_order'}
+        for field in self._children.values():
+            excludes.add(field)
+        return excludes
+
+    def dict(self, **kwargs: Any) -> dict:
+        """Convert this DiffSyncModel to a dict, excluding the adapter field by default as it is not serializable."""
+        exclude = kwargs.pop('exclude', None)
+        exclude = set(exclude) if exclude is not None else set()
+        exclude |= self.get_excludes()
+        return self.model_dump(warnings='error', exclude=exclude, **kwargs)
+
+
+class JSONEncoder(DjangoJSONEncoder):
+    def default(self, o: Any) -> Any:
+        if isinstance(o, Enum):
+            return o.value
+        return super().default(o)
+
 
 class TypedAdapter(Adapter):
     @overload  # type: ignore[override]
@@ -725,39 +749,94 @@ class TypedAdapter(Adapter):
     def get_all(self, obj: str | DiffSyncModel | type[DiffSyncModel]) -> Sequence[DiffSyncModel]:  # pyright: ignore
         return super().get_all(obj)
 
+    def add_child(self, parent: DjangoDiffModel, child: DjangoDiffModel):
+        self.add(child)
+        parent.add_child(child, initial=True)
+
+    def _walk_children[M: DjangoDiffModel](self, parent: M) -> Generator[dict[Any, Any], None, None]:
+        yield parent.dict()
+        for child in parent.get_children(type(parent), ordered=True):
+            yield from self._walk_children(child)
+
+    def save_model[M: DjangoDiffModel](self, model: type[M]) -> Generator[dict[Any, Any], None, None]:
+        model_name = model.get_type()
+        objs = cast(list[M], self.store.get_all(model=model_name))
+        if model_name in model.get_children_mapping():
+            # first find the roots
+            for obj in objs:
+                if obj._parent_model != model or obj._parent_id is None:
+                    yield from self._walk_children(obj)
+        else:
+            yield from (obj.dict() for obj in objs)
+
+    def to_dict(self) -> dict[str, list[dict[str, Any]]]:
+        models_left = list(self.top_level)
+        models_saved = set()
+        data = {}
+        while models_left:
+            model_name = models_left.pop(0)
+            model = getattr(self, model_name)
+            assert issubclass(model, DjangoDiffModel)
+            data[model_name] = list(self.save_model(model))
+            models_saved.add(model_name)
+            for child_model_name in model.get_children_mapping().keys():
+                if child_model_name in models_saved:
+                    continue
+                models_left.append(child_model_name)
+        return data
+
+    def save_json(self, path: Path):
+        data = self.to_dict()
+        with path.open('w') as f:
+            json.dump(data, f, cls=JSONEncoder, indent=2, ensure_ascii=False)
+
+
 class MergingSyncDiffer(DiffSyncDiffer):
     parent_changes: set[tuple[str, str]]
 
     def __init__(
-            self,
-            src_diffsync: Adapter,
-            dst_diffsync: Adapter,
-            flags: DiffSyncFlags,
-            diff_class: type[Diff] = Diff,
-            callback: Callable[[str, int, int], None] | None = None,
-        ):
+        self,
+        src_diffsync: Adapter,
+        dst_diffsync: Adapter,
+        flags: DiffSyncFlags,
+        diff_class: type[Diff] = Diff,
+        callback: Callable[[str, int, int], None] | None = None,
+    ):
         self.parent_changes = set()
         super().__init__(src_diffsync, dst_diffsync, flags, diff_class, callback)
 
+    def _detect_parent_change(self, obj: DiffSyncModel, other_adapter: Adapter) -> tuple[DiffSyncModel | None, bool]:
+        unique_id = obj.get_unique_id()
+        type_id = (obj.get_type(), unique_id)
+        if type_id in self.parent_changes:
+            return (None, True)
+
+        try:
+            other_obj = other_adapter.get(obj.get_type(), unique_id)
+        except ObjectNotFound:
+            return (None, False)
+
+        if isinstance(other_obj, DjangoDiffModel):
+            assert other_obj._parent_key is not None
+        self.parent_changes.add(type_id)
+
+        return (other_obj, True)
+
     def diff_object_pair(self, src_obj: DiffSyncModel | None, dst_obj: DiffSyncModel | None) -> DiffElement | None:
         parent_changed = False
+
+        # Try to detect parent moves
         if src_obj is not None and dst_obj is None:
-            # Try to detect parent moves
-            unique_id = src_obj.get_unique_id()
-            try:
-                dst_obj = self.dst_diffsync.get(src_obj.get_type(), unique_id)
-                if isinstance(dst_obj, DjangoDiffModel):
-                    assert dst_obj._parent_key is not None
-                self.parent_changes.add((dst_obj.get_type(), dst_obj.get_unique_id()))
-                parent_changed = True
-            except ObjectNotFound:
-                dst_obj = None
+            dst_obj, parent_changed = self._detect_parent_change(src_obj, self.dst_diffsync)
+            if parent_changed and dst_obj is None:
+                return None
         elif src_obj is None and dst_obj is not None:
-            type_id = (dst_obj.get_type(), dst_obj.get_unique_id())
-            if type_id in self.parent_changes:
+            src_obj, parent_changed = self._detect_parent_change(dst_obj, self.src_diffsync)
+            if parent_changed and src_obj is None:
                 return None
 
         el = super().diff_object_pair(src_obj, dst_obj)
+
         if parent_changed:
             assert el is not None
             attr_diffs = el.get_attrs_diffs().get('+', {})
@@ -988,8 +1067,6 @@ class DjangoAdapter(TypedAdapter):
 
 
 class JSONAdapter(TypedAdapter):
-    data: Any
-
     def __init__(
         self,
         json_path: Path,
@@ -999,6 +1076,9 @@ class JSONAdapter(TypedAdapter):
         self.json_path = json_path
         super().__init__(name=name, internal_storage_engine=internal_storage_engine)
 
-    def load_json(self):
+    def load_json(self) -> dict | list:
         with self.json_path.open('r') as f:
-            self.data = json.load(f)
+            return json.load(f)
+
+    def save(self):
+        self.save_json(self.json_path)
