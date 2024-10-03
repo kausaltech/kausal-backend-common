@@ -41,7 +41,7 @@ class UserLoggingOptions:
     django_runserver_errors_favicon: bool = True
     django_runserver_requests_broken_pipe: bool = True
 
-    def __post__init__(self):
+    def __post_init__(self):
         if not self.django_runserver_minimize_noise:
             return
         self.django_runserver_requests_media = False
