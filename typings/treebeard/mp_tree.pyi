@@ -1,5 +1,5 @@
 # ruff: noqa: N801
-from typing import Generic, TypeVar
+from typing import Generic, Self, TypeVar
 
 from django.db import models
 from django.db.models import Manager, QuerySet
@@ -29,3 +29,7 @@ class MP_Node(Generic[_MPN_QS], Node[_MPN_QS]):
 
     @classmethod
     def _get_basepath(cls, path: str, depth: int) -> str: ...
+
+    def get_descendants(self) -> _MPN_QS: ...
+    def get_children(self) -> _MPN_QS: ...
+    def get_parent(self, update: bool = ...) -> Self | None: ...
