@@ -22,7 +22,7 @@ class AbstractDocument(CollectionMember, index.Indexed, models.Model):
     file_size: models.PositiveIntegerField[float | int | str | Combinable, int]
     file_hash: models.CharField[str | int | Combinable, str]
 
-    search_fields: Sequence[str]
+    search_fields: Sequence[index.BaseField]
 
     class Meta(Options): ...
 

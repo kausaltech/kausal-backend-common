@@ -6,11 +6,11 @@ from typing_extensions import TypeVar
 
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import Group, Permission
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.checks import CheckMessage
 from django.db import models
-from django.db.models import ManyToManyField, Model, Q, QuerySet
+from django.db.models import Manager, ManyToManyField, Model, Q, QuerySet
 from django.db.models.base import ModelBase
 from django.db.models.fields.related_descriptors import ReverseManyToOneDescriptor
 from django.forms import Form
@@ -187,9 +187,9 @@ class RevisionMixin(models.Model):
         """
     def save_revision(  # noqa: PLR0913
         self, user: AbstractBaseUser | None = None, approved_go_live_at: str | datetime | None = None,
-        changed: bool = True, log_action: bool = False, previous_revision: Revision[Self] | None = None,
+        changed: bool = True, log_action: bool = False, previous_revision: Revision[Any] | None = None,
         clean: bool = True,
-    ) -> Revision:
+    ) -> Revision[Any]:
         '''
         Creates and saves a revision.
 
@@ -225,8 +225,8 @@ class DraftStateMixin(models.Model):
     @property
     def status_string(self) -> StrOrPromise: ...
     def publish(  # noqa: PLR0913
-        self, revision: Revision[Self], user: AbstractBaseUser | None = None, changed: bool = True, log_action: bool = True,
-        previous_revision: Revision[Self] | None = None, skip_permission_checks: bool = False,
+        self, revision: Revision[Any], user: AbstractBaseUser | None = None, changed: bool = True, log_action: bool = True,
+        previous_revision: Revision[Any] | None = None, skip_permission_checks: bool = False,
     ) -> None:
         """
         Publish a revision of the object by applying the changes in the revision to the live object.
@@ -434,7 +434,7 @@ class AbstractPage(models.Model):
     superclass to ensure that it is retained by subclasses of Page.
     """
 
-    objects: ClassVar[PageManager[Any]]
+    objects: ClassVar[PageManager[Any]]  # pyright: ignore
 
 PAGE_PERMISSION_TYPES: list[tuple[str, StrOrPromise, StrOrPromise]]
 PAGE_PERMISSION_TYPE_CHOICES: list[tuple[str, StrOrPromise]]
@@ -477,7 +477,7 @@ class Page(  # pyright: ignore[reportGeneralTypeIssues]
     private_page_options: Sequence[str]
 
     _default_manager: ClassVar[PageManager[Self]]
-    objects: ClassVar[PageManager[Self]]
+    objects: ClassVar[PageManager[Self]]  # pyright: ignore
 
     aliases: ReverseManyToOneDescriptor[Self]
     sites_rooted_here: ReverseManyToOneDescriptor[Site]
@@ -568,7 +568,7 @@ class Page(  # pyright: ignore[reportGeneralTypeIssues]
         """
 
     @_copy_signature(RevisionMixin.save_revision)
-    def save_revision(self, *args, **kwargs) -> Self: ...
+    def save_revision(self, *args, **kwargs) -> Revision[Self]: ...
 
     def get_latest_revision_as_object(self) -> Self: ...
     def update_aliases(
@@ -915,7 +915,7 @@ class Revision[M: Model](models.Model):
     object_str: models.TextField
     content: models.JSONField
     approved_go_live_at: _NullableDTF
-    objects: ClassVar[RevisionsManager]
+    objects: ClassVar[RevisionsManager]  # pyright: ignore
     _default_manager: ClassVar[RevisionsManager]
     page_revisions: ClassVar[PageRevisionsManager]
     content_object: GenericForeignKey
@@ -991,7 +991,7 @@ class PagePermissionTester:
 
 
 class PageViewRestriction(BaseViewRestriction):
-    page: models.ForeignKey[Page]
+    page: models.ForeignKey[Page, Page]
     passed_view_restrictions_session_key: str
 
     def save(self, user: AbstractBaseUser | None = None, **kwargs) -> None:  # type: ignore
@@ -1183,7 +1183,8 @@ class WorkflowState(models.Model):
     requested_by: Incomplete
     current_task_state: Incomplete
     on_finish: Incomplete
-    #objects: ClassVar[WorkflowStateManager]  # pyright: ignore
+    objects: ClassVar[Manager[WorkflowState]]  # pyright: ignore
+    _default_manager: ClassVar[Manager[WorkflowState]]
 
     def clean(self) -> None: ...
     def save(self, *args, **kwargs): ...
@@ -1264,7 +1265,7 @@ class TaskState(SpecificMixin['TaskState'], models.Model):
     exclude_fields_in_copy: Incomplete
     default_exclude_fields_in_copy: Incomplete
 
-    objects: ClassVar[TaskStateManager]
+    objects: ClassVar[TaskStateManager]  # pyright: ignore
     _default_manager: ClassVar[TaskStateManager]
 
     def __init__(self, *args, **kwargs) -> None: ...
@@ -1308,9 +1309,10 @@ class PageLogEntry(BaseLogEntry):
     objects: Incomplete
 
     @cached_property
-    def object_id(self): ...
+    def object_id(self) -> int: ...  # type: ignore[override]
     @cached_property
     def message(self): ...
+
 
 class Comment(ClusterableModel):
     """

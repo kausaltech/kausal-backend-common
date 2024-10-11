@@ -1,6 +1,4 @@
-from telepath import Adapter
-from typing import Any
+from telepath import Adapter as Adapter
 
-
-
-def register(adapter: Adapter, cls: Any) -> None: ...
+def register(adapter: Adapter, cls: type) -> None:
+    ...

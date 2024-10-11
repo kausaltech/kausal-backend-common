@@ -23,8 +23,8 @@ class LocaleManager(models.Manager[Locale]):
         """
 
 class Locale(models.Model):
-    language_code: CharField
-    objects: ClassVar[LocaleManager]
+    language_code: CharField[str, str]
+    objects: ClassVar[LocaleManager]  # pyright: ignore
     all_objects: ClassVar[models.Manager[Locale]]
 
     @classmethod
@@ -97,7 +97,7 @@ _QS = TypeVar('_QS', bound=models.QuerySet, default=models.QuerySet, covariant=T
 
 class TranslatableMixin(Generic[_QS], models.Model):
     translation_key: models.UUIDField
-    locale: models.ForeignKey[Locale]
+    locale: models.ForeignKey[Locale, Locale]
 
     @classmethod
     def check(cls, **kwargs) -> list[CheckMessage]: ...
