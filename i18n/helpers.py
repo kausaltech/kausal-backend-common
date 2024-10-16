@@ -35,7 +35,11 @@ def get_language_from_default_language_field(
         raise ValueError('Invalid default_language for', instance, default_language)
     return default_language
 
-def convert_language_code(language_code: str, output_format: Literal['kausal', 'django', 'modeltrans', 'next.js']) -> str:
+
+def convert_language_code(
+    language_code: str,
+    output_format: Literal['kausal', 'django', 'modeltrans', 'next.js', 'wagtail'],
+) -> str:
     """
     Convert given language code to wanted output format.
 
@@ -46,6 +50,7 @@ def convert_language_code(language_code: str, output_format: Literal['kausal', '
             'django': The format used by Django, e.g. django.utils.translation.get_language. ('es-us')
             'modeltrans': The format used by django-modeltrans. ('es_us')
             'next.js': The format used by next.js. ('es-US')
+            'wagtail': The format used by Wagtail, in particular its Locale objects. ('es-US')
 
     Returns:
         Given language code converted to wanted format as a string.
@@ -61,7 +66,7 @@ def convert_language_code(language_code: str, output_format: Literal['kausal', '
 
     language, region = regex_match.groups()
     match output_format:
-        case "kausal" | "next.js":
+        case "kausal" | "next.js" | "wagtail":
             result = language.lower()
             result += f"-{region.upper()}" if region else ""
             return result
@@ -74,6 +79,6 @@ def convert_language_code(language_code: str, output_format: Literal['kausal', '
             result += f"_{region.lower()}" if region else ""
             return result
         case _:
-            format_options = ["kausal", "django", "modeltrans", "next.js"]
+            format_options = ["kausal", "django", "modeltrans", "next.js", "wagtail"]
             error_message = f"'{output_format}' is not a valid language code format. Valid formats are {format_options}"
             raise ValueError(error_message)

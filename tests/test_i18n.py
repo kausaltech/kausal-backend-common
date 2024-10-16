@@ -4,7 +4,7 @@ import pytest
 
 from kausal_common.i18n import helpers
 
-# This is useless for these tests, but is needed for the moment so that these tests can be run in Paths environment
+# FIXME: This is useless for these tests, but is needed for the moment so that these tests can be run in Paths environment
 pytestmark = pytest.mark.django_db
 
 
@@ -51,6 +51,7 @@ def test_convert_language_code_input_validation(language_code, is_valid):
         ('django', True),
         ('modeltrans', True),
         ('next.js', True),
+        ('wagtail', True),
     ],
 )
 def test_convert_language_code_format_validation(output_format, is_valid):
@@ -75,6 +76,8 @@ def test_convert_language_code_format_validation(output_format, is_valid):
         ('FI-SV', 'modeltrans', 'fi_sv'),
         ('EN', 'next.js', 'en'),
         ('EN_us', 'next.js', 'en-US'),
+        ('EN', 'wagtail', 'en'),
+        ('EN_us', 'wagtail', 'en-US'),
     ],
 )
 def test_convert_language_code(language_code, output_format, wanted_result):
