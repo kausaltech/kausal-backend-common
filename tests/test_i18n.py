@@ -51,6 +51,7 @@ def test_convert_language_code_input_validation(language_code, is_valid):
         ('django', True),
         ('modeltrans', True),
         ('next.js', True),
+        ('wagtail Locale', True),
     ],
 )
 def test_convert_language_code_format_validation(output_format, is_valid):
@@ -75,6 +76,8 @@ def test_convert_language_code_format_validation(output_format, is_valid):
         ('FI-SV', 'modeltrans', 'fi_sv'),
         ('EN', 'next.js', 'en'),
         ('EN_us', 'next.js', 'en-US'),
+        ('EN', 'wagtail Locale', 'en'),
+        ('EN_us', 'wagtail Locale', 'en-US'),
     ],
 )
 def test_convert_language_code(language_code, output_format, wanted_result):
