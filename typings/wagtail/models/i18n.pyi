@@ -195,8 +195,8 @@ class BootstrapTranslatableMixin(TranslatableMixin):
     translation_key: Incomplete
     locale: Incomplete
     @classmethod
-    def check(cls, **kwargs): ...
-    class Meta:
+    def check(cls, **kwargs) -> list[CheckMessage]: ...
+    class Meta:  # noqa: DJ012
         abstract: bool
 
 def get_translatable_models(include_subclasses: bool = False) -> list[type[Model]]:

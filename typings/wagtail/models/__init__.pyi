@@ -448,7 +448,7 @@ class Page(  # pyright: ignore[reportGeneralTypeIssues]
     DraftStateMixin,
     LockableMixin,
     RevisionMixin,
-    TranslatableMixin[PageQuerySet],
+    TranslatableMixin[PageQuerySet[Page]],
     MP_Node[PageQuerySet[Page]],
     SpecificMixin[Page], index.Indexed, ClusterableModel, metaclass=PageBase,
 ):

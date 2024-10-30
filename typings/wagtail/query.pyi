@@ -1,4 +1,4 @@
-from typing import Any, Generic, Self, Sequence
+from typing import Generic, Self
 from typing_extensions import TypeVar
 
 from django.db.models import Model, Q, QuerySet
@@ -7,13 +7,9 @@ from wagtail.models import Page
 from wagtail.models.sites import Site as Site
 from wagtail.search.queryset import SearchableQuerySetMixin as SearchableQuerySetMixin
 
-from treebeard.mp_tree import MP_Node, MP_NodeQuerySet
+_NodeT = TypeVar('_NodeT', bound=Model)
 
-_NodeT = TypeVar('_NodeT', bound=MP_Node[Any], default=MP_Node)
-_BaseNodeT = TypeVar('_BaseNodeT', bound=MP_Node[Any], default=_NodeT)
-
-
-class TreeQuerySet(MP_NodeQuerySet[_NodeT]):
+class TreeQuerySet(QuerySet[_NodeT, _NodeT]):
     """
     Extends Treebeard's MP_NodeQuerySet with additional useful tree-related operations.
     """
@@ -82,10 +78,9 @@ class TreeQuerySet(MP_NodeQuerySet[_NodeT]):
         If inclusive is set to False, the page will be included in the results.
         """
 
-_BaseModelT = TypeVar('_BaseModelT', bound=Model, covariant=True)
-_BaseModelQS = TypeVar('_BaseModelQS', bound=QuerySet, covariant=True, default=QuerySet[_BaseModelT])
+_BaseModelQS = TypeVar('_BaseModelQS', bound=QuerySet, covariant=True)  # noqa: PLC0105
 
-class SpecificQuerySetMixin(Generic[_BaseModelT, _BaseModelQS]):
+class SpecificQuerySetMixin(Generic[_BaseModelQS]):
     def __init__(self, *args, **kwargs) -> None:
         """Set custom instance attributes"""
 
@@ -103,12 +98,11 @@ class SpecificQuerySetMixin(Generic[_BaseModelT, _BaseModelQS]):
         Returns True if this queryset is already specific, False otherwise.
         """
 
-
-_PageT = TypeVar('_PageT', bound=Page)
+_PageT = TypeVar('_PageT', bound=Page, default=Page)
 
 
 class PageQuerySet(
-    Generic[_PageT], SearchableQuerySetMixin, SpecificQuerySetMixin[Page, PageQuerySet[Page]], TreeQuerySet[_PageT],
+    Generic[_PageT], SearchableQuerySetMixin, SpecificQuerySetMixin[PageQuerySet[Page]], TreeQuerySet[_PageT],
 ):
     def live_q(self) -> Q: ...
     def live(self) -> Self:

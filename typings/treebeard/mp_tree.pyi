@@ -2,17 +2,16 @@
 from typing import Generic, Self, TypeVar
 
 from django.db import models
-from django.db.models import Manager, QuerySet
-from django.db.models.query import _Model, _Row
+from django.db.models import Manager, Model, QuerySet
 
 from treebeard.models import Node as Node
 
-_MPN_co = TypeVar('_MPN_co', bound=MP_Node, covariant=True)
+_Model = TypeVar("_Model", bound=Model, covariant=True)  # noqa: PLC0105
 
 class MP_NodeQuerySet(QuerySet[_Model, _Model]):
     def delete(self, *args, **kwargs): ...
 
-_MPN_QS = TypeVar('_MPN_QS', bound=MP_NodeQuerySet, default=MP_NodeQuerySet)
+_MPN_QS = TypeVar('_MPN_QS', bound=QuerySet, default=QuerySet)
 
 class MP_NodeManager(Manager[_Model]):
     def get_queryset(self) -> QuerySet: ...

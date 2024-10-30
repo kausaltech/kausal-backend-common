@@ -131,7 +131,7 @@ class MLModelManager(MultilingualManager[_M], ModelManager[_M, _MLQS]):
         def get_queryset(self) -> _MLQS: ...  # type: ignore[override]
 
 _PageT = TypeVar('_PageT', bound=Page, covariant=True)  # noqa: PLC0105
-_PageQS = TypeVar('_PageQS', bound=PageQuerySet, default=PageQuerySet[_PageT], covariant=True)  # noqa: PLC0105
+_PageQS = TypeVar('_PageQS', bound=PageQuerySet[Any], default=PageQuerySet[_PageT], covariant=True)  # noqa: PLC0105
 
 class PageModelManager(ModelManager[_PageT, _PageQS], PageManager[_PageT]):  # pyright: ignore
     if TYPE_CHECKING:
