@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from dataclasses import dataclass, field
 from functools import cache, cached_property
-from typing import TYPE_CHECKING, ClassVar, Literal, Protocol, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Generator, Literal, Protocol, overload
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -95,7 +95,7 @@ class Role(abc.ABC, ConcreteRoleProtocol):
                 new_perms.add(self.perms_by_app[app_label][p])
 
         if old_perms != new_perms:
-            logger.info('Permission changes detected in group %s, setting new permissions' % self.group_name)
+            logger.info('Permission changes detected in group %s, setting new permissions' % str(group))
             group.permissions.set(new_perms)
 
     def get_actions_for_model(self, model: type[Model]) -> set[str]:
@@ -104,6 +104,10 @@ class Role(abc.ABC, ConcreteRoleProtocol):
     def refresh(self):
         group, _ = Group.objects.get_or_create(name=str(self.name))
         self._update_model_perms(group)
+
+    def __rich_repr__(self) -> Generator[tuple[str, Any], Any, None]:
+        yield "id", self.id
+        yield "name", self.name
 
 
 class InstanceSpecificRole[M: Model](Role, abc.ABC):
@@ -139,9 +143,9 @@ class InstanceSpecificRole[M: Model](Role, abc.ABC):
         new_perms = set(Permission.objects.filter(
             **filt,
             codename__in=self.page_perms,
-        ))
+        ).values_list('id', flat=True))
         if old_perms != new_perms:
-            logger.info('Setting new %s page permissions' % self.group_name)
+            logger.info('Setting new %s page permissions' % str(group))
             grp_perms.delete()
             objs = [GroupPagePermission(
                 group=group,
@@ -149,6 +153,13 @@ class InstanceSpecificRole[M: Model](Role, abc.ABC):
                 permission=perm,
             ) for perm in new_perms]
             GroupPagePermission.objects.bulk_create(objs)
+
+    def _update_permissions(self, obj: M, group: Group) -> None:
+        self._update_model_perms(group)
+        if obj is not None:
+            site = self.get_instance_site(obj)
+            if site is not None:
+                self._update_page_perms(group, site)
 
     def create_or_update_instance_group(self, obj: M) -> Group:
         name = self.get_instance_group_name(obj)
@@ -160,11 +171,7 @@ class InstanceSpecificRole[M: Model](Role, abc.ABC):
             group.name = name
             group.save(update_fields=['name'])
 
-        self._update_model_perms(group)
-        if obj is not None:
-            site = self.get_instance_site(obj)
-            if site is not None:
-                self._update_page_perms(group, site)
+        self._update_permissions(obj, group)
 
         return group
 
@@ -187,6 +194,38 @@ class InstanceSpecificRole[M: Model](Role, abc.ABC):
         user.groups.remove(obj_group)
         logger.info("Unassign role %s for user %s" % (str(self.get_instance_group_name(obj)), user))
         return True
+
+    def __rich_repr__(self):
+        yield from super().__rich_repr__()
+        yield 'model', self.model
+
+class InstanceFieldGroupRole[M: Model](InstanceSpecificRole[M], abc.ABC):
+    instance_group_field_name: ClassVar[str]
+
+    def get_instances_for_user(self, user: User) -> QuerySet[M, M]:
+        user_groups = user.cgroups
+        filters = {
+            '%s__in' % self.instance_group_field_name: user_groups,
+        }
+        return self.model.objects.filter(**filters).distinct()
+
+    def delete_instance_group(self, obj: M):
+        grp = getattr(obj, self.instance_group_field_name)
+        if grp is None:
+            return
+        g_id = getattr(self, '%s_id' % self.instance_group_field_name)
+        filters = {
+            self.instance_group_field_name: g_id,
+        }
+        has_others = self.model.objects.filter(**filters).exclude(pk=obj.pk).exists()
+        if has_others:
+            return
+        setattr(obj, self.instance_group_field_name, None)
+        update = {
+            self.instance_group_field_name: None,
+        }
+        self.model.objects.filter(id=obj.pk).update(**update)
+        Group.objects.get(id=g_id).delete()
 
 
 class AdminRole[M: Model](InstanceSpecificRole[M], abc.ABC):
@@ -252,7 +291,33 @@ class UserPermissionCache:
             role = role_registry.get_role(role)
         if not isinstance(obj, role.model):
             raise TypeError("%s is not an instance of %s" % (obj, role.model))
-        if role.id in self.instance_roles:
-            return obj.pk in self.instance_roles
-        self.instance_roles[role.id] = set(obj.pk for obj in role.get_instances_for_user(self.user))
-        return True
+        role_objs = self.instance_roles.get(role.id)
+        if role_objs is None:
+            role_objs = set(obj.pk for obj in role.get_instances_for_user(self.user))
+            self.instance_roles[role.id] = role_objs
+        return obj.pk in role_objs
+
+    def get_roles_for_instance(self, obj: Model) -> list[InstanceSpecificRole[Any]] | None:
+        """
+        Return the roles the user has for a given model instance.
+
+        If no roles are configured for the model, will return None.
+        """
+        roles: list[InstanceSpecificRole] = []
+        model_has_roles = False
+        for role in role_registry.get_all_roles():
+            if role.model is not type(obj):
+                continue
+            model_has_roles = True
+            if self.has_instance_role(role, obj):
+                roles.append(role)
+        if not model_has_roles:
+            return None
+        return roles
+
+    def refresh_role_permissions(self):
+        """Ensure the groups associated with the roles have up-to-date permissions."""
+        for role in role_registry.get_all_roles():
+            objs = role.get_instances_for_user(self.user)
+            for obj in objs:
+                role.create_or_update_instance_group(obj)
