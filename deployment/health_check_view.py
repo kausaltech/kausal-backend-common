@@ -20,6 +20,10 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
+HEALTH_CHECK_VIEW_NAME = 'healthcheck'
+HEALTH_CHECK_PATH = 'healthz/'
+
+
 def check_database():
     conn = connections['default']
     conn_time_left = None
