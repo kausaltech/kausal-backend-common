@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Sequence, overload
 
 if TYPE_CHECKING:
     import environ
@@ -43,6 +43,7 @@ def run_deployment_checks():
 BOOLEAN_TRUE_STRINGS = ('true', 'on', 'ok', 'y', 'yes', '1')
 BOOLEAN_FALSE_STRINGS = ('false', 'off', 'n', 'no', '0')
 
+
 def _check_env_match(env_var: str, matches: Sequence[str]) -> bool:
     val = os.getenv(env_var, None)
     if val is None:
@@ -52,7 +53,34 @@ def _check_env_match(env_var: str, matches: Sequence[str]) -> bool:
     return val in matches
 
 
-def env_bool(env_var: str, default: bool) -> bool:
+def coerce_bool(val: str) -> bool | None:
+    """
+    Coerce a string to a boolean value.
+
+    Returns
+    -------
+        bool | None:
+            The boolean interpretation of the string, or None if the string
+            is not recognized.
+
+    """
+
+    if _check_env_match(val, BOOLEAN_FALSE_STRINGS):
+        return False
+    if _check_env_match(val, BOOLEAN_TRUE_STRINGS):
+        return True
+    return None
+
+
+@overload
+def env_bool(env_var: str, default: bool) -> bool: ...
+
+
+@overload
+def env_bool(env_var: str, default: None) -> bool | None: ...
+
+
+def env_bool(env_var: str, default: bool | None = None) -> bool | None:
     """
     Determine a boolean value from an environment variable.
 
@@ -63,13 +91,15 @@ def env_bool(env_var: str, default: bool) -> bool:
     Args:
     ----
         env_var (str): The name of the environment variable to check.
-        default (bool): The default value to return if the environment
-                        variable is not set or its value is not recognized.
+        default (bool | None):
+            The default value to return if the environment variable is not set
+            or its value is not recognized.
 
     Returns:
     -------
-        bool: The boolean interpretation of the environment variable's value,
-              or the default value if the variable is not set or not recognized.
+        bool | None:
+            The boolean interpretation of the environment variable's value,
+            or the default value if the variable is not set or not recognized.
 
     Note:
     ----
@@ -77,27 +107,33 @@ def env_bool(env_var: str, default: bool) -> bool:
         - False values: 'false', 'off', 'n', 'no', '0' (case-insensitive)
 
     """
-    if default:
-        is_false = _check_env_match(env_var, BOOLEAN_FALSE_STRINGS)
-        return not is_false
-    is_true = _check_env_match(env_var, BOOLEAN_TRUE_STRINGS)
-    return is_true
+    val = os.getenv(env_var, None)
+    if val is None:
+        return default
+    ret = coerce_bool(val)
+    if ret is not None:
+        return ret
+    return default
 
 
 def set_secret_file_vars(env: environ.Env, directory: str | Path) -> None:
     """
-    Scan a directory for files that could be valid environment variables
-    and set corresponding *_FILE variables in the environ.Env instance.
+    Scan a directory for files that could be valid environment variables.
+
+    If such files are found, set corresponding *_FILE variables in the
+    environ.Env instance.
 
     :param env: An instance of environ.Env
     :param directory: The directory to scan for secret files (str or Path)
     """
+
     directory = Path(directory)
 
     if not directory.is_dir():
-        raise ValueError(f"The provided path '{directory}' is not a valid directory.")
+        msg = f"The provided path '{directory}' is not a valid directory."
+        raise ValueError(msg)
 
     for file_path in directory.iterdir():
         if file_path.is_file() and ENV_VARIABLE_PATTERN.fullmatch(file_path.name):
-            env_var_name = f"{file_path.name}_FILE"
+            env_var_name = f'{file_path.name}_FILE'
             env.ENVIRON[env_var_name] = str(file_path)
