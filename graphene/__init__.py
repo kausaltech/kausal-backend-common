@@ -2,40 +2,41 @@ from __future__ import annotations
 
 import functools
 import re
-import typing
+from enum import Enum
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
+import graphene
 from django.db.models import Model
 from django.db.models.constants import LOOKUP_SEP
 from graphene.utils.trim_docstring import trim_docstring
 from graphene_django import DjangoObjectType
+from graphene_pydantic import PydanticObjectType
 from modeltrans.translator import get_i18n_field
 
 import graphene_django_optimizer as gql_optimizer
 
+from kausal_common.graphene.utils import create_from_dataclass
 from kausal_common.i18n.helpers import get_language_from_default_language_field
+from kausal_common.models.permission_policy import ALL_OBJECT_SPECIFIC_ACTIONS, ObjectSpecificAction
+from kausal_common.models.permissions import ModelAction, PermissionedModel, UserPermissions, get_user_permissions_for_instance
+from kausal_common.users import is_authenticated
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import type_check_only
 
-    from django.contrib.auth.models import AnonymousUser
     from django.http import HttpRequest
     from graphene import Field, Interface
     from graphene_django.types import DjangoObjectTypeOptions
     from graphql import GraphQLResolveInfo
     from modeltrans.fields import TranslationField
 
-    from users.models import User
+    from kausal_common.users import UserOrAnon
 
-type UserOrAnon = 'User | AnonymousUser'
-
-if TYPE_CHECKING:
     @type_check_only
     class GQLContext(HttpRequest):
         user: UserOrAnon  # type: ignore[override]
         graphql_query_language: str
-
 
     @type_check_only
     class GQLInfo(GraphQLResolveInfo):
@@ -91,7 +92,35 @@ class DjangoNodeMeta:
     interfaces: Iterable[type[Interface]]
 
 
+def resolve_user_roles(obj: Model, info: GQLInfo) -> list[str]:
+    assert isinstance(obj, PermissionedModel)
+    user = info.context.user
+    if not is_authenticated(user):
+        return []
+
+    roles = user.perms.get_roles_for_instance(obj)
+    if roles is None:
+        return []
+    return [role.id for role in roles]
+
+
+class UserPermissionsType(PydanticObjectType):
+    class Meta:
+        model = UserPermissions
+        name = 'UserPermissions'
+
+
+def resolve_user_permissions(obj: PermissionedModel, info: GQLInfo) -> UserPermissions:
+    assert isinstance(obj, PermissionedModel)
+    return get_user_permissions_for_instance(info.context.user, obj)
+
+
+UserRolesField = graphene.List(graphene.NonNull(graphene.String), required=False)
+
+
 class DjangoNode(DjangoObjectType, Generic[M]):
+    user_permissions = graphene.Field(UserPermissionsType, resolver=resolve_user_permissions)
+    user_roles = graphene.Field(UserRolesField, resolver=resolve_user_roles)
     _meta: DjangoObjectTypeOptions
 
     @classmethod
@@ -107,7 +136,7 @@ class DjangoNode(DjangoObjectType, Generic[M]):
             if field is not None and field.resolver is None and not hasattr(cls, 'resolve_%s' % translated_field_name):
                 resolver = functools.partial(resolve_i18n_field, translated_field_name)
                 only = [translated_field_name, i18n_field.name]
-                select_related=[]
+                select_related = []
                 default_language_field = i18n_field.default_language_field
                 if default_language_field:
                     parsed_default_language_field = default_language_field.split(LOOKUP_SEP)
@@ -122,9 +151,8 @@ class DjangoNode(DjangoObjectType, Generic[M]):
                 apply_hints = gql_optimizer.resolver_hints(**hints)
                 field.resolver = apply_hints(resolver)
 
-
     @classmethod
-    def __init_subclass_with_meta__(cls, **kwargs: Any) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def __init_subclass_with_meta__(cls, **kwargs: Any) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]  # noqa: ANN401
         if 'name' not in kwargs:
             # Remove the trailing 'Node' from the object types
             name = cls.__name__
@@ -142,6 +170,12 @@ class DjangoNode(DjangoObjectType, Generic[M]):
 
         super().__init_subclass_with_meta__(**kwargs)
         cls._resolve_i18n_fields()
+
+        from kausal_common.models.permissions import PermissionedModel
+        if not issubclass(model, PermissionedModel):
+            fields = cls._meta.fields
+            if 'allowed_actions' in cls._meta.fields:
+                del fields['allowed_actions']
 
     if TYPE_CHECKING:
         Meta: Any

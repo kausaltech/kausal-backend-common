@@ -39,6 +39,7 @@ def is_base_action(action: str) -> TypeGuard[ObjectSpecificAction]:
 
 class ModelPermissionPolicy(Generic[_M, _QS, CreateContext], ABC, WagtailModelPermissionPolicy[_M, User, Any]):
     public_fields: list[str]
+    """List of fields that are public."""
 
     def __init__(self, model: type[_M]):
         super().__init__(model)
@@ -87,6 +88,23 @@ class ModelPermissionPolicy(Generic[_M, _QS, CreateContext], ABC, WagtailModelPe
     @abstractmethod
     def user_can_create(self, user: User, context: CreateContext) -> bool:
         """Check if user can create a new object."""
+
+    def creatable_child_models(self, user: UserOrAnon, obj: _M) -> Sequence[type[PermissionedModel]]:
+        """
+        Return a list of related models that the user can create.
+
+        The child models are typically associated with the current model via a ForeignKey or OneToOneField.
+        """
+        creatable_child_models: list[type[PermissionedModel]] = []
+        for child_model in self.model.child_models:
+            pp = child_model.permission_policy()
+            if isinstance(pp, ParentInheritedPolicy):
+                if self.user_is_authenticated(user):
+                    if pp.user_can_create(user, obj):
+                        creatable_child_models.append(child_model)
+                elif pp.anon_can_create(obj):
+                    creatable_child_models.append(child_model)
+        return creatable_child_models
 
     def anon_can_create(self, context: CreateContext) -> bool:
         """Check if an unauthenticated user can create a new object."""
@@ -216,6 +234,8 @@ class ParentInheritedPolicy(Generic[_M, _ParentM, _QS], ModelPermissionPolicy[_M
         self.parent_model = parent_model
         self.parent_policy = parent_model.permission_policy()
         self.parent_field = parent_field
+        if model not in self.parent_model.child_models:
+            self.parent_model.child_models.append(model)
 
     def parent_in_q(self, val: QuerySet) -> Q:
         key = '%s__in' % self.parent_field

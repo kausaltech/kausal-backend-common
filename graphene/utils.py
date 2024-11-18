@@ -7,8 +7,11 @@ from typing import get_type_hints
 
 import graphene
 
+if typing.TYPE_CHECKING:
+    from _typeshed import DataclassInstance
 
-def create_from_dataclass(kls):
+
+def create_from_dataclass(kls: type[DataclassInstance]):
     field_types = get_type_hints(kls)
     fields = dataclasses.fields(kls)
     gfields = {}

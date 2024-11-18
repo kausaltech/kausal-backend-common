@@ -4,8 +4,6 @@ import re
 from typing import TYPE_CHECKING, Literal
 
 from django.conf import settings
-from modeltrans.translator import get_i18n_field
-from modeltrans.utils import get_instance_field_value
 
 if TYPE_CHECKING:
     from django.db import models
@@ -18,7 +16,11 @@ def get_language_from_default_language_field(
     instance: models.Model,
     i18n_field: TranslationField | None = None,
 ):
-    """Return the primary language from the default language field"""
+    """Return the primary language from the default language field."""
+
+    from modeltrans.translator import get_i18n_field
+    from modeltrans.utils import get_instance_field_value
+
     if not i18n_field:
         i18n_field = get_i18n_field(instance._meta.model)  # pyright: ignore
 
