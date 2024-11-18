@@ -45,4 +45,4 @@ class Logger(BaseLogger):
             request_body_size=len(req.body.buf.getbuffer()),
             user_agent=environ.get('HTTP_USER_AGENT'),
         )
-        access_log.bind(**args).log(level, 'HTTP request')
+        access_log.bind(**args).log(level, '%s %s' % (req.method, req.path))

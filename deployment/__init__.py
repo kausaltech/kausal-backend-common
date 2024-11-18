@@ -44,15 +44,6 @@ BOOLEAN_TRUE_STRINGS = ('true', 'on', 'ok', 'y', 'yes', '1')
 BOOLEAN_FALSE_STRINGS = ('false', 'off', 'n', 'no', '0')
 
 
-def _check_env_match(env_var: str, matches: Sequence[str]) -> bool:
-    val = os.getenv(env_var, None)
-    if val is None:
-        return False
-
-    val = val.lower().strip()
-    return val in matches
-
-
 def coerce_bool(val: str) -> bool | None:
     """
     Coerce a string to a boolean value.
@@ -65,9 +56,10 @@ def coerce_bool(val: str) -> bool | None:
 
     """
 
-    if _check_env_match(val, BOOLEAN_FALSE_STRINGS):
+    val = val.lower().strip()
+    if val in BOOLEAN_FALSE_STRINGS:
         return False
-    if _check_env_match(val, BOOLEAN_TRUE_STRINGS):
+    if val in BOOLEAN_TRUE_STRINGS:
         return True
     return None
 
