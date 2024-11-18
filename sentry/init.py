@@ -6,14 +6,13 @@ from functools import wraps
 from typing import TYPE_CHECKING, cast
 from urllib.parse import urlparse
 
-from django.urls import reverse
-
 import sentry_sdk
 import sentry_sdk.integrations
+from django.urls import reverse
 from sentry_sdk.integrations.argv import ArgvIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 
-from kausal_common.deployment import env_bool
+from kausal_common.deployment import coerce_bool, env_bool
 from kausal_common.deployment.types import is_development_environment
 from kausal_common.telemetry import otel_enabled
 
@@ -21,6 +20,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from sentry_sdk._types import Event, Hint
+    from sentry_sdk.envelope import Envelope
 
 
 def strip_sensitive_cookies(req: dict):
@@ -43,6 +43,12 @@ def strip_sensitive_cookies(req: dict):
 
 _in_interactive_mode: bool | None = None
 
+
+def suppress_send(value: bool):
+    global _in_interactive_mode  # noqa: PLW0603
+    _in_interactive_mode = value
+
+
 def is_in_interactive_mode():
     global _in_interactive_mode  # noqa: PLW0603
     if _in_interactive_mode is not None:
@@ -55,6 +61,7 @@ def is_in_interactive_mode():
     else:
         _in_interactive_mode = True
     return _in_interactive_mode
+
 
 def before_send_transaction(event: Event, hint: Hint):
     from kausal_common.deployment.health_check_view import HEALTH_CHECK_VIEW_NAME
@@ -87,16 +94,25 @@ def before_send(event: Event, hint: Hint):
     return event
 
 
-def _should_enable_spotlight() -> bool:
-    # from sentry_sdk.spotlight import DEFAULT_SPOTLIGHT_URL
-    # FIXME: Should we try to connect to the default URL?
-    if not is_development_environment():
-        return False
-    return True
+def _get_spotlight_url() -> str | None:
+    from sentry_sdk.spotlight import DEFAULT_SPOTLIGHT_URL
+
+    if not is_development_environment() and not env_bool('SENTRY_SPOTLIGHT_FORCE', default=False):
+        return None
+
+    spotlight_env = os.getenv('SENTRY_SPOTLIGHT', None)
+    if spotlight_env is None:
+        return None
+    enabled = coerce_bool(spotlight_env)
+    if enabled is None:
+        return DEFAULT_SPOTLIGHT_URL
+    return spotlight_env
+
 
 def _wrap_method[F: Callable](func: F, op: str, get_desc: Callable | None = None) -> F:
     if getattr(func, '_sentry_wrapped', False):
         return func
+
     @wraps(func)
     def wrap_with_span(*args, **kwargs):  # noqa: ANN202
         if get_desc is not None:
@@ -105,6 +121,7 @@ def _wrap_method[F: Callable](func: F, op: str, get_desc: Callable | None = None
             desc = None
         with sentry_sdk.start_span(op=op, description=desc):
             return func(*args, **kwargs)
+
     setattr(wrap_with_span, '_sentry_wrapped', True)  # noqa: B010
     return cast(F, wrap_with_span)
 
@@ -124,30 +141,58 @@ def _patch_django_init() -> None:
     AppConfig.import_models = _wrap_method(AppConfig.import_models, op='import models', get_desc=get_self_app)  # type: ignore[method-assign]
 
 
+class NullTransport(sentry_sdk.Transport):
+    def capture_envelope(self, envelope: Envelope):
+        pass
+
+
 def init_sentry(dsn: str | None, deployment_type: str | None = None):
     from sentry_sdk.integrations.modules import ModulesIntegration
+
     if sentry_sdk.is_initialized():
         return
+    spotlight_url = _get_spotlight_url()
+    if spotlight_url and not dsn:
+        # We need to set a DSN to enable spotlight
+        dsn = 'http://abcd@localhost/1'
+        transport = NullTransport()
+    else:
+        transport = None
+
+    if spotlight_url:
+        from rich import print
+
+        spotlight_view_url = spotlight_url.removesuffix('/stream')
+        print(f'🔦 Spotlight enabled at: [link={spotlight_view_url}]{spotlight_view_url}')
+
     sentry_sdk.init(
         dsn=dsn,
         debug=env_bool('SENTRY_DEBUG', default=False),
+        spotlight=spotlight_url,
+        transport=transport,
         send_default_pii=True,
         traces_sample_rate=1.0,
         profiles_sample_rate=1.0 if env_bool('SENTRY_PROFILING', default=False) else 0.0,
         instrumenter='otel' if otel_enabled() else None,
-        integrations=[DjangoIntegration(
-            middleware_spans=False,
-        )],
+        integrations=[
+            DjangoIntegration(
+                middleware_spans=False,
+            ),
+        ],
         disabled_integrations=[
             ModulesIntegration(),
             ArgvIntegration(),
         ],
-        auto_enabling_integrations=False,
         environment=os.getenv('SENTRY_ENVIRONMENT', None) or deployment_type,
         server_name=os.getenv('NODE_NAME', None),
         before_send_transaction=before_send_transaction,
         before_send=before_send,
-        spotlight=_should_enable_spotlight(),
     )
     if env_bool('SENTRY_TRACE_DJANGO_INIT', default=False):
         _patch_django_init()
+
+    if otel_enabled():
+        from kausal_common.telemetry import init_django_telemetry, init_telemetry
+
+        init_telemetry()
+        init_django_telemetry()
