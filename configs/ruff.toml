@@ -1,0 +1,107 @@
+line-length = 130
+exclude = ["node_modules", "*/migrations", "Attic", ".venv"]
+target-version = "py312"
+
+[lint]
+select = ["ALL"]
+ignore = [
+  "ANN0",
+  "ANN201",
+  "ANN204",
+  "ARG001",
+  "ARG002",
+  "ARG004",
+  "BLE001",
+  "C401",
+  "C408",
+  "CPY",
+  "D1",
+  "D202",
+  "D203",
+  "D212",
+  "DJ001",
+  "EM101",
+  "EM102",
+  "ERA",
+  "FBT001",
+  "FBT002",
+  "FIX001",
+  "FIX002",
+  "G002",
+  "G004",
+  "PD011",
+  "PD901",
+  "PGH003",
+  "PIE790",
+  "PLR1722",
+  "PLR2004",
+  "PYI021",
+  "Q000",
+  "RET504",
+  "RSE102",
+  "RUF005",
+  "RUF012",
+  "S101",
+  "SIM103",
+  "SIM108",
+  "SIM114",
+  "SIM118",
+  "SLF001",
+  "T201",
+  "TD0",
+  "TID252",
+  "TRY002",
+  "TRY003",
+  "TRY400",
+  "UP031",
+  "UP035",
+]
+
+[lint.per-file-ignores]
+"kausal_common/typings/*" = ["D"]
+"kausal_common/typings/django/*" = ["ALL"]
+"**/migrations/*" = ["I001", "I002", "E501"]
+
+[lint.pylint]
+max-args = 10
+
+[lint.isort]
+split-on-trailing-comma = true
+combine-as-imports = true
+required-imports = ["from __future__ import annotations"]
+extra-standard-library = ["typing_extensions"]
+section-order = [
+  "future",
+  "standard-library",
+  #"django-init",
+  "django",
+  "third-party",
+  "kausal-common",
+  "django-project",
+  "first-party",
+  "local-folder",
+]
+
+[lint.isort.sections]
+"django" = [
+  'django',
+  'rest_framework',
+  'graphene',
+  'graphql',
+  'graphene_django',
+  'modelcluster',
+  'modeltrans',
+  'wagtail',
+  'reversion',
+  'django_stubs_ext',
+  'pydantic',
+]
+"django-init" = ['kausal_common.development.django']
+"kausal-common" = ['kausal_common']
+"django-project" = ['paths', 'aplans']
+
+[format]
+quote-style = "single"
+
+[lint.flake8-builtins]
+builtins-ignorelist = ["id", "format"]
