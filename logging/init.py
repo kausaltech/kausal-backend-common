@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from dataclasses import dataclass
 from logging.config import dictConfig
-from typing import TYPE_CHECKING, Literal, Protocol, Any
-import warnings
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from django.conf import settings
 
 from loguru import logger
 
 from kausal_common.deployment import env_bool
-from kausal_common.logging.warnings import register_warning_handler
+from kausal_common.logging.warnings import register_warning_handler, warning_traceback_enabled
 
 from .handler import LoguruLogger, get_rich_log_console, loguru_logfmt_sink, loguru_rich_sink
 
@@ -133,7 +133,6 @@ def get_logging_conf(
             'people.models': level('INFO' if options.people_verbose else 'WARNING'),
             '': level('DEBUG'),
         },
-
     }
     return config
 
@@ -173,9 +172,9 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
     from loguru._colorama import should_colorize
 
     if log_format == 'logfmt':
-        loguru_handlers = [dict(sink=loguru_logfmt_sink, format="{message}")]
+        loguru_handlers = [dict(sink=loguru_logfmt_sink, format='{message}')]
     else:
-        loguru_handlers = [dict(sink=loguru_rich_sink, format="{message}", colorize=should_colorize(sys.stdout))]
+        loguru_handlers = [dict(sink=loguru_rich_sink, format='{message}', colorize=should_colorize(sys.stdout))]
 
     # This configures loguru
     logger.configure(handlers=loguru_handlers)
@@ -185,7 +184,7 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
             handlers = ['loguru']
         else:
             handlers = [handler]
-        conf: _LoggerConfiguration = dict( # pyright: ignore
+        conf: _LoggerConfiguration = dict(  # pyright: ignore
             handlers=handlers,
             propagate=False,
             level=level,
@@ -196,9 +195,10 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
         import warnings
 
         from wagtail.utils.deprecation import RemovedInWagtail70Warning
+
         warnings.filterwarnings(action='ignore', category=RemovedInWagtail70Warning)
 
-    if env_bool('LOG_WARNING_TRACEBACK', default=False):
+    if warning_traceback_enabled():
         register_warning_handler()
 
     logging.setLoggerClass(LoguruLogger)
@@ -213,6 +213,7 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
 
     return level
 
+
 def _should_use_logfmt() -> bool:
     if env_bool('KUBERNETES_LOGGING', default=False) or env_bool('KUBERNETES_MODE', default=False):
         return True
@@ -222,13 +223,15 @@ def _should_use_logfmt() -> bool:
         return True
     return False
 
+
 def _autodetect_log_format() -> LogFormat:
     return 'logfmt' if _should_use_logfmt() else 'rich'
 
+
 def init_logging_django(
-        log_format: LogFormat | None = None,
-        log_sql_queries: bool | None = None,
-        options: UserLoggingOptions | None = None,
+    log_format: LogFormat | None = None,
+    log_sql_queries: bool | None = None,
+    options: UserLoggingOptions | None = None,
 ):
     if log_format is None:
         log_format = _autodetect_log_format()
@@ -237,22 +240,23 @@ def init_logging_django(
         options = UserLoggingOptions()
     if log_sql_queries is not None:
         warnings.warn(
-            "Parameter log_sql_queries is deprecated. Please use the options parameter instead.",
-            DeprecationWarning,
-            stacklevel=2
+            'Parameter log_sql_queries is deprecated. Please use the options parameter instead.', DeprecationWarning, stacklevel=2
         )
         options.sql_queries = log_sql_queries
 
     conf = get_logging_conf(level, options)
     return conf
 
+
 def init_logging(
-        log_format: LogFormat | None = None,
-        options: UserLoggingOptions | None = None,
+    log_format: LogFormat | None = None,
+    options: UserLoggingOptions | None = None,
 ):
     if log_format is None:
-        log_format = 'logfmt' if _should_use_logfmt() else 'rich'
-    level: GetHandler = _init_logging(log_format)
+        fmt = 'logfmt' if _should_use_logfmt() else 'rich'
+    else:
+        fmt = log_format
+    level: GetHandler = _init_logging(fmt)
     if options is None:
         options = UserLoggingOptions()
     conf = get_logging_conf(level, options)

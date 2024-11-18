@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import os
 from enum import Enum
 from functools import cache
-import os
 from warnings import warn
 
 
@@ -13,17 +13,21 @@ class DeploymentEnvironmentType(Enum):
     WIP = 'wip'
     DEV = 'development'
 
+
 def is_production_deployment() -> bool:
     return get_deployment_environment() == DeploymentEnvironmentType.PRODUCTION
 
+
 def is_development_environment() -> bool:
     return get_deployment_environment() == DeploymentEnvironmentType.DEV
+
 
 @cache
 def get_deployment_environment() -> DeploymentEnvironmentType:
     dt_val: str
     try:
         from django.conf import settings
+
         dt_val = settings.DEPLOYMENT_TYPE
     except Exception:
         dt_val = os.getenv('DEPLOYMENT_TYPE') or 'development'

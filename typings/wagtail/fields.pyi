@@ -30,10 +30,11 @@ class RichTextField(Generic[_RTF_ST, _RTF_GT], models.TextField[_RTF_ST, _RTF_GT
     def extract_references(self, value) -> Generator[Incomplete, Incomplete, None]: ...
 
 
-type StreamFieldNamedBlock = tuple[str, Block]
-type StreamFieldBlocks = Block | type[Block] | Sequence[StreamFieldNamedBlock]
+type StreamFieldNamedBlock = tuple[str, Block[Any]]
+type StreamFieldBlocks = Block[Any] | type[Block[Any]] | Sequence[StreamFieldNamedBlock]
 
-class StreamField(models.Field):
+
+class StreamField(models.Field[Any, StreamValue]):
     stream_block: Block
 
     @classmethod
@@ -44,6 +45,8 @@ class StreamField(models.Field):
         min_num: int | None = None,
         max_num: int | None = None,
         block_counts: dict[str, dict[str, int]] | None = None,
+        blank: bool = False,
+        null: bool = False,
         **kwargs,
     ) -> Self: ...
 
@@ -54,16 +57,18 @@ class StreamField(models.Field):
         min_num: int | None = None,
         max_num: int | None = None,
         block_counts: dict[str, dict[str, int]] | None = None,
+        blank: bool = False,
+        null: bool = False,
         **kwargs,
     ) -> None: ...
     @property
     def json_field(self) -> models.JSONField: ...
     def get_internal_type(self) -> Literal['JSONField']: ...
     def to_python(self, value) -> StreamValue: ...
-    def get_prep_value(self, value: StreamValue) -> Any: ...
+    def get_prep_value(self, value: StreamValue) -> Any: ...  # noqa: ANN401
     def value_to_string(self, obj): ...
     def get_searchable_content(self, value): ...
-    def extract_references(self, value) -> Any: ...
+    def extract_references(self, value) -> Any: ...  # noqa: ANN401
     def get_block_by_content_path(self, value, path_elements):
         """
         Given a list of elements from a content path, retrieve the block at that path

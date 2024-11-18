@@ -45,15 +45,15 @@ type FK[To: Model | None] = ForeignKey[To, To]
 if TYPE_CHECKING:
     @type_check_only
     class RelatedManagerQS[To: Model, QS: QuerySet](RelatedManager[To]):  # pyright: ignore
-        def get_queryset(self) -> QS: ...
+        def get_queryset(self) -> QS: ...  # pyright: ignore
 
     @type_check_only
-    class ReverseManyToOneDescriptorQS[To: Model, QS: QuerySet](ReverseManyToOneDescriptor[To]):
+    class ReverseManyToOneDescriptorQS[To: Model, QS: QuerySet[Any]](ReverseManyToOneDescriptor[To]):
         @overload    # type: ignore
         def __get__(self, instance: Model, cls: Any = ...) -> RelatedManagerQS[_To, QS]: ...  # type: ignore  # noqa: ANN401
 
 type RevMany[To: Model] = ReverseManyToOneDescriptor[To]
-type RevManyQS[To: Model, QS: QuerySet] = ReverseManyToOneDescriptorQS[To, QS]
+type RevManyQS[To: Model, QS: QuerySet[Any]] = ReverseManyToOneDescriptorQS[To, QS]
 type RevManyToMany[To: Model, Through: Model] = ManyToManyDescriptor[To, Through]
 
 type OneToOne[To: Model | None] = OneToOneField[To, To]
@@ -116,7 +116,7 @@ class ModelManager(Generic[_M, _QS], Manager[_M]):
         return self.get_queryset()
 
 
-_MLQS = TypeVar("_MLQS", bound=MultilingualQuerySet, default=MultilingualQuerySet[_M])
+_MLQS = TypeVar("_MLQS", bound=MultilingualQuerySet[Any], default=MultilingualQuerySet[_M])
 
 class MLModelManager(MultilingualManager[_M], ModelManager[_M, _MLQS]):
     """
@@ -141,17 +141,17 @@ class PageModelManager(ModelManager[_PageT, _PageQS], PageManager[_PageT]):  # p
 def manager_from_qs[_M: Model, _QS: QuerySet](qs: type[_QS]) -> ModelManager[_M, _QS]:  # pyright: ignore
     return ModelManager[_M, _QS].from_queryset(qs)()
 
-def manager_from_mlqs[_M: Model, _MLQS: MultilingualQuerySet](qs: type[_MLQS]) -> MLModelManager[_M, _MLQS]:
+def manager_from_mlqs[_M: Model, _MLQS: MultilingualQuerySet[Any]](qs: type[_MLQS]) -> MLModelManager[_M, _MLQS]:
     return MLModelManager[_M, _MLQS].from_queryset(qs)()
 
 
 if TYPE_CHECKING:
-    type MLMM[_M: Model, _MLQS: MultilingualQuerySet] = MLModelManager[_M, _MLQS]
+    type MLMM[_M: Model, _MLQS: MultilingualQuerySet[Any]] = MLModelManager[_M, _MLQS]
 
     _F = TypeVar('_F', bound=Callable[..., Any])
 
     class copy_signature(Generic[_F]):  # noqa: N801
-        def __init__(self, target: _F) -> None: ...
+        def __init__(self, target: _F) -> None: ...  # pyright: ignore
         def __call__(self, wrapped: Callable[..., Any]) -> _F: ...
 else:
     def copy_signature(_):

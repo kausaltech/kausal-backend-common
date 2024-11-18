@@ -115,6 +115,7 @@ class InstanceSpecificRole[M: Model](Role, abc.ABC):
 
     def __init__(self, model: type[M]):
         self.model = model
+        super().__init__()
 
     @abc.abstractmethod
     def get_instance_group_name(self, obj: M) -> str: ...
@@ -139,7 +140,7 @@ class InstanceSpecificRole[M: Model](Role, abc.ABC):
         )
         root_page = site.root_page
         grp_perms = root_page.group_permissions.filter(group=group)  # pyright: ignore
-        old_perms = set(grp_perms.values_list('permission', flat=True))
+        old_perms: set[Permission] = set(grp_perms.values_list('permission', flat=True))
         new_perms = set(Permission.objects.filter(
             **filt,
             codename__in=self.page_perms,
@@ -207,24 +208,25 @@ class InstanceFieldGroupRole[M: Model](InstanceSpecificRole[M], abc.ABC):
         filters = {
             '%s__in' % self.instance_group_field_name: user_groups,
         }
-        return self.model.objects.filter(**filters).distinct()
+        return self.model._default_manager.filter(**filters).distinct()
 
     def delete_instance_group(self, obj: M):
-        grp = getattr(obj, self.instance_group_field_name)
+        grp: Group | None = getattr(obj, self.instance_group_field_name)
         if grp is None:
             return
-        g_id = getattr(self, '%s_id' % self.instance_group_field_name)
+        mgr = self.model._default_manager
+        g_id: int = getattr(self, '%s_id' % self.instance_group_field_name)
         filters = {
             self.instance_group_field_name: g_id,
         }
-        has_others = self.model.objects.filter(**filters).exclude(pk=obj.pk).exists()
+        has_others = mgr.filter(**filters).exclude(pk=obj.pk).exists()
         if has_others:
             return
         setattr(obj, self.instance_group_field_name, None)
         update = {
             self.instance_group_field_name: None,
         }
-        self.model.objects.filter(id=obj.pk).update(**update)
+        mgr.filter(id=obj.pk).update(**update)
         Group.objects.get(id=g_id).delete()
 
 
@@ -240,13 +242,14 @@ class AdminRole[M: Model](InstanceSpecificRole[M], abc.ABC):
 
 class RoleRegistry:
     def __init__(self):
-        self.roles: dict[str, InstanceSpecificRole] = {}
+        self.roles: dict[str, InstanceSpecificRole[Any]] = {}
+        super().__init__()
 
-    def register(self, role: InstanceSpecificRole):
+    def register(self, role: InstanceSpecificRole[Any]):
         """Register a role in the role registry."""
         from .roles import InstanceSpecificRole
 
-        if not isinstance(role, InstanceSpecificRole):
+        if not isinstance(role, InstanceSpecificRole): # pyright: ignore[reportUnnecessaryIsInstance]
             msg = f"Only InstanceSpecificRole instances can be registered. Got {role}"
             raise TypeError(msg)
 
@@ -256,14 +259,14 @@ class RoleRegistry:
 
         self.roles[role.id] = role
 
-    def get_role(self, role_id: str) -> InstanceSpecificRole:
+    def get_role(self, role_id: str) -> InstanceSpecificRole[Any]:
         """Get a role by its ID."""
         if role_id not in self.roles:
             msg = f"No role registered with id '{role_id}'"
             raise KeyError(msg)
         return self.roles[role_id]
 
-    def get_all_roles(self) -> list[InstanceSpecificRole]:
+    def get_all_roles(self) -> list[InstanceSpecificRole[Any]]:
         """Get all registered roles."""
         return list(self.roles.values())
 
@@ -271,7 +274,7 @@ class RoleRegistry:
 role_registry = RoleRegistry()
 
 
-def register_role(role: InstanceSpecificRole):
+def register_role(role: InstanceSpecificRole[Any]):
     return role_registry.register(role)
 
 
@@ -286,7 +289,7 @@ class UserPermissionCache:
     @overload
     def has_instance_role(self, role: str, obj: Model) -> bool: ...
 
-    def has_instance_role(self, role: str | InstanceSpecificRole, obj: Model) -> bool:
+    def has_instance_role(self, role: str | InstanceSpecificRole[Any], obj: Model) -> bool:
         if isinstance(role, str):
             role = role_registry.get_role(role)
         if not isinstance(obj, role.model):
@@ -303,7 +306,7 @@ class UserPermissionCache:
 
         If no roles are configured for the model, will return None.
         """
-        roles: list[InstanceSpecificRole] = []
+        roles: list[InstanceSpecificRole[Any]] = []
         model_has_roles = False
         for role in role_registry.get_all_roles():
             if role.model is not type(obj):

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import abc
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from django.core import checks
 from django.db import models
@@ -11,15 +11,18 @@ if TYPE_CHECKING:
     from django.core.checks import CheckMessage
 
 
-class OrderedModel(models.Model):
+class OrderedModel(models.Model):  # noqa: DJ008
     """Like wagtailorderable.models.Orderable, but with additional functionality in filter_siblings()."""
 
     order = models.PositiveIntegerField(default=0, editable=True, verbose_name=_('order'))
     sort_order_field = 'order'
     order_on_create: int | None
 
-    class Meta:
-        abstract = True
+    if TYPE_CHECKING:
+        Meta: Any
+    else:
+        class Meta:
+            abstract = True
 
     def save(self, *args, **kwargs):
         if self.pk is None:

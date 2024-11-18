@@ -19,6 +19,7 @@ from rich.logging import RichHandler
 from rich.text import Text, TextType
 
 from kausal_common.deployment import env_bool
+from kausal_common.logging.warnings import warning_traceback_enabled
 
 if TYPE_CHECKING:
     from rich.console import ConsoleRenderable, RenderableType
@@ -33,7 +34,7 @@ class LogRender:
         show_time: bool = True,
         show_level: bool = False,
         show_path: bool = True,
-        time_format: str | FormatTimeCallable = "[%x %X]",
+        time_format: str | FormatTimeCallable = '[%x %X]',
         omit_repeated_times: bool = True,
         level_width: int | None = 8,
     ) -> None:
@@ -52,7 +53,7 @@ class LogRender:
         name: str,
         log_time: datetime | None = None,
         time_format: str | FormatTimeCallable | None = None,
-        level: TextType = "",
+        level: TextType = '',
         path: str | None = None,
         line_no: int | None = None,
         link_path: str | None = None,
@@ -62,12 +63,12 @@ class LogRender:
         output = Table.grid(padding=(0, 1))
         output.expand = True
         if self.show_time:
-            output.add_column(style="log.time")
+            output.add_column(style='log.time')
         if self.show_level:
-            output.add_column(style="log.level", width=self.level_width)
-        output.add_column(ratio=1, style="log.message", overflow="fold")
+            output.add_column(style='log.level', width=self.level_width)
+        output.add_column(ratio=1, style='log.message', overflow='fold')
         if self.show_path and path:
-            output.add_column(style="log.path")
+            output.add_column(style='log.path')
         row: list[RenderableType] = []
         if self.show_time:
             log_time = log_time or console.get_datetime()
@@ -77,7 +78,7 @@ class LogRender:
             else:
                 log_time_display = Text(log_time.strftime(time_format))
             if log_time_display == self._last_time and self.omit_repeated_times:
-                row.append(Text(" " * len(log_time_display)))
+                row.append(Text(' ' * len(log_time_display)))
             else:
                 row.append(log_time_display)
                 self._last_time = log_time_display
@@ -93,7 +94,8 @@ class LogRender:
         if self.show_path and path:
             path_text = Text()
             path_text.append(
-                name, style=f"link file://{link_path}#{line_no}" if link_path else "",
+                name,
+                style=f'link file://{link_path}#{line_no}' if link_path else '',
             )
             row.append(path_text)
 
@@ -108,8 +110,9 @@ RICH_TIME_FORMAT = '%H:%M:%S.%f'
 
 log_console: Console | None = None
 
+
 def get_rich_log_console() -> Console:
-    global log_console
+    global log_console  # noqa: PLW0603
 
     if log_console is None:
         log_console = Console(stderr=True)
@@ -144,6 +147,7 @@ class RichLogHandler(RichHandler):
             delattr(record, '_extra_keys')
 
         scope_parts: list[Text] = []
+
         def add_scope(style: str, key: str):
             if key not in extra:
                 return
@@ -273,13 +277,15 @@ class UwsgiReqLogHandler(StreamHandler):
 showwarning_ = warnings.showwarning
 log_warning = logger.opt(depth=2)
 
-def showwarning(message: Warning | str, category: type[Warning], filename: str, lineno: int, file=None, line=None):
+
+def showwarning(message: Warning | str, category: type[Warning], filename: str, lineno: int, file=None, line=None) -> None:  # noqa: PLR0913
     cat_str = '%s.%s' % (category.__module__, category.__name__)
 
     with log_warning.contextualize(category=cat_str):
         log_warning.warning(message)
 
-if env_bool('LOG_WARNINGS', default=True):
+
+if not warning_traceback_enabled() and env_bool('LOG_WARNINGS', default=True):
     warnings.showwarning = showwarning
 
 
@@ -294,9 +300,10 @@ class LoguruLogRecord(LogRecord):
     def set_extra(self, extra: dict[str, Any]):
         self._extra_keys = list(extra.keys())
         for key, val in extra.items():
-            if (key in ["message", "asctime"]) or (key in self.__dict__):
-                raise KeyError("Attempt to overwrite %r in LogRecord" % key)
+            if (key in ['message', 'asctime']) or (key in self.__dict__):
+                raise KeyError('Attempt to overwrite %r in LogRecord' % key)
             setattr(self, key, val)
+
 
 logging.setLogRecordFactory(LoguruLogRecord)
 
@@ -312,9 +319,8 @@ class LoguruLogger(logging.Logger):
         return rec
 
 
-
 def loguru_make_record(record: loguru.Record, strip_markup: bool = False):
-    exc = record["exception"]
+    exc = record['exception']
     extra = record.get('extra', {})
     name = extra.pop('name', record['name'] or '')
 
@@ -325,17 +331,17 @@ def loguru_make_record(record: loguru.Record, strip_markup: bool = False):
 
     log_rec = LoguruLogRecord(
         name,
-        record["level"].no,
-        record["file"].path,
-        record["line"],
+        record['level'].no,
+        record['file'].path,
+        record['line'],
         msg.rstrip(),
         (),
-        (exc.type, exc.value, exc.traceback) if exc else None, # type: ignore
-        func=record["function"],
+        (exc.type, exc.value, exc.traceback) if exc else None,  # type: ignore
+        func=record['function'],
     )
     log_rec.set_extra(record['extra'])
     if exc:
-        log_rec.exc_text = "\n"
+        log_rec.exc_text = '\n'
     return log_rec
 
 

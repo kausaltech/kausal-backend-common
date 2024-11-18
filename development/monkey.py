@@ -13,6 +13,7 @@ def _monkeypath_init() -> None:
     import django_stubs_ext
     from django.db.models import ManyToManyField
     from django.db.models.fields.json import JSONField
+    from graphene import ObjectType
     from modelcluster.fields import ParentalKey, ParentalManyToManyField
     from wagtail.admin.panels import Panel
     from wagtail.admin.viewsets.model import ModelViewSet
@@ -24,7 +25,7 @@ def _monkeypath_init() -> None:
         ModelViewSet, ParentalKey, ParentalManyToManyField,
         JSONField, ManyToManyField, Node,
         Panel, Panel.BoundPanel, BaseObjectMixin,
-        BasePermissionPolicy
+        BasePermissionPolicy, ObjectType
     ], include_builtins=True)
 
 

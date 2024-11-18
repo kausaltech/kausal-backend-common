@@ -492,7 +492,7 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         return cast(_ModelT, child_obj)
 
     @classmethod
-    def create_django_instance(cls, adapter: DjangoAdapter, create_kwargs: dict) -> _ModelT:
+    def create_django_instance(cls, adapter: DjangoAdapter, create_kwargs: dict, /) -> _ModelT:
         model = cls._model
         mp_model = cls._mpnode_or_none()
         parent_id = None
