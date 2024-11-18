@@ -6,9 +6,10 @@ from functools import wraps
 from typing import TYPE_CHECKING, cast
 from urllib.parse import urlparse
 
+from django.urls import reverse
+
 import sentry_sdk
 import sentry_sdk.integrations
-from django.urls import reverse
 from sentry_sdk.integrations.argv import ArgvIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 
@@ -105,8 +106,8 @@ def _get_spotlight_url() -> str | None:
         return None
     enabled = coerce_bool(spotlight_env)
     if enabled is None:
-        return DEFAULT_SPOTLIGHT_URL
-    return spotlight_env
+        return spotlight_env
+    return DEFAULT_SPOTLIGHT_URL if enabled else None
 
 
 def _wrap_method[F: Callable](func: F, op: str, get_desc: Callable | None = None) -> F:
