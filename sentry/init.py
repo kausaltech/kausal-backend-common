@@ -12,6 +12,7 @@ import sentry_sdk
 import sentry_sdk.integrations
 from sentry_sdk.integrations.argv import ArgvIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.logging import ignore_logger
 
 from kausal_common.deployment import coerce_bool, env_bool
 from kausal_common.deployment.types import is_development_environment
@@ -189,6 +190,7 @@ def init_sentry(dsn: str | None, deployment_type: str | None = None):
         before_send_transaction=before_send_transaction,
         before_send=before_send,
     )
+    ignore_logger('uwsgi-req')
     if env_bool('SENTRY_TRACE_DJANGO_INIT', default=False):
         _patch_django_init()
 
