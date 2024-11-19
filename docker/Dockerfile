@@ -72,14 +72,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   apt update && apt install --no-install-recommends -y \
 	${build_time_deps}
 
-ENV CARGO_HOME=${UV_HOME} UV_BIN=${UV_HOME}/bin/uv
 # Install uv
-RUN \
-  curl -LsSf https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-installer.sh | sh
-
 ENV \
   XDG_CACHE_HOME=/cache \
+  UV_INSTALL_DIR=${UV_HOME} \
+  UV_BIN=${UV_HOME}/uv \
   UV_PYTHON_INSTALL_DIR=${UV_HOME}
+
+RUN \
+  curl -LsSf https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-installer.sh | sh
 
 WORKDIR ${app_path}
 
