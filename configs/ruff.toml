@@ -14,6 +14,7 @@ ignore = [
   "BLE001",
   "C401",
   "C408",
+  "COM812",
   "CPY",
   "D1",
   "D202",
@@ -35,6 +36,7 @@ ignore = [
   "PIE790",
   "PLR1722",
   "PLR2004",
+  "PT002",
   "PYI021",
   "Q000",
   "RET504",
@@ -56,12 +58,14 @@ ignore = [
   "UP031",
   "UP035",
 ]
+flake8-pytest-style.fixture-parentheses = false
 
 [lint.per-file-ignores]
-"kausal_common/typings/*" = ["D"]
-"kausal_common/typings/django/*" = ["ALL"]
-"**/migrations/*" = ["I001", "I002", "E501"]
-"**/tests/test_*" = ["PLR0913"]
+"../typings/*" = ["D"]
+"../typings/django/*" = ["ALL"]
+"../../**/migrations/*" = ["I001", "I002", "E501"]
+"../../**/tests/test_*" = ["PLR0913"]
+"../../**/tests/*" = ["I002"]
 
 [lint.pylint]
 max-args = 10
