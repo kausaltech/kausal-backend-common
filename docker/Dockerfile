@@ -64,6 +64,8 @@ RUN \
 #
 FROM base AS builder
 
+ARG UV_VERSION=0.5.2
+
 # Install build-time deps, and clean the cache from stale packages.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -73,7 +75,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 ENV CARGO_HOME=${UV_HOME} UV_BIN=${UV_HOME}/bin/uv
 # Install uv
 RUN \
-  curl -LsSf https://github.com/astral-sh/uv/releases/download/0.3.3/uv-installer.sh | sh
+  curl -LsSf https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-installer.sh | sh
 
 ENV \
   XDG_CACHE_HOME=/cache \
