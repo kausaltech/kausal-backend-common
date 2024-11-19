@@ -61,6 +61,7 @@ ignore = [
 "kausal_common/typings/*" = ["D"]
 "kausal_common/typings/django/*" = ["ALL"]
 "**/migrations/*" = ["I001", "I002", "E501"]
+"**/tests/test_*" = ["PLR0913"]
 
 [lint.pylint]
 max-args = 10
@@ -83,22 +84,22 @@ section-order = [
 ]
 
 [lint.isort.sections]
-"django" = [
-  'django',
-  'rest_framework',
-  'graphene',
-  'graphql',
-  'graphene_django',
-  'modelcluster',
-  'modeltrans',
-  'wagtail',
-  'reversion',
-  'django_stubs_ext',
-  'pydantic',
+django = [
+  "django_stubs_ext",
+  "django",
+  "graphene_django",
+  "graphene",
+  "graphql",
+  "modelcluster",
+  "modeltrans",
+  "pydantic",
+  "rest_framework",
+  "reversion",
+  "wagtail",
 ]
-"django-init" = ['kausal_common.development.django']
-"kausal-common" = ['kausal_common']
-"django-project" = ['paths', 'aplans']
+"django-init" = ["kausal_common.development.django"]
+"kausal-common" = ["kausal_common"]
+"django-project" = ["paths", "aplans"]
 
 [format]
 quote-style = "single"
