@@ -192,7 +192,7 @@ check_package_versions() {
     print_check "Checking installed package versions..." "📦"
 
     # Extract requirements files from pyproject.toml
-    REQ_FILES=$(grep -E "^(dependencies|optional-dependencies\.dev)" pyproject.toml | sed -n 's/.*\[\([^]]*\)\].*/\1/p' | tr -d '"' | tr ',' ' ')
+    REQ_FILES=$(sed -n '/^dependencies\|^optional-dependencies\.dev/,/}/p' pyproject.toml | grep -o '".*"' | tr -d '"' | grep -v '^$' | tr '\n' ' ')
     if [ -z "$REQ_FILES" ]; then
         print_error "No requirements files found in pyproject.toml"
         return 1
