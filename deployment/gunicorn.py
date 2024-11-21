@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 import contextlib
-import gc
-import os
-from threading import Thread
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -11,7 +8,7 @@ from loguru import logger
 from kausal_common.telemetry import init_telemetry
 
 if TYPE_CHECKING:
-    from gunicorn.arbiter import Arbiter
+    from gunicorn.arbiter import Arbiter  # type: ignore[import-not-found]
     from gunicorn.workers.base import Worker
 
 
@@ -22,13 +19,13 @@ def pre_import():
     """Import import some of the larger packages before forking."""
 
     with contextlib.suppress(ImportError):
-        import pandas as pd  # noqa: F401
+        import pandas as pd  # type: ignore[import-untyped]  # noqa: F401
 
     with contextlib.suppress(ImportError):
         import polars as pl  # noqa: F401
 
     with contextlib.suppress(ImportError):
-        from nodes.units import unit_registry  # noqa: F401
+        from nodes.units import unit_registry  # type: ignore[import-not-found]  # noqa: F401
 
     gunicorn_log.info("Additional imports completed")
 

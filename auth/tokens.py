@@ -18,7 +18,9 @@ if TYPE_CHECKING:
 @cache
 def get_id_token_authenticator() -> type[TokenAuthentication] | None:
     try:
-        from kausal_paths_extensions.auth.authentication import IDTokenAuthentication  # type: ignore[missing-imports]
+        from kausal_paths_extensions.auth.authentication import (  # type: ignore[import-not-found]
+            IDTokenAuthentication,
+        )
     except ImportError:
         pass
     else:
