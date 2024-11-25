@@ -131,6 +131,7 @@ def get_logging_conf(
             'fsspec': level('INFO'),
             'oauthlib.oauth2.rfc6749.endpoints': level('INFO'),
             'people.models': level('INFO' if options.people_verbose else 'WARNING'),
+            'asyncio': level('INFO'),
             '': level('DEBUG'),
         },
     }

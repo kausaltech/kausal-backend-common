@@ -54,7 +54,7 @@ def suppress_send(value: bool):
 def is_in_interactive_mode():
     global _in_interactive_mode  # noqa: PLW0603
     if _in_interactive_mode is not None:
-        return None
+        return _in_interactive_mode
 
     try:
         get_ipython().__class__.__name__  # type: ignore  # noqa: B018, F821

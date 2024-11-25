@@ -61,8 +61,8 @@ ignore = [
 flake8-pytest-style.fixture-parentheses = false
 
 [lint.per-file-ignores]
-"../typings/*" = ["D"]
-"../typings/django/*" = ["ALL"]
+"../typings/**" = ["D", "A002", "ANN401", "PLC0105"]
+"../typings/django/**" = ["ALL"]
 "../../**/migrations/*" = ["I001", "I002", "E501"]
 "../../**/tests/test_*" = ["PLR0913"]
 "../../**/tests/*" = ["I002"]
@@ -93,6 +93,7 @@ django = [
   "django",
   "graphene_django",
   "graphene",
+  "strawberry",
   "graphql",
   "modelcluster",
   "modeltrans",
