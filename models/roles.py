@@ -134,17 +134,21 @@ class InstanceSpecificRole[M: Model](Role, abc.ABC):
         """Return the objects for which the user has this role."""
 
     def _update_page_perms(self, group: Group, site: Site) -> None:
+        from wagtail.models import GroupPagePermission
+
         filt = dict(
             content_type__app_label='wagtailcore',
             content_type__model='page',
         )
         root_page = site.root_page
-        grp_perms = root_page.group_permissions.filter(group=group)  # pyright: ignore
-        old_perms: set[Permission] = set(grp_perms.values_list('permission', flat=True))
+        grp_perms = GroupPagePermission.objects.filter(page=root_page, group=group)
+        old_perms: set[Permission] = set(
+            Permission.objects.filter(grouppagepermission__in=grp_perms).distinct()
+        )
         new_perms = set(Permission.objects.filter(
             **filt,
             codename__in=self.page_perms,
-        ).values_list('id', flat=True))
+        ))
         if old_perms != new_perms:
             logger.info('Setting new %s page permissions' % str(group))
             grp_perms.delete()
@@ -308,6 +312,7 @@ class UserPermissionCache:
         """
         roles: list[InstanceSpecificRole[Any]] = []
         model_has_roles = False
+
         for role in role_registry.get_all_roles():
             if role.model is not type(obj):
                 continue
