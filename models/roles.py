@@ -4,6 +4,7 @@ import abc
 from dataclasses import dataclass, field
 from functools import cache, cached_property
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Protocol, cast, overload
+from django.contrib.auth import get_permission_codename
 from typing_extensions import TypeVar
 
 from django.contrib.auth.models import Group, Permission
@@ -84,26 +85,38 @@ class Role(abc.ABC, ConcreteRoleProtocol):
         return 'Role %s (%s)' % (self.id, str(self.name))
 
     def check(self) -> list[CheckMessage]:
-        perms = Permission.objects.filter(content_type__app_label__in=self._app_model_perms.keys()).select_related('content_type')
-        perms_by_app: dict[str, dict[str, Permission]] = {}
-        for perm in perms:
-            app_perm_objs = perms_by_app.setdefault(perm.content_type.app_label, {})
-            app_perm_objs[perm.codename] = perm
+        from django.apps import apps
+
+        allow_list = {'wagtailadmin.access_admin'}
 
         errors: list[CheckMessage] = []
         for app_label, app_perms in self._app_model_perms.items():
-            if app_label not in perms_by_app:
-                raise ValueError(f'Role {self.id} has no permissions for app {app_label}')
+            app = apps.app_configs.get(app_label)
+            if app is None:
+                error = Error(
+                    f'Role {self.id} has permissions for non-existing app {app_label}', id='kausal_common.R001', obj=self
+                )
+                errors.append(error)
+                continue
+            model_perms = set()
+            for model in app.get_models():
+                meta = model._meta
+                for action in meta.default_permissions:
+                    model_perms.add(get_permission_codename(action, meta))
+                for codename in meta.permissions:
+                    model_perms.add(codename)
             for perm_str in app_perms:
-                obj = perms_by_app[app_label].get(perm_str)
-                if obj is None:
-                    errors.append(
-                        Error(
-                            f'Role has invalid permission {perm_str} for app {app_label}',
-                            id='kausal_common.R002',
-                            obj=self,
-                        )
-                    )
+                if perm_str in model_perms:
+                    continue
+                if f'{app_label}.{perm_str}' in allow_list:
+                    continue
+                error = Error(
+                    f'Role has invalid permission {perm_str} for app {app_label}',
+                    id='kausal_common.R002',
+                    obj=self,
+                )
+                errors.append(error)
+
         return errors
 
     @cached_property
