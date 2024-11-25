@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypeGuard, cast, overload
 from typing_extensions import TypeVar
 
@@ -191,6 +192,8 @@ class ModelPermissionPolicy(Generic[_M, _QS, CreateContext], ABC, WagtailModelPe
             return False
         if not self.user_is_authenticated(user):
             return self.anon_has_perm(action, instance)
+        if user.is_superuser:
+            return True
         return self.user_has_perm(user, action, instance)
 
     def is_field_visible(self, instance: _M, field_name: str, user: UserOrAnon | None) -> bool:
@@ -228,14 +231,22 @@ _ParentM = TypeVar('_ParentM', bound='PermissionedModel')
 class ParentInheritedPolicy(Generic[_M, _ParentM, _QS], ModelPermissionPolicy[_M, _QS, _ParentM]):
     parent_model: type[_ParentM]
     parent_policy: ModelPermissionPolicy[_ParentM, QS[_ParentM], Any]
+    disallowed_actions: set[BaseObjectAction]
 
-    def __init__(self, model: type[_M], parent_model: type[_ParentM], parent_field: str):
+    def __init__(
+        self,
+        model: type[_M],
+        parent_model: type[_ParentM],
+        parent_field: str,
+        disallowed_actions: Iterable[BaseObjectAction] = (),
+    ):
         super().__init__(model)
         self.parent_model = parent_model
         self.parent_policy = parent_model.permission_policy()
         self.parent_field = parent_field
         if model not in self.parent_model.child_models:
             self.parent_model.child_models.append(model)
+        self.disallowed_actions = set(disallowed_actions)
 
     def parent_in_q(self, val: QuerySet) -> Q:
         key = '%s__in' % self.parent_field
@@ -248,17 +259,27 @@ class ParentInheritedPolicy(Generic[_M, _ParentM, _QS], ModelPermissionPolicy[_M
         return getattr(obj, self.parent_field)
 
     def construct_perm_q(self, user: User, action: BaseObjectAction) -> Q | None:
+        if action in self.disallowed_actions:
+            return None
         return self.parent_in_q(self.get_parent_qs(user, action))
 
     def construct_perm_q_anon(self, action: BaseObjectAction) -> Q | None:
+        if action in self.disallowed_actions:
+            return None
         return self.parent_in_q(self.get_parent_qs(AnonymousUser(), action))
 
     def user_has_perm(self, user: User, action: ObjectSpecificAction, obj: _M) -> bool:
+        if action in self.disallowed_actions:
+            return False
         return self.parent_policy.user_has_perm(user, action, getattr(obj, self.parent_field))
 
     def anon_has_perm(self, action: ObjectSpecificAction, obj: _M) -> bool:
+        if action in self.disallowed_actions:
+            return False
         return self.parent_policy.anon_has_perm(action, self.get_parent_obj(obj))
 
     def user_can_create(self, user: User, context: _ParentM) -> bool:
+        if 'add' in self.disallowed_actions:
+            return False
         # Default to the permission to edit the parent object
         return self.parent_policy.user_has_perm(user, 'change', context)

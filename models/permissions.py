@@ -13,6 +13,8 @@ from pydantic import BaseModel, Field
 from kausal_common.models.permission_policy import ALL_OBJECT_SPECIFIC_ACTIONS
 
 if TYPE_CHECKING:
+    from rich.repr import RichReprResult
+
     from kausal_common.graphene import GQLInfo
     from kausal_common.models.permission_policy import ModelPermissionPolicy
     from kausal_common.users import UserOrAnon
@@ -20,7 +22,7 @@ if TYPE_CHECKING:
     from .permission_policy import ObjectSpecificAction
 
 
-class PermissionedModel(models.Model):  # noqa: DJ008
+class PermissionedModel(models.Model):
     child_models: ClassVar[list[type[PermissionedModel]]] = []
 
     if TYPE_CHECKING:
@@ -28,6 +30,12 @@ class PermissionedModel(models.Model):  # noqa: DJ008
     else:
         class Meta:
             abstract = True
+
+    @abstractmethod
+    def __str__(self) -> str: ...
+
+    @abstractmethod
+    def __rich_repr__(self) -> RichReprResult: ...
 
     @classmethod
     @abstractmethod
