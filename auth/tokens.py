@@ -3,8 +3,6 @@ from __future__ import annotations
 from functools import cache
 from typing import TYPE_CHECKING, Literal, cast
 
-from oauth2_provider.views.oidc import InvalidJWSObject
-
 if TYPE_CHECKING:
     from typing import type_check_only
 
@@ -43,16 +41,16 @@ if TYPE_CHECKING:
 @cache
 def get_access_token_authenticator() -> type[AccessTokenAuthentication] | None:
     try:
-        from kausal_paths_extensions.auth.authentication import (
-            AccessTokenAuthentication as PathsAccessTokenAuth,  # type: ignore[missing-imports]
+        from kausal_paths_extensions.auth.authentication import (  # type: ignore[missing-imports]
+            AccessTokenAuthentication as PathsAccessTokenAuth,
         )
     except ImportError:
         pass
     else:
         return cast('type[AccessTokenAuthentication]', PathsAccessTokenAuth)
     try:
-        from kausal_paths_extensions.auth.authentication import (
-            AccessTokenAuthentication as WatchAccessTokenAuth,  # type: ignore[missing-imports]
+        from kausal_watch_extensions.auth.authentication import (  # type: ignore[missing-imports]
+            AccessTokenAuthentication as WatchAccessTokenAuth,
         )
     except ImportError:
         pass
@@ -66,6 +64,8 @@ def authenticate_api_request(request: HttpRequest, api_type: Literal['graphql', 
         return None
     id_token_auth = get_id_token_authenticator()
     if id_token_auth is not None:
+        from oauth2_provider.views.oidc import InvalidJWSObject
+
         auth = id_token_auth()
         try:
             ret = auth.authenticate(cast('Request', request))
