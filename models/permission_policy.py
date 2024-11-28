@@ -38,7 +38,7 @@ def is_base_action(action: str) -> TypeGuard[ObjectSpecificAction]:
     return action in ('view', 'change', 'delete')
 
 
-class ModelPermissionPolicy(Generic[_M, _QS, CreateContext], ABC, WagtailModelPermissionPolicy[_M, User, Any]):
+class ModelPermissionPolicy(Generic[_M, CreateContext, _QS], ABC, WagtailModelPermissionPolicy[_M, User, Any]):
     public_fields: list[str]
     """List of fields that are public."""
 
@@ -204,7 +204,7 @@ class ModelPermissionPolicy(Generic[_M, _QS, CreateContext], ABC, WagtailModelPe
         return self.user_has_any_permission_for_instance(user, ['change', 'add', 'delete'], instance)
 
 
-class ModelReadOnlyPolicy(ModelPermissionPolicy[_M, _QS, CreateContext]):
+class ModelReadOnlyPolicy(ModelPermissionPolicy[_M, CreateContext, _QS]):
     def construct_perm_q(self, user: User, action: BaseObjectAction) -> Q | None:
         if action == 'view':
             return Q()
@@ -228,9 +228,9 @@ class ModelReadOnlyPolicy(ModelPermissionPolicy[_M, _QS, CreateContext]):
 _ParentM = TypeVar('_ParentM', bound='PermissionedModel')
 
 
-class ParentInheritedPolicy(Generic[_M, _ParentM, _QS], ModelPermissionPolicy[_M, _QS, _ParentM]):
+class ParentInheritedPolicy(Generic[_M, _ParentM, _QS], ModelPermissionPolicy[_M, _ParentM, _QS]):
     parent_model: type[_ParentM]
-    parent_policy: ModelPermissionPolicy[_ParentM, QS[_ParentM], Any]
+    parent_policy: ModelPermissionPolicy[_ParentM, Any, QS[_ParentM]]
     disallowed_actions: set[BaseObjectAction]
 
     def __init__(
