@@ -32,7 +32,7 @@ def register_form_field_override(
     """
 
 _P = ParamSpec('_P')
-FormfieldCallback: TypeAlias = Callable[Concatenate[DBField, _P], FormField]
+FormfieldCallback: TypeAlias = Callable[Concatenate[DBField, _P], FormField]  # noqa: UP040
 
 def formfield_for_dbfield(db_field: DBField, **kwargs: Any) -> FormField: ...
 
@@ -58,7 +58,7 @@ class BaseModelFormKwargs[M: Model](TypedDict, total=False):
     use_required_attribute: bool | None
     renderer: BaseRenderer | None
 
-_U = TypeVar('_U', bound=AbstractBaseUser, default=AbstractBaseUser)
+_U = TypeVar('_U', bound=AbstractBaseUser, default=AbstractBaseUser, covariant=True)
 _M = TypeVar('_M', bound=Model, default=Model)
 
 

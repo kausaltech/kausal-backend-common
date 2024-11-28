@@ -13,9 +13,7 @@ from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.ui.tables import Column, Table
 from wagtail.admin.widgets import Button
 
-_Model = TypeVar('_Model', bound=Model, default=Model)
-_ReqT = TypeVar('_ReqT', bound=HttpRequest, default=HttpRequest)
-_QS = TypeVar('_QS', bound=QuerySet, default=QuerySet)
+_Model = TypeVar('_Model', bound=Model, default=Model, covariant=True)
 _PKT = TypeVar('_PKT', default=Any)
 
 
@@ -77,7 +75,7 @@ class ActiveFilter(NamedTuple):
     value: Any
     removed_filter_url: str
 
-class BaseListingView[M: Model](WagtailAdminTemplateMixin, BaseListView[M]):
+class BaseListingView(WagtailAdminTemplateMixin, BaseListView[_Model]):  # type: ignore[type-var]
     results_template_name: str
     results_only: bool
     table_class: type[Table]

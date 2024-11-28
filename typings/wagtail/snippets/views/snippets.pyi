@@ -17,9 +17,9 @@ from wagtail.snippets.views.chooser import SnippetChooserViewSet
 def get_snippet_model_from_url_params(app_name: str, model_name: str) -> type[Model]: ...
 
 
-_Model = TypeVar('_Model', bound=Model, default=Model)
-_QS = TypeVar('_QS', bound=QuerySet, default=QuerySet)
-_Form = TypeVar('_Form', bound=BaseModelForm, default=WagtailAdminModelForm)
+_ModelT = TypeVar('_ModelT', bound=Model, default=Model, covariant=True)
+_QS = TypeVar('_QS', bound=QuerySet[Any, Any], default=QuerySet[_ModelT])
+_FormT = TypeVar('_FormT', bound=BaseModelForm[Any], default=WagtailAdminModelForm[_ModelT], covariant=True)
 
 
 class SnippetType(TypedDict):
@@ -34,13 +34,13 @@ class ModelIndexView[M: Model](base.BaseListingView[M]):
     def get_template_names(self) -> list[str]: ...
 
 
-class IndexView(Generic[_Model, _QS], mixins.IndexViewOptionalFeaturesMixin, generic_models.IndexView[_Model]):
+class IndexView(Generic[_ModelT, _QS], mixins.IndexViewOptionalFeaturesMixin, generic_models.IndexView[_ModelT]):
     view_name: ClassVar[str]
     def get_base_queryset(self) -> _QS: ...
 
 
-class CreateView[M: Model, F: BaseModelForm](
-    mixins.CreateEditViewOptionalFeaturesMixin[M, F], generic_models.CreateView[M, F],
+class CreateView(
+    mixins.CreateEditViewOptionalFeaturesMixin[_ModelT, _FormT], generic_models.CreateView[_ModelT, _FormT],
 ):
     view_name: ClassVar[str]
     def run_before_hook(self) -> HttpResponse | None: ...
@@ -48,9 +48,9 @@ class CreateView[M: Model, F: BaseModelForm](
     def get_side_panels(self) -> MediaContainer: ...
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
 
-class CopyView[M: Model, F: BaseModelForm](generic.CopyViewMixin[M], CreateView[M, F]): ...
+class CopyView(generic.CopyViewMixin[_ModelT], CreateView[_ModelT, _FormT]): ...
 
-class EditView(generic.CreateEditViewOptionalFeaturesMixin[_Model, _Form], generic.EditView[_Model, _Form]):
+class EditView(generic.CreateEditViewOptionalFeaturesMixin[_ModelT, _FormT], generic.EditView[_ModelT, _FormT]):
     view_name: ClassVar[str]
     def run_before_hook(self) -> HttpResponse | None: ...
     def run_after_hook(self) -> HttpResponse | None: ...
@@ -105,17 +105,17 @@ class WorkflowHistoryView(generic.PermissionCheckedMixin, history.WorkflowHistor
 class WorkflowHistoryDetailView(generic.PermissionCheckedMixin, history.WorkflowHistoryDetailView):
     ...
 
-class SnippetViewSet(Generic[_Model, _Form], ModelViewSet[_Model, _Form]):
-    model: type[_Model]
+class SnippetViewSet(Generic[_ModelT, _FormT], ModelViewSet[_ModelT, _FormT]):
+    model: type[_ModelT]
     chooser_per_page: ClassVar[int]
     admin_url_namespace: ClassVar[str | None]
     base_url_path: ClassVar[str | None]
     chooser_admin_url_namespace: ClassVar[str | None]
     chooser_base_url_path: ClassVar[str | None]
-    index_view_class: ClassVar[type[IndexView]]
-    add_view_class: ClassVar[type[CreateView]]
-    copy_view_class: ClassVar[type[CopyView]]  # type: ignore
-    edit_view_class: ClassVar[type[EditView]]
+    index_view_class: ClassVar[type[IndexView[_ModelT, Any]]]  # type: ignore[misc]
+    add_view_class: ClassVar[type[CreateView[_ModelT, _FormT]]]  # type: ignore[misc]
+    copy_view_class: ClassVar[type[CopyView[_ModelT]]]  # type: ignore[misc]
+    edit_view_class: ClassVar[type[EditView[_ModelT, _FormT]]]  # type: ignore[misc]
     delete_view_class: ClassVar[type[DeleteView]]
     usage_view_class: ClassVar[type[UsageView]]
     history_view_class: ClassVar[type[HistoryView]]

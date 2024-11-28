@@ -16,19 +16,19 @@ from wagtail.admin.views.generic.usage import UsageView
 from wagtail.admin.viewsets.base import ViewSet, ViewSetGroup
 from wagtail.permission_policies.base import BasePermissionPolicy
 
-_Model = TypeVar('_Model', bound=Model, default=Model)
-_Form = TypeVar('_Form', bound=BaseModelForm, default=WagtailAdminModelForm)
+_ModelT = TypeVar('_ModelT', bound=Model, default=Model, covariant=True)
+_FormT = TypeVar('_FormT', bound=BaseModelForm, default=WagtailAdminModelForm[_ModelT], covariant=True)
 
 
-class ModelViewSet(Generic[_Model, _Form], ViewSet):
+class ModelViewSet(Generic[_ModelT, _FormT], ViewSet):
     add_to_reference_index: ClassVar[bool]
-    index_view_class: ClassVar[type[generic.IndexView]]
-    add_view_class: ClassVar[type[generic.CreateView]]
-    edit_view_class: ClassVar[type[generic.EditView]]
+    index_view_class: ClassVar[type[generic.IndexView[_ModelT, Any]]]  # type: ignore[misc]
+    add_view_class: ClassVar[type[generic.CreateView[_ModelT, _FormT]]]  # type: ignore[misc]
+    edit_view_class: ClassVar[type[generic.EditView[_ModelT, _FormT]]]  # type: ignore[misc]
     delete_view_class: ClassVar[type[generic.DeleteView]]
     history_view_class: ClassVar[type[HistoryView]]
     usage_view_class: ClassVar[type[UsageView]]
-    copy_view_class: ClassVar[type[generic.CopyView]]
+    copy_view_class: ClassVar[type[generic.CopyView[_ModelT]]]  # type: ignore[misc]
     inspect_view_class: ClassVar[type[generic.InspectView]]
     _show_breadcrumbs: ClassVar[bool]
     template_prefix: ClassVar[str]
@@ -38,8 +38,8 @@ class ModelViewSet(Generic[_Model, _Form], ViewSet):
     inspect_view_fields: ClassVar[list[str]]
     inspect_view_fields_exclude: ClassVar[list[str]]
     copy_view_enabled: ClassVar[bool]
-    model: type[_Model]
-    model_opts: Options[_Model]
+    model: type[_ModelT]
+    model_opts: Options[_ModelT]
     app_label: str
     model_name: str
 
