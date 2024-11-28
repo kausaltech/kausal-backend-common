@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import json
 from collections import OrderedDict
-from pathlib import PurePath
+from dataclasses import dataclass
+from pathlib import Path, PurePath
 from typing import TYPE_CHECKING, Any
 
-from django.contrib.staticfiles.storage import ManifestStaticFilesStorage as DjangoManifestStorage
+from django.contrib.staticfiles import finders
+from django.contrib.staticfiles.storage import ManifestStaticFilesStorage as DjangoManifestStorage, staticfiles_storage
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -37,3 +40,26 @@ class ManifestStaticFilesStorage(DjangoManifestStorage):
                     break
         ret = super().post_process(new_paths, dry_run=dry_run, **options)
         return ret  # type: ignore[return-value]
+
+
+@dataclass
+class ManifestEntry:
+    path: str
+    integrity_hash: str
+
+    @property
+    def url(self) -> str:
+        return staticfiles_storage.url(self.path)
+
+
+def load_from_manifest(root_path: PurePath, entries: list[str]) -> dict[str, ManifestEntry]:
+    manifest_fn = finders.find(f'{root_path}/manifest.json')
+    if not manifest_fn:
+        raise FileNotFoundError(f'Manifest file not found for {root_path}')
+    with Path(manifest_fn).open('r') as f:
+        manifest = json.load(f)
+    out: dict[str, ManifestEntry] = {}
+    for entry in entries:
+        data = manifest[entry]
+        out[entry] = ManifestEntry(path=data['file'], integrity_hash=data['integrity-hash'])
+    return out
