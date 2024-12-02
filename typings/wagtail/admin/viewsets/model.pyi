@@ -32,7 +32,7 @@ class ModelViewSet(Generic[_ModelT, _FormT], ViewSet):
     inspect_view_class: ClassVar[type[generic.InspectView]]
     _show_breadcrumbs: ClassVar[bool]
     template_prefix: ClassVar[str]
-    list_per_page: ClassVar[int]
+    list_per_page: ClassVar[int | None]
     ordering: ClassVar[str | list[str] | None]
     inspect_view_enabled: ClassVar[bool]
     inspect_view_fields: ClassVar[list[str]]
