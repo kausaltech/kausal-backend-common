@@ -17,6 +17,7 @@ def _monkeypath_init() -> None:
     from modelcluster.fields import ParentalKey, ParentalManyToManyField
     from wagtail.admin.panels import Panel
     from wagtail.admin.viewsets.model import ModelViewSet
+    from wagtail.blocks.base import Block
     from wagtail.permission_policies.base import BasePermissionPolicy
 
     from treebeard.models import Node
@@ -25,7 +26,8 @@ def _monkeypath_init() -> None:
         ModelViewSet, ParentalKey, ParentalManyToManyField,
         JSONField, ManyToManyField, Node,
         Panel, Panel.BoundPanel, BaseObjectMixin,
-        BasePermissionPolicy, ObjectType
+        BasePermissionPolicy, ObjectType,
+        Block
     ], include_builtins=True)
 
 
