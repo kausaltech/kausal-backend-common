@@ -16,7 +16,7 @@ from wagtail.admin.panels import Panel
 from wagtail.admin.ui.components import Component
 from wagtail.admin.ui.tables import Column
 from wagtail.admin.views.mixins import SpreadsheetExportMixin
-from wagtail.admin.widgets.button import ButtonWithDropdown, HeaderButton, ListingButton
+from wagtail.admin.widgets.button import Button, HeaderButton, ListingButton
 from wagtail.models import DraftStateMixin, ReferenceIndex
 from wagtail.models.audit_log import ModelLogEntry
 
@@ -63,7 +63,7 @@ class IndexView(Generic[_ModelT], SpreadsheetExportMixin, LocaleMixin, Permissio
     def get_delete_url(self, instance: _ModelT) -> str | None: ...  # type: ignore[misc]
     def get_add_url(self) -> str | None: ...
     def get_list_more_buttons(self, instance: _ModelT) -> list[ListingButton]: ...  # type: ignore[misc]
-    def get_list_buttons(self, instance: _ModelT) -> list[ButtonWithDropdown]: ...  # type: ignore[misc]
+    def get_list_buttons(self, instance: _ModelT) -> list[Button]: ...  # type: ignore[misc]
     def get_context_data(self, *args: Any, **kwargs: Any) -> dict[str, Any]: ...
     def render_to_response(self, context: dict[str, Any], **response_kwargs: Any) -> HttpResponse: ...
 
