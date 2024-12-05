@@ -22,7 +22,7 @@ _FormT = TypeVar('_FormT', bound=BaseModelForm, default=WagtailAdminModelForm[_M
 
 class ModelViewSet(Generic[_ModelT, _FormT], ViewSet):
     add_to_reference_index: ClassVar[bool]
-    index_view_class: ClassVar[type[generic.IndexView[_ModelT, Any]]]  # type: ignore[misc]
+    index_view_class: ClassVar[type[generic.IndexView[_ModelT]]]  # type: ignore[misc]
     add_view_class: ClassVar[type[generic.CreateView[_ModelT, _FormT]]]  # type: ignore[misc]
     edit_view_class: ClassVar[type[generic.EditView[_ModelT, _FormT]]]  # type: ignore[misc]
     delete_view_class: ClassVar[type[generic.DeleteView]]

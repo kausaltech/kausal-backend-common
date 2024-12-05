@@ -114,7 +114,7 @@ class SnippetViewSet(Generic[_ModelT, _FormT], ModelViewSet[_ModelT, _FormT]):
     chooser_base_url_path: ClassVar[str | None]
     index_view_class: ClassVar[type[IndexView[_ModelT, Any]]]  # type: ignore[misc]
     add_view_class: ClassVar[type[CreateView[_ModelT, _FormT]]]  # type: ignore[misc]
-    copy_view_class: ClassVar[type[CopyView[_ModelT]]]  # type: ignore[misc]
+    copy_view_class: ClassVar[type[CopyView[_ModelT]]]  # type: ignore[misc,assignment]
     edit_view_class: ClassVar[type[EditView[_ModelT, _FormT]]]  # type: ignore[misc]
     delete_view_class: ClassVar[type[DeleteView]]
     usage_view_class: ClassVar[type[UsageView]]
