@@ -172,6 +172,9 @@ class CombinedSchema(graphene.Schema):
         type_map = StrawberryCompatibleTypeMap(
             sb_schema, query, mutation, subscription, types, auto_camelcase=auto_camelcase
         )
+        if directives is None:
+            directives = ()
+        sb_directives = sb_schema._schema.directives
         # graphql_types = type_map.types
         # for name, type_ in sb_schema._schema.type_map.items():
         #     if name in type_map:
@@ -182,5 +185,5 @@ class CombinedSchema(graphene.Schema):
             type_map.mutation,
             type_map.subscription,
             type_map.types,
-            directives,
+            (*directives, *sb_directives),
         )
