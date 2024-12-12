@@ -106,6 +106,7 @@ def get_logging_conf(
             'parso': level('WARNING'),
             'requests': level('WARNING'),
             'urllib3.connectionpool': level('INFO'),
+            'urllib3.util': level('INFO'),
             'elasticsearch': level('WARNING'),
             'PIL': level('INFO'),
             'faker': level('INFO'),
@@ -199,7 +200,7 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
 
         warnings.filterwarnings(action='ignore', category=RemovedInWagtail70Warning)
 
-    if warning_traceback_enabled():
+    if log_format != 'logfmt' and warning_traceback_enabled():
         register_warning_handler()
 
     logging.setLoggerClass(LoguruLogger)
@@ -220,7 +221,7 @@ def _should_use_logfmt() -> bool:
         return True
 
     console = get_rich_log_console()
-    if not console.is_terminal or console.is_dumb_terminal:
+    if (not console.is_terminal and not console.is_jupyter) or console.is_dumb_terminal:
         return True
     return False
 
@@ -253,6 +254,7 @@ def init_logging(
     log_format: LogFormat | None = None,
     options: UserLoggingOptions | None = None,
 ):
+    fmt: LogFormat
     if log_format is None:
         fmt = 'logfmt' if _should_use_logfmt() else 'rich'
     else:

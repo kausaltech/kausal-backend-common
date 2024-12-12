@@ -51,6 +51,7 @@ def check_cache() -> dict:
     except Exception as e:
         sentry_sdk.capture_exception(e)
         logger.exception("Cache health check error")
+        return dict(status='fail')
 
     latency = round((time.monotonic() - start) * 1000000)
     if resp == 'checked':

@@ -10,9 +10,9 @@ from django.urls import reverse
 
 import sentry_sdk
 import sentry_sdk.integrations
+from sentry_sdk.consts import DEFAULT_MAX_VALUE_LENGTH
 from sentry_sdk.integrations.argv import ArgvIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
-from sentry_sdk.integrations.logging import ignore_logger
 
 from kausal_common.deployment import coerce_bool, env_bool
 from kausal_common.deployment.types import is_development_environment
@@ -149,6 +149,8 @@ class NullTransport(sentry_sdk.Transport):
 
 
 def init_sentry(dsn: str | None, deployment_type: str | None = None):
+    from sentry_sdk.integrations.logging import LoggingIntegration
+    from sentry_sdk.integrations.loguru import LoguruIntegration
     from sentry_sdk.integrations.modules import ModulesIntegration
 
     if sentry_sdk.is_initialized():
@@ -184,13 +186,16 @@ def init_sentry(dsn: str | None, deployment_type: str | None = None):
         disabled_integrations=[
             ModulesIntegration(),
             ArgvIntegration(),
+            LoguruIntegration(),
+            LoggingIntegration(),
         ],
         environment=os.getenv('SENTRY_ENVIRONMENT', None) or deployment_type,
         server_name=os.getenv('NODE_NAME', None),
         before_send_transaction=before_send_transaction,
         before_send=before_send,
+        max_value_length=4096 if spotlight_url else DEFAULT_MAX_VALUE_LENGTH,
+        max_request_body_size='always' if spotlight_url else 'medium',
     )
-    ignore_logger('uwsgi-req')
     if env_bool('SENTRY_TRACE_DJANGO_INIT', default=False):
         _patch_django_init()
 

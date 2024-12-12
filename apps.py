@@ -25,10 +25,9 @@ def check_graphql_schema(app_configs, **kwargs) -> list[CheckMessage]:
         importlib.import_module(mod_path)
     except Exception as exc:
         from django.conf import settings
-
         if settings.DEBUG:
             console = rich.get_console()
-            tbp = Traceback.from_exception(type(exc), exc, traceback=None, max_frames=20, show_locals=True)
+            tbp = Traceback.from_exception(type(exc), exc, traceback=exc.__traceback__, max_frames=20, show_locals=True)
             console.print(tbp)
         else:
             logger.exception('GraphQL schema failed to initialize')

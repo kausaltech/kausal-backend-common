@@ -253,7 +253,7 @@ class LogFmtFormatter(Logfmter):
         ret['thread.id'] = threading.get_native_id()
         return ret
 
-    def formatTime(self, record: logging.LogRecord, datefmt=None) -> str:
+    def formatTime(self, record: logging.LogRecord, datefmt=None) -> str:  # noqa: N802
         return datetime.fromtimestamp(record.created, UTC).strftime(ISO_FORMAT)
 
 
@@ -278,7 +278,7 @@ showwarning_ = warnings.showwarning
 log_warning = logger.opt(depth=2)
 
 
-def showwarning(message: Warning | str, category: type[Warning], filename: str, lineno: int, file=None, line=None) -> None:  # noqa: PLR0913
+def showwarning(message: Warning | str, category: type[Warning], filename: str, lineno: int, file=None, line=None) -> None:
     cat_str = '%s.%s' % (category.__module__, category.__name__)
 
     with log_warning.contextualize(category=cat_str):
@@ -309,7 +309,7 @@ logging.setLogRecordFactory(LoguruLogRecord)
 
 
 class LoguruLogger(logging.Logger):
-    def makeRecord(self, *args, **kwargs):
+    def makeRecord(self, *args, **kwargs):  # noqa: N802
         rec = cast(LoguruLogRecord, super().makeRecord(*args, **kwargs))
 
         extra = args[8]
@@ -359,9 +359,13 @@ def loguru_rich_sink(message: loguru.Message):
 
 
 def loguru_logfmt_sink(message: loguru.Message):
+    from kausal_common.sentry.logging import handle_log_record
+
     rec = loguru_make_record(message.record, strip_markup=True)
+
     sys.stderr.write(logfmt_formatter.format(rec) + '\n')
     sys.stderr.flush()
+    handle_log_record(rec)
 
 
 class LoguruLoggingHandler(logging.Handler):
