@@ -8,6 +8,7 @@ ignore = [
   "ANN0",
   "ANN201",
   "ANN204",
+  "ANN401",
   "ARG001",
   "ARG002",
   "ARG004",
@@ -98,6 +99,7 @@ django = [
   "modelcluster",
   "modeltrans",
   "pydantic",
+  "pydantic_core",
   "rest_framework",
   "reversion",
   "wagtail",
@@ -110,4 +112,4 @@ django = [
 quote-style = "single"
 
 [lint.flake8-builtins]
-builtins-ignorelist = ["id", "format"]
+builtins-ignorelist = ["id", "format", "print", "input"]
