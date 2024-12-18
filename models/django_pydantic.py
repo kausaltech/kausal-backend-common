@@ -27,7 +27,6 @@ from django.utils.functional import Promise
 from pydantic import BaseModel, ConfigDict, IPvAnyAddress, Json, PrivateAttr
 from pydantic.fields import FieldInfo
 from pydantic.v1.fields import Required
-
 from pydantic_core import PydanticUndefined
 
 BaseModel.model_config['protected_namespaces'] = ()
@@ -176,7 +175,7 @@ def _convert_field(field: Field, schema_name: str) -> tuple[PythonType, FieldInf
         else:
             assert field.related_model != 'self'
             internal_type = field.related_model._meta.pk.get_internal_type()
-            if not field.concrete and field.auto_created or field.null:
+            if (not field.concrete and field.auto_created) or field.null:
                 default = None
 
         pk_type = FIELD_TYPES.get(internal_type, int)
@@ -400,7 +399,7 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         return instance
 
     @classmethod
-    def from_django(cls, data: _ModelT | dict, context: Any = None) -> Self:  # noqa: ANN401
+    def from_django(cls, data: _ModelT | dict, context: Any = None) -> Self:
         if isinstance(data, cls._model):
             obj = data
             obj_data = cls._convert_django_instance(obj)
@@ -704,7 +703,9 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         self._children_changed.add(child.get_type())
 
     def get_excludes(self) -> set[str]:
-        excludes = {'adapter', 'model_flags', 'sibling_order'}
+        excludes = {'adapter', 'model_flags'}
+        if not self._is_orderable:
+            excludes.add(SIBLING_ORDER_ATTRIBUTE)
         for field in self._children.values():
             excludes.add(field)
         return excludes
@@ -754,7 +755,7 @@ class TypedAdapter(Adapter):
         parent.add_child(child, initial=True)
 
     def _walk_children[M: DjangoDiffModel](self, parent: M) -> Generator[dict[Any, Any], None, None]:
-        yield parent.dict()
+        yield parent.dict(exclude={SIBLING_ORDER_ATTRIBUTE})
         for child in parent.get_children(type(parent), ordered=True):
             yield from self._walk_children(child)
 
@@ -767,7 +768,7 @@ class TypedAdapter(Adapter):
                 if obj._parent_model != model or obj._parent_id is None:
                     yield from self._walk_children(obj)
         else:
-            yield from (obj.dict() for obj in objs)
+            yield from (obj.dict(exclude={SIBLING_ORDER_ATTRIBUTE}) for obj in objs)
 
     def to_dict(self) -> dict[str, list[dict[str, Any]]]:
         models_left = list(self.top_level)
