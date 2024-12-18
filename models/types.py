@@ -50,7 +50,7 @@ if TYPE_CHECKING:
     @type_check_only
     class ReverseManyToOneDescriptorQS[To: Model, QS: QuerySet[Any]](ReverseManyToOneDescriptor[To]):
         @overload    # type: ignore
-        def __get__(self, instance: Model, cls: Any = ...) -> RelatedManagerQS[_To, QS]: ...  # type: ignore  # noqa: ANN401
+        def __get__(self, instance: Model, cls: Any = ...) -> RelatedManagerQS[_To, QS]: ...  # type: ignore
 
 type RevMany[To: Model] = ReverseManyToOneDescriptor[To]
 type RevManyQS[To: Model, QS: QuerySet[Any]] = ReverseManyToOneDescriptorQS[To, QS]

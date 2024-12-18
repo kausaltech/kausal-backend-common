@@ -53,7 +53,7 @@ class ModelPermissionPolicy(Generic[_M, CreateContext, _QS], ABC, WagtailModelPe
                 self_pf = []
         self.public_fields = self_pf
 
-    def is_create_context_valid(self, context: Any) -> TypeGuard[CreateContext]:  # noqa: ANN401
+    def is_create_context_valid(self, context: Any) -> TypeGuard[CreateContext]:
         return False
 
     @staticmethod

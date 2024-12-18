@@ -39,7 +39,7 @@ class PermissionedModel(models.Model):
 
     @classmethod
     @abstractmethod
-    def permission_policy(cls) -> ModelPermissionPolicy[Self, Any]: ...
+    def permission_policy(cls) -> ModelPermissionPolicy[Self, Any, Any]: ...
 
     def gql_action_allowed(self, info: GQLInfo, action: ObjectSpecificAction) -> bool:
         return self.permission_policy().gql_action_allowed(info, action, self)
