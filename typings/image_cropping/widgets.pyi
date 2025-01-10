@@ -1,4 +1,3 @@
-from .config import settings as settings
 from .utils import get_backend as get_backend
 from _typeshed import Incomplete
 from django.contrib.admin.widgets import AdminFileWidget, ForeignKeyRawIdWidget
