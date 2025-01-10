@@ -1,0 +1,3 @@
+from _typeshed import Incomplete
+
+def import_attribute(import_path, exception_handler: Incomplete | None = None): ...
