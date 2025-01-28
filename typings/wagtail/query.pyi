@@ -1,6 +1,7 @@
 from typing import Generic, Self
 from typing_extensions import TypeVar
 
+from django.db import models
 from django.db.models import Model, Q, QuerySet
 from django.db.models.query import BaseIterable, ModelIterable
 from wagtail.models import Page
@@ -77,6 +78,13 @@ class TreeQuerySet(QuerySet[_NodeT, _NodeT]):
 
         If inclusive is set to False, the page will be included in the results.
         """
+    @classmethod
+    def as_manager(cls) -> TreeManager: ...
+
+class BaseTreeManager(models.Manager[_NodeT]):
+    def get_queryset(self) -> TreeQuerySet: ...
+
+class TreeManager(BaseTreeManager): ...
 
 _BaseModelQS = TypeVar('_BaseModelQS', bound=QuerySet, covariant=True)  # noqa: PLC0105
 

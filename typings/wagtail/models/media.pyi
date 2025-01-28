@@ -20,6 +20,8 @@ class CollectionQuerySet(TreeQuerySet[Collection]):
         dropdown, where the label is formatted with get_indented_name to provide a tree layout.
         The indent level is chosen to place the minimum-depth collection at indent 0.
         """
+    @classmethod
+    def as_manager(cls) -> CollectionManager: ...
 
 class BaseCollectionManager(models.Manager[Collection]):
     def get_queryset(self) -> CollectionQuerySet: ...
