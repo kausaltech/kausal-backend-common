@@ -79,12 +79,7 @@ class TreeQuerySet(QuerySet[_NodeT, _NodeT]):
         If inclusive is set to False, the page will be included in the results.
         """
     @classmethod
-    def as_manager(cls) -> TreeManager: ...
-
-class BaseTreeManager(models.Manager[_NodeT]):
-    def get_queryset(self) -> TreeQuerySet: ...
-
-class TreeManager(BaseTreeManager): ...
+    def as_manager(cls) -> models.Manager[_NodeT]: ...
 
 _BaseModelQS = TypeVar('_BaseModelQS', bound=QuerySet, covariant=True)  # noqa: PLC0105
 
