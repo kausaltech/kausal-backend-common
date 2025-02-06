@@ -75,11 +75,6 @@ function compare_coverage() {
         echo "✅ Coverage maintained or increased from $previous_percentage% to $current_percentage%" >> $GITHUB_STEP_SUMMARY
     fi
 
-        # If this is a main branch build, update the main branch coverage
-    if [ "$GITHUB_REF" = "refs/heads/main" ]; then
-        echo "Updating main branch coverage..."
-        s3cmd --host $BUILD_S3_ENDPOINT --host-bucket $BUILD_S3_ENDPOINT put $COVERAGE_XML_PATH s3://$BUILD_S3_BUCKET/main-branch-coverage.xml
-    fi
 }
 
 function upload_report() {
@@ -141,6 +136,12 @@ pytest_rc=$?
 upload_report
 if get_previous_coverage; then
     compare_coverage
+fi
+
+# If this is a main branch build, update the main branch coverage
+if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+    echo "Updating main branch coverage..."
+    s3cmd --host $BUILD_S3_ENDPOINT --host-bucket $BUILD_S3_ENDPOINT put $COVERAGE_XML_PATH s3://$BUILD_S3_BUCKET/main-branch-coverage.xml
 fi
 
 exit $pytest_rc
