@@ -58,9 +58,9 @@ class DimensionScope(OrderedModel):
     dimension = models.ForeignKey(Dimension, on_delete=models.CASCADE, related_name='scopes')
     scope_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='+')
     scope_id = models.PositiveIntegerField()
-    scope: models.ForeignKey[Plan, Plan] | models.ForeignKey[CategoryType, CategoryType] = GenericForeignKey(  # pyright: ignore
+    scope = GenericForeignKey(
         'scope_content_type', 'scope_id',
-    ) # type: ignore[assignment]
+    )
 
     class Meta:
         verbose_name = _('dimension scope')
@@ -126,16 +126,23 @@ class DatasetSchema(models.Model):
 
     @staticmethod
     def get_for_model(obj: models.Model) -> list[DatasetSchema]:
-        scope_id = None
-        scope_content_type_id = None
-        if isinstance(obj, Action):
-            scope_id = obj.plan.pk
-            scope_content_type_id = ContentType.objects.get_for_model(Plan).pk
-        elif isinstance(obj, Category):
-            scope_id = obj.type.pk
-            scope_content_type_id = ContentType.objects.get_for_model(CategoryType).pk
-        if scope_id is not None:
-            return DatasetSchema.get_for_scope(scope_id, scope_content_type_id)
+        """Get schemas for any model that can have datasets."""
+        content_type = ContentType.objects.get_for_model(obj)
+
+        # For Action objects, look up schemas via their Plan
+        if content_type.app_label == 'actions' and content_type.model == 'action':
+            plan = getattr(obj, 'plan', None)
+            if plan:
+                plan_type = ContentType.objects.get_for_model(plan)
+                return DatasetSchema.get_for_scope(plan.pk, plan_type.id)
+
+        # For Category objects, look up schemas via their CategoryType
+        elif content_type.app_label == 'actions' and content_type.model == 'category':
+            category_type = getattr(obj, 'type', None)
+            if category_type:
+                type_content_type = ContentType.objects.get_for_model(category_type)
+                return DatasetSchema.get_for_scope(category_type.pk, type_content_type.id)
+
         return []
 
     def delete(self, *args, **kwargs):
@@ -177,9 +184,9 @@ class Dataset(models.Model):
         null=True, blank=True,
     )
     scope_id = models.PositiveIntegerField(null=True, blank=True)
-    scope: models.ForeignKey[Action, Action] | models.ForeignKey[Category, Category] = GenericForeignKey(  # pyright: ignore
+    scope = GenericForeignKey(
         'scope_content_type', 'scope_id',
-    ) # type: ignore[assignment]
+    )
 
     class Meta:  # pyright:ignore
         verbose_name = _('dataset')
@@ -202,15 +209,13 @@ class Dataset(models.Model):
 
 
 class DatasetSchemaScope(models.Model):
-    """Link a dataset schema to a context in which it can be used, such as a plan."""
-
+    """Link a dataset schema to a context in which it can be used."""
     schema = models.ForeignKey(DatasetSchema, on_delete=models.CASCADE, related_name='scopes')
     scope_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='+')
     scope_id = models.PositiveIntegerField()
-    # If scope is a Plan, this schema can be used for Actions in that plan
-    scope: models.ForeignKey[Plan, Plan] | models.ForeignKey[CategoryType, CategoryType] = GenericForeignKey(  # pyright: ignore
+    scope = GenericForeignKey(
         'scope_content_type', 'scope_id',
-    ) # type: ignore[assignment]
+    )
 
     class Meta:
         verbose_name = _('dataset schema scope')
