@@ -29,7 +29,6 @@ class Dimension(ClusterableModel):
         verbose_name = _('dimension')
         verbose_name_plural = _('dimensions')
         ordering = ('name',)
-        db_table = 'budget_dimension'
 
     def __str__(self):
         return self.name_i18n
@@ -46,7 +45,6 @@ class DimensionCategory(OrderedModel):
     class Meta:
         verbose_name = _('dimension category')
         verbose_name_plural = _('dimension categories')
-        db_table = 'budget_dimensioncategory'
 
     def __str__(self):
         if self.label:
@@ -67,8 +65,6 @@ class DimensionScope(OrderedModel):
     class Meta:
         verbose_name = _('dimension scope')
         verbose_name_plural = _('dimension scopes')
-        db_table = 'budget_dimensionscope'
-
 
 class DatasetSchema(models.Model):
     class TimeResolution(models.TextChoices):
@@ -109,7 +105,6 @@ class DatasetSchema(models.Model):
     class Meta:
         verbose_name = _('dataset schema')
         verbose_name_plural = _('dataset schemas')
-        db_table = 'budget_datasetschema'
 
     def __str__(self):
         if self.name_i18n:
@@ -162,7 +157,6 @@ class DatasetSchemaDimensionCategory(OrderedModel):
     class Meta:
         verbose_name = _('dataset schema dimension category')
         verbose_name_plural = _('dataset schema dimension categories')
-        db_table = 'budget_datasetschemadimensioncategory'
 
     def filter_siblings(
         self,
@@ -191,7 +185,6 @@ class Dataset(models.Model):
         verbose_name = _('dataset')
         verbose_name_plural = _('datasets')
         ordering = ('id',)
-        db_table = 'budget_dataset'
         constraints = (
             models.UniqueConstraint(
                 fields=['schema', 'scope_content_type', 'scope_id'],
@@ -222,7 +215,6 @@ class DatasetSchemaScope(models.Model):
     class Meta:
         verbose_name = _('dataset schema scope')
         verbose_name_plural = _('dataset schema scopes')
-        db_table = 'budget_datasetschemascope'
 
     def __str__(self):
         return f'DatasetSchemaScope schema:{self.schema.uuid} scope:{self.scope}'
@@ -264,7 +256,7 @@ class DataPoint(models.Model):
         verbose_name = _('data point')
         verbose_name_plural = _('data points')
         ordering = ('date',)
-        db_table = 'budget_datapoint'
+
         # TODO: Enforce uniqueness constraint.
         # This doesn't work because dimension_categories is a many-to-many field.
         # constraints = [
