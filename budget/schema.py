@@ -1,121 +1,75 @@
-from __future__ import annotations
-
-import typing
-
-import graphene
-
-if typing.TYPE_CHECKING:
-    from graphene import GQLInfo
-
-from aplans.graphql_types import DjangoNode, register_django_node
-
-from actions.schema import ActionNode, CategoryNode, CategoryTypeNode, PlanNode
-from .models import (
-    DataPoint,
+from graphene_django import DjangoObjectType
+from kausal_common.budget.models import (
     Dataset,
-    DatasetSchema,
-    DatasetSchemaDimensionCategory,
     DatasetSchemaScope,
-    Dimension,
-    DimensionCategory,
     DimensionScope,
 )
 
-if typing.TYPE_CHECKING:
-    from actions.models.action import Action
-    from actions.models.category import Category, CategoryType
-    from actions.models.plan import Plan
+import graphene
 
 
-class DimensionNode(DjangoNode):
+class DimensionNode(DjangoObjectType):
     class Meta:
-        model = Dimension
-        name = 'BudgetDimension'  # clashes otherwise with type name in indicators.schema
-        fields = ('uuid', 'name', 'categories', 'scopes')
+        abstract = True
 
-
-class DimensionCategoryNode(DjangoNode):
+class DimensionCategoryNode(DjangoObjectType):
     class Meta:
-        model = DimensionCategory
-        name = 'BudgetDimensionCategory'  # clashes otherwise with type name in indicators.schema
-        fields = ('uuid', 'dimension', 'label')
+        abstract = True
 
 
-class DatasetSchemaDimensionCategoryNode(DjangoNode):
+class DatasetSchemaDimensionCategoryNode(DjangoObjectType):
     class Meta:
-        model = DatasetSchemaDimensionCategory
-        fields = ('order', 'category', 'schema')
+        abstract = True
 
-
-class DimensionScopeNode(DjangoNode):
+class DimensionScopeNode(DjangoObjectType):
     scope = graphene.Field(lambda: DimensionScopeTypeNode)
 
     class Meta:
-        model = DimensionScope
-        fields = '__all__'
+        abstract = True
 
     @staticmethod
-    def resolve_scope(root, info) -> Plan | CategoryType:
+    def resolve_scope(root: DimensionScope, info):
         return root.scope
 
 
 class DimensionScopeTypeNode(graphene.Union):
     class Meta:
-        types = (
-            PlanNode, CategoryTypeNode,
-        )
+        abstract = True  # Make it abstract
 
-
-class DataPointNode(DjangoNode):
+class DataPointNode(DjangoObjectType):
     value = graphene.Float()
     class Meta:
-        model = DataPoint
-        fields = ('uuid', 'dataset', 'date', 'value', 'dimension_categories')
+        abstract = True
 
-
-class DatasetSchemaScopeNode(DjangoNode):
+class DatasetSchemaScopeNode(DjangoObjectType):
     scope = graphene.Field(lambda: DatasetSchemaScopeTypeNode)
 
     class Meta:
-        model = DatasetSchemaScope
-        fields = '__all__'
+        abstract = True
 
     @staticmethod
-    def resolve_scope(root, info) -> Plan | CategoryType:
+    def resolve_scope(root: DatasetSchemaScope, info):
         return root.scope
-
 
 class DatasetSchemaScopeTypeNode(graphene.Union):
     class Meta:
-        types = (
-            PlanNode, CategoryTypeNode,
-        )
+        abstract = True
+
+class DatasetNode(DjangoObjectType):
+    scope = graphene.Field(lambda: DatasetScopeTypeNode)
+
+    class Meta:
+        abstract = True
+
+    @staticmethod
+    def resolve_scope(root: Dataset, info):
+        return root.scope
 
 
 class DatasetScopeTypeNode(graphene.Union):
     class Meta:
-        types = (
-            ActionNode, CategoryNode,
-        )
+        abstract = True
 
-@register_django_node
-class DatasetSchemaNode(DjangoNode):
+class DatasetSchemaNode(DjangoObjectType):
     class Meta:
-        model = DatasetSchema
-        fields = ('uuid', 'time_resolution', 'unit', 'name', 'scopes', 'dimension_categories')
-
-
-class DatasetNode(DjangoNode):
-    scope = graphene.Field(lambda: DatasetScopeTypeNode)
-
-    class Meta:
-        model = Dataset
-        fields = ('uuid', 'schema', 'data_points')
-
-    @staticmethod
-    def resolve_scope(root: Dataset, info: GQLInfo) -> Action | Category:
-        return root.scope
-
-
-class Query:
-    pass
+        abstract = True
