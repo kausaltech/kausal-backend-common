@@ -1,16 +1,18 @@
+from __future__ import annotations
+
 from modeltrans.conf import get_available_languages
 from modeltrans.translator import get_i18n_field
 from modeltrans.utils import build_localized_fieldname
 from rest_framework import permissions, serializers, viewsets
 from rest_framework.fields import Field
+from rest_framework.routers import DefaultRouter, SimpleRouter
 
-from rest_framework_nested import routers
+from rest_framework_nested.routers import NestedSimpleRouter
 
 from .models import DataPoint, Dataset, DatasetSchema, DatasetSchemaDimensionCategory, Dimension, DimensionCategory
 
-router = routers.DefaultRouter()
-
-all_routers = []
+router = DefaultRouter()
+all_routers: list[SimpleRouter]  = []
 
 
 class I18nFieldSerializerMixin:
@@ -167,10 +169,13 @@ class DimensionCategoryViewSet(viewsets.ModelViewSet):
 
 router.register(r'dataset_schemas', DatasetSchemaViewSet, basename='datasetschema')
 router.register(r'datasets', DatasetViewSet, basename='dataset')
-dataset_router = routers.NestedSimpleRouter(router, r'datasets', lookup='dataset')
-all_routers.append(dataset_router)
-dataset_router.register(r'data_points', DataPointViewSet, basename='datapoint')
 router.register(r'dimensions', DimensionViewSet, basename='dimension')
-dimension_router = routers.NestedSimpleRouter(router, r'dimensions', lookup='dimension')
-all_routers.append(dimension_router)
+
+dataset_router = NestedSimpleRouter(router, r'datasets', lookup='dataset')
+dimension_router = NestedSimpleRouter(router, r'dimensions', lookup='dimension')
+
+dataset_router.register(r'data_points', DataPointViewSet, basename='datapoint')
 dimension_router.register(r'categories', DimensionCategoryViewSet, basename='category')
+
+all_routers.append(dataset_router)
+all_routers.append(dimension_router)
