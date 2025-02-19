@@ -6,9 +6,9 @@ from rest_framework.fields import Field
 
 from rest_framework_nested import routers
 
-from aplans.api_router import router
-
 from .models import DataPoint, Dataset, DatasetSchema, DatasetSchemaDimensionCategory, Dimension, DimensionCategory
+
+router = routers.DefaultRouter()
 
 all_routers = []
 
