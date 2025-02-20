@@ -1,5 +1,5 @@
 from graphene_django import DjangoObjectType
-from kausal_common.budget.models import (
+from kausal_common.datasets.models import (
     Dataset,
     DatasetSchemaScope,
     DimensionScope,

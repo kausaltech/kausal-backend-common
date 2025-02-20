@@ -12,7 +12,7 @@ class DimensionAdmin(WatchViewSet):
     model = Dimension
     menu_order = 2100
     icon = 'kausal-dimension'
-    menu_label = _('Budget dimensions')
+    menu_label = _('Dataset dimensions')
     list_display = ('name',)
     add_to_settings_menu = True
 
