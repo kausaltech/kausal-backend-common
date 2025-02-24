@@ -191,7 +191,7 @@ class Dataset(models.Model):
         constraints = (
             models.UniqueConstraint(
                 fields=['schema', 'scope_content_type', 'scope_id'],
-                name='unique_dataset_per_instance_per_schema',
+                name='unique_dataset_per_scope_per_schema',
             ),
         )
 
