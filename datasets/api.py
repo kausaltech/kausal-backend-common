@@ -9,7 +9,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from rest_framework_nested.routers import NestedSimpleRouter
 
-from .models import DataPoint, Dataset, DatasetSchema, DatasetSchemaDimensionCategory, Dimension, DimensionCategory, DatasetMetric
+from .models import DataPoint, Dataset, DatasetSchema, DatasetSchemaDimensionCategory, Dimension, DimensionCategory, DatasetMetric, DataPointComment
 
 router = DefaultRouter()
 all_routers: list[SimpleRouter]  = []
@@ -193,6 +193,39 @@ class DimensionCategoryViewSet(viewsets.ModelViewSet):
         serializer.save(dimension=dimension)
 
 
+class DataPointCommentSerializer(serializers.ModelSerializer):
+    datapoint = serializers.SlugRelatedField(slug_field='uuid', read_only=True)
+
+    class Meta:
+        model = DataPointComment
+        fields = ['uuid', 'datapoint', 'text', 'type', 'state', 'resolved_at', 'resolved_by',
+                 'created_at', 'created_by', 'updated_at', 'updated_by']
+        read_only_fields = ['uuid', 'resolved_at', 'resolved_by', 'created_at', 'created_by',
+                           'updated_at', 'updated_by']
+
+class DataPointCommentViewSet(viewsets.ModelViewSet):
+    lookup_field = 'uuid'
+    serializer_class = DataPointCommentSerializer
+    permission_classes = (
+        permissions.DjangoModelPermissions,
+    )
+
+    def get_queryset(self):
+        return DataPointComment.objects.filter(datapoint__uuid=self.kwargs['datapoint_uuid'])
+
+    def perform_create(self, serializer):
+        datapoint_uuid = self.kwargs['datapoint_uuid']
+        datapoint = DataPoint.objects.get(uuid=datapoint_uuid)
+        serializer.save(
+            datapoint=datapoint,
+            created_by=self.request.user,
+            updated_by=self.request.user
+        )
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+
 router.register(r'dataset_schemas', DatasetSchemaViewSet, basename='datasetschema')
 router.register(r'datasets', DatasetViewSet, basename='dataset')
 router.register(r'dimensions', DimensionViewSet, basename='dimension')
@@ -206,6 +239,10 @@ dimension_router.register(r'categories', DimensionCategoryViewSet, basename='cat
 datasetschema_router = NestedSimpleRouter(router, r'dataset_schemas', lookup='datasetschema')
 datasetschema_router.register(r'metrics', DatasetMetricViewSet, basename='datasetmetric')
 
+datapoint_router = NestedSimpleRouter(dataset_router, r'data_points', lookup='datapoint')
+datapoint_router.register(r'comments', DataPointCommentViewSet, basename='datapointcomment')
+
 all_routers.append(dataset_router)
 all_routers.append(dimension_router)
 all_routers.append(datasetschema_router)
+all_routers.append(datapoint_router)

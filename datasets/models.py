@@ -343,7 +343,7 @@ class DataPointComment(UserModifiableModel):
     )
 
     def __str__(self):
-        return 'Comment on %s (created by %s at %s)' % (self.dataset, self.created_by, self.created_at)
+        return 'Comment on datapoint %s (created by %s at %s)' % (self.datapoint, self.created_by, self.created_at)
 
     class Meta:
         ordering = ('datapoint', '-created_at')
