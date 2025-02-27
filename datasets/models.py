@@ -15,6 +15,11 @@ from ..models.ordered import OrderedModel
 
 from ..models.types import FK
 
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from users.models import User
+
 
 class Dimension(ClusterableModel):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -292,3 +297,55 @@ class DataPoint(models.Model):
 
     def __str__(self):
         return f'Datapoint {self.uuid} / dataset {self.dataset.uuid}'
+
+
+class UserModifiableModel(models.Model):  # noqa: DJ008
+    created_at = models.DateTimeField(verbose_name=_('created at'), editable=False, auto_now_add=True)
+    created_by = models.ForeignKey('users.User', null=True, on_delete=models.SET_NULL, editable=False, related_name='+')
+    updated_at = models.DateTimeField(verbose_name=_('updated at'), editable=False, auto_now=True)
+    updated_by = models.ForeignKey('users.User', null=True, on_delete=models.SET_NULL, editable=False, related_name='+')
+
+    if TYPE_CHECKING:
+        Meta: Any
+    else:
+        class Meta:
+            abstract = True
+
+
+class DataPointComment(UserModifiableModel):
+    class CommentType(models.TextChoices):
+        REVIEW = 'review', _('Review comment')
+        STICKY = 'sticky', _('Sticky comment')
+
+    class State(models.TextChoices):
+        RESOLVED = 'resolved', _('Resolved')
+        UNRESOLVED = 'unresolved', _('Unresolved')
+    datapoint = models.ForeignKey(DataPoint, null=True, blank=True, on_delete=models.CASCADE, related_name='comments')
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    text = models.TextField()
+    type = models.CharField(
+        null=True,
+        blank=True,
+        max_length=20,
+        choices=CommentType.choices,
+    )
+    state = models.CharField(
+        null=True,
+        blank=True,
+        max_length=20,
+        choices=State.choices,
+    )
+    resolved_at = models.DateTimeField(
+        verbose_name=_('resolved at'), editable=False, null=True,
+    )
+    resolved_by: FK['User' | None] = models.ForeignKey(
+        'users.User', null=True, on_delete=models.SET_NULL, related_name='resolved_comments',
+    )
+
+    def __str__(self):
+        return 'Comment on %s (created by %s at %s)' % (self.dataset, self.created_by, self.created_at)
+
+    class Meta:
+        ordering = ('datapoint', '-created_at')
+        verbose_name = _('comment')
+        verbose_name_plural = _('comments')
