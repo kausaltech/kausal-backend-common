@@ -5,6 +5,7 @@ from modeltrans.translator import get_i18n_field
 from modeltrans.utils import build_localized_fieldname
 from rest_framework import permissions, serializers, viewsets
 from rest_framework.fields import Field
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from rest_framework_nested.routers import NestedSimpleRouter
@@ -81,6 +82,7 @@ class DataPointSerializer(serializers.ModelSerializer):
 
 
 class DataPointViewSet(viewsets.ModelViewSet):
+    pagination_class = PageNumberPagination
     lookup_field = 'uuid'
     serializer_class = DataPointSerializer
     permission_classes = (
