@@ -62,7 +62,7 @@ class DimensionScope(OrderedModel):
         verbose_name = _('dimension scope')
         verbose_name_plural = _('dimension scopes')
 
-class DatasetSchema(models.Model):
+class DatasetSchema(ClusterableModel):
     class TimeResolution(models.TextChoices):
         """
         Time resolution of all data points.
@@ -148,7 +148,7 @@ class DatasetSchema(models.Model):
 
 
 class DatasetSchemaDimensionCategory(OrderedModel):
-    schema = models.ForeignKey(
+    schema = ParentalKey(
         DatasetSchema,
         on_delete=models.PROTECT,
         related_name='dimension_categories',
