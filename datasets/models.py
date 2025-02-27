@@ -265,7 +265,7 @@ class DataPoint(models.Model):
     )
 
     metric = models.ForeignKey(
-        DatasetMetric, related_name='data_points', null=True, blank=True, on_delete=models.PROTECT, verbose_name=_('metric')
+        DatasetMetric, related_name='data_points', on_delete=models.PROTECT, verbose_name=_('metric')
     )
     value = models.DecimalField(
         max_digits=10,
