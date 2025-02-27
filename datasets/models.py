@@ -13,6 +13,8 @@ from modeltrans.fields import TranslationField
 
 from ..models.ordered import OrderedModel
 
+from ..models.types import FK
+
 
 class Dimension(ClusterableModel):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -61,6 +63,7 @@ class DimensionScope(OrderedModel):
     class Meta:
         verbose_name = _('dimension scope')
         verbose_name_plural = _('dimension scopes')
+
 
 class DatasetSchema(models.Model):
     class TimeResolution(models.TextChoices):
@@ -146,6 +149,22 @@ class DatasetSchema(models.Model):
         DatasetSchema.get_for_scope.cache_clear()
         return retval
 
+class DatasetMetric(OrderedModel):
+    schema: FK[DatasetSchema] = models.ForeignKey(DatasetSchema, on_delete=models.CASCADE, related_name='metrics')
+    label = models.CharField(verbose_name=_('label'), max_length=100)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    unit = models.CharField(verbose_name=_('unit'), blank=True, max_length=50)
+
+    i18n = TranslationField(fields=('label', 'unit', ))
+
+    class Meta:
+        ordering = ('order',)
+
+    def filter_siblings(self, qs: models.QuerySet[DatasetMetric]):
+        return qs.filter(schema=self.schema)
+
+    def __str__(self):
+        return self.label
 
 class DatasetSchemaDimensionCategory(OrderedModel):
     schema = models.ForeignKey(
@@ -174,7 +193,9 @@ class Dataset(models.Model):
         DatasetSchema, null=True, blank=True, related_name='datasets',
         verbose_name=_('schema'), on_delete=models.PROTECT,
     )
+
     # The "scope" generic foreign key links this dataset to an action or category
+    # or instance
     scope_content_type = models.ForeignKey(
         ContentType, on_delete=models.CASCADE, related_name='+',
         null=True, blank=True,
@@ -241,6 +262,10 @@ class DataPoint(models.Model):
     date = models.DateField(
         verbose_name=_('date'),
         help_text=_("Date of this data point in context of the dataset's time resolution"),
+    )
+
+    metric = models.ForeignKey(
+        DatasetMetric, related_name='data_points', null=True, blank=True, on_delete=models.PROTECT, verbose_name=_('metric')
     )
     value = models.DecimalField(
         max_digits=10,
