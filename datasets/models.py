@@ -316,24 +316,24 @@ class DataPointComment(UserModifiableModel):
     class CommentType(models.TextChoices):
         REVIEW = 'review', _('Review comment')
         STICKY = 'sticky', _('Sticky comment')
+        PLAIN = 'plain', _('Comment')
 
-    class State(models.TextChoices):
+    class ReviewState(models.TextChoices):
         RESOLVED = 'resolved', _('Resolved')
         UNRESOLVED = 'unresolved', _('Unresolved')
+
     datapoint = models.ForeignKey(DataPoint, null=True, blank=True, on_delete=models.CASCADE, related_name='comments')
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     text = models.TextField()
     type = models.CharField(
-        null=True,
-        blank=True,
+        default=CommentType.PLAIN,
         max_length=20,
         choices=CommentType.choices,
     )
-    state = models.CharField(
-        null=True,
+    review_state = models.CharField(
         blank=True,
         max_length=20,
-        choices=State.choices,
+        choices=ReviewState.choices,
     )
     resolved_at = models.DateTimeField(
         verbose_name=_('resolved at'), editable=False, null=True,

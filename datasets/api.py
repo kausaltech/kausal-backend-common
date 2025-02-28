@@ -105,6 +105,7 @@ class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
         model = DatasetMetric
         fields = ['uuid', 'schema', 'label', 'unit', 'order']
 
+
 class DatasetMetricViewSet(viewsets.ModelViewSet):
     lookup_field = 'uuid'
     serializer_class = DatasetMetricSerializer
@@ -198,7 +199,7 @@ class DataPointCommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataPointComment
-        fields = ['uuid', 'datapoint', 'text', 'type', 'state', 'resolved_at', 'resolved_by',
+        fields = ['uuid', 'datapoint', 'text', 'type', 'review_state', 'resolved_at', 'resolved_by',
                  'created_at', 'created_by', 'updated_at', 'updated_by']
         read_only_fields = ['uuid', 'resolved_at', 'resolved_by', 'created_at', 'created_by',
                            'updated_at', 'updated_by']
