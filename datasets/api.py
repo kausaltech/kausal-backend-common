@@ -62,11 +62,14 @@ class DataPointSerializer(serializers.ModelSerializer):
         # FIXME: Restrict queryset to dimension categories available to the dataset
         slug_field='uuid', many=True, queryset=DimensionCategory.objects.all(),
     )
+    metric = serializers.SlugRelatedField(
+        slug_field='uuid', many=False, queryset=DatasetMetric.objects.all()
+    )
     value = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False, allow_null=True)
 
     class Meta:
         model = DataPoint
-        fields = ['uuid', 'dataset', 'dimension_categories', 'date', 'value']
+        fields = ['uuid', 'dataset', 'dimension_categories', 'date', 'value', 'metric']
 
     def create(self, validated_data):
         dimension_categories = validated_data.pop('dimension_categories')
@@ -78,6 +81,9 @@ class DataPointSerializer(serializers.ModelSerializer):
             # TODO: Do proper validation instead
             assert dimension_category in allowed_dimension_categories
             data_point.dimension_categories.add(dimension_category)
+        metric = validated_data.pop('metric')
+        allowed_metrics = dataset.schema.metrics.all()
+        assert metric in allowed_metrics
         return data_point
 
 
