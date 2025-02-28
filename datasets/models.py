@@ -13,6 +13,13 @@ from modeltrans.fields import TranslationField
 
 from ..models.ordered import OrderedModel
 
+from ..models.types import FK
+
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from users.models import User
+
 
 class Dimension(ClusterableModel):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -61,6 +68,7 @@ class DimensionScope(OrderedModel):
     class Meta:
         verbose_name = _('dimension scope')
         verbose_name_plural = _('dimension scopes')
+
 
 class DatasetSchema(models.Model):
     class TimeResolution(models.TextChoices):
@@ -146,6 +154,22 @@ class DatasetSchema(models.Model):
         DatasetSchema.get_for_scope.cache_clear()
         return retval
 
+class DatasetMetric(OrderedModel):
+    schema: FK[DatasetSchema] = models.ForeignKey(DatasetSchema, on_delete=models.CASCADE, related_name='metrics')
+    label = models.CharField(verbose_name=_('label'), max_length=100)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    unit = models.CharField(verbose_name=_('unit'), blank=True, max_length=50)
+
+    i18n = TranslationField(fields=('label', 'unit', ))
+
+    class Meta:
+        ordering = ('order',)
+
+    def filter_siblings(self, qs: models.QuerySet[DatasetMetric]):
+        return qs.filter(schema=self.schema)
+
+    def __str__(self):
+        return self.label
 
 class DatasetSchemaDimensionCategory(OrderedModel):
     schema = models.ForeignKey(
@@ -174,7 +198,9 @@ class Dataset(models.Model):
         DatasetSchema, null=True, blank=True, related_name='datasets',
         verbose_name=_('schema'), on_delete=models.PROTECT,
     )
+
     # The "scope" generic foreign key links this dataset to an action or category
+    # or instance
     scope_content_type = models.ForeignKey(
         ContentType, on_delete=models.CASCADE, related_name='+',
         null=True, blank=True,
@@ -242,6 +268,10 @@ class DataPoint(models.Model):
         verbose_name=_('date'),
         help_text=_("Date of this data point in context of the dataset's time resolution"),
     )
+
+    metric = models.ForeignKey(
+        DatasetMetric, related_name='data_points', on_delete=models.PROTECT, verbose_name=_('metric')
+    )
     value = models.DecimalField(
         max_digits=10,
         decimal_places=4,
@@ -267,3 +297,55 @@ class DataPoint(models.Model):
 
     def __str__(self):
         return f'Datapoint {self.uuid} / dataset {self.dataset.uuid}'
+
+
+class UserModifiableModel(models.Model):  # noqa: DJ008
+    created_at = models.DateTimeField(verbose_name=_('created at'), editable=False, auto_now_add=True)
+    created_by = models.ForeignKey('users.User', null=True, on_delete=models.SET_NULL, editable=False, related_name='+')
+    updated_at = models.DateTimeField(verbose_name=_('updated at'), editable=False, auto_now=True)
+    updated_by = models.ForeignKey('users.User', null=True, on_delete=models.SET_NULL, editable=False, related_name='+')
+
+    if TYPE_CHECKING:
+        Meta: Any
+    else:
+        class Meta:
+            abstract = True
+
+
+class DataPointComment(UserModifiableModel):
+    class CommentType(models.TextChoices):
+        REVIEW = 'review', _('Review comment')
+        STICKY = 'sticky', _('Sticky comment')
+        PLAIN = 'plain', _('Comment')
+
+    class ReviewState(models.TextChoices):
+        RESOLVED = 'resolved', _('Resolved')
+        UNRESOLVED = 'unresolved', _('Unresolved')
+
+    datapoint = models.ForeignKey(DataPoint, null=True, blank=True, on_delete=models.CASCADE, related_name='comments')
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    text = models.TextField()
+    type = models.CharField(
+        default=CommentType.PLAIN,
+        max_length=20,
+        choices=CommentType.choices,
+    )
+    review_state = models.CharField(
+        blank=True,
+        max_length=20,
+        choices=ReviewState.choices,
+    )
+    resolved_at = models.DateTimeField(
+        verbose_name=_('resolved at'), editable=False, null=True,
+    )
+    resolved_by: FK['User' | None] = models.ForeignKey(
+        'users.User', null=True, on_delete=models.SET_NULL, related_name='resolved_comments',
+    )
+
+    def __str__(self):
+        return 'Comment on datapoint %s (created by %s at %s)' % (self.datapoint, self.created_by, self.created_at)
+
+    class Meta:
+        ordering = ('datapoint', '-created_at')
+        verbose_name = _('comment')
+        verbose_name_plural = _('comments')
