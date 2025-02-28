@@ -227,6 +227,18 @@ class DataPointCommentViewSet(viewsets.ModelViewSet):
         serializer.save(updated_by=self.request.user)
 
 
+class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = DataPointCommentSerializer
+    permission_classes = (
+        permissions.DjangoModelPermissions,
+    )
+
+    def get_queryset(self):
+        return DataPointComment.objects.filter(
+            datapoint__dataset__uuid=self.kwargs['dataset_uuid']
+        ).select_related('datapoint', 'created_by', 'updated_by', 'resolved_by')
+
+
 router.register(r'dataset_schemas', DatasetSchemaViewSet, basename='datasetschema')
 router.register(r'datasets', DatasetViewSet, basename='dataset')
 router.register(r'dimensions', DimensionViewSet, basename='dimension')
@@ -242,6 +254,7 @@ datasetschema_router.register(r'metrics', DatasetMetricViewSet, basename='datase
 
 datapoint_router = NestedSimpleRouter(dataset_router, r'data_points', lookup='datapoint')
 datapoint_router.register(r'comments', DataPointCommentViewSet, basename='datapointcomment')
+dataset_router.register(r'comments', DatasetCommentsViewSet, basename='datasetcomment')
 
 all_routers.append(dataset_router)
 all_routers.append(dimension_router)
