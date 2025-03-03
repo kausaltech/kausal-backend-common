@@ -11,11 +11,13 @@ from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from modeltrans.fields import TranslationField
 
+from ..models.modification_tracking import UserModifiableModel
+
 from ..models.ordered import OrderedModel
 
 from ..models.types import FK
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from users.models import User
@@ -146,7 +148,8 @@ class DatasetSchema(models.Model):
             if category_type:
                 type_content_type = ContentType.objects.get_for_model(category_type)
                 return DatasetSchema.get_for_scope(category_type.pk, type_content_type.id)
-
+        elif content_type.app_label == 'nodes' and content_type.model == 'instanceconfig':
+            return DatasetSchema.get_for_scope(obj.pk, content_type.id)
         return []
 
     def delete(self, *args, **kwargs):
@@ -299,17 +302,6 @@ class DataPoint(models.Model):
         return f'Datapoint {self.uuid} / dataset {self.dataset.uuid}'
 
 
-class UserModifiableModel(models.Model):  # noqa: DJ008
-    created_at = models.DateTimeField(verbose_name=_('created at'), editable=False, auto_now_add=True)
-    created_by = models.ForeignKey('users.User', null=True, on_delete=models.SET_NULL, editable=False, related_name='+')
-    updated_at = models.DateTimeField(verbose_name=_('updated at'), editable=False, auto_now=True)
-    updated_by = models.ForeignKey('users.User', null=True, on_delete=models.SET_NULL, editable=False, related_name='+')
-
-    if TYPE_CHECKING:
-        Meta: Any
-    else:
-        class Meta:
-            abstract = True
 
 
 class DataPointComment(UserModifiableModel):
@@ -349,3 +341,62 @@ class DataPointComment(UserModifiableModel):
         ordering = ('datapoint', '-created_at')
         verbose_name = _('comment')
         verbose_name_plural = _('comments')
+
+
+class DataSource(UserModifiableModel):
+    """
+    Reference to some published data source.
+
+    DataSource is used to track where specific data values in datasets have come from.
+    Can be linked to any model that represents an "instance" context.
+    """
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+    # Generic foreign key to any instance model
+    scope_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='+')
+    scope_id = models.PositiveIntegerField()
+    scope = GenericForeignKey('scope_content_type', 'scope_id')
+
+    name = models.CharField(max_length=200, null=False, blank=False, verbose_name=_('name'))
+    edition = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('edition'))
+    authority = models.CharField(
+        max_length=200,
+        verbose_name=_('authority'),
+        help_text=_('The organization responsible for the data source'),
+        null=True,
+        blank=True,
+    )
+    description = models.TextField(null=True, blank=True, verbose_name=_('description'))
+    url = models.URLField(verbose_name=_('URL'), null=True, blank=True)
+
+    def get_label(self):
+        name, *rest = [p for p in (self.name, self.authority, self.edition) if p is not None]
+        return f'{name}, {" ".join(rest)}'
+
+    def __str__(self):
+        return self.get_label()
+
+    class Meta:
+        verbose_name = _('Data source')
+        verbose_name_plural = _('Data sources')
+
+    def natural_key(self):
+        return (str(self.uuid),)
+
+
+
+class DatasetSourceReference(UserModifiableModel):
+    datapoint = models.ForeignKey(DataPoint, null=True, on_delete=models.CASCADE, related_name='source_references')
+    dataset = models.ForeignKey(Dataset, null=True, on_delete=models.CASCADE, related_name='source_references')
+    data_source = models.ForeignKey(DataSource, on_delete=models.PROTECT, related_name='references')
+
+    def __str__(self):
+        if self.datapoint:
+            return f"Source reference for datapoint {self.datapoint.uuid} in dataset {self.datapoint.dataset.uuid}: {self.data_source}"
+        else:
+            return f"Source reference for dataset {self.dataset.uuid}: {self.data_source}"
+
+    class Meta:
+        ordering = ('datapoint__dataset', 'datapoint')
+        verbose_name = _('data source reference')
+        verbose_name_plural = _('data source references')
