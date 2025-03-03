@@ -10,7 +10,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from rest_framework_nested.routers import NestedSimpleRouter
 
-from .models import DataPoint, Dataset, DatasetSchema, DatasetSchemaDimensionCategory, Dimension, DimensionCategory, DatasetMetric, DataPointComment
+from .models import DataPoint, Dataset, DatasetSchema, DatasetSchemaDimensionCategory, Dimension, DimensionCategory, DatasetMetric, DataPointComment, DataSource, DatasetSourceReference
 
 router = DefaultRouter()
 all_routers: list[SimpleRouter]  = []
@@ -208,9 +208,9 @@ class DataPointCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataPointComment
         fields = ['uuid', 'datapoint', 'text', 'type', 'review_state', 'resolved_at', 'resolved_by',
-                 'created_at', 'created_by', 'updated_at', 'updated_by']
+                 'created_at', 'created_by', 'last_modified_at', 'last_modified_by']
         read_only_fields = ['uuid', 'resolved_at', 'resolved_by', 'created_at', 'created_by',
-                           'updated_at', 'updated_by']
+                           'last_modified_at', 'last_modified_by']
 
 class DataPointCommentViewSet(viewsets.ModelViewSet):
     lookup_field = 'uuid'
@@ -228,11 +228,11 @@ class DataPointCommentViewSet(viewsets.ModelViewSet):
         serializer.save(
             datapoint=datapoint,
             created_by=self.request.user,
-            updated_by=self.request.user
+            last_modified_by=self.request.user
         )
 
     def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
+        serializer.save(last_modified_by=self.request.user)
 
 
 class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -244,7 +244,52 @@ class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return DataPointComment.objects.filter(
             datapoint__dataset__uuid=self.kwargs['dataset_uuid']
-        ).select_related('datapoint', 'created_by', 'updated_by', 'resolved_by')
+        ).select_related('datapoint', 'created_by', 'last_modified_by', 'resolved_by')
+
+
+class DatasetSourceReferenceSerializer(serializers.ModelSerializer):
+    data_source = serializers.SlugRelatedField(slug_field='uuid', queryset=DataSource.objects.all())
+    datapoint = serializers.SlugRelatedField(slug_field='uuid', queryset=DataPoint.objects.all(), required=False)
+    dataset = serializers.SlugRelatedField(slug_field='uuid', queryset=Dataset.objects.all(), required=False)
+
+    class Meta:
+        model = DatasetSourceReference
+        fields = ['datapoint', 'dataset', 'data_source']
+
+    def validate(self, data):
+        """
+        Check that exactly one of datapoint or dataset is provided.
+        """
+        datapoint = data.get('datapoint')
+        dataset = data.get('dataset')
+
+        if bool(datapoint) == bool(dataset):
+            raise serializers.ValidationError("Exactly one of datapoint or dataset must be provided")
+
+        return data
+
+
+class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
+    lookup_field = 'uuid'
+    serializer_class = DatasetSourceReferenceSerializer
+    permission_classes = (
+        permissions.DjangoModelPermissions,
+    )
+
+    def get_queryset(self):
+        if 'datapoint_uuid' in self.kwargs:
+            return DatasetSourceReference.objects.filter(datapoint__uuid=self.kwargs['datapoint_uuid'])
+        elif 'dataset_uuid' in self.kwargs:
+            return DatasetSourceReference.objects.filter(dataset__uuid=self.kwargs['dataset_uuid'])
+        return DatasetSourceReference.objects.none()
+
+    def perform_create(self, serializer):
+        if 'datapoint_uuid' in self.kwargs:
+            datapoint = DataPoint.objects.get(uuid=self.kwargs['datapoint_uuid'])
+            serializer.save(datapoint=datapoint, dataset=None)
+        elif 'dataset_uuid' in self.kwargs:
+            dataset = Dataset.objects.get(uuid=self.kwargs['dataset_uuid'])
+            serializer.save(dataset=dataset, datapoint=None)
 
 
 router.register(r'dataset_schemas', DatasetSchemaViewSet, basename='datasetschema')
@@ -263,6 +308,9 @@ datasetschema_router.register(r'metrics', DatasetMetricViewSet, basename='datase
 datapoint_router = NestedSimpleRouter(dataset_router, r'data_points', lookup='datapoint')
 datapoint_router.register(r'comments', DataPointCommentViewSet, basename='datapointcomment')
 dataset_router.register(r'comments', DatasetCommentsViewSet, basename='datasetcomment')
+
+datapoint_router.register(r'sources', DatasetSourceReferenceViewSet, basename='datapointsource')
+dataset_router.register(r'sources', DatasetSourceReferenceViewSet, basename='datasetsource')
 
 all_routers.append(dataset_router)
 all_routers.append(dimension_router)
