@@ -72,7 +72,7 @@ class DimensionScope(OrderedModel):
         verbose_name_plural = _('dimension scopes')
 
 
-class DatasetSchema(models.Model):
+class DatasetSchema(ClusterableModel):
     class TimeResolution(models.TextChoices):
         """
         Time resolution of all data points.
@@ -193,6 +193,18 @@ class DatasetSchemaDimensionCategory(OrderedModel):
         qs: models.QuerySet[DatasetSchemaDimensionCategory],
     ) -> models.QuerySet[DatasetSchemaDimensionCategory]:
         return qs.filter(schema=self.schema, category__dimension=self.category.dimension)
+
+
+class DatasetSchemaDimension(OrderedModel):
+    schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='dimensions', null=False, blank=False)
+    dimension = models.ForeignKey(Dimension, on_delete=models.CASCADE, related_name='schemas', null=False, blank=False)
+
+    class Meta:
+        verbose_name = _('dataset schema dimension')
+        verbose_name_plural = _('dataset schema dimensions')
+
+    def filter_siblings(self, qs: models.QuerySet[DatasetSchemaDimension]) -> models.QuerySet[DatasetSchemaDimension]:
+        return qs.filter(schema=self.schema)
 
 
 class Dataset(models.Model):

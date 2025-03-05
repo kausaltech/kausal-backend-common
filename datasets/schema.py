@@ -21,6 +21,12 @@ class DatasetSchemaDimensionCategoryNode(DjangoObjectType):
     class Meta:
         abstract = True
 
+
+class DatasetSchemaDimensionNode(DjangoObjectType):
+    class Meta:
+        abstract = True
+
+
 class DimensionScopeNode(DjangoObjectType):
     scope = graphene.Field(lambda: DimensionScopeTypeNode)
 
