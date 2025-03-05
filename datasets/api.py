@@ -10,7 +10,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from rest_framework_nested.routers import NestedSimpleRouter
 
-from .models import DataPoint, Dataset, DatasetSchema, DatasetSchemaDimensionCategory, Dimension, DimensionCategory, DatasetMetric, DataPointComment, DataSource, DatasetSourceReference
+from .models import DataPoint, Dataset, DatasetSchema, DatasetSchemaDimensionCategory, Dimension, DimensionCategory, DatasetMetric, DataPointComment, DataSource, DatasetSourceReference, DatasetSchemaDimension
 from django.contrib.contenttypes.models import ContentType
 
 router = DefaultRouter()
@@ -77,7 +77,10 @@ class DataPointSerializer(serializers.ModelSerializer):
         data_point = super().create(validated_data)
         dataset = data_point.dataset
         assert dataset == validated_data['dataset']
-        allowed_dimension_categories = [dc.category for dc in dataset.schema.dimension_categories.all()]
+
+        schema_dimensions = list(dataset.schema.dimensions.all())
+        categories_lists = [schema_dimension.dimension.categories.all() for schema_dimension in schema_dimensions]
+        allowed_dimension_categories = [category for categories_list in categories_lists for category in categories_list]
         for dimension_category in dimension_categories:
             # TODO: Do proper validation instead
             assert dimension_category in allowed_dimension_categories
@@ -131,15 +134,32 @@ class DatasetMetricViewSet(viewsets.ModelViewSet):
         serializer.save(schema=schema)
 
 
+class DimensionSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
+    categories = DimensionCategorySerializer(many=True, required=False)
+    name = serializers.CharField(source='name_i18n')
+
+    class Meta:
+        model = Dimension
+        fields = ['uuid', 'name', 'categories']
+
+
+class DatasetSchemaDimensionSerializer(serializers.ModelSerializer):
+    dimension = DimensionSerializer(many=False, required=False)
+
+    class Meta:
+        model = DatasetSchemaDimension
+        fields = ['order', 'dimension']
+
+
 class DatasetSchemaSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
-    dimension_categories = DatasetSchemaDimensionCategorySerializer(
+    dimensions = DatasetSchemaDimensionSerializer(
         many=True, required=False,
     )
     metrics = DatasetMetricSerializer(many=True, required=False, read_only=True)
 
     class Meta:
         model = DatasetSchema
-        fields = ['uuid', 'time_resolution', 'unit', 'name', 'dimension_categories', 'metrics', 'start_date']
+        fields = ['uuid', 'time_resolution', 'unit', 'name', 'dimensions', 'metrics', 'start_date']
 
 
 class DatasetSchemaViewSet(viewsets.ModelViewSet):
@@ -167,15 +187,6 @@ class DatasetViewSet(viewsets.ModelViewSet):
     permission_classes = (
         permissions.DjangoModelPermissions,
     )
-
-
-class DimensionSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
-    categories = DimensionCategorySerializer(many=True, required=False)
-    name = serializers.CharField(source='name_i18n')
-
-    class Meta:
-        model = Dimension
-        fields = ['uuid', 'name', 'categories']
 
 
 class DimensionViewSet(viewsets.ModelViewSet):
