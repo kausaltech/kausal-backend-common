@@ -10,7 +10,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from rest_framework_nested.routers import NestedSimpleRouter
 
-from .models import DataPoint, Dataset, DatasetSchema, DatasetSchemaDimensionCategory, Dimension, DimensionCategory, DatasetMetric, DataPointComment, DataSource, DatasetSourceReference, DatasetSchemaDimension
+from .models import DataPoint, Dataset, DatasetSchema, Dimension, DimensionCategory, DatasetMetric, DataPointComment, DataSource, DatasetSourceReference, DatasetSchemaDimension
 from django.contrib.contenttypes.models import ContentType
 
 router = DefaultRouter()
@@ -47,14 +47,6 @@ class DimensionCategorySerializer(I18nFieldSerializerMixin, serializers.ModelSer
     class Meta:
         model = DimensionCategory
         fields = ['uuid', 'label', 'dimension']
-
-
-class DatasetSchemaDimensionCategorySerializer(serializers.ModelSerializer):
-    category = DimensionCategorySerializer(many=False, required=False)
-
-    class Meta:
-        model = DatasetSchemaDimensionCategory
-        fields = ['order', 'category']
 
 
 class DataPointSerializer(serializers.ModelSerializer):

@@ -17,11 +17,6 @@ class DimensionCategoryNode(DjangoObjectType):
         abstract = True
 
 
-class DatasetSchemaDimensionCategoryNode(DjangoObjectType):
-    class Meta:
-        abstract = True
-
-
 class DatasetSchemaDimensionNode(DjangoObjectType):
     class Meta:
         abstract = True
