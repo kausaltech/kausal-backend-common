@@ -174,27 +174,6 @@ class DatasetMetric(OrderedModel):
     def __str__(self):
         return self.label
 
-class DatasetSchemaDimensionCategory(OrderedModel):
-    schema = models.ForeignKey(
-        DatasetSchema,
-        on_delete=models.PROTECT,
-        related_name='dimension_categories',
-        null=False,
-        blank=False,
-    )
-    category = models.ForeignKey(DimensionCategory, related_name='schemas', on_delete=models.PROTECT, null=False, blank=False)
-
-    class Meta:
-        verbose_name = _('dataset schema dimension category')
-        verbose_name_plural = _('dataset schema dimension categories')
-
-    def filter_siblings(
-        self,
-        qs: models.QuerySet[DatasetSchemaDimensionCategory],
-    ) -> models.QuerySet[DatasetSchemaDimensionCategory]:
-        return qs.filter(schema=self.schema, category__dimension=self.category.dimension)
-
-
 class DatasetSchemaDimension(OrderedModel):
     schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='dimensions', null=False, blank=False)
     dimension = models.ForeignKey(Dimension, on_delete=models.CASCADE, related_name='schemas', null=False, blank=False)
