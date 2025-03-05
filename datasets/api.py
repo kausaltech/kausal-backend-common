@@ -10,7 +10,8 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from rest_framework_nested.routers import NestedSimpleRouter
 
-from .models import DataPoint, Dataset, DatasetSchema, DatasetSchemaDimensionCategory, Dimension, DimensionCategory, DatasetMetric, DataPointComment
+from .models import DataPoint, Dataset, DatasetSchema, DatasetSchemaDimensionCategory, Dimension, DimensionCategory, DatasetMetric, DataPointComment, DataSource, DatasetSourceReference
+from django.contrib.contenttypes.models import ContentType
 
 router = DefaultRouter()
 all_routers: list[SimpleRouter]  = []
@@ -208,9 +209,9 @@ class DataPointCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataPointComment
         fields = ['uuid', 'datapoint', 'text', 'type', 'review_state', 'resolved_at', 'resolved_by',
-                 'created_at', 'created_by', 'updated_at', 'updated_by']
+                 'created_at', 'created_by', 'last_modified_at', 'last_modified_by']
         read_only_fields = ['uuid', 'resolved_at', 'resolved_by', 'created_at', 'created_by',
-                           'updated_at', 'updated_by']
+                           'last_modified_at', 'last_modified_by']
 
 class DataPointCommentViewSet(viewsets.ModelViewSet):
     lookup_field = 'uuid'
@@ -228,11 +229,11 @@ class DataPointCommentViewSet(viewsets.ModelViewSet):
         serializer.save(
             datapoint=datapoint,
             created_by=self.request.user,
-            updated_by=self.request.user
+            last_modified_by=self.request.user
         )
 
     def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
+        serializer.save(last_modified_by=self.request.user)
 
 
 class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -244,7 +245,125 @@ class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return DataPointComment.objects.filter(
             datapoint__dataset__uuid=self.kwargs['dataset_uuid']
-        ).select_related('datapoint', 'created_by', 'updated_by', 'resolved_by')
+        ).select_related('datapoint', 'created_by', 'last_modified_by', 'resolved_by')
+
+
+class DatasetSourceReferenceSerializer(serializers.ModelSerializer):
+    data_source = serializers.SlugRelatedField(slug_field='uuid', queryset=DataSource.objects.all())
+    datapoint = serializers.SlugRelatedField(slug_field='uuid', queryset=DataPoint.objects.all(), required=False)
+    dataset = serializers.SlugRelatedField(slug_field='uuid', queryset=Dataset.objects.all(), required=False)
+
+    class Meta:
+        model = DatasetSourceReference
+        fields = ['datapoint', 'dataset', 'data_source']
+
+    def validate(self, data):
+        """
+        Check that exactly one of datapoint or dataset is provided.
+        """
+        datapoint = data.get('datapoint')
+        dataset = data.get('dataset')
+
+        if bool(datapoint) == bool(dataset):
+            raise serializers.ValidationError("Exactly one of datapoint or dataset must be provided")
+
+        return data
+
+
+class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
+    lookup_field = 'uuid'
+    serializer_class = DatasetSourceReferenceSerializer
+    permission_classes = (
+        permissions.DjangoModelPermissions,
+    )
+
+    def get_queryset(self):
+        if 'datapoint_uuid' in self.kwargs:
+            return DatasetSourceReference.objects.filter(datapoint__uuid=self.kwargs['datapoint_uuid'])
+        elif 'dataset_uuid' in self.kwargs:
+            return DatasetSourceReference.objects.filter(dataset__uuid=self.kwargs['dataset_uuid'])
+        return DatasetSourceReference.objects.none()
+
+    def perform_create(self, serializer):
+        if 'datapoint_uuid' in self.kwargs:
+            datapoint = DataPoint.objects.get(uuid=self.kwargs['datapoint_uuid'])
+            serializer.save(datapoint=datapoint, dataset=None)
+        elif 'dataset_uuid' in self.kwargs:
+            dataset = Dataset.objects.get(uuid=self.kwargs['dataset_uuid'])
+            serializer.save(dataset=dataset, datapoint=None)
+
+
+class DataSourceSerializer(serializers.ModelSerializer):
+    label = serializers.SerializerMethodField()
+
+    content_type_app = serializers.CharField(write_only=True, required=True)
+    content_type_model = serializers.CharField(write_only=True, required=True)
+    object_id = serializers.IntegerField(write_only=True, required=True)
+
+    def get_label(self, instance):
+        return instance.get_label()
+
+    def create(self, validated_data):
+        content_type_app = validated_data.pop('content_type_app', None)
+        content_type_model = validated_data.pop('content_type_model', None)
+        object_id = validated_data.pop('object_id', None)
+
+        try:
+            content_type = ContentType.objects.get(
+                app_label=content_type_app,
+                model=content_type_model
+            )
+        except ContentType.DoesNotExist:
+            raise serializers.ValidationError(
+                f"ContentType with app_label={content_type_app} and model={content_type_model} does not exist"
+            )
+
+        data_source = DataSource.objects.create(
+            **validated_data,
+            scope_content_type=content_type,
+            scope_id=object_id
+        )
+
+        return data_source
+
+    class Meta:
+        model = DataSource
+        fields = [
+            'uuid', 'name', 'edition', 'authority', 'description', 'url', 'label',
+            'content_type_app', 'content_type_model', 'object_id'
+        ]
+        read_only_fields = ['uuid']
+
+
+class DataSourceViewSet(viewsets.ModelViewSet):
+    lookup_field = 'uuid'
+    serializer_class = DataSourceSerializer
+    permission_classes = (permissions.DjangoModelPermissions,)
+
+    def get_queryset(self):
+        queryset = DataSource.objects.all()
+        if 'uuid' in self.kwargs:
+            return queryset
+
+        content_type_app = self.request.query_params.get('content_type_app')
+        content_type_model = self.request.query_params.get('content_type_model')
+        object_id = self.request.query_params.get('object_id')
+
+        if content_type_app and content_type_model and object_id:
+            try:
+                content_type = ContentType.objects.get(
+                    app_label=content_type_app,
+                    model=content_type_model
+                )
+                queryset = queryset.filter(
+                    scope_content_type=content_type,
+                    scope_id=object_id
+                )
+                return queryset
+            except ContentType.DoesNotExist:
+                return DataSource.objects.none()
+
+        return DataSource.objects.none()
 
 
 router.register(r'dataset_schemas', DatasetSchemaViewSet, basename='datasetschema')
@@ -263,6 +382,11 @@ datasetschema_router.register(r'metrics', DatasetMetricViewSet, basename='datase
 datapoint_router = NestedSimpleRouter(dataset_router, r'data_points', lookup='datapoint')
 datapoint_router.register(r'comments', DataPointCommentViewSet, basename='datapointcomment')
 dataset_router.register(r'comments', DatasetCommentsViewSet, basename='datasetcomment')
+
+datapoint_router.register(r'sources', DatasetSourceReferenceViewSet, basename='datapointsource')
+dataset_router.register(r'sources', DatasetSourceReferenceViewSet, basename='datasetsource')
+
+router.register(r'data_sources', DataSourceViewSet, basename='datasource')
 
 all_routers.append(dataset_router)
 all_routers.append(dimension_router)
