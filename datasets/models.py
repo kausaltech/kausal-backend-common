@@ -66,10 +66,23 @@ class DimensionScope(OrderedModel):
     scope = GenericForeignKey(
         'scope_content_type', 'scope_id',
     )
+    identifier = models.CharField(
+        blank=True,
+        null=True,
+        max_length=100,
+        verbose_name=_('identifier'),
+        help_text=_("Optional identifier that, if set, must be unique in the scope"),
+    )
 
     class Meta:
         verbose_name = _('dimension scope')
         verbose_name_plural = _('dimension scopes')
+        constraints = (
+            models.UniqueConstraint(
+                fields=['identifier', 'scope_content_type', 'scope_id'],
+                name='unique_identifier_per_dimension_scope',
+            ),
+        )
 
 
 class DatasetSchema(ClusterableModel):
@@ -157,22 +170,17 @@ class DatasetSchema(ClusterableModel):
         DatasetSchema.get_for_scope.cache_clear()
         return retval
 
-class DatasetMetric(OrderedModel):
-    schema: FK[DatasetSchema] = models.ForeignKey(DatasetSchema, on_delete=models.CASCADE, related_name='metrics')
+
+class DatasetMetric(models.Model):
     label = models.CharField(verbose_name=_('label'), max_length=100)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     unit = models.CharField(verbose_name=_('unit'), blank=True, max_length=50)
 
-    i18n = TranslationField(fields=('label', 'unit', ))
-
-    class Meta:
-        ordering = ('order',)
-
-    def filter_siblings(self, qs: models.QuerySet[DatasetMetric]):
-        return qs.filter(schema=self.schema)
+    i18n = TranslationField(fields=('label', 'unit'))
 
     def __str__(self):
         return self.label
+
 
 class DatasetSchemaDimension(OrderedModel):
     schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='dimensions', null=False, blank=False)
@@ -186,11 +194,30 @@ class DatasetSchemaDimension(OrderedModel):
         return qs.filter(schema=self.schema)
 
 
+class DatasetSchemaMetric(models.Model):
+    schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='metrics', null=False, blank=False)
+    metric = models.ForeignKey(DatasetMetric, on_delete=models.CASCADE, related_name='schemas', null=False, blank=False)
+
+    class Meta:
+        verbose_name = _('dataset schema metrics')
+        verbose_name_plural = _('dataset schema metrics')
+
+    def __str__(self):
+        return f'DatasetSchemaMetric schema:{self.schema.uuid} metric:{self.metric.uuid}'
+
+
 class Dataset(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     schema = models.ForeignKey(
         DatasetSchema, null=True, blank=True, related_name='datasets',
         verbose_name=_('schema'), on_delete=models.PROTECT,
+    )
+    identifier = models.CharField(
+        blank=True,
+        null=True,
+        max_length=100,
+        verbose_name=_('identifier'),
+        help_text=_("Optional identifier that, if set, must be unique in the dataset's scope"),
     )
 
     # The "scope" generic foreign key links this dataset to an action or category
@@ -212,6 +239,10 @@ class Dataset(models.Model):
             models.UniqueConstraint(
                 fields=['schema', 'scope_content_type', 'scope_id'],
                 name='unique_dataset_per_scope_per_schema',
+            ),
+            models.UniqueConstraint(
+                fields=['identifier', 'scope_content_type', 'scope_id'],
+                name='unique_identifier_per_dataset_scope',
             ),
         )
 
@@ -267,8 +298,8 @@ class DataPoint(models.Model):
         DatasetMetric, related_name='data_points', on_delete=models.PROTECT, verbose_name=_('metric')
     )
     value = models.DecimalField(
-        max_digits=10,
-        decimal_places=4,
+        max_digits=32,
+        decimal_places=16,
         verbose_name=_('value'),
         # null means that the data point is explicitly marked as not available or not applicable, for example
         # - category combination not applicable or
