@@ -10,7 +10,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from rest_framework_nested.routers import NestedSimpleRouter
 
-from .models import DataPoint, Dataset, DatasetSchema, Dimension, DimensionCategory, DatasetMetric, DataPointComment, DataSource, DatasetSourceReference, DatasetSchemaDimension
+from .models import DataPoint, Dataset, DatasetSchema, DatasetSchemaMetric, Dimension, DimensionCategory, DatasetMetric, DataPointComment, DataSource, DatasetSourceReference, DatasetSchemaDimension
 from django.contrib.contenttypes.models import ContentType
 
 router = DefaultRouter()
@@ -101,29 +101,21 @@ class DataPointViewSet(viewsets.ModelViewSet):
 
 
 class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
-    schema = serializers.SlugRelatedField(slug_field='uuid', read_only=True)
     label = serializers.CharField(source='label_i18n')
     unit = serializers.CharField(source='unit_i18n', required=False)
 
     class Meta:
         model = DatasetMetric
-        fields = ['uuid', 'schema', 'label', 'unit', 'order']
+        fields = ['uuid', 'label', 'unit']
 
 
 class DatasetMetricViewSet(viewsets.ModelViewSet):
+    queryset = DatasetMetric.objects.all()
     lookup_field = 'uuid'
     serializer_class = DatasetMetricSerializer
     permission_classes = (
         permissions.DjangoModelPermissions,
     )
-
-    def get_queryset(self):
-        return DatasetMetric.objects.filter(schema__uuid=self.kwargs['datasetschema_uuid'])
-
-    def perform_create(self, serializer):
-        schema_uuid = self.kwargs['datasetschema_uuid']
-        schema = DatasetSchema.objects.get(uuid=schema_uuid)
-        serializer.save(schema=schema)
 
 
 class DimensionSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
@@ -141,6 +133,14 @@ class DatasetSchemaDimensionSerializer(serializers.ModelSerializer):
     class Meta:
         model = DatasetSchemaDimension
         fields = ['order', 'dimension']
+
+
+class DatasetSchemaMetricSerializer(serializers.ModelSerializer):
+    metric = DatasetMetricSerializer(many=False, required=False)
+
+    class Meta:
+        model = DatasetSchemaMetric
+        fields = ['metric']
 
 
 class DatasetSchemaSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
