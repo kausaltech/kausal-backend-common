@@ -44,4 +44,12 @@ class DatasetSchemaViewSet(SnippetViewSet):
                 FieldPanel('dimension'),
             ]
         ),
+        InlinePanel(
+            'metrics',
+            heading=_("Metrics"),
+            help_text=_("Defines the interpretation and units for the values of the dataset"),
+            panels=[
+                FieldPanel('metric'),
+            ]
+        ),
     ]
