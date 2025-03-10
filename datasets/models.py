@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import importlib
 import uuid
 from functools import lru_cache
 from typing import TYPE_CHECKING, ClassVar, Self
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from modelcluster.fields import ParentalKey
@@ -18,6 +20,8 @@ from kausal_common.datasets.permission_policy import get_permission_policy
 from kausal_common.models.fields import IdentifierField
 from kausal_common.models.permission_policy import ModelPermissionPolicy
 from kausal_common.models.uuid import UUIDIdentifiedModel
+from kausal_common.models.permission_policy import ModelPermissionPolicy
+from kausal_common.datasets.permission_policy import get_permission_policy
 
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
@@ -27,6 +31,11 @@ from .config import dataset_config
 
 if TYPE_CHECKING:
     import contextlib
+    from typing import Self
+
+    from kausal_common.models.permission_policy import ModelPermissionPolicy
+    from kausal_common.models.types import QS
+
     from typing import Self
 
     from kausal_common.models.permission_policy import ModelPermissionPolicy
@@ -184,8 +193,9 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         """
         Time resolution of all data points.
 
-        If a dataset has, e.g., monthly time resolution, then each data point applies to the entire month in which
-        the data point's time is.
+        If a dataset has monthly time resolution, then each data point applies to the entire month
+        the data point's time belongs to. For yearly resolution, the data point applies to the entire
+        year the date belongs to.
         """
 
         # TBD: Could also be separate model. (Some customers might be very creative in their granularities.)
@@ -278,6 +288,10 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         DatasetSchema.get_for_scope.cache_clear()
+
+    @classmethod
+    def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
+        return get_permission_policy('SCHEMA_PERMISSION_POLICY')
 
     @staticmethod
     @lru_cache
@@ -419,6 +433,10 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
             self.schema = DatasetSchema.objects.create()
         super().save(*args, **kwargs)
 
+    @classmethod
+    def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
+        return get_permission_policy('DATASET_PERMISSION_POLICY')
+
 
 class DatasetSchemaScope(PermissionedModel):
     """Link a dataset schema to a context in which it can be used."""
@@ -493,6 +511,10 @@ class DataPoint(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
 
     def __str__(self):
         return f'Datapoint {self.uuid} / dataset {self.dataset.uuid}'
+
+    @classmethod
+    def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
+        return get_permission_policy('DATAPOINT_PERMISSION_POLICY')
 
 
 class DataPointComment(UserModifiableModel, PermissionedModel):
