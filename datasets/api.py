@@ -58,7 +58,7 @@ class DataPointSerializer(serializers.ModelSerializer):
     metric = serializers.SlugRelatedField(
         slug_field='uuid', many=False, queryset=DatasetMetric.objects.all()
     )
-    value = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False, allow_null=True)
+    value = serializers.DecimalField(max_digits=32, decimal_places=16, coerce_to_string=False, allow_null=True)
 
     class Meta:
         model = DataPoint
