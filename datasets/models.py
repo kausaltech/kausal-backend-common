@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -12,15 +13,12 @@ from modelcluster.models import ClusterableModel
 from modeltrans.fields import TranslationField
 
 from ..models.modification_tracking import UserModifiableModel
-
 from ..models.ordered import OrderedModel
-
-from ..models.types import FK, RevMany
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from users.models import User
+
+    from ..models.types import FK, RevMany
 
 
 class Dimension(ClusterableModel):
@@ -271,6 +269,7 @@ class Dataset(models.Model):
 
 class DatasetSchemaScope(models.Model):
     """Link a dataset schema to a context in which it can be used."""
+
     schema = models.ForeignKey(DatasetSchema, on_delete=models.CASCADE, related_name='scopes')
     scope_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='+')
     scope_id = models.PositiveIntegerField()
@@ -338,8 +337,6 @@ class DataPoint(models.Model):
         return f'Datapoint {self.uuid} / dataset {self.dataset.uuid}'
 
 
-
-
 class DataPointComment(UserModifiableModel):
     class CommentType(models.TextChoices):
         REVIEW = 'review', _('Review comment')
@@ -386,6 +383,7 @@ class DataSource(UserModifiableModel):
     DataSource is used to track where specific data values in datasets have come from.
     Can be linked to any model that represents an "instance" context.
     """
+
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     # Generic foreign key to any instance model
@@ -418,7 +416,6 @@ class DataSource(UserModifiableModel):
 
     def natural_key(self):
         return (str(self.uuid),)
-
 
 
 class DatasetSourceReference(UserModifiableModel):
