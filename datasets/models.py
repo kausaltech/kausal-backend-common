@@ -15,7 +15,7 @@ from ..models.modification_tracking import UserModifiableModel
 
 from ..models.ordered import OrderedModel
 
-from ..models.types import FK
+from ..models.types import FK, RevMany
 
 from typing import TYPE_CHECKING
 
@@ -133,6 +133,7 @@ class DatasetSchema(ClusterableModel):
     i18n = TranslationField(fields=['unit', 'name'])
     unit_i18n: str
     name_i18n: str
+    datasets: RevMany[Dataset]
 
     class Meta:
         verbose_name = _('dataset schema')
