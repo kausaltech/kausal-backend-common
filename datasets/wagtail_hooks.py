@@ -1,6 +1,5 @@
 from __future__ import annotations
 from django.utils.translation import gettext_lazy as _
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 
 from wagtail.admin.panels import FieldPanel
@@ -10,6 +9,7 @@ from wagtail.snippets.models import register_snippet
 from wagtail.log_actions import log
 
 from .models import DataSource
+from .config import dataset_config
 
 
 class DataSourceForm(WagtailAdminModelForm):
@@ -18,10 +18,9 @@ class DataSourceForm(WagtailAdminModelForm):
         exclude = ['scope_content_type', 'scope_id']
 
 class DataSourceCreateView(CreateView):
-
     def save_instance(self):
         user = self.request.user
-        default_scope_app, default_scope_model = settings.DATASOURCE_DEFAULT_SCOPE_CONTENT_TYPE
+        default_scope_app, default_scope_model = dataset_config.DATASOURCE_DEFAULT_SCOPE_CONTENT_TYPE
         scope_content_type = ContentType.objects.get(app_label=default_scope_app, model=default_scope_model)
         scope_id = None
 
