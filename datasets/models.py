@@ -16,6 +16,7 @@ from wagtail.admin.panels.inline_panel import InlinePanel
 
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
+from .config import dataset_config
 
 if TYPE_CHECKING:
     from users.models import User
@@ -181,11 +182,13 @@ class DatasetSchema(ClusterableModel):
 
     def __str__(self):
         if self.name_i18n:
-            return f'{self.name_i18n} ({self.uuid})'
+            return f'{self.name_i18n}'
         return str(self.uuid)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+        if dataset_config.SCHEMA_HAS_SINGLE_DATASET:
+            Dataset.objects.get_or_create(schema=self)
         DatasetSchema.get_for_scope.cache_clear()
 
     @staticmethod
@@ -301,6 +304,8 @@ class Dataset(models.Model):
         )
 
     def __str__(self):
+        if dataset_config.SCHEMA_HAS_SINGLE_DATASET:
+            return str(self.schema)
         return f'Dataset {self.uuid}'
 
     def save(self, *args, **kwargs):
