@@ -11,6 +11,8 @@ from django.utils.translation import gettext_lazy as _
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from modeltrans.fields import TranslationField
+from wagtail.admin.panels.field_panel import FieldPanel
+from wagtail.admin.panels.inline_panel import InlinePanel
 
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
@@ -132,6 +134,43 @@ class DatasetSchema(ClusterableModel):
     unit_i18n: str
     name_i18n: str
     datasets: RevMany[Dataset]
+
+    panels = [
+        FieldPanel(
+            'name',
+            heading=_("Name"),
+            help_text=_("Descriptive name of the dataset schema"),
+        ),
+        FieldPanel(
+            'unit',
+            heading=_("Unit"),
+            help_text=_("Unit of the dataset schema"),
+        ),
+        FieldPanel(
+            'time_resolution',
+            heading=_("Time Resolution"),
+        ),
+        FieldPanel(
+            'start_date',
+            heading=_("Start Date"),
+        ),
+        InlinePanel(
+            'metrics',
+            heading=_("Metrics"),
+            help_text=_("Defines the interpretation and units for the values of the dataset"),
+            panels=[
+                FieldPanel('metric'),
+            ]
+        ),
+        InlinePanel(
+            'dimensions',
+            heading=_("Dimensions"),
+            help_text=_("Used when metrics are tracked for multiple categories"),
+            panels=[
+                FieldPanel('dimension'),
+            ]
+        ),
+    ]
 
     class Meta:
         verbose_name = _('dataset schema')
