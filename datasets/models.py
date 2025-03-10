@@ -43,6 +43,13 @@ class DimensionCategory(OrderedModel):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     dimension = ParentalKey(Dimension, blank=False, on_delete=models.CASCADE, related_name='categories')
     label = models.CharField(max_length=100, verbose_name=_('label'))
+    identifier = models.CharField(
+        blank=True,
+        null=True,
+        max_length=100,
+        verbose_name=_('identifier'),
+        help_text=_("Optional identifier that, if set, must be unique for the dataset"),
+    )
 
     i18n = TranslationField(fields=['label'])
     label_i18n: str
@@ -50,6 +57,12 @@ class DimensionCategory(OrderedModel):
     class Meta:
         verbose_name = _('dimension category')
         verbose_name_plural = _('dimension categories')
+        constraints = (
+            models.UniqueConstraint(
+                fields=['identifier', 'dimension'],
+                name='unique_identifier_per_dimension',
+            ),
+        )
 
     def __str__(self):
         if self.label:
