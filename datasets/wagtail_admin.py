@@ -37,6 +37,14 @@ class DatasetSchemaViewSet(SnippetViewSet):
             heading=_("Start Date"),
         ),
         InlinePanel(
+            'metrics',
+            heading=_("Metrics"),
+            help_text=_("Defines the interpretation and units for the values of the dataset"),
+            panels=[
+                FieldPanel('metric'),
+            ]
+        ),
+        InlinePanel(
             'dimensions',
             heading=_("Dimensions"),
             help_text=_("Used when metrics are tracked for multiple categories"),
