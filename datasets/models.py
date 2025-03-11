@@ -67,6 +67,9 @@ class DimensionCategory(OrderedModel):
             return f'{self.label_i18n} ({self.uuid})'
         return str(self.uuid)
 
+    def filter_siblings(self, qs: models.QuerySet[DimensionCategory]) -> models.QuerySet[DimensionCategory]:
+        return qs.filter(dimension=self.dimension)
+
 
 class DimensionScope(OrderedModel):
     """Link a dimension to a context in which it can be used, such as a plan or a category type."""
