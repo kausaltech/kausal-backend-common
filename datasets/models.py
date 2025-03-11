@@ -21,6 +21,8 @@ from kausal_common.models.uuid import UUIDIdentifiedModel
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
 from ..models.types import ModelManager, RevMany
+from ..models.permissions import PermissionedModel, PermissionedQuerySet
+
 from .config import dataset_config
 
 if TYPE_CHECKING:
@@ -35,7 +37,7 @@ if TYPE_CHECKING:
         from nodes.models import InstanceConfig  # type: ignore
 
 
-class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel):
+class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, PermissionedModel):
     name = models.CharField(max_length=100, verbose_name=_('name'))
 
     i18n = TranslationField(fields=['name'])
@@ -52,7 +54,7 @@ class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel):
         return self.name_i18n
 
 
-class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel):
+class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, PermissionedModel):
     identifier = IdentifierField[str | None, str | None](
         null=True, blank=True, help_text=_("Optional identifier that, if set, must be unique within the dimension"),
     )
@@ -92,7 +94,7 @@ class DimensionScopeManager(ModelManager['DimensionScope', DimensionScopeQuerySe
 del _DimensionScopeManager
 
 
-class DimensionScope(OrderedModel):
+class DimensionScope(OrderedModel, PermissionedModel):
     """Link a dimension to a context in which it can be used, such as a plan or a category type."""
 
     dimension = models.ForeignKey(Dimension, on_delete=models.CASCADE, related_name='scopes')
@@ -122,7 +124,7 @@ class DimensionScope(OrderedModel):
         )
 
 
-class DatasetSchema(ClusterableModel):
+class DatasetSchema(ClusterableModel, PermissionedModel):
     class TimeResolution(models.TextChoices):
         """
         Time resolution of all data points.
@@ -256,7 +258,7 @@ class DatasetSchema(ClusterableModel):
         return retval
 
 
-class DatasetMetric(OrderedModel, UUIDIdentifiedModel):
+class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
     schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='metrics', null=False, blank=False)
     name = models.CharField(verbose_name=_('name'), max_length=100, null=True, blank=True)
     """Maps to the DataFrame column name."""
@@ -272,7 +274,7 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel):
         return qs.filter(schema=self.schema)
 
 
-class DatasetSchemaDimension(OrderedModel):
+class DatasetSchemaDimension(OrderedModel, PermissionedModel):
     schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='dimensions', null=False, blank=False)
     dimension = models.ForeignKey(Dimension, on_delete=models.CASCADE, related_name='schemas', null=False, blank=False)
 
@@ -300,7 +302,7 @@ class DatasetManager(ModelManager['Dataset', DatasetQuerySet], _DatasetManager):
 del _DatasetManager
 
 
-class Dataset(UserModifiableModel, UUIDIdentifiedModel):
+class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     schema: FK[DatasetSchema | None] = models.ForeignKey(
         DatasetSchema, null=True, blank=True, related_name='datasets',
         verbose_name=_('schema'), on_delete=models.PROTECT,
@@ -353,7 +355,7 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel):
         super().save(*args, **kwargs)
 
 
-class DatasetSchemaScope(models.Model):
+class DatasetSchemaScope(PermissionedModel):
     """Link a dataset schema to a context in which it can be used."""
 
     schema = models.ForeignKey(DatasetSchema, on_delete=models.CASCADE, related_name='scopes')
@@ -380,7 +382,7 @@ class DatasetSchemaScope(models.Model):
         return retval
 
 
-class DataPoint(UserModifiableModel, UUIDIdentifiedModel):
+class DataPoint(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     dataset = models.ForeignKey(
         Dataset, related_name='data_points', on_delete=models.CASCADE, verbose_name=_('dataset'),
     )
@@ -422,7 +424,7 @@ class DataPoint(UserModifiableModel, UUIDIdentifiedModel):
         return f'Datapoint {self.uuid} / dataset {self.dataset.uuid}'
 
 
-class DataPointComment(UserModifiableModel):
+class DataPointComment(UserModifiableModel, PermissionedModel):
     class CommentType(models.TextChoices):
         REVIEW = 'review', _('Review comment')
         STICKY = 'sticky', _('Sticky comment')
@@ -461,7 +463,7 @@ class DataPointComment(UserModifiableModel):
         verbose_name_plural = _('comments')
 
 
-class DataSource(UserModifiableModel):
+class DataSource(UserModifiableModel, PermissionedModel):
     """
     Reference to some published data source.
 
@@ -503,7 +505,7 @@ class DataSource(UserModifiableModel):
         return (str(self.uuid),)
 
 
-class DatasetSourceReference(UserModifiableModel):
+class DatasetSourceReference(UserModifiableModel, PermissionedModel):
     datapoint: FK[DataPoint | None] = models.ForeignKey(
         DataPoint, null=True, on_delete=models.CASCADE, related_name='source_references'
     )
