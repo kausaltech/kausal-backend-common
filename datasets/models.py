@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, ClassVar, Self
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
@@ -15,18 +14,23 @@ from modeltrans.fields import TranslationField
 from wagtail.admin.panels.field_panel import FieldPanel
 from wagtail.admin.panels.inline_panel import InlinePanel
 
+from kausal_common.datasets.permission_policy import get_permission_policy
 from kausal_common.models.fields import IdentifierField
+from kausal_common.models.permission_policy import ModelPermissionPolicy
 from kausal_common.models.uuid import UUIDIdentifiedModel
 
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
-from ..models.types import ModelManager, RevMany
 from ..models.permissions import PermissionedModel, PermissionedQuerySet
-
+from ..models.types import ModelManager, RevMany
 from .config import dataset_config
 
 if TYPE_CHECKING:
     import contextlib
+    from typing import Self
+
+    from kausal_common.models.permission_policy import ModelPermissionPolicy
+    from kausal_common.models.types import QS
 
     from users.models import User
 
@@ -37,13 +41,60 @@ if TYPE_CHECKING:
         from nodes.models import InstanceConfig  # type: ignore
 
 
+class DimensionQuerySet(PermissionedQuerySet['Dimension']):
+    pass
+
+
+class DimensionCategoryQuerySet(PermissionedQuerySet['DimensionCategory']):
+    pass
+
+
+class DatasetSchemaQuerySet(PermissionedQuerySet['DatasetSchema']):
+    pass
+
+
+class DatasetMetricQuerySet(PermissionedQuerySet['DatasetMetric']):
+    pass
+
+
+class DatasetSchemaDimensionQuerySet(PermissionedQuerySet['DatasetSchemaDimension']):
+    pass
+
+
+class DatasetSchemaMetricQuerySet(PermissionedQuerySet['DatasetSchemaMetric']):
+    pass
+
+
+class DatasetSchemaScopeQuerySet(PermissionedQuerySet['DatasetSchemaScope']):
+    pass
+
+
+class DataPointQuerySet(PermissionedQuerySet['DataPoint']):
+    pass
+
+
+class DataPointCommentQuerySet(PermissionedQuerySet['DataPointComment']):
+    pass
+
+
+class DataSourceQuerySet(PermissionedQuerySet['DataSource']):
+    pass
+
+
+class DatasetSourceReferenceQuerySet(PermissionedQuerySet['DatasetSourceReference']):
+    pass
+
+
 class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, PermissionedModel):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=100, verbose_name=_('name'))
 
     i18n = TranslationField(fields=['name'])
     name_i18n: str
 
     scopes: RevMany[DimensionScope]
+    objects: ClassVar[DimensionQuerySet] = DimensionQuerySet.as_manager() # pyright: ignore
+    _default_manager: ClassVar[DimensionQuerySet]
 
     class Meta:
         verbose_name = _('dimension')
@@ -64,6 +115,9 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, 
     i18n = TranslationField(fields=['label'])
     label_i18n: str
 
+    objects: ClassVar[DimensionCategoryQuerySet] = DimensionCategoryQuerySet.as_manager() # pyright: ignore
+    _default_manager: ClassVar[DimensionCategoryQuerySet]
+
     class Meta:
         verbose_name = _('dimension category')
         verbose_name_plural = _('dimension categories')
@@ -83,7 +137,7 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, 
         return qs.filter(dimension=self.dimension)
 
 
-class DimensionScopeQuerySet(QuerySet['DimensionScope']):
+class DimensionScopeQuerySet(PermissionedQuerySet['DimensionScope']):
     def for_instance_config(self, instance_config: InstanceConfig) -> Self:
         return self.filter(scope_content_type=ContentType.objects.get_for_model(instance_config), scope_id=instance_config.pk)
 
@@ -112,6 +166,7 @@ class DimensionScope(OrderedModel, PermissionedModel):
     )
 
     objects: ClassVar[DimensionScopeManager] = DimensionScopeManager()
+    _default_manager: ClassVar[DimensionScopeQuerySet]
 
     class Meta:
         verbose_name = _('dimension scope')
@@ -164,6 +219,9 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     objects: models.Manager[DatasetSchema]
 
     datasets: RevMany[Dataset]
+
+    objects: ClassVar[DatasetSchemaQuerySet] = DatasetSchemaQuerySet.as_manager() # pyright: ignore
+    _default_manager: ClassVar[DatasetSchemaQuerySet]
 
     panels = [
         FieldPanel(
@@ -267,6 +325,9 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
 
     i18n = TranslationField(fields=('label', 'unit'))
 
+    objects: ClassVar[DatasetMetricQuerySet] = DatasetMetricQuerySet.as_manager() # pyright: ignore
+    _default_manager: ClassVar[DatasetMetricQuerySet]
+
     def __str__(self):
         return self.label or self.name or str(self.uuid)
 
@@ -278,6 +339,9 @@ class DatasetSchemaDimension(OrderedModel, PermissionedModel):
     schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='dimensions', null=False, blank=False)
     dimension = models.ForeignKey(Dimension, on_delete=models.CASCADE, related_name='schemas', null=False, blank=False)
 
+    objects: ClassVar[DatasetSchemaDimensionQuerySet] = DatasetSchemaDimensionQuerySet.as_manager() # pyright: ignore
+    _default_manager: ClassVar[DatasetSchemaDimensionQuerySet]
+
     class Meta:
         verbose_name = _('dataset schema dimension')
         verbose_name_plural = _('dataset schema dimensions')
@@ -286,7 +350,7 @@ class DatasetSchemaDimension(OrderedModel, PermissionedModel):
         return qs.filter(schema=self.schema)
 
 
-class DatasetQuerySet(QuerySet['Dataset']):
+class DatasetQuerySet(PermissionedQuerySet['Dataset']):
     def for_instance_config(self, instance_config: InstanceConfig) -> Self:
         return self.filter(scope_id=instance_config.pk)
 
@@ -328,6 +392,7 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
 
     objects: ClassVar[DatasetManager] = DatasetManager()
     mgr: ClassVar[DatasetManager] = DatasetManager()
+    _default_manager: ClassVar[DatasetQuerySet]
 
     class Meta:  # pyright:ignore
         verbose_name = _('dataset')
@@ -364,6 +429,9 @@ class DatasetSchemaScope(PermissionedModel):
     scope = GenericForeignKey(
         'scope_content_type', 'scope_id',
     )
+
+    objects: ClassVar[DatasetSchemaScopeQuerySet] = DatasetSchemaScopeQuerySet.as_manager() # pyright: ignore
+    _default_manager: ClassVar[DatasetSchemaScopeQuerySet]
 
     class Meta:
         verbose_name = _('dataset schema scope')
@@ -407,6 +475,9 @@ class DataPoint(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
         null=True,
         blank=True,
     )
+
+    objects: ClassVar[DataPointQuerySet] = DataPointQuerySet.as_manager() # pyright: ignore
+    _default_manager: ClassVar[DataPointQuerySet]
 
     class Meta:  # pyright:ignore
         verbose_name = _('data point')
@@ -454,6 +525,9 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
         'users.User', null=True, on_delete=models.SET_NULL, related_name='resolved_comments',
     )
 
+    objects: ClassVar[DataPointCommentQuerySet] = DataPointCommentQuerySet.as_manager() # pyright: ignore
+    _default_manager: ClassVar[DataPointCommentQuerySet]
+
     def __str__(self):
         return 'Comment on datapoint %s (created by %s at %s)' % (self.datapoint, self.created_by, self.created_at)
 
@@ -490,6 +564,9 @@ class DataSource(UserModifiableModel, PermissionedModel):
     description = models.TextField(null=True, blank=True, verbose_name=_('description'))
     url = models.URLField(verbose_name=_('URL'), null=True, blank=True)
 
+    objects: ClassVar[DataSourceQuerySet] = DataSourceQuerySet.as_manager() # pyright: ignore
+    _default_manager: ClassVar[DataSourceQuerySet]
+
     def get_label(self):
         name, *rest = [p for p in (self.name, self.authority, self.edition) if p is not None]
         return f'{name}, {" ".join(rest)}'
@@ -513,6 +590,9 @@ class DatasetSourceReference(UserModifiableModel, PermissionedModel):
         Dataset, null=True, on_delete=models.CASCADE, related_name='source_references'
     )
     data_source = models.ForeignKey(DataSource, on_delete=models.PROTECT, related_name='references')
+
+    objects: ClassVar[DatasetSourceReferenceQuerySet] = DatasetSourceReferenceQuerySet.as_manager() # pyright: ignore
+    _default_manager: ClassVar[DatasetSourceReferenceQuerySet]
 
     def __str__(self):
         dp = self.datapoint
