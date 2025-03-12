@@ -211,8 +211,6 @@ class DatasetSchema(ClusterableModel):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        if dataset_config.SCHEMA_HAS_SINGLE_DATASET:
-            Dataset.objects.get_or_create(schema=self)
         DatasetSchema.get_for_scope.cache_clear()
 
     @staticmethod
