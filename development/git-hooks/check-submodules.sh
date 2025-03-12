@@ -98,7 +98,7 @@ check_submodule_is_pushed() {
       echo "Did you forget to push submodule [$l_path] to remote?"
       echo "Cannot proceed until you do so."
 
-      print_warning_with_title "Checking ${PRE_COMMIT_FROM_REF}..${PRE_COMMIT_TO_REF}"
+      print_warning_with_title "Checking" "${PRE_COMMIT_FROM_REF}..${PRE_COMMIT_TO_REF}"
       print_warning_with_title "  Submodule remote ref" ${l_remote_ref}
       print_warning_with_title "  Submodule local ref" ${l_hash}
       return 1
