@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import uuid
 from functools import lru_cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar, Self
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
@@ -14,22 +15,33 @@ from modeltrans.fields import TranslationField
 from wagtail.admin.panels.field_panel import FieldPanel
 from wagtail.admin.panels.inline_panel import InlinePanel
 
+from kausal_common.models.fields import IdentifierField
+from kausal_common.models.uuid import UUIDIdentifiedModel
+
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
+from ..models.types import ModelManager, RevMany
 from .config import dataset_config
 
 if TYPE_CHECKING:
+    import contextlib
+
     from users.models import User
 
     from ..models.types import FK, RevMany
+    with contextlib.suppress(ImportError):
+        from actions.models import Plan  # type: ignore
+
+        from nodes.models import InstanceConfig  # type: ignore
 
 
-class Dimension(ClusterableModel):
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel):
     name = models.CharField(max_length=100, verbose_name=_('name'))
 
     i18n = TranslationField(fields=['name'])
     name_i18n: str
+
+    scopes: RevMany[DimensionScope]
 
     class Meta:
         verbose_name = _('dimension')
@@ -40,17 +52,12 @@ class Dimension(ClusterableModel):
         return self.name_i18n
 
 
-class DimensionCategory(OrderedModel):
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel):
+    identifier = IdentifierField[str | None, str | None](
+        null=True, blank=True, help_text=_("Optional identifier that, if set, must be unique within the dimension"),
+    )
     dimension = ParentalKey(Dimension, blank=False, on_delete=models.CASCADE, related_name='categories')
     label = models.CharField(max_length=100, verbose_name=_('label'))
-    identifier = models.CharField(
-        blank=True,
-        null=True,
-        max_length=100,
-        verbose_name=_('identifier'),
-        help_text=_("Optional identifier that, if set, must be unique for the dataset"),
-    )
 
     i18n = TranslationField(fields=['label'])
     label_i18n: str
@@ -74,6 +81,17 @@ class DimensionCategory(OrderedModel):
         return qs.filter(dimension=self.dimension)
 
 
+class DimensionScopeQuerySet(QuerySet['DimensionScope']):
+    def for_instance_config(self, instance_config: InstanceConfig) -> Self:
+        return self.filter(scope_content_type=ContentType.objects.get_for_model(instance_config), scope_id=instance_config.pk)
+
+
+_DimensionScopeManager = models.Manager.from_queryset(DimensionScopeQuerySet)
+class DimensionScopeManager(ModelManager['DimensionScope', DimensionScopeQuerySet], _DimensionScopeManager):  # pyright: ignore
+    """Model manager for DimensionScope."""
+del _DimensionScopeManager
+
+
 class DimensionScope(OrderedModel):
     """Link a dimension to a context in which it can be used, such as a plan or a category type."""
 
@@ -90,6 +108,8 @@ class DimensionScope(OrderedModel):
         verbose_name=_('identifier'),
         help_text=_("Optional identifier that, if set, must be unique in the scope"),
     )
+
+    objects: ClassVar[DimensionScopeManager] = DimensionScopeManager()
 
     class Meta:
         verbose_name = _('dimension scope')
@@ -137,6 +157,9 @@ class DatasetSchema(ClusterableModel):
     i18n = TranslationField(fields=['unit', 'name'])
     unit_i18n: str
     name_i18n: str
+
+    objects: models.Manager[DatasetSchema]
+
     datasets: RevMany[Dataset]
 
     panels = [
@@ -228,15 +251,17 @@ class DatasetSchema(ClusterableModel):
         return retval
 
 
-class DatasetMetric(models.Model):
+class DatasetMetric(UUIDIdentifiedModel):
+    name = models.CharField(verbose_name=_('name'), max_length=100, null=True, blank=True)
+    """Maps to the DataFrame column name."""
+
     label = models.CharField(verbose_name=_('label'), max_length=100)
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     unit = models.CharField(verbose_name=_('unit'), blank=True, max_length=50)
 
     i18n = TranslationField(fields=('label', 'unit'))
 
     def __str__(self):
-        return self.label
+        return self.label or self.name or str(self.uuid)
 
 
 class DatasetSchemaDimension(OrderedModel):
@@ -251,7 +276,7 @@ class DatasetSchemaDimension(OrderedModel):
         return qs.filter(schema=self.schema)
 
 
-class DatasetSchemaMetric(models.Model):
+class DatasetSchemaMetric(OrderedModel):
     schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='metrics', null=False, blank=False)
     metric = models.ForeignKey(DatasetMetric, on_delete=models.CASCADE, related_name='schemas', null=False, blank=False)
 
@@ -262,10 +287,28 @@ class DatasetSchemaMetric(models.Model):
     def __str__(self):
         return f'DatasetSchemaMetric schema:{self.schema.uuid} metric:{self.metric.uuid}'
 
+    def filter_siblings(self, qs: models.QuerySet[DatasetSchemaMetric]) -> models.QuerySet[DatasetSchemaMetric]:
+        return qs.filter(schema=self.schema)
 
-class Dataset(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    schema = models.ForeignKey(
+
+class DatasetQuerySet(QuerySet['Dataset']):
+    def for_instance_config(self, instance_config: InstanceConfig) -> Self:
+        return self.filter(scope_id=instance_config.pk)
+
+    def for_plan(self, plan: Plan) -> Self:
+        from actions.models import Plan  # type: ignore
+
+        return self.filter(scope_content_type=ContentType.objects.get_for_model(Plan), scope_id=plan.pk)
+
+
+_DatasetManager = models.Manager.from_queryset(DatasetQuerySet)
+class DatasetManager(ModelManager['Dataset', DatasetQuerySet], _DatasetManager):  # pyright: ignore
+    """Model manager for Dataset."""
+del _DatasetManager
+
+
+class Dataset(UserModifiableModel, UUIDIdentifiedModel):
+    schema: FK[DatasetSchema | None] = models.ForeignKey(
         DatasetSchema, null=True, blank=True, related_name='datasets',
         verbose_name=_('schema'), on_delete=models.PROTECT,
     )
@@ -287,6 +330,9 @@ class Dataset(models.Model):
     scope = GenericForeignKey(
         'scope_content_type', 'scope_id',
     )
+
+    objects: ClassVar[DatasetManager] = DatasetManager()
+    mgr: ClassVar[DatasetManager] = DatasetManager()
 
     class Meta:  # pyright:ignore
         verbose_name = _('dataset')
@@ -341,8 +387,7 @@ class DatasetSchemaScope(models.Model):
         return retval
 
 
-class DataPoint(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+class DataPoint(UserModifiableModel, UUIDIdentifiedModel):
     dataset = models.ForeignKey(
         Dataset, related_name='data_points', on_delete=models.CASCADE, verbose_name=_('dataset'),
     )
@@ -410,7 +455,7 @@ class DataPointComment(UserModifiableModel):
     resolved_at = models.DateTimeField(
         verbose_name=_('resolved at'), editable=False, null=True,
     )
-    resolved_by: FK['User' | None] = models.ForeignKey(
+    resolved_by: FK[User | None] = models.ForeignKey(
         'users.User', null=True, on_delete=models.SET_NULL, related_name='resolved_comments',
     )
 
@@ -466,15 +511,21 @@ class DataSource(UserModifiableModel):
 
 
 class DatasetSourceReference(UserModifiableModel):
-    datapoint = models.ForeignKey(DataPoint, null=True, on_delete=models.CASCADE, related_name='source_references')
-    dataset = models.ForeignKey(Dataset, null=True, on_delete=models.CASCADE, related_name='source_references')
+    datapoint: FK[DataPoint | None] = models.ForeignKey(
+        DataPoint, null=True, on_delete=models.CASCADE, related_name='source_references'
+    )
+    dataset: FK[Dataset | None] = models.ForeignKey(
+        Dataset, null=True, on_delete=models.CASCADE, related_name='source_references'
+    )
     data_source = models.ForeignKey(DataSource, on_delete=models.PROTECT, related_name='references')
 
     def __str__(self):
-        if self.datapoint:
-            return f"Source reference for datapoint {self.datapoint.uuid} in dataset {self.datapoint.dataset.uuid}: {self.data_source}"
-        elif self.dataset:
-            return f"Source reference for dataset {self.dataset.uuid}: {self.data_source}"
+        dp = self.datapoint
+        if dp:
+            return f"Source reference for datapoint {dp.uuid} in dataset {dp.dataset.uuid}: {self.data_source}"
+        ds = self.dataset
+        if ds:
+            return f"Source reference for dataset {ds.uuid}: {self.data_source}"
         return 'Source reference without datapoint or dataset'
 
     class Meta:
