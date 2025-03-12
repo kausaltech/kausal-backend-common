@@ -147,6 +147,7 @@ class DatasetSchema(ClusterableModel):
     )
     unit = models.CharField(max_length=100, blank=True, verbose_name=_('unit'))
     name = models.CharField(max_length=100, blank=False, verbose_name=_('name'))
+    description = models.TextField(blank=True)
     start_date = models.DateField(
         verbose_name=_('start date'),
         blank=True,
@@ -167,6 +168,11 @@ class DatasetSchema(ClusterableModel):
             'name',
             heading=_("Name"),
             help_text=_("Descriptive name of the dataset schema"),
+        ),
+        FieldPanel(
+            'description',
+            heading=_("Description"),
+            help_text=_("Description of the content and use of the dataset"),
         ),
         FieldPanel(
             'unit',
