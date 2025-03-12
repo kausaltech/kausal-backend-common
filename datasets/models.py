@@ -473,8 +473,9 @@ class DatasetSourceReference(UserModifiableModel):
     def __str__(self):
         if self.datapoint:
             return f"Source reference for datapoint {self.datapoint.uuid} in dataset {self.datapoint.dataset.uuid}: {self.data_source}"
-        else:
+        elif self.dataset:
             return f"Source reference for dataset {self.dataset.uuid}: {self.data_source}"
+        return 'Source reference without datapoint or dataset'
 
     class Meta:
         ordering = ('datapoint__dataset', 'datapoint')
