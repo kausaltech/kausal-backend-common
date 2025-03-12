@@ -251,10 +251,10 @@ class DatasetSchema(ClusterableModel):
         return retval
 
 
-class DatasetMetric(UUIDIdentifiedModel):
+class DatasetMetric(OrderedModel, UUIDIdentifiedModel):
+    schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='metrics', null=False, blank=False)
     name = models.CharField(verbose_name=_('name'), max_length=100, null=True, blank=True)
     """Maps to the DataFrame column name."""
-
     label = models.CharField(verbose_name=_('label'), max_length=100)
     unit = models.CharField(verbose_name=_('unit'), blank=True, max_length=50)
 
@@ -262,6 +262,9 @@ class DatasetMetric(UUIDIdentifiedModel):
 
     def __str__(self):
         return self.label or self.name or str(self.uuid)
+
+    def filter_siblings(self, qs: models.QuerySet[DatasetMetric]) -> models.QuerySet[DatasetMetric]:
+        return qs.filter(schema=self.schema)
 
 
 class DatasetSchemaDimension(OrderedModel):
@@ -273,21 +276,6 @@ class DatasetSchemaDimension(OrderedModel):
         verbose_name_plural = _('dataset schema dimensions')
 
     def filter_siblings(self, qs: models.QuerySet[DatasetSchemaDimension]) -> models.QuerySet[DatasetSchemaDimension]:
-        return qs.filter(schema=self.schema)
-
-
-class DatasetSchemaMetric(OrderedModel):
-    schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='metrics', null=False, blank=False)
-    metric = models.ForeignKey(DatasetMetric, on_delete=models.CASCADE, related_name='schemas', null=False, blank=False)
-
-    class Meta:
-        verbose_name = _('dataset schema metrics')
-        verbose_name_plural = _('dataset schema metrics')
-
-    def __str__(self):
-        return f'DatasetSchemaMetric schema:{self.schema.uuid} metric:{self.metric.uuid}'
-
-    def filter_siblings(self, qs: models.QuerySet[DatasetSchemaMetric]) -> models.QuerySet[DatasetSchemaMetric]:
         return qs.filter(schema=self.schema)
 
 
