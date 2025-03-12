@@ -7,6 +7,18 @@ import uuid
 from django.db import migrations, models
 
 
+OLD_PATHS_TABLES = (
+    'datasets_datasetdimensionselectedcategory',
+    'datasets_datasetdimension',
+    'datasets_datasetcomment',
+    'datasets_datasetmetric',
+    'datasets_datasetsourcereference',
+    'datasets_dataset',
+    'datasets_dimensioncategory',
+    'datasets_dimension',
+)
+
+
 class Migration(migrations.Migration):
 
     initial = True
@@ -16,6 +28,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL([
+            f"DROP TABLE IF EXISTS {table};"
+            for table in OLD_PATHS_TABLES
+        ]),
         migrations.CreateModel(
             name="DatasetSchema",
             fields=[
