@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from django.apps import AppConfig
 
 
@@ -7,7 +9,4 @@ class DatasetsConfig(AppConfig):
     label = 'datasets'
 
     def ready(self):
-        try:
-            import kausal_common.datasets.wagtail_admin  # noqa
-        except ImportError:
-            pass
+        import kausal_common.datasets.signals  # noqa: F401
