@@ -186,7 +186,8 @@ class DatasetSchema(ClusterableModel):
             heading=_("Metrics"),
             help_text=_("Defines the interpretation and units for the values of the dataset"),
             panels=[
-                FieldPanel('metric'),
+                FieldPanel('label'),
+                FieldPanel('unit')
             ]
         ),
         InlinePanel(

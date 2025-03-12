@@ -93,8 +93,7 @@ class DataPointSerializer(serializers.ModelSerializer):
             assert dimension_category in allowed_dimension_categories
             data_point.dimension_categories.add(dimension_category)
         metric = validated_data.pop('metric')
-        allowed_metrics = [sm.metric for sm in dataset.schema.metrics.all()]
-        assert metric in allowed_metrics
+        assert metric in dataset.schema.metrics.all()
         return data_point
 
 
