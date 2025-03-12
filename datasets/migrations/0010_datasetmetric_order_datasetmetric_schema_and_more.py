@@ -10,7 +10,13 @@ def set_schema(apps, schema_editor):
     DatasetSchemaMetric = apps.get_model('datasets', 'DatasetSchemaMetric')
     for metric in DatasetMetric.objects.all():
         dsm = list(DatasetSchemaMetric.objects.filter(metric=metric))
-        if len(dsm) != 1:
+        if not dsm:
+            raise Exception(
+                f"DatasetMetric {metric} is not linked to a schema. Check if you want to delete all metrics without a "
+                "schema, run DatasetMetric.objects.exclude(id__in=DatasetSchemaMetric.objects.all()).delete() and try "
+                "again."
+            )
+        if len(dsm) > 1:
             raise Exception(f"DatasetMetric {metric} is linked to {len(dsm)} schemas; expected 1")
         metric.schema = dsm[0].schema
         metric.save(update_fields=['schema'])
