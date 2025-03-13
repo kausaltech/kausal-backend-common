@@ -54,7 +54,10 @@ class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel):
 
 class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel):
     identifier = IdentifierField[str | None, str | None](
-        null=True, blank=True, help_text=_("Optional identifier that, if set, must be unique within the dimension"),
+        null=True,
+        blank=True,
+        help_text=_("Optional identifier that, if set, must be unique within the dimension"),
+        max_length=200,
     )
     dimension = ParentalKey(Dimension, blank=False, on_delete=models.CASCADE, related_name='categories')
     label = models.CharField(max_length=100, verbose_name=_('label'))
