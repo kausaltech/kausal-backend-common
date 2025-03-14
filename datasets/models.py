@@ -215,7 +215,6 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         default=TimeResolution.YEARLY,
         help_text=_('Time resolution of the time stamps of data points in this dataset'),
     )
-    unit = models.CharField(max_length=100, blank=True, verbose_name=_('unit'))
     name = models.CharField(max_length=100, blank=False, verbose_name=_('name'))
     description = models.TextField(blank=True)
     start_date = models.DateField(
@@ -225,8 +224,7 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         help_text=_("First applicable date for datapoints in these datasets"),
     )
 
-    i18n = TranslationField(fields=['unit', 'name'])
-    unit_i18n: str
+    i18n = TranslationField(fields=['name'])
     name_i18n: str
 
     objects: models.Manager[DatasetSchema]
@@ -246,11 +244,6 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
             'description',
             heading=_("Description"),
             help_text=_("Description of the content and use of the dataset"),
-        ),
-        FieldPanel(
-            'unit',
-            heading=_("Unit"),
-            help_text=_("Unit of the dataset schema"),
         ),
         FieldPanel(
             'time_resolution',

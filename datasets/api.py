@@ -158,7 +158,7 @@ class DatasetSchemaSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
 
     class Meta:
         model = DatasetSchema
-        fields = ['uuid', 'time_resolution', 'unit', 'name', 'dimensions', 'metrics', 'start_date']
+        fields = ['uuid', 'time_resolution', 'name', 'dimensions', 'metrics', 'start_date']
 
 
 class DatasetSchemaViewSet(viewsets.ModelViewSet):
