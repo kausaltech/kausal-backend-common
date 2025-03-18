@@ -283,14 +283,12 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        DatasetSchema.get_for_scope.cache_clear()
 
     @classmethod
     def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
         return get_permission_policy('SCHEMA_PERMISSION_POLICY')
 
     @staticmethod
-    @lru_cache
     def get_for_scope(scope_id: int, scope_content_type_id: int) -> list[DatasetSchema]:
         return list(
             DatasetSchema.objects.filter(
@@ -322,7 +320,6 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
 
     def delete(self, *args, **kwargs):
         retval = super().delete(*args, **kwargs)
-        DatasetSchema.get_for_scope.cache_clear()
         return retval
 
 
@@ -465,11 +462,9 @@ class DatasetSchemaScope(PermissionedModel):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        DatasetSchema.get_for_scope.cache_clear()
 
     def delete(self, *args, **kwargs):
         retval = super().delete(*args, **kwargs)
-        DatasetSchema.get_for_scope.cache_clear()
         return retval
 
 
