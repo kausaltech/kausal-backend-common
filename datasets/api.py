@@ -115,10 +115,8 @@ class DataPointViewSet(viewsets.ModelViewSet):
         serializer.save(dataset=dataset, last_modified_by=user)
         dataset.last_modified_by = user
         dataset.save()
-        if (dataset.scope_content_type.app_label == 'nodes' and
-                dataset.scope_content_type.model == 'instanceconfig'):
-            ic = dataset.scope
-            ic.invalidate_cache()
+        dataset.clear_scope_instance_cache()
+
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -126,19 +124,13 @@ class DataPointViewSet(viewsets.ModelViewSet):
         dataset = instance.dataset
         dataset.last_modified_by = self.request.user
         dataset.save()
-        if (dataset.scope_content_type.app_label == 'nodes' and
-                dataset.scope_content_type.model == 'instanceconfig'):
-            ic = dataset.scope
-            ic.invalidate_cache()
+        dataset.clear_scope_instance_cache()
 
     def perform_destroy(self, instance):
         dataset = instance.dataset
         dataset.last_modified_by = self.request.user
         dataset.save()
-        if (dataset.scope_content_type.app_label == 'nodes' and
-                dataset.scope_content_type.model == 'instanceconfig'):
-            ic = dataset.scope
-            ic.invalidate_cache()
+        dataset.clear_scope_instance_cache()
 
         instance.delete()
 
