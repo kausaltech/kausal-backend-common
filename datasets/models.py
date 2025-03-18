@@ -221,7 +221,7 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         verbose_name=_('start date'),
         blank=True,
         null=True,
-        help_text=_("First applicable date for datapoints in these datasets"),
+        help_text=("For a newly created dataset, start entering values from this year"),
     )
 
     i18n = TranslationField(fields=['name'])
@@ -251,7 +251,7 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         ),
         FieldPanel(
             'start_date',
-            heading=_("Start Date"),
+            heading=_("Initial date"),
         ),
         InlinePanel(
             'metrics',
