@@ -247,7 +247,7 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         ),
         FieldPanel(
             'time_resolution',
-            heading=_("Time Resolution"),
+            heading=_("Time resolution"),
         ),
         FieldPanel(
             'start_date',
