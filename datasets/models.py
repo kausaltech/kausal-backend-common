@@ -473,6 +473,10 @@ class DatasetSchemaScope(PermissionedModel):
         return retval
 
 
+# Note that the P in DataPoint is upper case. Rationale: The word "datapoint" seems to be rarely used.
+# Source: https://english.stackexchange.com/questions/508238/word-choice-data-points-or-datapoints
+# This is in contract to "dataset", which seems to be more common than "data set".
+# Source: https://english.stackexchange.com/questions/2120/which-is-correct-dataset-or-data-set
 class DataPoint(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     dataset = models.ForeignKey(
         Dataset, related_name='data_points', on_delete=models.CASCADE, verbose_name=_('dataset'),
@@ -515,11 +519,11 @@ class DataPoint(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
         # ]
 
     def __str__(self):
-        return f'Datapoint {self.uuid} / dataset {self.dataset.uuid}'
+        return f'DataPoint {self.uuid} / dataset {self.dataset.uuid}'
 
     @classmethod
     def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
-        return get_permission_policy('DATAPOINT_PERMISSION_POLICY')
+        return get_permission_policy('DATA_POINT_PERMISSION_POLICY')
 
 
 class DataPointComment(UserModifiableModel, PermissionedModel):
