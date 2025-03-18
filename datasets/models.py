@@ -362,7 +362,10 @@ class DatasetSchemaDimension(OrderedModel, PermissionedModel):
 
 class DatasetQuerySet(PermissionedQuerySet['Dataset']):
     def for_instance_config(self, instance_config: InstanceConfig) -> Self:
-        return self.filter(scope_id=instance_config.pk)
+        return self.filter(
+            scope_content_type=ContentType.objects.get_for_model(InstanceConfig),
+            scope_id=instance_config.pk,
+        )
 
     def for_plan(self, plan: Plan) -> Self:
         from actions.models import Plan  # type: ignore
