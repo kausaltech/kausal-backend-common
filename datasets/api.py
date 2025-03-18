@@ -111,7 +111,28 @@ class DataPointViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         dataset_uuid = self.kwargs['dataset_uuid']
         dataset = Dataset.objects.get(uuid=dataset_uuid)
-        serializer.save(dataset=dataset)
+        user = self.request.user
+        serializer.save(dataset=dataset, last_modified_by=user)
+        dataset.last_modified_by = user
+        dataset.save()
+        dataset.clear_scope_instance_cache()
+
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        instance = serializer.save(last_modified_by=user)
+        dataset = instance.dataset
+        dataset.last_modified_by = self.request.user
+        dataset.save()
+        dataset.clear_scope_instance_cache()
+
+    def perform_destroy(self, instance):
+        dataset = instance.dataset
+        dataset.last_modified_by = self.request.user
+        dataset.save()
+        dataset.clear_scope_instance_cache()
+
+        instance.delete()
 
 
 class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):

@@ -436,6 +436,12 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
         return get_permission_policy('DATASET_PERMISSION_POLICY')
 
+    def clear_scope_instance_cache(self):
+        if (self.scope_content_type.app_label == 'nodes' and
+                self.scope_content_type.model == 'instanceconfig'):
+            ic = self.scope
+            ic.invalidate_cache()
+
 
 class DatasetSchemaScope(PermissionedModel):
     """Link a dataset schema to a context in which it can be used."""
