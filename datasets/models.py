@@ -20,8 +20,6 @@ from kausal_common.datasets.permission_policy import get_permission_policy
 from kausal_common.models.fields import IdentifierField
 from kausal_common.models.permission_policy import ModelPermissionPolicy
 from kausal_common.models.uuid import UUIDIdentifiedModel
-from kausal_common.models.permission_policy import ModelPermissionPolicy
-from kausal_common.datasets.permission_policy import get_permission_policy
 
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
@@ -31,11 +29,6 @@ from .config import dataset_config
 
 if TYPE_CHECKING:
     import contextlib
-    from typing import Self
-
-    from kausal_common.models.permission_policy import ModelPermissionPolicy
-    from kausal_common.models.types import QS
-
     from typing import Self
 
     from kausal_common.models.permission_policy import ModelPermissionPolicy
