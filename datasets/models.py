@@ -353,7 +353,7 @@ class DatasetSchemaDimension(OrderedModel, PermissionedModel):
 class DatasetQuerySet(PermissionedQuerySet['Dataset']):
     def for_instance_config(self, instance_config: InstanceConfig) -> Self:
         return self.filter(
-            scope_content_type=ContentType.objects.get_for_model(InstanceConfig),
+            scope_content_type=ContentType.objects.get_for_model(instance_config),
             scope_id=instance_config.pk,
         )
 
