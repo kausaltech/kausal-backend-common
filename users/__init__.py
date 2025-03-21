@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypeGuard
 
 if TYPE_CHECKING:
-    from django.contrib.auth.models import AnonymousUser
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
     from users.models import User
 
 
-type UserOrAnon = "User | AnonymousUser"
+type UserOrAnon = "AbstractBaseUser | AnonymousUser"
 
 
 def is_authenticated(user: UserOrAnon) -> TypeGuard[User]:
