@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import importlib
 import uuid
-from functools import lru_cache
 from typing import TYPE_CHECKING, ClassVar, Self
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from modelcluster.fields import ParentalKey
@@ -30,6 +27,8 @@ from .config import dataset_config
 if TYPE_CHECKING:
     import contextlib
     from typing import Self
+
+    from rich.repr import RichReprResult
 
     from kausal_common.models.permission_policy import ModelPermissionPolicy
     from kausal_common.models.types import QS
@@ -274,6 +273,12 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
             return f'{self.name_i18n}'
         return str(self.uuid)
 
+    def __rich_repr__(self) -> RichReprResult:
+        yield 'uuid', self.uuid
+        yield 'time_resolution', self.time_resolution
+        yield 'name', self.name
+        yield 'start_date', self.start_date
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
@@ -330,6 +335,10 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
 
     def __str__(self):
         return self.label or self.name or str(self.uuid)
+
+    def __rich_repr__(self) -> RichReprResult:
+        yield 'schema', self.schema
+        yield 'name', self.name
 
     def filter_siblings(self, qs: models.QuerySet[DatasetMetric]) -> models.QuerySet[DatasetMetric]:
         return qs.filter(schema=self.schema)
@@ -416,6 +425,11 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
         if dataset_config.SCHEMA_HAS_SINGLE_DATASET:
             return str(self.schema)
         return f'Dataset {self.uuid}'
+
+    def __rich_repr__(self) -> RichReprResult:
+        yield 'schema', self.schema
+        yield 'identifier', self.identifier
+        yield 'scope', self.scope
 
     def save(self, *args, **kwargs):
         if self.schema is None:
@@ -509,6 +523,12 @@ class DataPoint(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     def __str__(self):
         return f'DataPoint {self.uuid} / dataset {self.dataset.uuid}'
 
+    def __rich_repr__(self) -> RichReprResult:
+        yield 'dataset', self.dataset
+        yield 'date', self.date
+        yield 'metric', self.metric
+        yield 'value', self.value
+
     @classmethod
     def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
         return get_permission_policy('DATA_POINT_PERMISSION_POLICY')
@@ -592,6 +612,11 @@ class DataSource(UserModifiableModel, PermissionedModel):
 
     def __str__(self):
         return self.get_label()
+
+    def __rich_repr__(self) -> RichReprResult:
+        yield 'uuid', self.uuid
+        yield 'scope', self.scope
+        yield 'name', self.name
 
     class Meta:
         verbose_name = _('Data source')
