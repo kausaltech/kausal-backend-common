@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import typing
 
+# from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from modeltrans.conf import get_available_languages
 from modeltrans.translator import get_i18n_field
@@ -12,6 +13,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from rest_framework_nested.routers import NestedSimpleRouter
 
+# from users.models import User
 from .models import (
     DataPoint,
     DataPointComment,
@@ -106,7 +108,10 @@ class DataPointViewSet(viewsets.ModelViewSet):
     )
 
     def get_queryset(self):
-        return DataPoint.objects.filter(dataset__uuid=self.kwargs['dataset_uuid'])
+        # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
+        # TODO: check that we don't allow editing instances for which we only have view permissions
+        qs = DataPoint.permission_policy().instances_user_has_permission_for(self.request.user, 'view')
+        return qs.filter(dataset__uuid=self.kwargs['dataset_uuid'])
 
     def perform_create(self, serializer):
         dataset_uuid = self.kwargs['dataset_uuid']
@@ -183,12 +188,16 @@ class DatasetSchemaSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
 
 
 class DatasetSchemaViewSet(viewsets.ModelViewSet):
-    queryset = DatasetSchema.objects.all()
     lookup_field = 'uuid'
     serializer_class = DatasetSchemaSerializer
     permission_classes = (
         permissions.DjangoModelPermissions,
     )
+
+    def get_queryset(self):
+        # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
+        # TODO: check that we don't allow editing instances for which we only have view permissions
+        return DatasetSchema.permission_policy().instances_user_has_permission_for(self.request.user, 'view')
 
 
 class DatasetSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
@@ -201,12 +210,16 @@ class DatasetSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
 
 
 class DatasetViewSet(viewsets.ModelViewSet):
-    queryset = Dataset.objects.all()
     lookup_field = 'uuid'
     serializer_class = DatasetSerializer
     permission_classes = (
         permissions.DjangoModelPermissions,
     )
+
+    def get_queryset(self):
+        # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
+        # TODO: check that we don't allow editing instances for which we only have view permissions
+        return Dataset.permission_policy().instances_user_has_permission_for(self.request.user, 'view')
 
 
 class DimensionViewSet(viewsets.ModelViewSet):
@@ -372,29 +385,32 @@ class DataSourceViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.DjangoModelPermissions,)
 
     def get_queryset(self):
-        queryset = DataSource.objects.all()
-        if 'uuid' in self.kwargs:
-            return queryset
-
         content_type_app = self.request.query_params.get('content_type_app')
         content_type_model = self.request.query_params.get('content_type_model')
         object_id = self.request.query_params.get('object_id')
+        has_any_scope_param = any([content_type_app, content_type_model, object_id])
+        has_all_scope_params = all([content_type_app, content_type_model, object_id])
+        if has_any_scope_param and not has_all_scope_params:
+            raise Exception("Must specify either all or none of content_type_app, content_type_model and object_id")
 
-        if content_type_app and content_type_model and object_id:
-            try:
-                content_type = ContentType.objects.get(
-                    app_label=content_type_app,
-                    model=content_type_model
-                )
-                queryset = queryset.filter(
-                    scope_content_type=content_type,
-                    scope_id=object_id
-                )
-                return queryset
-            except ContentType.DoesNotExist:
-                return DataSource.objects.none()
+        # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
+        # TODO: check that we don't allow editing instances for which we only have view permissions
+        qs = DataSource.permission_policy().instances_user_has_permission_for(self.request.user, 'view')
 
-        return DataSource.objects.none()
+        if has_any_scope_param:
+            # Deliberately not catching ContentType.DoesNotExist because this should cause an HTTP error code IMO
+            content_type = ContentType.objects.get(
+                app_label=content_type_app,
+                model=content_type_model
+            )
+            qs = qs.filter(
+                scope_content_type=content_type,
+                scope_id=object_id,
+            )
+
+        if 'uuid' in self.kwargs:
+            qs = qs.filter(uuid=self.kwargs['uuid'])
+        return qs
 
 
 router.register(r'dataset_schemas', DatasetSchemaViewSet, basename='datasetschema')
