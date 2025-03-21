@@ -20,7 +20,7 @@ class DataSourceForm(WagtailAdminModelForm):
 class DataSourceCreateView(CreateView):
     def save_instance(self):
         user = self.request.user
-        default_scope_app, default_scope_model = dataset_config.DATASOURCE_DEFAULT_SCOPE_CONTENT_TYPE
+        default_scope_app, default_scope_model = dataset_config.DATA_SOURCE_DEFAULT_SCOPE_CONTENT_TYPE
         scope_content_type = ContentType.objects.get(app_label=default_scope_app, model=default_scope_model)
         scope_id = None
 
