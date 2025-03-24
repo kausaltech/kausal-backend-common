@@ -3,7 +3,7 @@
 REPORT_PATH=/tmp/report.html
 COVERAGE_XML_PATH=/tmp/coverage.xml
 COVERAGE_HTML_PATH=/tmp/htmlcov
-PYTEST_ARGS="--html=$REPORT_PATH --self-contained-html --cov=. --cov-report=xml:$COVERAGE_XML_PATH --cov-report=html:$COVERAGE_HTML_PATH --cov-report=term-missing $@"
+PYTEST_ARGS="--html=$REPORT_PATH --self-contained-html --cov=. --cov-branch --cov-report=xml:$COVERAGE_XML_PATH --cov-report=html:$COVERAGE_HTML_PATH --cov-report=term-missing $@"
 SHOULD_CREATE_DB=1
 
 function import_test_db() {
