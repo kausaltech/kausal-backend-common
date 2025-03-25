@@ -37,9 +37,9 @@ if TYPE_CHECKING:
 
     from ..models.types import FK, RevMany
     with contextlib.suppress(ImportError):
-        from actions.models import Plan  # type: ignore
-
         from nodes.models import InstanceConfig  # type: ignore
+
+        from actions.models import Plan  # type: ignore
 
 
 class DimensionQuerySet(PermissionedQuerySet['Dimension']):
