@@ -3,7 +3,8 @@ from __future__ import annotations
 import functools
 import re
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic
+from typing_extensions import TypeVar
 
 import graphene
 from django.db.models import Model

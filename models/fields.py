@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, TypeVar
+from typing import Any
+from typing_extensions import TypeVar
 
 from django.core.validators import RegexValidator
 from django.db import models

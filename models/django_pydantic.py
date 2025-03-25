@@ -10,7 +10,8 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum
 from types import UnionType
-from typing import Any, ClassVar, Generator, Generic, NamedTuple, Self, TypeVar, cast, overload
+from typing import Any, ClassVar, Generator, Generic, NamedTuple, Self, cast, overload
+from typing_extensions TypeVar
 from uuid import UUID
 
 from django.contrib.admin.utils import NestedObjects
