@@ -62,10 +62,6 @@ class DatasetSchemaDimensionQuerySet(PermissionedQuerySet['DatasetSchemaDimensio
     pass
 
 
-class DatasetSchemaMetricQuerySet(PermissionedQuerySet['DatasetSchemaMetric']):
-    pass
-
-
 class DatasetSchemaScopeQuerySet(PermissionedQuerySet['DatasetSchemaScope']):
     pass
 
