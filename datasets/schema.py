@@ -12,6 +12,7 @@ class DimensionNode(DjangoObjectType):
     class Meta:
         abstract = True
 
+
 class DimensionCategoryNode(DjangoObjectType):
     class Meta:
         abstract = True
@@ -37,10 +38,12 @@ class DimensionScopeTypeNode(graphene.Union):
     class Meta:
         abstract = True  # Make it abstract
 
+
 class DataPointNode(DjangoObjectType):
     value = graphene.Float()
     class Meta:
         abstract = True
+
 
 class DatasetSchemaScopeNode(DjangoObjectType):
     scope = graphene.Field(lambda: DatasetSchemaScopeTypeNode)
@@ -52,9 +55,11 @@ class DatasetSchemaScopeNode(DjangoObjectType):
     def resolve_scope(root: DatasetSchemaScope, info):
         return root.scope
 
+
 class DatasetSchemaScopeTypeNode(graphene.Union):
     class Meta:
         abstract = True
+
 
 class DatasetNode(DjangoObjectType):
     scope = graphene.Field(lambda: DatasetScopeTypeNode)
@@ -70,6 +75,7 @@ class DatasetNode(DjangoObjectType):
 class DatasetScopeTypeNode(graphene.Union):
     class Meta:
         abstract = True
+
 
 class DatasetSchemaNode(DjangoObjectType):
     class Meta:
