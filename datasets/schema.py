@@ -80,3 +80,8 @@ class DatasetScopeTypeNode(graphene.Union):
 class DatasetSchemaNode(DjangoObjectType):
     class Meta:
         abstract = True
+
+
+class DatasetMetricNode(DjangoObjectType):
+    class Meta:
+        abstract = True
