@@ -2,7 +2,8 @@
 
 REPORT_PATH=/tmp/report.html
 COVERAGE_XML_PATH=/tmp/coverage.xml
-PYTEST_ARGS="--html=$REPORT_PATH --self-contained-html --cov=. --cov-branch --cov-report=xml:$COVERAGE_XML_PATH --cov-report=term-missing $@"
+JUNIT_XML_PATH=/tmp/junit.xml
+PYTEST_ARGS="--junitxml=$JUNIT_XML_PATH -o junit_family=legacy --html=$REPORT_PATH --self-contained-html --cov=. --cov-branch --cov-report=xml:$COVERAGE_XML_PATH --cov-report=term-missing $@"
 SHOULD_CREATE_DB=1
 
 function import_test_db() {
