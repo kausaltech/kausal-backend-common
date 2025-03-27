@@ -65,7 +65,11 @@ flake8-pytest-style.fixture-parentheses = false
 "../typings/**" = ["D", "A002", "ANN401", "PLC0105"]
 "../typings/django/**" = ["ALL"]
 "../../**/migrations/*" = ["I001", "I002", "E501"]
-"../../**/tests/test_*" = ["PLR0913"]
+"../../**/tests/test_*" = [
+  "PLR0913",
+  "ANN202",  # no type annotations required for tests
+  "S106",   # skip inline password security checks
+]
 "../../**/tests/*" = ["I002"]
 
 [lint.pylint]
