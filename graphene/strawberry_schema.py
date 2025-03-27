@@ -132,8 +132,14 @@ class StrawberryCompatibleTypeMap(GrapheneTypeMap):
         auto_camelcase: bool = True,
     ):
         self.sb_schema = sb_schema
-        super().__init__(query=query, mutation=mutation, subscription=subscription, types=types, auto_camelcase=auto_camelcase)  # type: ignore
         gql_schema = sb_schema._schema
+        super().__init__(query=query, mutation=mutation, subscription=subscription, types=types, auto_camelcase=auto_camelcase)  # type: ignore
+        mutation_type = self.mutation
+        if gql_schema.mutation_type:
+            for name, field in gql_schema.mutation_type.fields.items():
+                if name in mutation_type.fields:
+                    raise ValueError(f"Field {name} already exists in {mutation_type}")
+                mutation_type.fields[name] = field
         for type_ in gql_schema.type_map.values():
             if not is_abstract_type(type_):
                 continue
