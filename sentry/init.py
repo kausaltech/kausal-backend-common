@@ -11,9 +11,8 @@ from django.urls import reverse
 import sentry_sdk
 import sentry_sdk.integrations
 from sentry_sdk.consts import DEFAULT_MAX_VALUE_LENGTH
-from sentry_sdk.integrations.argv import ArgvIntegration
-from sentry_sdk.integrations.django import DjangoIntegration
 
+from kausal_common.context import get_project_id
 from kausal_common.deployment import coerce_bool, env_bool
 from kausal_common.deployment.types import is_development_environment
 from kausal_common.telemetry import otel_enabled
@@ -23,6 +22,7 @@ if TYPE_CHECKING:
 
     from sentry_sdk._types import Event, Hint
     from sentry_sdk.envelope import Envelope
+    from sentry_sdk.integrations import Integration
 
 
 def strip_sensitive_cookies(req: dict):
@@ -147,12 +147,26 @@ class NullTransport(sentry_sdk.Transport):
     def capture_envelope(self, envelope: Envelope):
         pass
 
+DISABLED_DEFAULT_INTEGRATIONS = {'modules', 'argv', 'loguru', 'logging'}
+
+def _get_integrations() -> list[Integration]:
+    from sentry_sdk.integrations import iter_default_integrations
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    integrations: list[Integration] = []
+    for integration_cls in iter_default_integrations(True):  # noqa: FBT003
+        if integration_cls.identifier in DISABLED_DEFAULT_INTEGRATIONS:
+            continue
+        integration: Integration
+        if integration_cls is DjangoIntegration:
+            integration = DjangoIntegration(middleware_spans=False)
+        else:
+            integration = integration_cls()
+        integrations.append(integration)
+    return integrations
+
 
 def init_sentry(dsn: str | None, deployment_type: str | None = None):
-    from sentry_sdk.integrations.logging import LoggingIntegration
-    from sentry_sdk.integrations.loguru import LoguruIntegration
-    from sentry_sdk.integrations.modules import ModulesIntegration
-
     if sentry_sdk.is_initialized():
         return
     spotlight_url = _get_spotlight_url()
@@ -169,6 +183,13 @@ def init_sentry(dsn: str | None, deployment_type: str | None = None):
         spotlight_view_url = spotlight_url.removesuffix('/stream')
         print(f'🔦 Spotlight enabled at: [link={spotlight_view_url}]{spotlight_view_url}')
 
+    if is_development_environment() and not os.getenv('SENTRY_RELEASE'):
+        release = '%s@dev' % get_project_id()
+    else:
+        release = None
+
+    integrations = _get_integrations()
+
     sentry_sdk.init(
         dsn=dsn,
         debug=env_bool('SENTRY_DEBUG', default=False),
@@ -178,23 +199,16 @@ def init_sentry(dsn: str | None, deployment_type: str | None = None):
         traces_sample_rate=1.0,
         profiles_sample_rate=1.0 if env_bool('SENTRY_PROFILING', default=False) else 0.0,
         instrumenter='otel' if otel_enabled() else None,
-        integrations=[
-            DjangoIntegration(
-                middleware_spans=False,
-            ),
-        ],
-        disabled_integrations=[
-            ModulesIntegration(),
-            ArgvIntegration(),
-            LoguruIntegration(),
-            LoggingIntegration(),
-        ],
+        release=release,
+        integrations=integrations,
+        default_integrations=False,
         environment=os.getenv('SENTRY_ENVIRONMENT', None) or deployment_type,
         server_name=os.getenv('NODE_NAME', None),
         before_send_transaction=before_send_transaction,
         before_send=before_send,
         max_value_length=4096 if spotlight_url else DEFAULT_MAX_VALUE_LENGTH,
         max_request_body_size='always' if spotlight_url else 'medium',
+        _experiments={'transport_http2': not bool(spotlight_url)},
     )
     if env_bool('SENTRY_TRACE_DJANGO_INIT', default=False):
         _patch_django_init()
