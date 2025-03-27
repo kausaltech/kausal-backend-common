@@ -12,6 +12,7 @@ class DeploymentEnvironmentType(Enum):
     TESTING = 'testing'
     WIP = 'wip'
     DEV = 'development'
+    CI = 'ci'
 
 
 def is_production_deployment() -> bool:

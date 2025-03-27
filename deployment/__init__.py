@@ -5,6 +5,8 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Sequence, overload
 
+from django.core.exceptions import ImproperlyConfigured
+
 if TYPE_CHECKING:
     import environ
 
@@ -129,3 +131,18 @@ def set_secret_file_vars(env: environ.Env, directory: str | Path) -> None:
         if file_path.is_file() and ENV_VARIABLE_PATTERN.fullmatch(file_path.name):
             env_var_name = f'{file_path.name}_FILE'
             env.ENVIRON[env_var_name] = str(file_path)
+
+
+def test_mode_enabled() -> bool:
+    from kausal_common.deployment.types import DeploymentEnvironmentType, get_deployment_environment
+
+    if not env_bool('CI', default=False):
+        return False
+
+    if not env_bool('TEST_MODE', default=False):
+        return False
+
+    if get_deployment_environment() not in (DeploymentEnvironmentType.CI, DeploymentEnvironmentType.DEV):
+        raise ImproperlyConfigured('Test mode cannot be enabled in this environment')
+
+    return True

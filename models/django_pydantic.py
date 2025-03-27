@@ -11,7 +11,7 @@ from decimal import Decimal
 from enum import Enum
 from types import UnionType
 from typing import Any, ClassVar, Generator, Generic, NamedTuple, Self, cast, overload
-from typing_extensions TypeVar
+from typing_extensions import TypeVar
 from uuid import UUID
 
 from django.contrib.admin.utils import NestedObjects
@@ -755,12 +755,12 @@ class TypedAdapter(Adapter):
         self.add(child)
         parent.add_child(child, initial=True)
 
-    def _walk_children[M: DjangoDiffModel](self, parent: M) -> Generator[dict[Any, Any], None, None]:
+    def _walk_children(self, parent: DjangoDiffModel) -> Generator[dict[Any, Any]]:
         yield parent.dict(exclude={SIBLING_ORDER_ATTRIBUTE})
         for child in parent.get_children(type(parent), ordered=True):
             yield from self._walk_children(child)
 
-    def save_model[M: DjangoDiffModel](self, model: type[M]) -> Generator[dict[Any, Any], None, None]:
+    def save_model[M: DjangoDiffModel](self, model: type[M]) -> Generator[dict[Any, Any]]:
         model_name = model.get_type()
         objs = cast(list[M], self.store.get_all(model=model_name))
         if model_name in model.get_children_mapping():
