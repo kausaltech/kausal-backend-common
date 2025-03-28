@@ -393,8 +393,6 @@ class DataSourceViewSet(viewsets.ModelViewSet):
         if has_any_scope_param and not has_all_scope_params:
             raise Exception("Must specify either all or none of content_type_app, content_type_model and object_id")
 
-        # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
-        # TODO: check that we don't allow editing instances for which we only have view permissions
         qs = DataSource.permission_policy().instances_user_has_permission_for(self.request.user, 'view')
 
         if has_any_scope_param:
