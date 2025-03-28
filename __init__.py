@@ -4,8 +4,8 @@ from .mail.env import ENV_SCHEMA as MAIL_ENV_SCHEMA
 
 # Used in ENV_SCHEMA -- all of these environment variables will be exposed as variables in `settings`
 EXPOSED_SETTINGS_ENV_SCHEMA = dict(
-    DANGEROUSLY_ENABLE_DELETE_USER_MUTATION=(bool, False),
-    DANGEROUSLY_ENABLE_REGISTER_USER_MUTATION=(bool, False),
+    # for future settings; example:
+    # FOO=(bool, False),
 )
 
 # kwargs to be added to arguments to django-environ's Env.__init__()

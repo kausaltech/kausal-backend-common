@@ -3,10 +3,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import strawberry
-from django.conf import settings
 
 from kausal_common.deployment import test_mode_enabled
+from kausal_common.models.roles import role_registry
 from kausal_common.strawberry.registry import register_strawberry_type
+
+from users.models import User
+from users.schema import UserType
 
 
 class TestModeNotEnabledError(Exception):
@@ -35,6 +38,13 @@ class CoverageOutput:
         if not COVERAGE_XML_PATH.exists():
             return None
         return COVERAGE_XML_PATH.read_text(encoding='utf-8')
+
+
+# for instance-specific roles; KP's framework roles don't have anything to do with this
+@strawberry.input
+class Role:
+    id: str
+    object: str
 
 
 @register_strawberry_type
@@ -75,6 +85,28 @@ class TestModeMutation:
             raise CoverageNotEnabledError()
         cov.switch_context(context)
         return True
+
+    @strawberry.mutation
+    def register_user(self, email: str, password: str, roles: list[Role]) -> UserType:
+        email = email.strip().lower()
+        if User.objects.filter(email=email).exists():
+            raise Exception("A user with that email already exists")
+        user = User(email=email)
+        user.set_password(password)
+        user.save()
+        for role_input in roles:
+            role = role_registry.get_role(role_input.id)
+            obj = role.model.objects.get(identifier=role_input.object)
+            role.assign_user(obj, user)
+        return UserType(user)
+
+    @strawberry.mutation
+    def delete_user(self, email: str) -> UserType:
+        email = email.strip().lower()
+        user = User.objects.get(email=email)
+        result = UserType(user)
+        user.delete()
+        return result
 
 
 @strawberry.type
