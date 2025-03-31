@@ -162,6 +162,8 @@ class DimensionScope(OrderedModel, PermissionedModel):
         return f'{self.dimension.name} ({self.scope})'
 
     def clean(self) -> None:
+        if dataset_config.DIMENSION_HAS_SINGLE_SCOPE is False:
+            return
         # Check if there's already a scope for this dimension
         if self.pk is None:
             # Being created
