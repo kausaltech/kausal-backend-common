@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, ClassVar, Self
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from modelcluster.fields import ParentalKey
@@ -159,6 +160,17 @@ class DimensionScope(OrderedModel, PermissionedModel):
 
     def __str__(self):
         return f'{self.dimension.name} ({self.scope})'
+
+    def clean(self) -> None:
+        # Check if there's already a scope for this dimension
+        if self.pk is None:
+            # Being created
+            if self.dimension.scopes.exists():
+                raise ValidationError(_('Only one scope per dimension is allowed'))
+            return
+
+        if self.dimension.scopes.exclude(pk=self.pk).exists():
+            raise ValidationError(_('Only one scope per dimension is allowed'))
 
 
 class DatasetSchema(ClusterableModel, PermissionedModel):
