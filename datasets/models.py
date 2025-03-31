@@ -37,9 +37,9 @@ if TYPE_CHECKING:
 
     from ..models.types import FK, RevMany
     with contextlib.suppress(ImportError):
-        from nodes.models import InstanceConfig  # type: ignore
-
         from actions.models import Plan  # type: ignore
+
+        from nodes.models import InstanceConfig  # type: ignore
 
 
 class DimensionQuerySet(PermissionedQuerySet['Dimension']):
@@ -101,6 +101,15 @@ class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, Perm
     def __str__(self):
         return self.name_i18n
 
+    def __rich_repr__(self) -> RichReprResult:
+        yield 'uuid', self.uuid
+        yield 'name', self.name
+        scopes = list(self.scopes.all())
+        if len(scopes) == 1:
+            yield 'scope', scopes[0].scope
+        else:
+            yield 'scopes', [scope.scope for scope in scopes]
+
 
 class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, PermissionedModel):
     identifier = IdentifierField[str | None, str | None](
@@ -128,10 +137,15 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, 
             ),
         )
 
-    def __str__(self):
-        if self.label:
+    def __str__(self) -> str:
+        if self.label_i18n:
             return f'{self.label_i18n} ({self.uuid})'
         return str(self.uuid)
+
+    def __rich_repr__(self) -> RichReprResult:
+        yield 'uuid', self.uuid
+        yield 'label', self.label
+        yield 'dimension', self.dimension
 
     def filter_siblings(self, qs: models.QuerySet[DimensionCategory]) -> models.QuerySet[DimensionCategory]:
         return qs.filter(dimension=self.dimension)
@@ -177,6 +191,9 @@ class DimensionScope(OrderedModel, PermissionedModel):
                 name='unique_identifier_per_dimension_scope',
             ),
         )
+
+    def __str__(self):
+        return f'{self.dimension.name} ({self.scope})'
 
 
 class DatasetSchema(ClusterableModel, PermissionedModel):
@@ -437,8 +454,12 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
         return get_permission_policy('DATASET_PERMISSION_POLICY')
 
     def clear_scope_instance_cache(self):
+        if self.scope_content_type is None:
+            return
         if (self.scope_content_type.app_label == 'nodes' and
                 self.scope_content_type.model == 'instanceconfig'):
+            if self.scope is None:
+                return
             ic = self.scope
             ic.invalidate_cache()
 
