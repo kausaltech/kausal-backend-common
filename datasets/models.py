@@ -226,7 +226,7 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         verbose_name=_('start date'),
         blank=True,
         null=True,
-        help_text=("For a newly created dataset, start entering values from this year"),
+        help_text=_('For a newly created dataset, start entering values from this year'),
     )
 
     i18n = TranslationField(fields=['name'])
