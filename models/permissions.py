@@ -2,15 +2,19 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Self, cast
 from typing_extensions import TypeVar
 
 from django.db import models
 from django.db.models import QuerySet
 from graphql import GraphQLError
+from modeltrans.manager import MultilingualManager
+from modeltrans.translator import get_i18n_field
 from pydantic import BaseModel, Field
 
 from kausal_common.models.permission_policy import ALL_OBJECT_SPECIFIC_ACTIONS
+
+from .types import ModelManager
 
 if TYPE_CHECKING:
     from rich.repr import RichReprResult
@@ -62,6 +66,38 @@ class PermissionedQuerySet(QuerySet[_Model, _Model]):
         return self._pp.filter_by_perm(self, user, 'delete')
     def modifiable_by(self, user: UserOrAnon) -> Self:
         return self._pp.filter_by_perm(self, user, 'change')
+
+
+_PM = TypeVar("_PM", bound=PermissionedModel, covariant=True)  # noqa: PLC0105
+_PQS = TypeVar(  # noqa: PLC0105
+    "_PQS",
+    bound=PermissionedQuerySet[PermissionedModel],
+    default=PermissionedQuerySet[_PM], covariant=True
+)
+
+class PermissionedManager(MultilingualManager[_PM], ModelManager[_PM, _PQS]):
+    """
+    Manager for PermissionedModel instances.
+
+    Will return instances of `PermissionedQuerySet`, unless overridden by a subclass.
+    If the model has an i18n field, the queryset will also inherit from `MultilingualQuerySet`.
+    """
+
+    _queryset_class: type[QuerySet]
+
+    def __init__(self) -> None:
+        super().__init__()
+        if self._queryset_class is QuerySet:
+            self._queryset_class = PermissionedQuerySet
+
+    if TYPE_CHECKING:
+        def _patch_queryset[QS: QuerySet[Any]](self, qs: QS) -> QS: ...
+
+    def get_queryset(self) -> _PQS:  # type: ignore[override]
+        qs = super(ModelManager, self).get_queryset()
+        if get_i18n_field(self.model):
+            qs = self._patch_queryset(qs)
+        return cast('_PQS', qs)
 
 
 class ModelAction(Enum):
