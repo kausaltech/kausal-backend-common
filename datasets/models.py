@@ -15,13 +15,13 @@ from wagtail.admin.panels.inline_panel import InlinePanel
 
 from kausal_common.datasets.permission_policy import get_permission_policy
 from kausal_common.models.fields import IdentifierField
-from kausal_common.models.permission_policy import ModelPermissionPolicy
+from kausal_common.models.permission_policy import ModelPermissionPolicy, ParentInheritedPolicy
 from kausal_common.models.uuid import UUIDIdentifiedModel
 
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
-from ..models.permissions import PermissionedModel, PermissionedQuerySet
-from ..models.types import ModelManager, RevMany
+from ..models.permissions import PermissionedManager, PermissionedModel, PermissionedQuerySet
+from ..models.types import M2M, ModelManager, RevMany
 from .config import dataset_config
 
 if TYPE_CHECKING:
@@ -42,46 +42,6 @@ if TYPE_CHECKING:
         from nodes.models import InstanceConfig  # type: ignore
 
 
-class DimensionQuerySet(PermissionedQuerySet['Dimension']):
-    pass
-
-
-class DimensionCategoryQuerySet(PermissionedQuerySet['DimensionCategory']):
-    pass
-
-
-class DatasetSchemaQuerySet(PermissionedQuerySet['DatasetSchema']):
-    pass
-
-
-class DatasetMetricQuerySet(PermissionedQuerySet['DatasetMetric']):
-    pass
-
-
-class DatasetSchemaDimensionQuerySet(PermissionedQuerySet['DatasetSchemaDimension']):
-    pass
-
-
-class DatasetSchemaScopeQuerySet(PermissionedQuerySet['DatasetSchemaScope']):
-    pass
-
-
-class DataPointQuerySet(PermissionedQuerySet['DataPoint']):
-    pass
-
-
-class DataPointCommentQuerySet(PermissionedQuerySet['DataPointComment']):
-    pass
-
-
-class DataSourceQuerySet(PermissionedQuerySet['DataSource']):
-    pass
-
-
-class DatasetSourceReferenceQuerySet(PermissionedQuerySet['DatasetSourceReference']):
-    pass
-
-
 class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, PermissionedModel):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=100, verbose_name=_('name'))
@@ -90,8 +50,9 @@ class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, Perm
     name_i18n: str
 
     scopes: RevMany[DimensionScope]
-    objects: ClassVar[DimensionQuerySet] = DimensionQuerySet.as_manager() # pyright: ignore
-    _default_manager: ClassVar[DimensionQuerySet]
+
+    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
+    _default_manager: ClassVar[PermissionedManager[Self]]
 
     class Meta:
         verbose_name = _('dimension')
@@ -102,13 +63,15 @@ class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, Perm
         return self.name_i18n
 
     def __rich_repr__(self) -> RichReprResult:
+        yield 'pk', self.pk
         yield 'uuid', self.uuid
         yield 'name', self.name
-        scopes = list(self.scopes.all())
-        if len(scopes) == 1:
-            yield 'scope', scopes[0].scope
-        else:
-            yield 'scopes', [scope.scope for scope in scopes]
+        if self.pk:
+            scopes = list(self.scopes.all())
+            if len(scopes) == 1:
+                yield 'scope', scopes[0].scope
+            else:
+                yield 'scopes', [scope.scope for scope in scopes]
 
 
 class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, PermissionedModel):
@@ -119,13 +82,14 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, 
         max_length=200,
     )
     dimension = ParentalKey(Dimension, blank=False, on_delete=models.CASCADE, related_name='categories')
+    dimension_id: int
     label = models.CharField(max_length=100, verbose_name=_('label'))
 
     i18n = TranslationField(fields=['label'])
     label_i18n: str
 
-    objects: ClassVar[DimensionCategoryQuerySet] = DimensionCategoryQuerySet.as_manager() # pyright: ignore
-    _default_manager: ClassVar[DimensionCategoryQuerySet]
+    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
+    _default_manager: ClassVar[PermissionedManager[Self]]
 
     class Meta:
         verbose_name = _('dimension category')
@@ -145,7 +109,8 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, 
     def __rich_repr__(self) -> RichReprResult:
         yield 'uuid', self.uuid
         yield 'label', self.label
-        yield 'dimension', self.dimension
+        if self.dimension_id:
+            yield 'dimension', self.dimension
 
     def filter_siblings(self, qs: models.QuerySet[DimensionCategory]) -> models.QuerySet[DimensionCategory]:
         return qs.filter(dimension=self.dimension)
@@ -157,7 +122,7 @@ class DimensionScopeQuerySet(PermissionedQuerySet['DimensionScope']):
 
 
 _DimensionScopeManager = models.Manager.from_queryset(DimensionScopeQuerySet)
-class DimensionScopeManager(ModelManager['DimensionScope', DimensionScopeQuerySet], _DimensionScopeManager):  # pyright: ignore
+class DimensionScopeManager(ModelManager['DimensionScope', DimensionScopeQuerySet], _DimensionScopeManager):
     """Model manager for DimensionScope."""
 del _DimensionScopeManager
 
@@ -232,12 +197,10 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     i18n = TranslationField(fields=['name'])
     name_i18n: str
 
-    objects: models.Manager[DatasetSchema]
-
     datasets: RevMany[Dataset]
 
-    objects: ClassVar[DatasetSchemaQuerySet] = DatasetSchemaQuerySet.as_manager() # pyright: ignore
-    _default_manager: ClassVar[DatasetSchemaQuerySet]
+    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
+    _default_manager: ClassVar[PermissionedManager[Self]]
 
     panels = [
         FieldPanel(
@@ -343,8 +306,8 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
 
     i18n = TranslationField(fields=('label', 'unit'))
 
-    objects: ClassVar[DatasetMetricQuerySet] = DatasetMetricQuerySet.as_manager() # pyright: ignore
-    _default_manager: ClassVar[DatasetMetricQuerySet]
+    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
+    _default_manager: ClassVar[PermissionedManager[Self]]
 
     def __str__(self):
         return self.label or self.name or str(self.uuid)
@@ -361,8 +324,8 @@ class DatasetSchemaDimension(OrderedModel, PermissionedModel):
     schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='dimensions', null=False, blank=False)
     dimension = models.ForeignKey(Dimension, on_delete=models.CASCADE, related_name='schemas', null=False, blank=False)
 
-    objects: ClassVar[DatasetSchemaDimensionQuerySet] = DatasetSchemaDimensionQuerySet.as_manager() # pyright: ignore
-    _default_manager: ClassVar[DatasetSchemaDimensionQuerySet]
+    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
+    _default_manager: ClassVar[PermissionedManager[Self]]
 
     class Meta:
         verbose_name = _('dataset schema dimension')
@@ -417,7 +380,7 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
 
     objects: ClassVar[DatasetManager] = DatasetManager()
     mgr: ClassVar[DatasetManager] = DatasetManager()
-    _default_manager: ClassVar[DatasetQuerySet]
+    _default_manager: ClassVar[DatasetManager]
 
     class Meta:  # pyright:ignore
         verbose_name = _('dataset')
@@ -474,8 +437,8 @@ class DatasetSchemaScope(PermissionedModel):
         'scope_content_type', 'scope_id',
     )
 
-    objects: ClassVar[DatasetSchemaScopeQuerySet] = DatasetSchemaScopeQuerySet.as_manager() # pyright: ignore
-    _default_manager: ClassVar[DatasetSchemaScopeQuerySet]
+    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
+    _default_manager: ClassVar[PermissionedManager[Self]]
 
     class Meta:
         verbose_name = _('dataset schema scope')
@@ -500,8 +463,12 @@ class DataPoint(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     dataset = models.ForeignKey(
         Dataset, related_name='data_points', on_delete=models.CASCADE, verbose_name=_('dataset'),
     )
-    dimension_categories = models.ManyToManyField(
-        DimensionCategory, related_name='data_points', blank=True, verbose_name=_('dimension categories'),
+    dimension_categories: M2M[DimensionCategory, DataPointDimensionCategory] = models.ManyToManyField(
+        DimensionCategory,
+        through='DataPointDimensionCategory',
+        related_name='data_points',
+        blank=True,
+        verbose_name=_('dimension categories'),
     )
     date = models.DateField(
         verbose_name=_('date'),
@@ -522,10 +489,10 @@ class DataPoint(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
         blank=True,
     )
 
-    objects: ClassVar[DataPointQuerySet] = DataPointQuerySet.as_manager() # pyright: ignore
-    _default_manager: ClassVar[DataPointQuerySet]
+    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
+    _default_manager: ClassVar[PermissionedManager[Self]]
 
-    class Meta:  # pyright:ignore
+    class Meta:
         verbose_name = _('data point')
         verbose_name_plural = _('data points')
         ordering = ('date',)
@@ -549,6 +516,38 @@ class DataPoint(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     @classmethod
     def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
         return get_permission_policy('DATA_POINT_PERMISSION_POLICY')
+
+
+class DataPointDimensionCategory(models.Model):
+    """Through model for the many-to-many relationship between DataPoint and DimensionCategory."""
+
+    datapoint = models.ForeignKey(
+        DataPoint,
+        on_delete=models.CASCADE,
+        related_name='dimension_category_links',
+        db_column='datapoint_id',
+    )
+    dimension_category = models.ForeignKey(
+        DimensionCategory,
+        on_delete=models.PROTECT,  # Prevents deletion of dimension categories used by datapoints
+        related_name='datapoint_links',
+        db_column='dimensioncategory_id',
+    )
+
+    class Meta:
+        verbose_name = _('data point dimension category')
+        verbose_name_plural = _('data point dimension categories')
+        unique_together = ('datapoint', 'dimension_category')
+        # Use the table name from the autogenerated m2m relation
+        db_table = 'datasets_datapoint_dimension_categories'
+
+    def __str__(self):
+        return f'{self.datapoint.uuid} / {self.dimension_category.uuid}'
+
+    def __rich_repr__(self) -> RichReprResult:
+        yield 'datapoint', self.datapoint
+        yield 'dimension_category', self.dimension_category
+
 
 
 class DataPointComment(UserModifiableModel, PermissionedModel):
@@ -581,8 +580,8 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
         'users.User', null=True, on_delete=models.SET_NULL, related_name='resolved_comments',
     )
 
-    objects: ClassVar[DataPointCommentQuerySet] = DataPointCommentQuerySet.as_manager() # pyright: ignore
-    _default_manager: ClassVar[DataPointCommentQuerySet]
+    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
+    _default_manager: ClassVar[PermissionedManager[Self]]
 
     def __str__(self):
         return 'Comment on datapoint %s (created by %s at %s)' % (self.datapoint, self.created_by, self.created_at)
@@ -620,8 +619,8 @@ class DataSource(UserModifiableModel, PermissionedModel):
     description = models.TextField(null=True, blank=True, verbose_name=_('description'))
     url = models.URLField(verbose_name=_('URL'), null=True, blank=True)
 
-    objects: ClassVar[DataSourceQuerySet] = DataSourceQuerySet.as_manager() # pyright: ignore
-    _default_manager: ClassVar[DataSourceQuerySet]
+    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
+    _default_manager: ClassVar[PermissionedManager[Self]]
 
     def get_label(self):
         name, *rest = [p for p in (self.name, self.authority, self.edition) if p is not None]
@@ -652,8 +651,8 @@ class DatasetSourceReference(UserModifiableModel, PermissionedModel):
     )
     data_source = models.ForeignKey(DataSource, on_delete=models.PROTECT, related_name='references')
 
-    objects: ClassVar[DatasetSourceReferenceQuerySet] = DatasetSourceReferenceQuerySet.as_manager() # pyright: ignore
-    _default_manager: ClassVar[DatasetSourceReferenceQuerySet]
+    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
+    _default_manager: ClassVar[PermissionedManager[Self]]
 
     def __str__(self):
         dp = self.datapoint
