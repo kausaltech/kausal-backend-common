@@ -9,13 +9,16 @@ from kausal_common.deployment.gunicorn import get_gunicorn_hooks
 
 bind = "0.0.0.0:8000"
 #workers = min(multiprocessing.cpu_count() * 2 + 1, 4)
-workers = 2
+KUBE_MODE = env_bool('KUBERNETES_MODE', default=False)
+TEST_MODE = env_bool('TEST_MODE', default=False)
+# Use only one worker in test mode to avoid process isolation issues
+if TEST_MODE:
+    workers = 1
+else:
+    workers = 2
 threads = multiprocessing.cpu_count() * 2 + 1
 wsgi_app = '%s:application' % os.getenv('UWSGI_MODULE', f'{get_django_project_name()}.wsgi')
 forwarded_allow_ips = '*'
-
-KUBE_MODE = env_bool('KUBERNETES_MODE', default=False)
-TEST_MODE = env_bool('TEST_MODE', default=False)
 
 if False and (KUBE_MODE or TEST_MODE):  # noqa: SIM223
     # No preloading until Python 3.14; Polars will deadlock otherwise
