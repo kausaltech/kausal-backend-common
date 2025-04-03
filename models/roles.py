@@ -3,10 +3,10 @@ from __future__ import annotations
 import abc
 from dataclasses import dataclass, field
 from functools import cache, cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Protocol, cast, overload
-from django.contrib.auth import get_permission_codename
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Protocol, cast, overload, override
 from typing_extensions import TypeVar
 
+from django.contrib.auth import get_permission_codename
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.checks import CheckMessage, Error
@@ -146,6 +146,11 @@ class Role(abc.ABC, ConcreteRoleProtocol):
     def refresh(self):
         group, _ = Group.objects.get_or_create(name=str(self.name))
         self._update_model_perms(group)
+
+    @property
+    def grant_admin_ui_access(self) -> bool:
+        # Override for roles that grant the user admin UI access
+        return False
 
     def __rich_repr__(self) -> Generator[tuple[str, Any], Any, None]:
         yield 'id', self.id
@@ -331,6 +336,11 @@ class AdminRole[M: Model](InstanceSpecificRole[M], abc.ABC):
     ]
 
     page_perms = set(PAGE_PERMISSION_CODENAMES)
+
+    @property
+    @override
+    def grant_admin_ui_access(self) -> bool:
+        return True
 
 
 class RoleRegistry:
