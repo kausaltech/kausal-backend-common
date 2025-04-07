@@ -641,6 +641,10 @@ class DataSource(UserModifiableModel, PermissionedModel):
     def natural_key(self):
         return (str(self.uuid),)
 
+    @classmethod
+    def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
+        return get_permission_policy('DATA_SOURCE_PERMISSION_POLICY')
+
 
 class DatasetSourceReference(UserModifiableModel, PermissionedModel):
     datapoint: FK[DataPoint | None] = models.ForeignKey(
