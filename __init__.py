@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .mail.env import ENV_SCHEMA as MAIL_ENV_SCHEMA
 
 # kwargs to be added to arguments to django-environ's Env.__init__()
