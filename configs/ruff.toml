@@ -68,7 +68,8 @@ flake8-pytest-style.fixture-parentheses = false
 "../../**/tests/test_*" = [
   "PLR0913",
   "ANN202",  # no type annotations required for tests
-  "S106",   # skip inline password security checks
+  "S106",    # skip inline password security checks
+  "INP001",  # part of an implicit namespace package. Add an `__init__.py`
 ]
 "../../**/tests/*" = ["I002"]
 
