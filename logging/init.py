@@ -18,6 +18,8 @@ from .handler import LoguruLogger, get_rich_log_console, loguru_logfmt_sink, log
 if TYPE_CHECKING:
     from logging.config import _DictConfigArgs, _LoggerConfiguration
 
+    from loguru import BasicHandlerConfig
+
 type LogFormat = Literal['rich', 'logfmt']
 type _Level = int | str
 
@@ -124,6 +126,7 @@ def get_logging_conf(
             'markdown_it': level('INFO'),
             'colormath': level('INFO'),
             'gql': level('WARNING'),
+            'psycopg.pool': level('WARNING'),
             'psycopg': level('INFO'),
             'aiobotocore': level('INFO'),
             's3fs': level('INFO'),
@@ -173,10 +176,13 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
 
     from loguru._colorama import should_colorize
 
+    loguru_handlers: list[BasicHandlerConfig]
     if log_format == 'logfmt':
-        loguru_handlers = [dict(sink=loguru_logfmt_sink, format='{message}')]
+        logfmt_handler: BasicHandlerConfig = dict(sink=loguru_logfmt_sink, format='{message}')  # pyright: ignore
+        loguru_handlers = [logfmt_handler]
     else:
-        loguru_handlers = [dict(sink=loguru_rich_sink, format='{message}', colorize=should_colorize(sys.stdout))]
+        rich_handler: BasicHandlerConfig = dict(sink=loguru_rich_sink, format='{message}', colorize=should_colorize(sys.stdout))  # pyright: ignore
+        loguru_handlers = [rich_handler]
 
     # This configures loguru
     logger.configure(handlers=loguru_handlers)
