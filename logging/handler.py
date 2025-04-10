@@ -5,10 +5,11 @@ import sys
 import threading
 import traceback
 import warnings
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from logging import LogRecord, StreamHandler
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Sequence, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import loguru
 from logfmter.formatter import Logfmter
@@ -148,7 +149,7 @@ class RichLogHandler(RichHandler):
 
         scope_parts: list[Text] = []
 
-        def add_scope(style: str, key: str):
+        def add_scope(style: str, key: str) -> None:
             if key not in extra:
                 return
             val = extra.pop(key)
@@ -202,7 +203,7 @@ class RichLogHandler(RichHandler):
         path = Path(record.pathname).name
         level = self.get_level_text(record)
         time_format = None if self.formatter is None else self.formatter.datefmt
-        log_time = datetime.fromtimestamp(record.created)
+        log_time = datetime.fromtimestamp(record.created)  # noqa: DTZ006
 
         log_renderable = self._log_render(
             self.console,
@@ -236,6 +237,8 @@ class LogFmtFormatter(Logfmter):
             delattr(record, 'markup')
         if hasattr(record, '_extra_keys'):
             delattr(record, '_extra_keys')
+        if record.thread:
+            record.thread = threading.get_native_id()
         if markup and isinstance(record.msg, str):
             try:
                 record.msg = Text.from_markup(record.msg).plain
@@ -250,7 +253,6 @@ class LogFmtFormatter(Logfmter):
             del ret['taskName']
         if 'extra' in ret:
             del ret['extra']
-        ret['thread.id'] = threading.get_native_id()
         return ret
 
     def formatTime(self, record: logging.LogRecord, datefmt=None) -> str:  # noqa: N802
@@ -310,8 +312,7 @@ logging.setLogRecordFactory(LoguruLogRecord)
 
 class LoguruLogger(logging.Logger):
     def makeRecord(self, *args, **kwargs):  # noqa: N802
-        rec = cast(LoguruLogRecord, super().makeRecord(*args, **kwargs))
-
+        rec = cast('LoguruLogRecord', super().makeRecord(*args, **kwargs))
         extra = args[8]
         if extra is not None and isinstance(extra, dict):
             rec.extra_keys = list(extra.keys())
@@ -381,8 +382,12 @@ class LoguruLoggingHandler(logging.Handler):
                 break
 
         log = logger.opt(depth=depth + 1, exception=record.exc_info)
+        logging_attrs = {}
         extra_keys: list[str] | None = getattr(record, '_extra_keys', None)
         if extra_keys:
             extra = {key: getattr(record, key) for key in extra_keys if hasattr(record, key)}
-            log = log.bind(**extra)
+            logging_attrs.update(extra)
+        if 'name' not in logging_attrs:
+            logging_attrs['name'] = record.name
+        log = log.bind(**logging_attrs)
         log.log(record.levelname, record.getMessage())
