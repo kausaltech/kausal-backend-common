@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from users.models import User
 
 
-type UserOrAnon = "AbstractBaseUser | AnonymousUser"
+type UserOrAnon = "User | AnonymousUser"
 
 
 def is_authenticated(user: UserOrAnon) -> TypeGuard[User]:
