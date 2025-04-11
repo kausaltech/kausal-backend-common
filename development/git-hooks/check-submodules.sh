@@ -53,6 +53,8 @@ find_submodule_remote_ref() {
   return 0
 }
 
+
+
 # ------------------------------
 # $1 = path
 # $2 = the local revision that is being pushed to the remote
@@ -88,21 +90,27 @@ check_submodule_is_pushed() {
 
     pushd . > /dev/null
     cd ${BASH_REMATCH[1]} || exit 1
-    local l_remote_ref
-    l_remote_ref=$(find_submodule_remote_ref)
-    if git merge-base --is-ancestor "$target_commit" "$l_remote_ref" ; then
+
+    remote_branches="$(git branch -r --contains ${target_commit})"
+    if [[ $? -eq 0 && -n ${remote_branches} ]] ; then
+      # If pushing to the `main` branch, we need to check that the submodule is
+      # also pushed to the `main` branch.
+      if [[ $PRE_COMMIT_REMOTE_BRANCH == "refs/heads/main" ]]; then
+        if [[ ! ${remote_branches} =~ "origin/main" ]]; then
+          print_error "  Submodule [$l_path] is not pushed to the main branch on remote"
+          return 1
+        fi
+      fi
       print_success "  All is good with this submodule..."
       return 0
-    else
-      print_error "Stop! Pre-commit condition failed."
-      echo "Did you forget to push submodule [$l_path] to remote?"
-      echo "Cannot proceed until you do so."
-
-      print_warning_with_title "Checking" "${PRE_COMMIT_FROM_REF}..${PRE_COMMIT_TO_REF}"
-      print_warning_with_title "  Submodule remote ref" ${l_remote_ref}
-      print_warning_with_title "  Submodule local ref" ${l_hash}
-      return 1
     fi
+    print_error "Stop! Pre-commit condition failed."
+    echo "Did you forget to push submodule [$l_path] to remote?"
+    echo "Cannot proceed until you do so."
+
+    print_warning_with_title "Checking" "${PRE_COMMIT_FROM_REF}..${PRE_COMMIT_TO_REF}"
+    print_warning_with_title "  Submodule local ref" ${l_hash}
+    return 1
   done < "${SUBMODULE_CONFIG_FILE}"
 }
 
