@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypeGuard
 
 if TYPE_CHECKING:
-    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+    from django.contrib.auth.models import AnonymousUser
 
     from users.models import User
 
