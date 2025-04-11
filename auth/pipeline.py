@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, cast
 from loguru import logger
 from sentry_sdk import capture_exception
 from social_core.backends.oauth import OAuthAuth
+from social_core.exceptions import AuthForbidden
 
 from kausal_common.auth.msgraph import get_user_photo
 from kausal_common.deployment import env_bool
@@ -58,6 +59,8 @@ def get_username(details: dict[str, Any], backend, response, *args, **kwargs):
     generate username from the `new_uuid` using the
     `uuid_to_username` function.
     """
+    if backend.name == 'password':
+        return {'username': kwargs.get('uid')}
 
     user = details.get('user')
     if not user:
@@ -91,6 +94,9 @@ def find_user_by_email(backend, details, user=None, social=None, *args, **kwargs
 
 
 def create_or_update_user(backend, details, user, *args, **kwargs):
+    if backend.name == 'password':
+        return None
+
     if user is None:
         uuid = cast(str, details.get('uuid') or kwargs.get('uid'))
         user = User(uuid=uuid)
@@ -183,3 +189,11 @@ def store_end_session_url(details, backend, response, user=None, *args, **kwargs
     request.session['social_auth_end_session_url'] = end_session_url
     if 'id_token' in response:
         request.session['social_auth_id_token'] = response['id_token']
+
+def validate_user_password(strategy, backend, user, *args, **kwargs):
+    if backend.name != 'password':
+        return
+
+    password = strategy.request_data()['password']
+    if not user.check_password(password) or not user.is_active:
+        raise AuthForbidden(backend)
