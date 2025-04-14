@@ -85,6 +85,43 @@ class DataPointSerializer(serializers.ModelSerializer):
         model = DataPoint
         fields = ['uuid', 'dataset', 'dimension_categories', 'date', 'value', 'metric']
 
+    def validate(self, data):
+        """Validate that no duplicate data point exists with the same date and dimension category combination."""
+        date = data.get('date')
+        dimension_categories = data.get('dimension_categories')
+        dataset = self.context['view'].kwargs.get('dataset_uuid')
+
+        if not all([date, dimension_categories, dataset]):
+            return data
+
+        # Skip validation on update (when we have an instance)
+        if self.instance:
+            return data
+
+        # For each data point, find all points in the same dataset with the same date
+        # based on the resolution
+        dataset_object = Dataset.objects.get(uuid=dataset)
+        if dataset_object.schema.time_resolution != dataset_object.schema.TimeResolution.YEARLY:
+            raise ValueError('Only yearly time resolution supported currently.')
+        existing_points = DataPoint.objects.filter(
+            dataset__uuid=dataset,
+            date__year=date.year,
+        ).prefetch_related('dimension_categories')
+
+        if not existing_points.exists():
+            return data
+
+        dimension_category_uuids = set(dc.uuid for dc in dimension_categories)
+
+        for point in existing_points:
+            point_categories = set(dc.uuid for dc in point.dimension_categories.all())
+            if point_categories == dimension_category_uuids:
+                raise serializers.ValidationError(
+                    "A data point with this date and dimension category combination already exists."
+                )
+
+        return data
+
     def create(self, validated_data):
         dimension_categories = validated_data.pop('dimension_categories')
         data_point = super().create(validated_data)
