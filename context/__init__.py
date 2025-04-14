@@ -10,7 +10,7 @@ def get_django_project_name() -> DjangoProjectName:
     for project_name in ('aplans', 'paths'):
         spec = find_spec(project_name)
         if spec is not None:
-            return cast(DjangoProjectName, project_name)
+            return cast('DjangoProjectName', project_name)
     raise RuntimeError('No Django project found')
 
 
