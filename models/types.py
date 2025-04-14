@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from typing import type_check_only
 
     from django.db.models.fields.related_descriptors import (
+        ManyRelatedManager,
         ManyToManyDescriptor,
         RelatedManager,
         ReverseManyToOneDescriptor,
@@ -50,16 +51,27 @@ if TYPE_CHECKING:
     @type_check_only
     class ReverseManyToOneDescriptorQS[To: Model, QS: QuerySet[Any]](ReverseManyToOneDescriptor[To]):
         @overload    # type: ignore
-        def __get__(self, instance: Model, cls: Any = ...) -> RelatedManagerQS[_To, QS]: ...  # type: ignore
+        def __get__(self, instance: Model, cls: Any = ...) -> RelatedManagerQS[To, QS]: ...  # type: ignore
+
+    @type_check_only
+    class ManyRelatedManagerQS[To: Model, Through: Model, QS: QuerySet[Any]](ManyRelatedManager[To, Through]):  # pyright: ignore
+        def get_queryset(self) -> QS: ...  # pyright: ignore
+
+    @type_check_only
+    class ManyToManyDescriptorQS[To: Model, Through: Model, QS: QuerySet[Any]](ManyToManyDescriptor[To, Through]):
+        @overload    # type: ignore
+        def __get__(self, instance: Model, cls: Any = ...) -> ManyRelatedManagerQS[To, Through, QS]: ...  # type: ignore
+
 
 type RevMany[To: Model] = ReverseManyToOneDescriptor[To]
 type RevManyQS[To: Model, QS: QuerySet[Any]] = ReverseManyToOneDescriptorQS[To, QS]
 type RevManyToMany[To: Model, Through: Model] = ManyToManyDescriptor[To, Through]
+type RevManyToManyQS[To: Model, Through: Model, QS: QuerySet[Any]] = ManyToManyDescriptorQS[To, Through, QS]
 
 type OneToOne[To: Model | None] = OneToOneField[To, To]
 type RevOne[From: Model, To: Model] = ReverseOneToOneDescriptor[From, To]
 
-M2M: TypeAlias = ManyToManyField[_To, _Through]  # pyright: ignore  # noqa: UP040
+M2M: TypeAlias = ManyToManyField[_To, _Through]  # pyright: ignore
 
 _M = TypeVar("_M", bound=Model, covariant=True)  # noqa: PLC0105
 _QS = TypeVar("_QS", bound=QuerySet[Model, Model], default=QuerySet[_M, _M], covariant=True)  # noqa: PLC0105
