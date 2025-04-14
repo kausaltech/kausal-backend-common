@@ -65,7 +65,7 @@ class DataSourceViewSet(SnippetViewSet):
         active_obj = None
         if default_scope_app == 'nodes':
             active_obj = user.get_active_instance()
-        elif default_scope_app == "actions":
+        elif default_scope_app == 'actions':
             active_obj = user.get_active_admin_plan()
         if not active_obj:
             return DataSource.objects.none()
