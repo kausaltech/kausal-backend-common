@@ -58,5 +58,19 @@ class DataSourceViewSet(SnippetViewSet):
         FieldPanel('url'),
     ]
 
+    def get_queryset(self, request):
+        qs = DataSource.objects.all()
+        user = request.user
+        default_scope_app, default_scope_model = dataset_config.DATA_SOURCE_DEFAULT_SCOPE_CONTENT_TYPE
+        active_obj = None
+        if default_scope_app == 'nodes':
+            active_obj = user.get_active_instance()
+        elif default_scope_app == "actions":
+            active_obj = user.get_active_admin_plan()
+        if not active_obj:
+            return DataSource.objects.none()
+
+        scope_content_type = ContentType.objects.get(app_label=default_scope_app, model=default_scope_model)
+        return qs.filter(scope_content_type=scope_content_type, scope_id=active_obj.id)
 
 register_snippet(DataSourceViewSet)
