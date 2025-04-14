@@ -13,19 +13,19 @@ from modeltrans.fields import TranslationField
 from wagtail.admin.panels.field_panel import FieldPanel
 from wagtail.admin.panels.inline_panel import InlinePanel
 
+from kausal_common.const import IS_PATHS, IS_WATCH
 from kausal_common.datasets.permission_policy import get_permission_policy
 from kausal_common.models.fields import IdentifierField
-from kausal_common.models.permission_policy import ModelPermissionPolicy, ParentInheritedPolicy
+from kausal_common.models.permission_policy import ModelPermissionPolicy
 from kausal_common.models.uuid import UUIDIdentifiedModel
 
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
 from ..models.permissions import PermissionedManager, PermissionedModel, PermissionedQuerySet
-from ..models.types import M2M, ModelManager, RevMany
+from ..models.types import M2M, ModelManager, RevMany, RevManyToManyQS
 from .config import dataset_config
 
 if TYPE_CHECKING:
-    import contextlib
     from typing import Self
 
     from rich.repr import RichReprResult
@@ -36,10 +36,10 @@ if TYPE_CHECKING:
     from users.models import User
 
     from ..models.types import FK, RevMany
-    with contextlib.suppress(ImportError):
-        from actions.models import Plan  # type: ignore
-
-        from nodes.models import InstanceConfig  # type: ignore
+    if IS_PATHS:
+        from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
+    elif IS_WATCH:
+        from actions.models import Plan
 
 
 class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, PermissionedModel):
@@ -50,6 +50,7 @@ class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, Perm
     name_i18n: str
 
     scopes: RevMany[DimensionScope]
+    categories: RevMany[DimensionCategory]
 
     objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
     _default_manager: ClassVar[PermissionedManager[Self]]
@@ -159,6 +160,9 @@ class DimensionScope(OrderedModel, PermissionedModel):
 
     def __str__(self):
         return f'{self.dimension.name} ({self.scope})'
+
+    def filter_siblings(self, qs: models.QuerySet[DimensionScope]) -> models.QuerySet[DimensionScope]:
+        return qs.filter(scope_content_type=self.scope_content_type, scope_id=self.scope_id)
 
 
 class DatasetSchema(ClusterableModel, PermissionedModel):
@@ -336,16 +340,18 @@ class DatasetSchemaDimension(OrderedModel, PermissionedModel):
 
 
 class DatasetQuerySet(PermissionedQuerySet['Dataset']):
-    def for_instance_config(self, instance_config: InstanceConfig) -> Self:
-        return self.filter(
-            scope_content_type=ContentType.objects.get_for_model(instance_config),
-            scope_id=instance_config.pk,
-        )
+    if IS_PATHS:
+        def for_instance_config(self, instance_config: InstanceConfig) -> Self:
+            return self.filter(
+                scope_content_type=ContentType.objects.get_for_model(instance_config),
+                scope_id=instance_config.pk,
+            )
 
-    def for_plan(self, plan: Plan) -> Self:
-        from actions.models import Plan  # type: ignore
+    if IS_WATCH:
+        def for_plan(self, plan: Plan) -> Self:
+            from actions.models import Plan  # type: ignore
 
-        return self.filter(scope_content_type=ContentType.objects.get_for_model(Plan), scope_id=plan.pk)
+            return self.filter(scope_content_type=ContentType.objects.get_for_model(Plan), scope_id=plan.pk)
 
 
 _DatasetManager = models.Manager.from_queryset(DatasetQuerySet)
@@ -377,6 +383,9 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     scope = GenericForeignKey(
         'scope_content_type', 'scope_id',
     )
+
+    if IS_PATHS:
+        nodes: RevManyToManyQS[NodeConfig, NodeDataset, NodeConfigQuerySet]
 
     objects: ClassVar[DatasetManager] = DatasetManager()
     mgr: ClassVar[DatasetManager] = DatasetManager()
