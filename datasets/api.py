@@ -246,9 +246,17 @@ class DimensionCategoryViewSet(viewsets.ModelViewSet):
         dimension = Dimension.objects.get(uuid=dimension_uuid)
         serializer.save(dimension=dimension)
 
+class UserSerializer(serializers.Serializer):
+     full_name = serializers.SerializerMethodField()
+
+     def get_full_name(self, instance):
+         return instance.get_full_name()
 
 class DataPointCommentSerializer(serializers.ModelSerializer):
     datapoint = serializers.SlugRelatedField(slug_field='uuid', read_only=True)
+    created_by = UserSerializer(read_only=True)
+    last_modified_by = UserSerializer(read_only=True)
+    resolved_by = UserSerializer(read_only=True)
 
     class Meta:
         model = DataPointComment
