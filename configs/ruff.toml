@@ -75,6 +75,7 @@ flake8-pytest-style.fixture-parentheses = false
 
 [lint.pylint]
 max-args = 10
+max-returns = 10
 
 [lint.isort]
 split-on-trailing-comma = true
