@@ -118,8 +118,9 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, 
 
 
 class DimensionScopeQuerySet(PermissionedQuerySet['DimensionScope']):
-    def for_instance_config(self, instance_config: InstanceConfig) -> Self:
-        return self.filter(scope_content_type=ContentType.objects.get_for_model(instance_config), scope_id=instance_config.pk)
+    if IS_PATHS:
+        def for_instance_config(self, instance_config: InstanceConfig) -> Self:
+            return self.filter(scope_content_type=ContentType.objects.get_for_model(instance_config), scope_id=instance_config.pk)
 
 
 _DimensionScopeManager = models.Manager.from_queryset(DimensionScopeQuerySet)

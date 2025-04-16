@@ -153,7 +153,7 @@ class DjangoNode(DjangoObjectType, Generic[M]):
                 field.resolver = apply_hints(resolver)
 
     @classmethod
-    def __init_subclass_with_meta__(cls, **kwargs: Any) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]  # noqa: ANN401
+    def __init_subclass_with_meta__(cls, **kwargs: Any) -> None:  # type: ignore[override]  # noqa: ANN401
         if 'name' not in kwargs:
             # Remove the trailing 'Node' from the object types
             name = cls.__name__

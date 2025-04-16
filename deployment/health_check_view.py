@@ -93,7 +93,7 @@ def check_ram_usage(pre_gc: MemoryLimit | None = None) -> dict:
     total_ram = 0
     known_parent_prefices = ('gunicorn', 'uwsgi', 'python')
     is_coordinator = any(parent.name().startswith(pfx) for pfx in known_parent_prefices) if parent else False
-    if is_coordinator:
+    if is_coordinator and parent:
         for child in parent.children(recursive=True):
             mem = MemoryLimit.from_psutil(child.pid)
             workers.append(dict(pid=child.pid, rss_mib=mem.current_mib))
