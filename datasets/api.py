@@ -4,9 +4,13 @@ import typing
 
 # from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from modeltrans.conf import get_available_languages
 from modeltrans.translator import get_i18n_field
 from modeltrans.utils import build_localized_fieldname
+
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 from rest_framework import permissions, serializers, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.routers import DefaultRouter, SimpleRouter
@@ -299,50 +303,67 @@ class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
             datapoint__dataset__uuid=self.kwargs['dataset_uuid']
         ).select_related('datapoint', 'created_by', 'last_modified_by', 'resolved_by')
 
-
-class DatasetSourceReferenceSerializer(serializers.ModelSerializer):
+class BaseSourceReferenceSerializer(serializers.ModelSerializer):
     data_source = serializers.SlugRelatedField(slug_field='uuid', queryset=DataSource.objects.all())
-    datapoint = serializers.SlugRelatedField(slug_field='uuid', queryset=DataPoint.objects.all(), required=False)
-    dataset = serializers.SlugRelatedField(slug_field='uuid', queryset=Dataset.objects.all(), required=False)
 
     class Meta:
         model = DatasetSourceReference
-        fields = ['datapoint', 'dataset', 'data_source']
+        fields = ['data_source']
 
-    def validate(self, data):
-        """
-        Check that exactly one of datapoint or dataset is provided.
-        """
-        datapoint = data.get('datapoint')
-        dataset = data.get('dataset')
+class DatapointSourceReferenceViewSet(viewsets.ModelViewSet):
+    lookup_field = 'uuid'
+    serializer_class = BaseSourceReferenceSerializer
+    permission_classes = (permissions.DjangoModelPermissions,)
 
-        if bool(datapoint) == bool(dataset):
-            raise serializers.ValidationError("Exactly one of datapoint or dataset must be provided")
+    def get_queryset(self):
+        return DatasetSourceReference.objects.filter(
+            datapoint__uuid=self.kwargs['datapoint_uuid']
+        ).select_related('data_source')
 
-        return data
-
+    def perform_create(self, serializer):
+        datapoint = DataPoint.objects.get(uuid=self.kwargs['datapoint_uuid'])
+        serializer.save(datapoint=datapoint, dataset=None)
 
 class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
     lookup_field = 'uuid'
-    serializer_class = DatasetSourceReferenceSerializer
-    permission_classes = (
-        permissions.DjangoModelPermissions,
+    serializer_class = BaseSourceReferenceSerializer
+    permission_classes = (permissions.DjangoModelPermissions,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='reference_target',
+                description="Type of entity the sources are linked to ('dataset', 'datapoint', or 'all'). Defaults to 'dataset'.",
+                type=OpenApiTypes.STR,
+                enum=['dataset', 'datapoint', 'all'],
+                default='dataset',
+                required=False
+            )
+        ],
+        description="List all sources for a dataset with optional filtering by reference target."
     )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
-        if 'datapoint_uuid' in self.kwargs:
-            return DatasetSourceReference.objects.filter(datapoint__uuid=self.kwargs['datapoint_uuid'])
-        elif 'dataset_uuid' in self.kwargs:
-            return DatasetSourceReference.objects.filter(dataset__uuid=self.kwargs['dataset_uuid'])
-        return DatasetSourceReference.objects.none()
+        dataset_uuid = self.kwargs['dataset_uuid']
+        reference_target = self.request.query_params.get('reference_target', 'dataset')
+
+        if reference_target == 'datapoint':
+            return DatasetSourceReference.objects.filter(
+                datapoint__dataset__uuid=dataset_uuid
+            ).select_related('datapoint', 'data_source')
+        elif reference_target == 'all':
+            return DatasetSourceReference.objects.filter(
+                Q(dataset__uuid=dataset_uuid) |
+                Q(datapoint__dataset__uuid=dataset_uuid)
+            ).select_related('datapoint', 'data_source')
+        else: # default to dataset
+            return DatasetSourceReference.objects.filter(dataset__uuid=dataset_uuid)
 
     def perform_create(self, serializer):
-        if 'datapoint_uuid' in self.kwargs:
-            datapoint = DataPoint.objects.get(uuid=self.kwargs['datapoint_uuid'])
-            serializer.save(datapoint=datapoint, dataset=None)
-        elif 'dataset_uuid' in self.kwargs:
-            dataset = Dataset.objects.get(uuid=self.kwargs['dataset_uuid'])
-            serializer.save(dataset=dataset, datapoint=None)
+        dataset = Dataset.objects.get(uuid=self.kwargs['dataset_uuid'])
+        serializer.save(dataset=dataset, datapoint=None)
 
 
 class DataSourceSerializer(serializers.ModelSerializer):
@@ -436,7 +457,7 @@ datapoint_router = NestedSimpleRouter(dataset_router, r'data_points', lookup='da
 datapoint_router.register(r'comments', DataPointCommentViewSet, basename='datapointcomment')
 dataset_router.register(r'comments', DatasetCommentsViewSet, basename='datasetcomment')
 
-datapoint_router.register(r'sources', DatasetSourceReferenceViewSet, basename='datapointsource')
+datapoint_router.register(r'sources', DatapointSourceReferenceViewSet, basename='datapointsource')
 dataset_router.register(r'sources', DatasetSourceReferenceViewSet, basename='datasetsource')
 
 router.register(r'data_sources', DataSourceViewSet, basename='datasource')
