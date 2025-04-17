@@ -332,28 +332,28 @@ class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name='source_type',
-                description="Type of sources to retrieve ('dataset', 'datapoint', or 'all'). Defaults to 'dataset'.",
+                name='reference_target',
+                description="Type of entity the sources are linked to ('dataset', 'datapoint', or 'all'). Defaults to 'dataset'.",
                 type=OpenApiTypes.STR,
                 enum=['dataset', 'datapoint', 'all'],
                 default='dataset',
                 required=False
             )
         ],
-        description="List all sources for a dataset with optional filtering by source_type."
+        description="List all sources for a dataset with optional filtering by reference target."
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
         dataset_uuid = self.kwargs['dataset_uuid']
-        source_type = self.request.query_params.get('source_type', 'dataset')
+        reference_target = self.request.query_params.get('reference_target', 'dataset')
 
-        if source_type == 'datapoint':
+        if reference_target == 'datapoint':
             return DatasetSourceReference.objects.filter(
                 datapoint__dataset__uuid=dataset_uuid
             ).select_related('datapoint', 'data_source')
-        elif source_type == 'all':
+        elif reference_target == 'all':
             return DatasetSourceReference.objects.filter(
                 Q(dataset__uuid=dataset_uuid) |
                 Q(datapoint__dataset__uuid=dataset_uuid)
