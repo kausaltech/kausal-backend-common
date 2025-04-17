@@ -4,6 +4,7 @@ import typing
 
 # from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from modeltrans.conf import get_available_languages
 from modeltrans.translator import get_i18n_field
 from modeltrans.utils import build_localized_fieldname
@@ -333,7 +334,19 @@ class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
         if 'datapoint_uuid' in self.kwargs:
             return DatasetSourceReference.objects.filter(datapoint__uuid=self.kwargs['datapoint_uuid'])
         elif 'dataset_uuid' in self.kwargs:
-            return DatasetSourceReference.objects.filter(dataset__uuid=self.kwargs['dataset_uuid'])
+            dataset_uuid = self.kwargs['dataset_uuid']
+            source_type = self.request.query_params.get('source_type', 'dataset')
+            if source_type == 'datapoint':
+                return DatasetSourceReference.objects.filter(
+                    datapoint__dataset__uuid=dataset_uuid
+                ).select_related('datapoint', 'data_source')
+            elif source_type == 'all':
+                return DatasetSourceReference.objects.filter(
+                    Q(dataset__uuid=dataset_uuid) |
+                    Q(datapoint__dataset__uuid=dataset_uuid)
+                ).select_related('datapoint', 'data_source')
+            else: # default to dataset
+                return DatasetSourceReference.objects.filter(dataset__uuid=dataset_uuid)
         return DatasetSourceReference.objects.none()
 
     def perform_create(self, serializer):
