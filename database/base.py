@@ -14,7 +14,7 @@ from psycopg.errors import InterfaceError, OperationalError
 class DatabaseWrapper(PostgisDatabaseWrapper):
     def __init__(self, settings_dict: dict[str, Any], alias: str = DEFAULT_DB_ALIAS):
         opts = settings_dict.setdefault('OPTIONS', {})
-        opts.setdefault('pool', True)
+        opts.setdefault('pool', dict(min_size=4, max_size=30, max_idle=10))
         settings_dict.setdefault('CONN_HEALTH_CHECKS', True)
         super().__init__(settings_dict, alias=alias)
 
