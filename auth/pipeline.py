@@ -83,7 +83,7 @@ def find_user_by_email(backend, details, user=None, social=None, *args, **kwargs
 
     details['email'] = details['email'].lower()
     try:
-        user = User.objects.get(email=details['email'])
+        user = User.objects.get(email__iexact=details['email'])
     except User.DoesNotExist:
         return None
 
