@@ -121,11 +121,11 @@ def _wrap_method[F: Callable](func: F, op: str, get_desc: Callable | None = None
             desc = get_desc(*args, **kwargs)
         else:
             desc = None
-        with sentry_sdk.start_span(op=op, description=desc):
+        with sentry_sdk.start_span(op=op, name=desc):
             return func(*args, **kwargs)
 
     setattr(wrap_with_span, '_sentry_wrapped', True)  # noqa: B010
-    return cast(F, wrap_with_span)
+    return cast('F', wrap_with_span)
 
 
 def _patch_django_init() -> None:
@@ -147,22 +147,25 @@ class NullTransport(sentry_sdk.Transport):
     def capture_envelope(self, envelope: Envelope):
         pass
 
-DISABLED_DEFAULT_INTEGRATIONS = {'modules', 'argv', 'loguru', 'logging'}
+DISABLED_DEFAULT_INTEGRATIONS = {'modules', 'argv', 'loguru', 'logging', 'graphene', 'strawberry', 'aiohttp', 'gql', 'tornado'}
 
 def _get_integrations() -> list[Integration]:
     from sentry_sdk.integrations import iter_default_integrations
+    from sentry_sdk.integrations.boto3 import Boto3Integration
+    from sentry_sdk.integrations.celery import CeleryIntegration
     from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.redis import RedisIntegration
 
     integrations: list[Integration] = []
-    for integration_cls in iter_default_integrations(True):  # noqa: FBT003
+    for integration_cls in iter_default_integrations(False):  # noqa: FBT003
         if integration_cls.identifier in DISABLED_DEFAULT_INTEGRATIONS:
             continue
-        integration: Integration
-        if integration_cls is DjangoIntegration:
-            integration = DjangoIntegration(middleware_spans=False)
-        else:
-            integration = integration_cls()
+        integration = integration_cls()
         integrations.append(integration)
+    integrations.append(DjangoIntegration(middleware_spans=False))
+    integrations.append(Boto3Integration())
+    integrations.append(CeleryIntegration())
+    integrations.append(RedisIntegration())
     return integrations
 
 
