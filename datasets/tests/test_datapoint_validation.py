@@ -66,7 +66,7 @@ def dataset(dataset_factory, schema):
 
 
 @pytest.fixture
-def existing_datapoint(data_point_factory, dataset, metric, dimension_categories):
+def existing_data_point(data_point_factory, dataset, metric, dimension_categories):
     category1, _ = dimension_categories
     return data_point_factory(
         dataset=dataset,
@@ -79,7 +79,7 @@ def existing_datapoint(data_point_factory, dataset, metric, dimension_categories
 
 @pytest.fixture
 def serializer_context(dataset, api_factory):
-    request = api_factory.post(f'/datasets/{dataset.uuid}/datapoints/')
+    request = api_factory.post(f'/datasets/{dataset.uuid}/data_points/')
     return {
         'view': type('obj', (object,), {
             'kwargs': {'dataset_uuid': str(dataset.uuid)}
@@ -88,8 +88,8 @@ def serializer_context(dataset, api_factory):
     }
 
 
-def test_duplicate_datapoint_validation(existing_datapoint, metric, dimension_categories, serializer_context):
-    """Test that trying to create a duplicate datapoint raises validation error."""
+def test_duplicate_data_point_validation(existing_data_point, metric, dimension_categories, serializer_context):
+    """Test that trying to create a duplicate data_point raises validation error."""
     category1, _ = dimension_categories
 
     data = {
@@ -108,8 +108,8 @@ def test_duplicate_datapoint_validation(existing_datapoint, metric, dimension_ca
     assert 'A data point with this date and dimension category combination already exists' in str(exc_info.value)
 
 
-def test_different_dimension_categories_passes(existing_datapoint, metric, dimension_categories, serializer_context):
-    """Test that creating datapoints with different dimension categories passes."""
+def test_different_dimension_categories_passes(existing_data_point, metric, dimension_categories, serializer_context):
+    """Test that creating data points with different dimension categories passes."""
     _, category2 = dimension_categories
 
     data = {
@@ -124,8 +124,8 @@ def test_different_dimension_categories_passes(existing_datapoint, metric, dimen
     assert serializer.is_valid()
 
 
-def test_different_date_passes(existing_datapoint, metric, dimension_categories, serializer_context):
-    """Test that creating datapoints with different dates passes."""
+def test_different_date_passes(existing_data_point, metric, dimension_categories, serializer_context):
+    """Test that creating data points with different dates passes."""
     category1, _ = dimension_categories
 
     data = {
