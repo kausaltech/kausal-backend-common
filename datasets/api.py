@@ -341,11 +341,13 @@ class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
         ).select_related('data_point', 'created_by', 'last_modified_by', 'resolved_by')
 
 class BaseSourceReferenceSerializer(serializers.ModelSerializer):
+    data_point = serializers.SlugRelatedField(slug_field='uuid', queryset=DataPoint.objects.all())
+    dataset = serializers.SlugRelatedField(slug_field='uuid', queryset=Dataset.objects.all())
     data_source = serializers.SlugRelatedField(slug_field='uuid', queryset=DataSource.objects.all())
 
     class Meta:
         model = DatasetSourceReference
-        fields = ['data_source']
+        fields = ['data_point', 'dataset', 'data_source']
 
 class DataPointSourceReferenceViewSet(viewsets.ModelViewSet):
     lookup_field = 'uuid'
