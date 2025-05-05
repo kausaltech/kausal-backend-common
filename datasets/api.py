@@ -314,10 +314,10 @@ class DataPointCommentViewSet(viewsets.ModelViewSet):
     )
 
     def get_queryset(self):
-        return DataPointComment.objects.filter(data_point__uuid=self.kwargs['data_point_uuid'])
+        return DataPointComment.objects.filter(data_point__uuid=self.kwargs['datapoint_uuid'])
 
     def perform_create(self, serializer):
-        data_point_uuid = self.kwargs['data_point_uuid']
+        data_point_uuid = self.kwargs['datapoint_uuid']
         data_point = DataPoint.objects.get(uuid=data_point_uuid)
         serializer.save(
             data_point=data_point,
@@ -356,11 +356,11 @@ class DataPointSourceReferenceViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return DatasetSourceReference.objects.filter(
-            data_point__uuid=self.kwargs['data_point_uuid']
+            data_point__uuid=self.kwargs['datapoint_uuid']
         ).select_related('data_source')
 
     def perform_create(self, serializer):
-        data_point = DataPoint.objects.get(uuid=self.kwargs['data_point_uuid'])
+        data_point = DataPoint.objects.get(uuid=self.kwargs['datapoint_uuid'])
         serializer.save(data_point=data_point, dataset=None)
 
 class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
