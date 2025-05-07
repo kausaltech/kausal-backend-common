@@ -21,7 +21,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='datasetsourcereference',
             name='uuid',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, unique=False),
         ),
         migrations.RunPython(generate_uuids, migrations.RunPython.noop),
+        migrations.AlterField(
+            model_name='datasetsourcereference',
+            name='uuid',
+            field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+        ),
     ]
