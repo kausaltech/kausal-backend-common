@@ -347,7 +347,7 @@ class BaseSourceReferenceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DatasetSourceReference
-        fields = ['data_point', 'dataset', 'data_source']
+        fields = ['uuid', 'data_point', 'dataset', 'data_source']
 
 class DataPointSourceReferenceViewSet(viewsets.ModelViewSet):
     lookup_field = 'uuid'

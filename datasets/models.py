@@ -658,6 +658,11 @@ class DataSource(UserModifiableModel, PermissionedModel):
 
 
 class DatasetSourceReference(UserModifiableModel, PermissionedModel):
+    """
+    Link a data source to a data point or dataset.
+    """
+
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     data_point: FK[DataPoint | None] = models.ForeignKey(
         DataPoint, null=True, on_delete=models.CASCADE, related_name='source_references'
     )
