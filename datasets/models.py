@@ -321,6 +321,10 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
         yield 'schema', self.schema
         yield 'name', self.name
 
+    def clean(self):
+        # Remember that this is not called automatically by save()
+        dataset_config.validate_unit(self.unit)
+
     def filter_siblings(self, qs: models.QuerySet[DatasetMetric]) -> models.QuerySet[DatasetMetric]:
         return qs.filter(schema=self.schema)
 
