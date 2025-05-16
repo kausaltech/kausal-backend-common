@@ -148,11 +148,8 @@ class SnippetViewSet(Generic[_ModelT, _FormT], ModelViewSet[_ModelT, _FormT]):
 
     def __init__(self, **kwargs: Any) -> None: ...
 
-    @cached_property
-    def url_prefix(self) -> str: ...
-
-    @cached_property
-    def url_namespace(self) -> str: ...
+    url_prefix: cached_property[str] | str
+    url_namespace: cached_property[str] | str
 
     @property
     def revisions_revert_view_class(self) -> type[Any]: ...
