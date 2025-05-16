@@ -46,7 +46,8 @@ class DjangoObjectType[M: Model](ObjectType):
         **options,
     ) -> None: ...
 
-    def resolve_id(self, info) -> str:
+    @staticmethod
+    def resolve_id(root, info) -> str:
         ...
 
     @classmethod

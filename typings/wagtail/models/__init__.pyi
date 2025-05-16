@@ -653,7 +653,7 @@ class Page(  # pyright: ignore[reportGeneralTypeIssues]
         Return the Site object that this page belongs to.
         """
     @classmethod
-    def get_indexed_objects(cls) -> QuerySet[Page]: ...
+    def get_indexed_objects(cls) -> PageQuerySet: ...
     def get_indexed_instance(self) -> Page: ...
     @classmethod
     def clean_subpage_models(cls) -> Sequence[type[Page]]:
@@ -1161,9 +1161,8 @@ class WorkflowStateQuerySet(models.QuerySet):
         Filters to only WorkflowStates for the given instance
         """
 
-#_WorkflowStateManager = models.Manager['WorkflowState'].from_queryset(WorkflowStateQuerySet)
-#class WorkflowStateManager(_WorkflowStateManager):
-#    def get_queryset(self) -> WorkflowStateQuerySet: ...
+class WorkflowStateManager(Manager[WorkflowState]):
+    def get_queryset(self) -> WorkflowStateQuerySet: ...
 
 
 class WorkflowState(models.Model):
@@ -1183,8 +1182,8 @@ class WorkflowState(models.Model):
     requested_by: Incomplete
     current_task_state: Incomplete
     on_finish: Incomplete
-    objects: ClassVar[Manager[WorkflowState]]  # pyright: ignore
-    _default_manager: ClassVar[Manager[WorkflowState]]
+    objects: ClassVar[WorkflowStateManager]  # pyright: ignore
+    _default_manager: ClassVar[WorkflowStateManager]
 
     def clean(self) -> None: ...
     def save(self, *args, **kwargs): ...

@@ -34,7 +34,7 @@ type StreamFieldNamedBlock = tuple[str, Block[Any]]
 type StreamFieldBlocks = Block[Any] | type[Block[Any]] | Sequence[StreamFieldNamedBlock]
 
 
-class StreamField(models.Field[Any, StreamValue]):
+class StreamField[GT: StreamValue | None = StreamValue](models.Field[Any, GT]):
     stream_block: Block
 
     @classmethod

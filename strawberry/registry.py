@@ -23,7 +23,6 @@ def register_strawberry_type[T: type](t: T | None = None) -> T | Callable[[T], T
         if type_ in strawberry_types:
             raise ValueError(f"Type {type_} is already registered")
         strawberry_types.add(type_)
-        return cast(T, type_)
+        return cast('T', type_)
 
     return wrapper if t is None else wrapper(t)
-
