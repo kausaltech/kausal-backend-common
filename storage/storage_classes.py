@@ -1,11 +1,16 @@
 from __future__ import annotations
 
-from django.core.files import File
+from functools import cached_property
+from typing import TYPE_CHECKING
+
 from django.core.files.storage import FileSystemStorage, Storage
 from django.utils.deconstruct import deconstructible
 
 from storages.backends.s3boto3 import S3Boto3Storage
 from storages.utils import setting
+
+if TYPE_CHECKING:
+    from django.core.files import File
 
 
 class MediaFilesS3Storage(S3Boto3Storage):
@@ -79,3 +84,8 @@ class LocalMediaStorageWithS3Fallback(Storage):
         if self.fs_storage.exists(name):
             return self.fs_storage.url(name)
         return self.s3_storage.url(name)
+
+    @cached_property
+    def location(self) -> str:
+        return str(self.fs_storage.location)
+
