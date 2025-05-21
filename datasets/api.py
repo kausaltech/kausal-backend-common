@@ -330,6 +330,7 @@ class DataPointCommentViewSet(viewsets.ModelViewSet):
 
 
 class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
+    pagination_class = None
     serializer_class = DataPointCommentSerializer
     permission_classes = (
         permissions.DjangoModelPermissions,
@@ -350,6 +351,7 @@ class BaseSourceReferenceSerializer(serializers.ModelSerializer):
         fields = ['uuid', 'data_point', 'dataset', 'data_source']
 
 class DataPointSourceReferenceViewSet(viewsets.ModelViewSet):
+    pagination_class = None
     lookup_field = 'uuid'
     serializer_class = BaseSourceReferenceSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
@@ -364,6 +366,7 @@ class DataPointSourceReferenceViewSet(viewsets.ModelViewSet):
         serializer.save(data_point=data_point, dataset=None)
 
 class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
+    pagination_class = None
     lookup_field = 'uuid'
     serializer_class = BaseSourceReferenceSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
