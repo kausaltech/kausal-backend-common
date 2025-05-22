@@ -20,7 +20,7 @@ class BaseLoggedRequest(models.Model):
     def save(self, *args, **kwargs):
         result = super().save(*args, **kwargs)
         date_cutoff = timezone.now() - timedelta(days=settings.REQUEST_LOG_MAX_DAYS)
-        self.__class__.objects.filter(created_at__lt=date_cutoff).delete()
+        self.__class__.objects.filter(created_at__lt=date_cutoff).delete() # type: ignore
         return result
 
     def __str__(self):
