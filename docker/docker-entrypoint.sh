@@ -50,7 +50,9 @@ if [ $needs_db -eq 1 ]; then
     if [ $needs_migrations -eq 1 ] && [ "$KUBERNETES_MODE" != "1" ]; then
         echo "Running database migrations..."
         python manage.py migrate --no-input
-        if [ "$TEST_MODE" == "1" ]; then
+        if [ "$TEST_MODE" == "1" ] && [ "$TEST_TYPE" != "watch" ]; then
+            # Only populate paths test instances here
+            # Watch test plans will be populated after server starts
             populate_paths_test_instances
         fi
     fi
