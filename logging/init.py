@@ -225,6 +225,12 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
         patch_traceback()
         install()
 
+    # gunicorn and uvicorn walk their own path with logging, so they need special treatment
+    for logger_name in ('gunicorn.access', 'gunicorn.error', 'uvicorn.access', 'uvicorn.error'):
+        gunicorn_logger = logging.getLogger(logger_name)
+        gunicorn_logger.handlers = []
+        gunicorn_logger.propagate = True
+
     return level
 
 

@@ -5,7 +5,6 @@ from functools import cache
 from typing import TYPE_CHECKING, Literal, cast
 
 from loguru import logger
-from oauth2_provider.models import IDToken
 
 from kausal_common.const import IS_PATHS, IS_WATCH
 
@@ -17,7 +16,7 @@ if TYPE_CHECKING:
     from rest_framework.request import Request
 
     from oauth2_provider.contrib.rest_framework import OAuth2Authentication
-    from oauth2_provider.models import AccessToken
+    from oauth2_provider.models import AccessToken, IDToken
 
     from kausal_common.deployment.types import LoggedHttpRequest
 
@@ -96,7 +95,7 @@ class TokenAuthResult:
     def token_type(self) -> Literal['id_token', 'access_token'] | None:
         if self.token is None:
             return None
-        if isinstance(self.token, IDToken):
+        if 'IDToken' in self.token.__class__.__name__:
             return 'id_token'
         return 'access_token'
 

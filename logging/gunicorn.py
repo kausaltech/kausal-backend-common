@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 from django.conf import settings
 
 from gunicorn.glogging import Logger as BaseLogger
-from loguru import logger
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -13,14 +13,13 @@ if TYPE_CHECKING:
     from gunicorn.http.message import Request
     from gunicorn.http.wsgi import Response
 
-access_log = logger.bind(name='gunicorn.access')
-error_log = logger.bind(name='gunicorn.error')
-
+access_log = logging.getLogger('gunicorn.access')
+error_log = logging.getLogger('gunicorn.error')
 
 class Logger(BaseLogger):
     def setup(self, cfg):
         super().setup(cfg)
-        # self.error_log = error_log
+        self.error_log = error_log
         self.access_log = access_log
 
     def access(self, resp: Response, req: Request, environ: dict[str, str], request_time: timedelta):
@@ -31,6 +30,7 @@ class Logger(BaseLogger):
                 level = 'ERROR'
             if status >= 400:
                 level = 'WARNING'
+        level_map = logging.getLevelNamesMapping()
         remote_addr = req.remote_addr
         if isinstance(remote_addr, tuple):
             remote_addr = ':'.join(str(x) for x in remote_addr)
@@ -45,4 +45,4 @@ class Logger(BaseLogger):
             request_body_size=len(req.body.buf.getbuffer()),
             user_agent=environ.get('HTTP_USER_AGENT'),
         )
-        access_log.bind(**args).log(level, '%s %s' % (req.method, req.path))
+        access_log.log(level_map[level], '%s %s' % (req.method, req.path), extra=args)
