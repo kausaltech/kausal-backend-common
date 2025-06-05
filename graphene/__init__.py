@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import functools
 import re
-from enum import Enum
 from typing import TYPE_CHECKING, Any, Generic
 from typing_extensions import TypeVar
 
@@ -16,10 +15,9 @@ from modeltrans.translator import get_i18n_field
 import graphene_django_optimizer as gql_optimizer
 from graphene_pydantic import PydanticObjectType
 
-from kausal_common.graphene.utils import create_from_dataclass
 from kausal_common.i18n.helpers import get_language_from_default_language_field
-from kausal_common.models.permission_policy import ALL_OBJECT_SPECIFIC_ACTIONS, ObjectSpecificAction
-from kausal_common.models.permissions import ModelAction, PermissionedModel, UserPermissions, get_user_permissions_for_instance
+from kausal_common.models.permissions import PermissionedModel, UserPermissions, get_user_permissions_for_instance
+from kausal_common.strawberry.context import GraphQLContext
 from kausal_common.users import is_authenticated
 
 if TYPE_CHECKING:
@@ -32,6 +30,7 @@ if TYPE_CHECKING:
     from graphql import GraphQLResolveInfo
     from modeltrans.fields import TranslationField
 
+    from kausal_common.const import IS_PATHS
     from kausal_common.users import UserOrAnon
 
     @type_check_only
@@ -39,9 +38,14 @@ if TYPE_CHECKING:
         user: UserOrAnon  # type: ignore[override]
         graphql_query_language: str
 
-    @type_check_only
-    class GQLInfo(GraphQLResolveInfo):
-        context: GQLContext  # type: ignore[override]
+    if IS_PATHS:
+        @type_check_only
+        class GQLInfo(GraphQLResolveInfo):
+            context: GraphQLContext
+    else:
+        @type_check_only
+        class GQLInfo(GraphQLResolveInfo):
+            context: GQLContext  # type: ignore[override]
 
 
 class ModelWithI18n(Model):
@@ -93,10 +97,18 @@ class DjangoNodeMeta:
     interfaces: Iterable[type[Interface]]
 
 
+def _get_user(info: GQLInfo) -> UserOrAnon:
+    if isinstance(info.context, GraphQLContext):
+        user = info.context.get_user()
+    else:
+        user = info.context.user
+    return user
+
+
 def resolve_user_roles(obj: Model, info: GQLInfo) -> list[str]:
     assert isinstance(obj, PermissionedModel)
-    user = info.context.user
-    if not is_authenticated(user):
+    user = _get_user(info)
+    if user is None or not is_authenticated(user):
         return []
 
     roles = user.perms.get_roles_for_instance(obj)
@@ -113,7 +125,8 @@ class UserPermissionsType(PydanticObjectType):
 
 def resolve_user_permissions(obj: PermissionedModel, info: GQLInfo) -> UserPermissions:
     assert isinstance(obj, PermissionedModel)
-    return get_user_permissions_for_instance(info.context.user, obj)
+    user = _get_user(info)
+    return get_user_permissions_for_instance(user, obj)
 
 
 UserRolesField = graphene.List(graphene.NonNull(graphene.String), required=False)
@@ -153,7 +166,7 @@ class DjangoNode(DjangoObjectType, Generic[M]):
                 field.resolver = apply_hints(resolver)
 
     @classmethod
-    def __init_subclass_with_meta__(cls, **kwargs: Any) -> None:  # type: ignore[override]  # noqa: ANN401
+    def __init_subclass_with_meta__(cls, **kwargs: Any) -> None:  # type: ignore[override]
         if 'name' not in kwargs:
             # Remove the trailing 'Node' from the object types
             name = cls.__name__

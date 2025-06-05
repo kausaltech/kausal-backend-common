@@ -11,6 +11,9 @@ if TYPE_CHECKING:
 
     from sentry_sdk import Scope
 
+    from kausal_common.auth.tokens import TokenAuthResult
+    from kausal_common.users import UserOrAnon
+
 
 class DeploymentEnvironmentType(Enum):
     PRODUCTION = 'production'
@@ -58,10 +61,8 @@ def get_cluster_context() -> ClusterContext:
 
 
 if TYPE_CHECKING:
-    from users.models import User
-
     class LoggedHttpRequest(HttpRequest):
         correlation_id: str
-        client_ip: str | None
-        scope: Scope
-        user: User | None
+        sentry_scope: Scope
+        user: UserOrAnon
+        token_auth: TokenAuthResult | None

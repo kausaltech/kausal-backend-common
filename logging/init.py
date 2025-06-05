@@ -3,17 +3,20 @@ from __future__ import annotations
 import logging
 import warnings
 from dataclasses import dataclass
+from importlib.util import find_spec
 from logging.config import dictConfig
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from django.conf import settings
+from django.utils.termcolors import DEFAULT_PALETTE, PALETTES
 
 from loguru import logger
 
 from kausal_common.deployment import env_bool
 from kausal_common.logging.warnings import register_warning_handler, warning_traceback_enabled
 
-from .handler import LoguruLogger, get_rich_log_console, loguru_logfmt_sink, loguru_rich_sink
+from .handler import LoguruLogger, loguru_logfmt_sink
+from .rich_logger import get_rich_log_console, loguru_rich_sink
 
 if TYPE_CHECKING:
     from logging.config import _DictConfigArgs, _LoggerConfiguration
@@ -60,6 +63,7 @@ def get_logging_conf(
     level: GetHandler,
     options: UserLoggingOptions,
 ):
+    sentry_debug = env_bool('SENTRY_DEBUG', default=False)
     filters = _get_filters(options)
     config: _DictConfigArgs = {
         'version': 1,
@@ -122,7 +126,7 @@ def get_logging_conf(
             'numba': level('INFO'),
             'botocore': level('INFO'),
             'filelock': level('INFO'),
-            'sentry_sdk.errors': level('INFO'),
+            'sentry_sdk.errors': level('DEBUG' if sentry_debug else 'INFO'),
             'markdown_it': level('INFO'),
             'colormath': level('INFO'),
             'gql': level('WARNING'),
@@ -136,6 +140,8 @@ def get_logging_conf(
             'oauthlib.oauth2.rfc6749.endpoints': level('INFO'),
             'people.models': level('INFO' if options.people_verbose else 'WARNING'),
             'asyncio': level('INFO'),
+            'daphne': level('INFO'),
+            'daphne.server': level('WARNING'),
             '': level('DEBUG'),
         },
     }
@@ -251,6 +257,11 @@ def init_logging_django(
             'Parameter log_sql_queries is deprecated. Please use the options parameter instead.', DeprecationWarning, stacklevel=2
         )
         options.sql_queries = log_sql_queries
+
+    if find_spec('daphne') is not None:
+        from .rich_logger import patch_daphne_runserver
+
+        patch_daphne_runserver()
 
     conf = get_logging_conf(level, options)
     return conf

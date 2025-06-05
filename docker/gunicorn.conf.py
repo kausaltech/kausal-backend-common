@@ -18,6 +18,15 @@ else:
     workers = 2
 threads = multiprocessing.cpu_count() * 2 + 1
 wsgi_app = '%s:application' % os.getenv('UWSGI_MODULE', f'{get_django_project_name()}.wsgi')
+
+try:
+    import uvicorn  # noqa: F401
+except ImportError:
+    pass
+else:
+    worker_class = 'uvicorn.workers.UvicornWorker'
+    wsgi_app = '%s:application' % os.getenv('ASGI_MODULE', f'{get_django_project_name()}.asgi')
+
 forwarded_allow_ips = '*'
 
 if False and (KUBE_MODE or TEST_MODE):  # noqa: SIM223
@@ -25,7 +34,6 @@ if False and (KUBE_MODE or TEST_MODE):  # noqa: SIM223
     preload_app = True
 
 if KUBE_MODE or env_bool('KUBERNETES_LOGGING', default=False):
-    print('setting logger_class')
     logger_class = 'kausal_common.logging.gunicorn.Logger'
 else:
     access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'

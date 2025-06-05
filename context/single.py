@@ -20,7 +20,7 @@ class SingleValueContext[ValueT]:
         self._context_var = ContextVar(self.context_name)
 
     @contextmanager
-    def activate(self, value: ValueT) -> Generator[None, None, None]:
+    def activate(self, value: ValueT) -> Generator[None]:
         """
         Set this context as the currently active one.
 

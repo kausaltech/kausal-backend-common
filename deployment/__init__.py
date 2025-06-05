@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import functools
 import os
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Sequence, overload
+from typing import TYPE_CHECKING, overload
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -12,7 +13,7 @@ if TYPE_CHECKING:
 
 ENV_VARIABLE_PATTERN = re.compile(r'[A-Z][A-Z0-9_]*')
 
-
+@functools.cache
 def get_deployment_build_id() -> str | None:
     return os.getenv('BUILD_ID', None)
 

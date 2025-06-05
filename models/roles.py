@@ -4,9 +4,9 @@ import abc
 from dataclasses import dataclass, field
 from functools import cache, cached_property
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Protocol, cast, overload
-from django.contrib.auth import get_permission_codename
 from typing_extensions import TypeVar
 
+from django.contrib.auth import get_permission_codename
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.checks import CheckMessage, Error
@@ -20,7 +20,7 @@ from loguru import logger
 if TYPE_CHECKING:
     from collections.abc import Generator, Sequence
 
-    from django.utils.functional import _StrPromise as StrPromise  # type: ignore
+    from django_stubs_ext import StrPromise
     from wagtail.models.sites import Site
 
     from users.models import User
@@ -147,7 +147,7 @@ class Role(abc.ABC, ConcreteRoleProtocol):
         group, _ = Group.objects.get_or_create(name=str(self.name))
         self._update_model_perms(group)
 
-    def __rich_repr__(self) -> Generator[tuple[str, Any], Any, None]:
+    def __rich_repr__(self) -> Generator[tuple[str, Any], Any]:
         yield 'id', self.id
         yield 'name', self.name
 
@@ -314,7 +314,7 @@ class InstanceFieldGroupRole(Generic[_ModelT, _QS], InstanceSpecificRole[_ModelT
         Group.objects.get(id=g_id).delete()
 
     def get_instances_for_user(self, user: User) -> _QS:
-        return cast(_QS, self.model._default_manager.filter(self.role_q(user)).distinct())
+        return cast('_QS', self.model._default_manager.filter(self.role_q(user)).distinct())
 
     def role_q(self, user: User, prefix: str | None = None) -> Q:
         q_str = f'{self.instance_group_field_name}__in'
