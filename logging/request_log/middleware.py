@@ -73,7 +73,7 @@ class LogUnsafeRequestMiddleware(MiddlewareMixin):
                 raw_request += f'{header_name}: {value}\r\n'
 
         content_type = request.META.get('CONTENT_TYPE', '')
-        raw_request += f'Content-Type: {request.META["CONTENT_TYPE"]}\r\n'
+        raw_request += f'Content-Type: {content_type}\r\n'
         content_length = int(request.META.get('CONTENT_LENGTH', 0))
         if request.method == 'POST' and request.FILES:
             request_body = self._serialize_file_upload_request(request, content_type)
