@@ -81,7 +81,7 @@ def find_user_by_email(backend, details, user=None, social=None, *args, **kwargs
     if user is not None:
         return None
 
-    details['email'] = details['email'].lower()
+    details['email'] = details['email'].lower().strip()
     try:
         user = User.objects.get(email__iexact=details['email'])
     except User.DoesNotExist:
@@ -195,5 +195,5 @@ def validate_user_password(strategy, backend, user, *args, **kwargs):
         return
 
     password = strategy.request_data()['password']
-    if not user.check_password(password) or not user.is_active:
+    if user is None or not user.check_password(password) or not user.is_active:
         raise AuthForbidden(backend)
