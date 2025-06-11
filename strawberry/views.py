@@ -4,11 +4,13 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from django.http.request import HttpRequest
+from strawberry import UNSET
 from strawberry.channels import (
     ChannelsRequest,
     GraphQLWSConsumer as StrawberryGraphQLWSConsumer,
     SyncGraphQLHTTPConsumer as StrawberrySyncGraphQLHTTPConsumer,
 )
+from strawberry.channels.handlers.http_handler import ChannelsResponse, MultipartChannelsResponse
 from strawberry.django.views import GraphQLView as StrawberryGraphQLView
 from strawberry.http.temporal_response import TemporalResponse
 
@@ -102,6 +104,19 @@ class GraphQLWSConsumer[Context: GraphQLContext = GraphQLContext](StrawberryGrap
 
 class SyncGraphQLHTTPConsumer[Context: GraphQLContext = GraphQLContext](StrawberrySyncGraphQLHTTPConsumer[Context, None], ABC):
     context_class: type[Context]
+
+    async def run(  # type: ignore[override]
+        self,
+        request: ChannelsRequest,
+        context: Context | None = UNSET,
+        root_value: Any | None = UNSET,
+    ) -> ChannelsResponse | MultipartChannelsResponse:
+        if request.method and request.method.lower() == "options":
+            return ChannelsResponse(
+                content=b'',
+                status=200,
+            )
+        return await super().run(request, context=context, root_value=root_value)
 
     def get_base_context(self, request: ChannelsRequest, response: TemporalResponse) -> BaseContext:
         base_ctx = _get_base_context(request, response)

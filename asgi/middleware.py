@@ -39,10 +39,15 @@ class GeneralRequestMiddleware(BaseMiddleware):
 
 
 def HTTPMiddleware(inner: ASGIApplication) -> ASGIApplication:  # noqa: N802
+    from django.conf import settings
+
+    from asgi_cors import asgi_cors  # type: ignore[import-untyped]
+
     return SentryAsgiMiddleware(
         ProxyHeadersMiddleware(
             AuthMiddlewareStack(
-                GeneralRequestMiddleware(inner)
+                GeneralRequestMiddleware(
+                    asgi_cors(inner, allow_all=True, headers=settings.CORS_ALLOW_HEADERS))
             ),
             trusted_hosts='*'
         ),
