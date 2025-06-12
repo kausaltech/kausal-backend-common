@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, cast
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
+from wagtail import hooks
 from wagtail.admin.forms.models import WagtailAdminModelForm
 from wagtail.admin.panels import FieldPanel
 from wagtail.log_actions import log
@@ -89,3 +90,17 @@ class DataSourceViewSet(SnippetViewSet):
         return qs.filter(scope_content_type=scope_content_type, scope_id=active_obj.pk)
 
 register_snippet(DataSourceViewSet)
+
+
+@hooks.register('register_admin_viewset')
+def register_action_chooser_viewset():
+    from .choosers import DatasetChooserViewSet
+
+    return DatasetChooserViewSet('dataset_chooser', url_prefix='dataset-chooser')
+
+
+@hooks.register('register_group_permission_panel')
+def register_dataset_permissions_panel():
+    from .forms import GroupDatasetPermissionFormSet
+
+    return GroupDatasetPermissionFormSet
