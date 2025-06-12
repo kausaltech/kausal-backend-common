@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING, ClassVar, Self
 
+from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -365,6 +366,16 @@ class DatasetManager(ModelManager['Dataset', DatasetQuerySet], _DatasetManager):
 del _DatasetManager
 
 
+DATASET_PERMISSION_TYPES = [
+    ("add_dataset", _("Add"), _("Add datasets")),
+    ("change_dataset", _("Edit"), _("Edit datasets")),
+    ("delete_dataset", _("Delete"), _("Delete datasets")),
+    ("view_dataset", _("View"), _("Delete datasets")),
+]
+
+DATASET_PERMISSION_CODENAMES = [identifier for identifier, *_ in DATASET_PERMISSION_TYPES]
+
+
 class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     schema: FK[DatasetSchema | None] = models.ForeignKey(
         DatasetSchema, null=True, blank=True, related_name='datasets',
@@ -691,3 +702,58 @@ class DatasetSourceReference(UserModifiableModel, PermissionedModel):
         ordering = ('data_point__dataset', 'data_point')
         verbose_name = _('data source reference')
         verbose_name_plural = _('data source references')
+
+
+class GroupDatasetPermissionManager(models.Manager):
+    def create(self, **kwargs):
+        # Simplify creation of GroupDatasetPermission objects by allowing one
+        # of permission or permission_type to be passed in.
+        permission = kwargs.get('permission')
+        permission_type = kwargs.pop('permission_type', None)
+        if not permission and permission_type:
+            kwargs['permission'] = Permission.objects.get(
+                content_type=ContentType.objects.get_for_model(Dataset),
+                codename=f'{permission_type}_dataset',
+            )
+        return super().create(**kwargs)
+
+
+class GroupDatasetPermission(models.Model):
+    group = models.ForeignKey(
+        Group,
+        verbose_name=_('group'),
+        related_name='dataset_permissions',
+        on_delete=models.CASCADE,
+    )
+    dataset = models.ForeignKey(
+        'datasets.Dataset',
+        verbose_name=_('dataset'),
+        related_name='group_permissions',
+        on_delete=models.CASCADE,
+    )
+    permission = models.ForeignKey(
+        Permission,
+        verbose_name=_('permission'),
+        on_delete=models.CASCADE,
+    )
+
+    objects = GroupDatasetPermissionManager()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('group', 'dataset', 'permission'),
+                name='unique_dataset_permission',
+            ),
+        ]
+        verbose_name = _('group dataset permission')
+        verbose_name_plural = _('group dataset permissions')
+
+    def __str__(self):
+        return "Group %d ('%s') has permission '%s' on dataset %d ('%s')" % (
+            self.group.id,
+            self.group,
+            self.permission.codename,
+            self.dataset.id,
+            self.dataset,
+        )
