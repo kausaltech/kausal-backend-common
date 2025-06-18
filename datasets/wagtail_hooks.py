@@ -11,6 +11,7 @@ from wagtail.log_actions import log
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import CreateView, SnippetViewSet
 
+from kausal_common.admin_site.permissioned_views import PermissionedViewSet
 from kausal_common.const import IS_PATHS, IS_WATCH
 
 from .config import dataset_config
@@ -53,15 +54,14 @@ class DataSourceCreateView(CreateView[DataSource, DataSourceForm]):
         return instance
 
 
-class DataSourceViewSet(SnippetViewSet):
+class DataSourceViewSet(PermissionedViewSet):
     model = DataSource
     menu_label = _('Data sources')
     icon = 'doc-full'
     menu_order = 11
     add_to_settings_menu = True
     form_class = DataSourceForm
-
-
+    copy_view_enabled = False
     add_view_class = DataSourceCreateView  # type: ignore[override]
     panels = [
         FieldPanel('name'),
