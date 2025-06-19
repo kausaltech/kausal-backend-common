@@ -283,3 +283,6 @@ class ParentInheritedPolicy(Generic[_M, _ParentM, _QS], ModelPermissionPolicy[_M
             return False
         # Default to the permission to edit the parent object
         return self.parent_policy.user_has_perm(user, 'change', context)
+
+    def user_has_any_permission(self, user: User | AnonymousUser, actions: Sequence[str]) -> bool:
+        return self.parent_policy.user_has_any_permission(user, actions)
