@@ -203,6 +203,7 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     name_i18n: str
 
     datasets: RevMany[Dataset]
+    scopes: RevMany[DatasetSchemaScope]
 
     objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
     _default_manager: ClassVar[PermissionedManager[Self]]
