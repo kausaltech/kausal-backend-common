@@ -35,7 +35,8 @@ class DataSourceCreateView(CreateView[DataSource, DataSourceForm]):
         scope_content_type = ContentType.objects.get(app_label=default_scope_app, model=default_scope_model)
         scope_id: int
         if IS_PATHS and default_scope_app == 'nodes':
-            active_instance = user.get_active_instance()
+            from paths.context import realm_context
+            active_instance = realm_context.get().realm
             scope_id = active_instance.pk
         elif IS_WATCH and default_scope_app == "actions":
             active_plan = user.get_active_admin_plan()
@@ -76,12 +77,12 @@ class DataSourceViewSet(SnippetViewSet):
         default_scope_app, default_scope_model = dataset_config.DATA_SOURCE_DEFAULT_SCOPE_CONTENT_TYPE
         active_obj: Model
         if IS_PATHS:
-            active_obj = user.get_active_instance()
+            from paths.context import realm_context
+            active_obj = realm_context.get().realm
         elif IS_WATCH:
             active_obj = user.get_active_admin_plan()
         else:
             raise ImproperlyConfigured()
-
         if not active_obj:
             return DataSource.objects.none()
 
