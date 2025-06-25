@@ -1,31 +1,33 @@
 from __future__ import annotations
-from abc import abstractmethod
-from datetime import timedelta
+
 import io
 import logging
-from typing import ClassVar, TYPE_CHECKING
 import uuid
+from abc import abstractmethod
+from datetime import timedelta
+from pathlib import Path
+from typing import TYPE_CHECKING
 
-from modelcluster.models import ClusterableModel
-from modeltrans.fields import TranslationField
-import willow
+import reversion
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
-import reversion
-from users.models import User
+from modelcluster.models import ClusterableModel
+from modeltrans.fields import TranslationField
 from wagtail.search import index
-from pathlib import Path
+
+import willow
 from image_cropping import ImageRatioField
 
-
+from users.models import User
 
 if TYPE_CHECKING:
-    from kausal_common.models.types import FK, M2M, OneToOne, RevMany
+    from django.http import HttpRequest
 
-    from aplans.types import UserOrAnon
-    from users.models import User as UserModel
+    from kausal_common.models.types import FK, OneToOne
+    from kausal_common.users import UserOrAnon
+
     from orgs.models import Organization
 
 logger = logging.getLogger(__name__)
@@ -68,7 +70,7 @@ class BasePerson(index.Indexed, ClusterableModel):
     image_width = models.PositiveIntegerField(null=True, editable=False)
     avatar_updated_at = models.DateTimeField(null=True, editable=False)
 
-    created_by: FK[UserModel | None] = models.ForeignKey(
+    created_by: FK[User | None] = models.ForeignKey(
         User, related_name='created_persons', blank=True, null=True, on_delete=models.SET_NULL,
         verbose_name=_('created by'),
     )
@@ -157,7 +159,7 @@ class BasePerson(index.Indexed, ClusterableModel):
         self.image_cropping = ','.join([str(x) for x in (left, top, right, bottom)])
 
     @abstractmethod
-    def get_avatar_url(self, **kwargs) -> str | None:
+    def get_avatar_url(self, request: HttpRequest, size: str | None = None) -> str | None:
         raise NotImplementedError('This method should be implemented by subclasses')
 
     def save(self, *args, **kwargs):
