@@ -37,7 +37,14 @@ if TYPE_CHECKING:
 
     from ..models.types import FK, RevMany
     if IS_PATHS:
-        from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
+        from nodes.models import (
+            InstanceConfig,
+            InstanceRoleGroup,
+            InstanceRoleGroupDataset,
+            NodeConfig,
+            NodeConfigQuerySet,
+            NodeDataset,
+        )
     elif IS_WATCH:
         from actions.models import Plan
 
@@ -392,6 +399,7 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
 
     if IS_PATHS:
         nodes: RevManyToManyQS[NodeConfig, NodeDataset, NodeConfigQuerySet]
+        instance_role_groups_edges: RevMany[InstanceRoleGroupDataset]
 
     objects: ClassVar[DatasetManager] = DatasetManager()
     mgr: ClassVar[DatasetManager] = DatasetManager()
