@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from typing import Any, ClassVar, Generic, TypedDict, TypeVar
 
 from django.db.models import Model, QuerySet
@@ -116,7 +117,7 @@ class SnippetViewSet(Generic[_ModelT, _FormT], ModelViewSet[_ModelT, _FormT]):
     add_view_class: ClassVar[type[CreateView[_ModelT, _FormT]]]  # type: ignore[misc]
     copy_view_class: ClassVar[type[CopyView[_ModelT]]]  # type: ignore[misc,assignment]
     edit_view_class: ClassVar[type[EditView[_ModelT, _FormT]]]  # type: ignore[misc]
-    delete_view_class: ClassVar[type[DeleteView]]
+    delete_view_class: ClassVar[type[DeleteView]]  # type: ignore[misc]
     usage_view_class: ClassVar[type[UsageView]]
     history_view_class: ClassVar[type[HistoryView]]
     inspect_view_class: ClassVar[type[InspectView]]
