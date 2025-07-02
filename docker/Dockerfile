@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.17-labs
+
 ARG base_image=ubuntu:24.04
 
 FROM caddy:2 AS caddy
@@ -7,11 +9,15 @@ FROM caddy:2 AS caddy
 #
 FROM ${base_image} AS base
 
-ARG runtime_deps="libpq5 postgresql-client gettext \
+ARG POSTGRESQL_MAJOR_VERSION=16
+ARG UV_VERSION=0.7.15
+ARG ubuntu_codename="noble"
+
+ARG runtime_deps="libpq5 gettext \
     libproj25 ^libgdal3[2-9]$ libjpeg6[2345]-turbo$ libtiff6 libxml2 libffi8 libxslt1.1 \
     libwebp7 libvoikko1 voikko-fi curl \
     iputils-ping inetutils-telnet redis-tools restic procps git \
-    ca-certificates media-types nano less"
+    ca-certificates media-types nano less gnupg"
 ARG build_time_deps="libpq-dev build-essential \
     zlib1g-dev libjpeg-dev libtiff-dev libopenjp2-7-dev libwebp-dev \
     binutils libproj-dev libgdal-dev \
@@ -29,7 +35,7 @@ RUN if id -u ubuntu > /dev/null 2>&1 ; then userdel -r ubuntu ; fi
 ENV VIRTUAL_ENV=/venv
 ENV UV_HOME=/opt/uv
 ENV NVM_DIR=/opt/nvm
-ENV PATH=/venv/bin:$PATH
+ENV PATH=${VIRTUAL_ENV}/bin:$PATH
 ENV DEBIAN_FRONTEND=noninteractive TZ=UTC
 
 RUN mkdir -p ${app_path}
@@ -37,17 +43,39 @@ RUN mkdir -p ${app_path}
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
 # Upgrade .deb packages, and install runtime deps.
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  apt update && apt upgrade -y && apt install --no-install-recommends -y \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked <<EOF
+  set -e
+  echo Updating apt repositories
+  apt-get update -qq
+  echo Upgrading apt packages
+  apt-get upgrade -qq -y
+  echo Installing runtime deps
+  apt-get install -qq --no-install-recommends -y \
     ${runtime_deps}
+EOF
+
+RUN <<EOF
+  set -e
+  echo "deb https://apt.postgresql.org/pub/repos/apt ${ubuntu_codename}-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+  curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+EOF
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked <<EOF
+  set -e
+  echo Updating apt repositories
+  apt-get update -qq
+  echo Installing PostgreSQL client libraries
+  apt-get install -qq --no-install-recommends -y \
+    postgresql-client-16 postgresql-client-17
+  rm -rf /var/lib/apt/lists/*
+EOF
 
 #
 # Install node with nvm
 #
 RUN \
   mkdir -p $NVM_DIR && export METHOD=script ; export PROFILE=/dev/null ; \
-  curl -LsSf https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+  curl -LsSf https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 COPY .nvmrc ${app_path}/
 RUN \
   cd ${app_path} && \
@@ -58,34 +86,49 @@ RUN \
     ln -s $cmd /usr/local/bin ; \
   done
 
+# Leave the uv install script in the image, because it's useful for debugging.
+RUN <<EOF
+  set -e
+  cat  > /usr/local/bin/install-uv.sh <<FOE
+#!/bin/bash
+export UV_VERSION=${UV_VERSION}
+curl -LsSf https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-installer.sh | bash -s -- --quiet
+FOE
+  chmod a+x /usr/local/bin/install-uv.sh
+EOF
 
 #
 # Builder stage
 #
 FROM base AS builder
 
-ARG UV_VERSION=0.5.2
 
 # Install build-time deps, and clean the cache from stale packages.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  apt update && apt install --no-install-recommends -y \
-	${build_time_deps}
+    --mount=type=cache,target=/var/lib/apt,sharing=locked <<EOF
+  set -e
+  echo Updating apt repositories
+  apt-get update -qq
+  echo Installing build-time deps
+  apt-get install -qq --no-install-recommends -y \
+    ${build_time_deps}
+EOF
 
 # Install uv
 ENV \
   XDG_CACHE_HOME=/cache \
   UV_INSTALL_DIR=${UV_HOME} \
   UV_BIN=${UV_HOME}/uv \
+  UV_LINK_MODE=copy \
   UV_PYTHON_INSTALL_DIR=${UV_HOME}
-
-RUN \
-  curl -LsSf https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-installer.sh | sh
 
 WORKDIR ${app_path}
 
 COPY --chown=${app_user_uid}:${app_user_gid} \
   .python-version pyproject.toml ${app_path}/
+
+RUN --mount=type=cache,target=/cache \
+  /usr/local/bin/install-uv.sh
 
 RUN --mount=type=cache,target=/cache \
   ${UV_BIN} python install
@@ -96,30 +139,46 @@ RUN \
   echo ${UV_HOME}/*/lib | tee /etc/ld.so.conf.d/uv-python.conf && \
   ldconfig
 
-COPY requirements.txt requirements-prod.txt ${app_path}/
+COPY requirements.txt* requirements-prod.txt* uv.lock* ${app_path}/
 ENV CC=gcc
 # TODO: Should '--compile-bytecode' be included below?
 ENV PIP_INSTALL="$UV_BIN pip install --link-mode=copy"
 RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
-  LIBRARY_PATH=$(cat /etc/ld.so.conf.d/uv-python.conf) \
-  ${PIP_INSTALL} -r ${app_path}/requirements-prod.txt -r ${app_path}/requirements.txt
+    --mount=type=secret,id=EXTRA_PYPI_INDEX <<EOF
+  set -e
+  export LIBRARY_PATH=$(cat /etc/ld.so.conf.d/uv-python.conf)
+  . ${VIRTUAL_ENV}/bin/activate
+  # If uv.lock exists, we'll just do a "uv sync".
+  if [ -f uv.lock ] ; then
+    EXTRA_GROUPS=""
+    if [ -f /run/secrets/EXTRA_PYPI_INDEX ] ; then
+      export UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX)
+      EXTRA_GROUPS="--group kausal"
+    fi
+    ${UV_BIN} sync --no-dev --active --group prod $EXTRA_GROUPS --locked
+  else
+    ${PIP_INSTALL} -r requirements-prod.txt -r requirements.txt
+  fi
+EOF
 
 # If uWSGI is installed, check that it actually starts, and if not, purge the uv cache
 # and try again. uWSGI might be compiled with an old libc version.
-RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
-  if which uwsgi 2>&1 > /dev/null ; then \
-    if ! uwsgi --version > /dev/null ; then \
-      ${UV_BIN} cache clean uwsgi && \
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOF
+  set -e
+  if which uwsgi 2>&1 > /dev/null ; then
+    if ! uwsgi --version > /dev/null ; then
+      ${UV_BIN} cache clean uwsgi
       LIBRARY_PATH=$(cat /etc/ld.so.conf.d/uv-python.conf) \
-        ${PIP_INSTALL} --no-binary uwsgi --reinstall-package uwsgi uwsgi ; \
-        uwsgi --version ; \
-    fi \
+        ${PIP_INSTALL} --no-binary uwsgi --reinstall-package uwsgi uwsgi
+      uwsgi --version
+    fi
   fi
+EOF
 
 # Install extra dependencies
 COPY requirements-kausal.txt ${app_path}/
 RUN --mount=type=secret,id=EXTRA_PYPI_INDEX \
-    if [ -f /run/secrets/EXTRA_PYPI_INDEX ] ; then \
+    if [ -f /run/secrets/EXTRA_PYPI_INDEX -a -f ${app_path}/requirements-kausal.txt ] ; then \
         UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX) \
         ${PIP_INSTALL} -r ${app_path}/requirements-kausal.txt ; \
     fi
@@ -144,14 +203,14 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
 #
 FROM base AS final
 
-ENV VENV_PATH=/venv
-ENV PATH=${VENV_PATH}/bin:${PATH}
+ENV VIRTUAL_ENV=/venv
+ENV PATH=${VIRTUAL_ENV}/bin:${PATH}
 
 COPY --from=builder /opt/uv /opt/uv
 RUN \
   echo ${UV_HOME}/*/lib | tee /etc/ld.so.conf.d/uv-python.conf && \
   ldconfig
-COPY --from=builder --chown=${app_user_uid}:${app_user_gid} /venv /venv
+COPY --from=builder --chown=${app_user_uid}:${app_user_gid} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 COPY --from=builder --chown=${app_user_uid}:${app_user_gid} ${app_path}/node_modules ${app_path}/node_modules
 
 COPY --chown=${app_user_uid}:${app_user_gid} . ${app_path}/
@@ -184,6 +243,14 @@ RUN \
 
 # Compile bytecode for venv
 RUN cd ${VIRTUAL_ENV} && python -m compileall -q
+
+RUN <<EOF
+  set -e
+  if [ ! -d ${PG_HOME}/bin ] ; then
+    echo "PostgreSQL ${POSTGRESQL_MAJOR_VERSION} is not installed."
+    exit 1
+  fi
+EOF
 
 # Switch to the app user
 USER user
