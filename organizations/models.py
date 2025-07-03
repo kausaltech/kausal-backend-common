@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import abstractmethod
+from modelcluster.models import ClusterableModel
 from modeltrans.manager import MultilingualQuerySet
 import reversion
 import typing
@@ -14,7 +15,7 @@ from django.utils.translation import gettext_lazy as _, pgettext_lazy
 
 from django.conf import settings
 from django.db import models
-from treebeard.mp_tree import MP_NodeQuerySet
+from treebeard.mp_tree import MP_Node, MP_NodeQuerySet
 
 from ..utils import get_supported_languages
 from wagtail.search import index
@@ -32,6 +33,38 @@ if TYPE_CHECKING:
     from ..models.types import FK, M2M
 
 
+# TODO: Generalize and put in some other app's models.py
+class Node[QS: MP_NodeQuerySet](MP_Node[QS], ClusterableModel):
+    class Meta:
+        abstract = True
+
+    name = models.CharField[str, str](max_length=255, verbose_name=_("name"))
+
+    # Disabled `node_order_by` for now. If we used this, then we wouldn't be able to use "left sibling" to specify a
+    # position of a node, e.g., when calling the REST API from the grid editor. Since it would be significant work to
+    # change it (e.g., disable move handles in grid editor, distinguish cases in the backend whether model has
+    # node_order_by, etc.) and some customers might want to order their organizations in some way, I decided to disable
+    # `node_order_by`.
+    # node_order_by = ['name']
+
+    public_fields = ['id', 'name']
+
+    # Duplicate get_parent from super class just to set short_description below
+    @admin.display(
+        description=pgettext_lazy('node', 'Parent'),
+    )
+    def get_parent(self, *args, **kwargs) -> Self | None:
+        return super().get_parent(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return self.name
+
+    def get_parent_path(self, update=False) -> str | None:
+        depth = int(len(self.path) / self.steplen)
+        if depth <= 1:
+            return None
+        parentpath = self._get_basepath(self.path, depth - 1)
+        return parentpath
 
 class BaseOrganizationClass(models.Model):
     identifier = models.CharField(max_length=255, unique=True, editable=False)
