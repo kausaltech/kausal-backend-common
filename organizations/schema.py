@@ -5,10 +5,8 @@ import graphene
 
 import graphene_django_optimizer as gql_optimizer
 
-from aplans.graphql_types import DjangoNode, register_django_node
-from aplans.utils import public_fields
+from kausal_common.graphene import DjangoNode, DjangoObjectType
 
-from actions.models import Plan
 from .forms import NodeForm
 from orgs.models import Organization, OrganizationQuerySet
 
@@ -22,10 +20,14 @@ class OrganizationClassNode(DjangoNode):
         abstract = True
 
 
+
 class OrganizationNode(DjangoNode):
-    ancestors = graphene.List(lambda: OrganizationNode)
-    descendants = graphene.List(lambda: OrganizationNode)
-    parent = graphene.Field(lambda: OrganizationNode, required=False)
+    ancestors = graphene.List('orgs.schema.OrganizationNode')
+    descendants = graphene.List('orgs.schema.OrganizationNode')
+    parent = graphene.Field('orgs.schema.OrganizationNode', required=False)
+
+    class Meta:
+        abstract = True
 
     @staticmethod
     def resolve_ancestors(root: Organization, info) -> OrganizationQuerySet:
@@ -43,8 +45,7 @@ class OrganizationNode(DjangoNode):
         return parent.get_parent()
 
 
-    class Meta:
-        abstract = True
+
 
 
 # class CreateOrganizationMutation(CreateModelInstanceMutation):
