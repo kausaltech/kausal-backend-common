@@ -17,7 +17,9 @@ from django.conf import settings
 from django.db import models
 from treebeard.mp_tree import MP_Node, MP_NodeQuerySet
 
-from ..utils import get_supported_languages
+from kausal_common.models.language import ModelWithPrimaryLanguage
+
+from ..i18n.helpers import get_supported_languages
 from wagtail.search import index
 from wagtail.fields import RichTextField
 
@@ -110,6 +112,7 @@ class BaseOrganizationMetadataAdmin(models.Model):
         verbose_name = _("metadata admin")
         verbose_name_plural = _("metadata admins")
         abstract = True
+
     def __str__(self):
         return str(self.person)
 
@@ -118,14 +121,8 @@ class BaseOrganizationQuerySet(MP_NodeQuerySet['Organization'], MultilingualQuer
     @abstractmethod
     def editable_by_user(self, user: User):
         raise NotImplementedError('This method should be implemented by subclasses')
-
-
-@reversion.register()
-class BaseOrganization(index.Indexed, gis_models.Model):
+class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model):
     # Different identifiers, depending on origin (namespace), are stored in OrganizationIdentifier
-    class Meta:
-        verbose_name = _("organization")
-        verbose_name_plural = _("organizations")
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     classification = models.ForeignKey(
@@ -189,7 +186,7 @@ class BaseOrganization(index.Indexed, gis_models.Model):
     # Intentionally overrides ModelWithPrimaryLanguage.primary_language
     # leaving out the default keyword argument
     primary_language = models.CharField(
-        max_length=8, choices=get_supported_languages(), verbose_name=_('primary language'),
+        max_length=8, choices=get_supported_languages, verbose_name=_('primary language'),
     )
     location = gis_models.PointField(verbose_name=_('Location'), srid=4326, null=True, blank=True)
 
@@ -210,6 +207,8 @@ class BaseOrganization(index.Indexed, gis_models.Model):
     classification_id: int | None
 
     class Meta:
+        verbose_name = _("organization")
+        verbose_name_plural = _("organizations")
         abstract = True
 
     @property
@@ -237,11 +236,7 @@ class BaseOrganizationIdentifier(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['namespace', 'identifier'], name='unique_identifier_in_namespace'),
         ]
+        abstract = True
 
     def __str__(self):
         return f'{self.identifier} @ {self.namespace.name}'
-
-    class Meta:
-        abstract = True
-
-

@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 class OrganizationViewMixin:
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()  # type: ignore[misc]
-        kwargs['parent_choices'] = Organization.objects.editable_by_user(self.request.user)  # type: ignore[attr-defined]
+        kwargs['parent_choices'] = Organization.objects.qs.editable_by_user(self.request.user)  # type: ignore[attr-defined]
         # If the parent is not editable, the form would display an empty parent,
         # leading to the org becoming a root when saved. Prevent this by adding
         # the parent to the queryset.
@@ -60,7 +60,7 @@ class CreateChildNodeView(OrganizationViewMixin, CreateView):
 
     permission_required = 'add_child_node'
 
-    def setup(self, request: HttpRequest, *args , **kwargs) -> None:
+    def setup(self, request: HttpRequest, *args, **kwargs) -> None:
         self.parent_pk = unquote(kwargs['parent_pk'])
         self.parent_instance = get_object_or_404(self.get_queryset(), pk=self.parent_pk)
         return super().setup(request, *args, **kwargs)
@@ -90,6 +90,15 @@ class CreateChildNodeView(OrganizationViewMixin, CreateView):
 
 class OrganizationCreateView(OrganizationViewMixin, CreateView):
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if IS_PATHS:
+            from paths.context import realm_context
+            admin_instance = realm_context.get().realm
+            kwargs['parent_choices'] = Organization.objects.qs.available_for_instance(admin_instance)
+
+        return kwargs
+
     def form_valid(self, form):
         result = super().form_valid(form)
         # Add the new organization to the related organizations of the user's active plan
@@ -99,13 +108,13 @@ class OrganizationCreateView(OrganizationViewMixin, CreateView):
             plan.related_organizations.add(org)
         elif IS_PATHS:
             pass
-            # instance = self.request.user.get_active_instance()
-            # instance.related_organizations.add(org)
+            # from paths.context import realm_context
+            # admin_instance = realm_context.get().realm
+            # admin_instance.related_organizations.add(org)
         return result
 
 
 class OrganizationEditView(OrganizationViewMixin, EditView):
-
     def user_has_permission(self, permission: str) -> bool:
         # return self.permission_policy.user_has_permission_for_instance(admin_req(self.request).user, permission, self.object)
         return True
@@ -126,7 +135,6 @@ def do_rollback():
 
 
 class OrganizationDeleteView(DeleteView):
-
     def user_has_permission(self, permission: str) -> bool:
         return self.permission_policy.user_has_permission_for_instance(admin_req(self.request).user, permission, self.object)
 
