@@ -88,6 +88,15 @@ class CreateChildNodeView(OrganizationViewMixin, CreateView):
 
 
 class OrganizationCreateView(OrganizationViewMixin, CreateView):
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if IS_PATHS:
+            from paths.context import realm_context
+            admin_instance = realm_context.get().realm
+            kwargs['parent_choices'] = Organization.objects.qs.available_for_instance(admin_instance)
+
+        return kwargs
+
     def form_valid(self, form):
         result = super().form_valid(form)
         # Add the new organization to the related organizations of the user's active plan
