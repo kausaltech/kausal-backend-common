@@ -17,8 +17,8 @@ from wagtail.admin.panels.inline_panel import InlinePanel
 from kausal_common.const import IS_PATHS, IS_WATCH
 from kausal_common.datasets.permission_policy import get_permission_policy
 from kausal_common.models.fields import IdentifierField
-from kausal_common.models.permission_policy import ModelPermissionPolicy
 from kausal_common.models.uuid import UUIDIdentifiedModel
+from kausal_common.users.models import ObjectRole
 
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from kausal_common.models.permission_policy import ModelPermissionPolicy
     from kausal_common.models.types import QS
 
-    from users.models import User
+    from users.models import DatasetSchemaGroupPermission, DatasetSchemaUserPermission, User
 
     from ..models.types import FK, RevMany
     if IS_PATHS:
@@ -252,6 +252,8 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
 
     datasets: RevMany[Dataset]
     scopes: RevMany[DatasetSchemaScope]
+    user_permissions: RevMany[DatasetSchemaUserPermission]
+    group_permissions: RevMany[DatasetSchemaGroupPermission]
 
     objects: ClassVar[DatasetSchemaManager] = DatasetSchemaManager()
     _default_manager: ClassVar[DatasetSchemaQuerySet]
@@ -403,6 +405,27 @@ class DatasetQuerySet(PermissionedQuerySet['Dataset']):
                 scope_content_type=ContentType.objects.get_for_model(instance_config),
                 scope_id=instance_config.pk,
             )
+
+        def with_viewable_schema(self, user: User) -> Self:
+            """
+            Restrict the queryset to those datasets whose schema is viewable.
+
+            For determining whether a schema is viewable, we check if the user has an explicit user or group permission
+            that allows them to view the particular instance of DatasetSchema. It does not matter whether the user has
+            view permissions on the schema model.
+            """
+            from users.models import DatasetSchemaGroupPermission, DatasetSchemaUserPermission
+
+            viewable_schemas_for_user = DatasetSchemaUserPermission.objects.filter(
+                role__in=[ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
+                user=user,
+            ).values_list('object')
+            viewable_schemas_for_group = DatasetSchemaGroupPermission.objects.filter(
+                role__in=[ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
+                group__users=user,
+            ).values_list('object')
+            return self.filter(models.Q(schema__in=viewable_schemas_for_user)
+                               | models.Q(schema__in=viewable_schemas_for_group))
 
     if IS_WATCH:
         def for_plan(self, plan: Plan) -> Self:
