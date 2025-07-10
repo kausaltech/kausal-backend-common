@@ -12,8 +12,6 @@ from modeltrans.manager import MultilingualManager
 from modeltrans.translator import get_i18n_field
 from pydantic import BaseModel, Field
 
-from kausal_common.models.permission_policy import ALL_OBJECT_SPECIFIC_ACTIONS
-
 from .types import ModelManager
 
 if TYPE_CHECKING:
@@ -123,6 +121,8 @@ class UserPermissions(BaseModel):
 
 
 def get_user_permissions_for_instance(user: UserOrAnon, obj: PermissionedModel) -> UserPermissions:
+    from kausal_common.models.permission_policy import ALL_OBJECT_SPECIFIC_ACTIONS
+
     assert isinstance(obj, PermissionedModel)
     pp = obj.permission_policy()
     actions: list[ModelAction] = [
