@@ -11,6 +11,7 @@ from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from modeltrans.fields import TranslationField
 from wagtail.admin.panels.field_panel import FieldPanel
+from wagtail.admin.panels.group import MultiFieldPanel
 from wagtail.admin.panels.inline_panel import InlinePanel
 
 from kausal_common.const import IS_PATHS, IS_WATCH
@@ -246,6 +247,26 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
                 FieldPanel('dimension'),
             ]
         ),
+        MultiFieldPanel([
+            InlinePanel(
+                'user_permissions',
+                heading=_("User permissions"),
+                help_text=_("Grants permissions on datasets of this schema to certain users"),
+                panels=[
+                    FieldPanel('user'),
+                    FieldPanel('role'),
+                ]
+            ),
+            InlinePanel(
+                'group_permissions',
+                heading=_("Group permissions"),
+                help_text=_("Grants permissions on datasets of this schema to certain user groups"),
+                panels=[
+                    FieldPanel('group'),
+                    FieldPanel('role'),
+                ]
+            ),
+        ], _("Permissions")),
     ]
 
     class Meta:
