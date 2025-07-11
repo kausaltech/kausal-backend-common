@@ -9,6 +9,7 @@ from django.contrib.auth.models import AbstractUser, UserManager as DjangoUserMa
 from django.db import models
 from django.db.models import Model
 from django.utils.translation import gettext_lazy as _
+from modelcluster.fields import ParentalKey
 
 from kausal_common.models.types import FK, copy_signature
 
@@ -238,7 +239,7 @@ def create_permission_membership_models[M: models.Model](
         (ObjectGroupPermissionBase,),
         {
             '__module__': 'users.models',
-            'object': models.ForeignKey(model, on_delete=models.CASCADE, related_name='group_permissions'),
+            'object': ParentalKey(model, on_delete=models.CASCADE, related_name='group_permissions'),
             'Meta': GroupPermissionMeta,
         },
     )
@@ -250,7 +251,7 @@ def create_permission_membership_models[M: models.Model](
         (ObjectUserPermissionBase,),
         {
             '__module__': 'users.models',
-            'object': models.ForeignKey(model, on_delete=models.CASCADE, related_name='user_permissions'),
+            'object': ParentalKey(model, on_delete=models.CASCADE, related_name='user_permissions'),
             'Meta': UserPermissionMeta,
         },
     )
