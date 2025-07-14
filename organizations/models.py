@@ -215,6 +215,8 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
     def parent(self):
         return self.get_parent()
 
+    def get_parent_choices(self, user: User):
+        raise NotImplementedError('This method should be implemented by subclasses')
 
 class BaseNamespace(models.Model):
     identifier = models.CharField(max_length=255, unique=True, editable=False)
