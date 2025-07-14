@@ -10,8 +10,7 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum
 from types import UnionType
-from typing import Any, ClassVar, Generator, Generic, NamedTuple, Self, cast, overload
-from typing_extensions import TypeVar
+from typing import Any, ClassVar, NamedTuple, Self, cast, overload
 from uuid import UUID
 
 from django.contrib.admin.utils import NestedObjects
@@ -48,7 +47,7 @@ from rich.tree import Tree
 from treebeard.mp_tree import MP_Node
 
 if typing.TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable, Generator, Sequence
     from pathlib import Path
 
     from diffsync.store import BaseStore
@@ -278,10 +277,8 @@ def convert_django_field(
         field_info,
     )
 
-_BaseT_co = TypeVar('_BaseT_co', bound=BaseModel, covariant=True)
-
-def pydantic_from_django_model(
-    cls: type[_BaseT_co], model: type[Model], include_fields: Sequence[str],
+def pydantic_from_django_model[BaseM: BaseModel](
+    cls: type[BaseM], model: type[Model], include_fields: Sequence[str],
 ):
     django_fields = DjangoModelFields()
     new_pydantic_fields: dict[str, tuple[PythonType, FieldInfo]] = {}
@@ -314,16 +311,14 @@ def pydantic_from_django_model(
     return django_fields
 
 
-_ModelT = TypeVar('_ModelT', bound=Model)
-
 class SiblingIds(NamedTuple):
     prev: str | None
     next: str | None
 
 SIBLING_ORDER_ATTRIBUTE = 'sibling_order'
 
-class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
-    _model: ClassVar[type[_ModelT]]  # type: ignore[misc]
+class DjangoDiffModel[ModelT: Model](DiffSyncModel):
+    _model: ClassVar[type[ModelT]]  # type: ignore[misc]
     _django_fields: ClassVar[DjangoModelFields]
     _allow_related_model_deletion: ClassVar[bool] = False
     _is_orderable: ClassVar[bool] = False
@@ -334,7 +329,7 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
     sibling_order: int | None = None
     """Order of the instance under the same parent."""
 
-    _instance: _ModelT | None = None
+    _instance: ModelT | None = None
     _instance_pk: int | None = None
     _parent_id: str | None = None
     _parent_model: type[DjangoDiffModel] | None = None
@@ -380,7 +375,7 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         super().__pydantic_init_subclass__(**kwargs)
 
     @classmethod
-    def _convert_django_instance(cls, obj: _ModelT) -> dict[str, Any]:
+    def _convert_django_instance(cls, obj: ModelT) -> dict[str, Any]:
         field_names = cls._django_fields.field_names
         data = {field_name: getattr(obj, field_name) for field_name in field_names}
         return data
@@ -391,7 +386,7 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
             return cls._model
         return None
 
-    def get_django_instance(self) -> _ModelT:
+    def get_django_instance(self) -> ModelT:
         if self._instance:
             return self._instance
         assert self._instance_pk
@@ -400,7 +395,7 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         return instance
 
     @classmethod
-    def from_django(cls, data: _ModelT | dict, context: Any = None) -> Self:
+    def from_django(cls, data: ModelT | dict, context: Any = None) -> Self:
         if isinstance(data, cls._model):
             obj = data
             obj_data = cls._convert_django_instance(obj)
@@ -417,7 +412,7 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         return self
 
     @classmethod
-    def create_related(cls, adapter: DjangoAdapter, ids: dict, attrs: dict, instance: _ModelT, /) -> None:
+    def create_related(cls, adapter: DjangoAdapter, ids: dict, attrs: dict, instance: ModelT, /) -> None:
         """
         Create related objects if there are any.
 
@@ -448,13 +443,13 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         return kwargs
 
     @classmethod
-    def get_mpnode_root_instance(cls, instance: _ModelT) -> _ModelT | None:  # noqa: ARG003
+    def get_mpnode_root_instance(cls, instance: ModelT) -> ModelT | None:  # noqa: ARG003
         return None
 
     @classmethod
     def _create_mpnode(
-        cls, adapter: DjangoAdapter, instance: _ModelT, parent_id: str | None, sibling_order: int | None,
-    ) -> _ModelT:
+        cls, adapter: DjangoAdapter, instance: ModelT, parent_id: str | None, sibling_order: int | None,
+    ) -> ModelT:
         parent = adapter.get(cls, str(parent_id)) if parent_id else None
         root_obj = cls.get_mpnode_root_instance(instance)
         parent_obj = parent.get_django_instance() if parent else cls.get_mpnode_root_instance(instance)
@@ -469,7 +464,7 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
                 assert isinstance(parent_obj, type(instance))
                 child_obj = parent_obj.add_child(instance=instance)
                 parent_obj.save()
-            return cast(_ModelT, child_obj)
+            return cast('ModelT', child_obj)
 
         # Orderable mptree
         if parent is not None:
@@ -489,10 +484,10 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
             assert isinstance(root_obj, MP_Node)
             child_obj = root_obj.add_child(instance=instance)
 
-        return cast(_ModelT, child_obj)
+        return cast('ModelT', child_obj)
 
     @classmethod
-    def create_django_instance(cls, adapter: DjangoAdapter, create_kwargs: dict, /) -> _ModelT:
+    def create_django_instance(cls, adapter: DjangoAdapter, create_kwargs: dict, /) -> ModelT:
         model = cls._model
         mp_model = cls._mpnode_or_none()
         parent_id = None
@@ -546,7 +541,7 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
         self._instance_pk = obj_pk
         return self
 
-    def update_related(self, obj: _ModelT, attrs: dict) -> None:
+    def update_related(self, obj: ModelT, attrs: dict) -> None:
         """
         Update related objects if there are any.
 
@@ -638,12 +633,12 @@ class DjangoDiffModel(DiffSyncModel, Generic[_ModelT]):
 
         return ret
 
-    def get_delete_collector[CollT: Collector](self, instance: _ModelT, collector: type[CollT]) -> CollT:
+    def get_delete_collector[CollT: Collector](self, instance: ModelT, collector: type[CollT]) -> CollT:
         coll = collector(using=router.db_for_write(type(instance), instance=instance))
         coll.collect([instance])  # pyright: ignore
         return coll
 
-    def is_object_deletion_allowed(self, instance: _ModelT) -> bool:
+    def is_object_deletion_allowed(self, instance: ModelT) -> bool:
         if not isinstance(self.adapter, DjangoAdapter):
             return True
         collector = self.get_delete_collector(instance, NestedObjects)
@@ -762,7 +757,7 @@ class TypedAdapter(Adapter):
 
     def save_model[M: DjangoDiffModel](self, model: type[M]) -> Generator[dict[Any, Any]]:
         model_name = model.get_type()
-        objs = cast(list[M], self.store.get_all(model=model_name))
+        objs = cast('list[M]', self.store.get_all(model=model_name))
         if model_name in model.get_children_mapping():
             # first find the roots
             for obj in objs:
@@ -852,13 +847,20 @@ class DjangoAdapter(TypedAdapter):
     transaction_started: bool = False
     allow_related_deletion: bool | None = None
     interactive: bool
+    counters: dict[str, int]
 
     def __init__(
         self, interactive: bool = False, allow_related_deletion: bool | None = None, **kwargs,
     ) -> None:
         self.allow_related_deletion = allow_related_deletion
         self.interactive = interactive
+        self.counters = {}
         super().__init__(**kwargs)
+
+    def increase_counter(self, name: str, amount: int = 1):
+        if name not in self.counters:
+            self.counters[name] = 0
+        self.counters[name] += amount
 
     def is_object_deletion_allowed(self, instance: Model):
         collector = NestedObjects(using=router.db_for_write(type(instance), instance=instance))
@@ -991,7 +993,7 @@ class DjangoAdapter(TypedAdapter):
             # Not re-arranging root nodes
             return
         db_pks: list[int] = list(siblings.values_list('pk', flat=True))
-        new_db_pks: list[int] = [cast(int, child._instance_pk) for child in children]
+        new_db_pks: list[int] = [cast('int', child._instance_pk) for child in children]
 
         mgr = child_model._default_manager
         nr_changes = 0
@@ -1041,7 +1043,7 @@ class DjangoAdapter(TypedAdapter):
                 parent_obj = parent.get_django_instance()
             self._reorder_mptree(parent_obj, child_model, child_type, children)
         else:
-            self._reorder_sorted(child_model, [cast(int, child._instance_pk) for child in children])
+            self._reorder_sorted(child_model, [cast('int', child._instance_pk) for child in children])
 
     def sync_complete(
         self, source: Adapter, diff: Diff, flags: DiffSyncFlags = DiffSyncFlags.NONE, logger: BoundLogger | None = None,

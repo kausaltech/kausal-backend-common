@@ -24,6 +24,12 @@ class OrderedModel(models.Model):  # noqa: DJ008
         class Meta:
             abstract = True
 
+    def __init__(self, *args, order_on_create: int | None = None, **kwargs):
+        # Specify `order_on_create` to set the order to that value when saving if the instance is being created. If it is
+        # None, the order will instead be set to <maximum existing order> + 1.
+        super().__init__(*args, **kwargs)
+        self.order_on_create = order_on_create
+
     def save(self, *args, **kwargs):
         if self.pk is None:
             order_on_create = getattr(self, 'order_on_create', None)
@@ -32,12 +38,6 @@ class OrderedModel(models.Model):  # noqa: DJ008
             else:
                 self.order = self.get_sort_order_max() + 1
         super().save(*args, **kwargs)
-
-    def __init__(self, *args, order_on_create: int | None = None, **kwargs):
-        # Specify `order_on_create` to set the order to that value when saving if the instance is being created. If it is
-        # None, the order will instead be set to <maximum existing order> + 1.
-        super().__init__(*args, **kwargs)
-        self.order_on_create = order_on_create
 
     @classmethod
     def check(cls, **kwargs) -> list[CheckMessage]:

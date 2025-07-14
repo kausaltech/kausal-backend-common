@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from typing import Any
 
 from django.utils.functional import cached_property as cached_property
@@ -9,17 +10,27 @@ from wagtail.utils.deprecation import RemovedInWagtail70Warning as RemovedInWagt
 
 from _typeshed import Incomplete
 
+type ReadOnlyProp[T] = T | Callable[[Any], T]
+
 class Button(Component):
     template_name: str
-    show: bool
+    show: ReadOnlyProp[bool]
     label: StrOrPromise
     icon_name: str
-    url: str | None
+    url: ReadOnlyProp[str] | None
     attrs: dict[str, Any]
     classname: str
     priority: int
 
-    def __init__(self, label: str = '', url: str | None = None, classname: str = '', icon_name: Incomplete | None = None, attrs={}, priority: int = 1000) -> None: ...
+    def __init__(
+        self,
+        label: str = '',
+        url: str | None = None,
+        classname: str = '',
+        icon_name: Incomplete | None = None,
+        attrs={},
+        priority: int = 1000,
+    ) -> None: ...
     def get_context_data(self, parent_context): ...
     @property
     def base_attrs_string(self): ...
@@ -33,10 +44,19 @@ class Button(Component):
 
 class HeaderButton(Button):
     """An icon-only button to be displayed after the breadcrumbs in the header."""
-    def __init__(self, label: str = '', url: Incomplete | None = None, classname: str = '', icon_name: Incomplete | None = None, attrs={}, icon_only: bool = False, **kwargs) -> None: ...
+    def __init__(
+        self,
+        label: str = '',
+        url: Incomplete | None = None,
+        classname: str = '',
+        icon_name: Incomplete | None = None,
+        attrs={},
+        icon_only: bool = False,
+        **kwargs,
+    ) -> None: ...
 
 class ListingButton(Button):
-    def __init__(self, label: StrOrPromise = '', url: str | None = None, classname: str = "", **kwargs) -> None: ...
+    def __init__(self, label: StrOrPromise = '', url: str | None = None, classname: str = '', **kwargs) -> None: ...
 
 class PageListingButton(ListingButton):
     aria_label_format: Incomplete
@@ -44,9 +64,15 @@ class PageListingButton(ListingButton):
     page: Incomplete
     user: Incomplete
     next_url: Incomplete
-    def __init__(self, *args, page: Incomplete | None = None, next_url: Incomplete | None = None, attrs={}, user: Incomplete | None = None, **kwargs) -> None: ...
-    @cached_property
-    def url(self): ...
+    def __init__(
+        self,
+        *args,
+        page: Incomplete | None = None,
+        next_url: Incomplete | None = None,
+        attrs={},
+        user: Incomplete | None = None,
+        **kwargs,
+    ) -> None: ...
     @cached_property
     def page_perms(self): ...
 
@@ -66,8 +92,17 @@ class ButtonWithDropdownFromHook(BaseDropdownMenuButton):
     page: Incomplete
     user: Incomplete
     next_url: Incomplete
-    def __init__(self, label, hook_name, page, user: Incomplete | None = None, page_perms: Incomplete | None = None, next_url: Incomplete | None = None, **kwargs) -> None: ...
+    def __init__(
+        self,
+        label,
+        hook_name,
+        page,
+        user: Incomplete | None = None,
+        page_perms: Incomplete | None = None,
+        next_url: Incomplete | None = None,
+        **kwargs,
+    ) -> None: ...
     @property
-    def show(self): ...
+    def show(self) -> bool: ...
     @cached_property
     def dropdown_buttons(self): ...
