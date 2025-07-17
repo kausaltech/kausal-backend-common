@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from django.apps import apps
 from django.contrib.admin.utils import unquote
@@ -36,17 +36,16 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
     from orgs.wagtail_admin import OrganizationViewSet
+    from users.models import User
 
 
 class OrganizationViewMixin:
+    request: HttpRequest
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()  # type: ignore[misc]
-        kwargs['parent_choices'] = Organization.objects.qs.editable_by_user(self.request.user)  # type: ignore[attr-defined]
-        # If the parent is not editable, the form would display an empty parent,
-        # leading to the org becoming a root when saved. Prevent this by adding
-        # the parent to the queryset.
-        if getattr(self, 'object', None) and self.object.get_parent():  # type: ignore[attr-defined]
-            kwargs['parent_choices'] |= Organization.objects.filter(pk=self.object.get_parent().pk)  # type: ignore[attr-defined]
+        obj = getattr(self, 'object', None)
+        kwargs['parent_choices'] = Organization.get_parent_choices(obj=obj, user=cast('User', admin_req(self.request).user))
         return kwargs
 
 
@@ -89,16 +88,6 @@ class CreateChildNodeView(OrganizationViewMixin, CreateView):
 
 
 class OrganizationCreateView(OrganizationViewMixin, CreateView):
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        if IS_PATHS:
-            from paths.context import realm_context
-            admin_instance = realm_context.get().realm
-            kwargs['parent_choices'] = Organization.objects.qs.available_for_instance(admin_instance)
-
-        return kwargs
-
     def form_valid(self, form):
         result = super().form_valid(form)
         # Add the new organization to the related organizations of the user's active plan
