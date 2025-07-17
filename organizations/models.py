@@ -6,7 +6,7 @@ import reversion
 import typing
 import uuid
 
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Self
 
 from django.contrib import admin
 from django.contrib.gis.db import models as gis_models
@@ -215,7 +215,8 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
     def parent(self):
         return self.get_parent()
 
-    def get_parent_choices(self, user: User):
+    @classmethod
+    def get_parent_choices(cls, user: User, obj: Self | None = None) -> models.QuerySet[Self]:
         raise NotImplementedError('This method should be implemented by subclasses')
 
 class BaseNamespace(models.Model):
