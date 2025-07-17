@@ -9,9 +9,8 @@ from django.contrib.auth.models import AbstractUser, UserManager as DjangoUserMa
 from django.db import models
 from django.db.models import Model
 from django.utils.translation import gettext_lazy as _
-from modelcluster.fields import ParentalKey
 
-from kausal_common.models.types import FK, copy_signature
+from kausal_common.models.types import copy_signature
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -170,89 +169,3 @@ def username_to_uuid(username: str):
         raise ValueError('Not an UUID based username: %r' % (username,))
     decoded = base64.b32decode(username[2:].upper() + '======')
     return UUID(bytes=decoded)
-
-
-class ObjectRole(models.TextChoices):
-    VIEWER = 'viewer'
-    EDITOR = 'editor'
-    ADMIN = 'admin'
-
-
-# Workaround for https://code.djangoproject.com/ticket/33174
-# Once this has been fixed in Django, we can probably use the code in the `if` branch below unconditionally and
-# merge _ObjectRoleBase into ObjectRoleBase.
-class _ObjectRoleBase(models.Model):
-    role = models.CharField(choices=ObjectRole.choices)
-
-    class Meta:
-        abstract = True
-
-if TYPE_CHECKING:
-    class ObjectRoleBase[M: models.Model](_ObjectRoleBase):  # noqa: DJ008
-        object: FK[M]
-else:
-    ObjectRoleBase = _ObjectRoleBase
-
-
-if TYPE_CHECKING:
-    class ObjectGroupPermissionBase[M: models.Model](ObjectRoleBase[M]):
-        group = models.ForeignKey('users.UserGroup', on_delete=models.CASCADE)
-
-        object: FK[M]
-        objects: models.Manager[f'{M.__name__}GroupPermission']  # pyright: ignore
-
-        class Meta:  # pyright: ignore
-            abstract = True
-else:
-    class ObjectGroupPermissionBase(ObjectRoleBase):
-        group = models.ForeignKey('users.UserGroup', on_delete=models.CASCADE)
-
-        class Meta:  # pyright: ignore
-            abstract = True
-
-
-if TYPE_CHECKING:
-    class ObjectUserPermissionBase[M: models.Model](ObjectRoleBase[M]):
-        user = models.ForeignKey('users.User', on_delete=models.CASCADE)
-
-        object: FK[M]
-        objects: models.Manager[f'{M.__name__}UserPermission']  # pyright: ignore
-
-        class Meta:  # pyright: ignore
-            abstract = True
-else:
-    class ObjectUserPermissionBase(ObjectRoleBase):
-        user = models.ForeignKey('users.User', on_delete=models.CASCADE)
-
-        class Meta:  # pyright: ignore
-            abstract = True
-
-
-def create_permission_membership_models[M: models.Model](
-    model: type[M]
-) -> tuple[type[ObjectGroupPermissionBase[M]], type[ObjectUserPermissionBase[M]]]:
-    GroupPermissionMeta = type('Meta', (),{  # noqa: N806
-        'unique_together': (('group', 'object'),),
-    })
-    GroupPermission = type(  # noqa: N806
-        '%sGroupPermission' % model.__name__,
-        (ObjectGroupPermissionBase,),
-        {
-            '__module__': 'users.models',
-            'object': ParentalKey(model, on_delete=models.CASCADE, related_name='group_permissions'),
-            'Meta': GroupPermissionMeta,
-        },
-    )
-    UserPermissionMeta = type('Meta', (),{  # noqa: N806
-        'unique_together': (('user', 'object'),),
-    })
-    UserPermission = type(  # noqa: N806
-        '%sUserPermission' % model.__name__,
-        (ObjectUserPermissionBase,),
-        {
-            '__module__': 'users.models',
-            'object': ParentalKey(model, on_delete=models.CASCADE, related_name='user_permissions'),
-            'Meta': UserPermissionMeta,
-        },
-    )
-    return GroupPermission, UserPermission
