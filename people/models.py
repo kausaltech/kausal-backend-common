@@ -13,6 +13,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
+from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from modeltrans.fields import TranslationField
 from wagtail.search import index
@@ -214,3 +215,89 @@ class BasePerson(index.Indexed, ClusterableModel):
             bool: True if visible, False otherwise
         """
         raise NotImplementedError("This method should be implemented by subclasses")
+
+
+class ObjectRole(models.TextChoices):
+    VIEWER = 'viewer'
+    EDITOR = 'editor'
+    ADMIN = 'admin'
+
+
+# Workaround for https://code.djangoproject.com/ticket/33174
+# Once this has been fixed in Django, we can probably use the code in the `if` branch below unconditionally and
+# merge _ObjectRoleBase into ObjectRoleBase.
+class _ObjectRoleBase(models.Model):
+    role = models.CharField(choices=ObjectRole.choices)
+
+    class Meta:
+        abstract = True
+
+if TYPE_CHECKING:
+    class ObjectRoleBase[M: models.Model](_ObjectRoleBase):  # noqa: DJ008
+        object: FK[M]
+else:
+    ObjectRoleBase = _ObjectRoleBase
+
+
+if TYPE_CHECKING:
+    class ObjectGroupPermissionBase[M: models.Model](ObjectRoleBase[M]):
+        group = models.ForeignKey('people.PersonGroup', on_delete=models.CASCADE)
+
+        object: FK[M]
+        objects: models.Manager[f'{M.__name__}GroupPermission']  # pyright: ignore
+
+        class Meta:  # pyright: ignore
+            abstract = True
+else:
+    class ObjectGroupPermissionBase(ObjectRoleBase):
+        group = models.ForeignKey('people.PersonGroup', on_delete=models.CASCADE)
+
+        class Meta:  # pyright: ignore
+            abstract = True
+
+
+if TYPE_CHECKING:
+    class ObjectPersonPermissionBase[M: models.Model](ObjectRoleBase[M]):
+        person = models.ForeignKey('people.Person', on_delete=models.CASCADE)
+
+        object: FK[M]
+        objects: models.Manager[f'{M.__name__}PersonPermission']  # pyright: ignore
+
+        class Meta:  # pyright: ignore
+            abstract = True
+else:
+    class ObjectPersonPermissionBase(ObjectRoleBase):
+        person = models.ForeignKey('people.Person', on_delete=models.CASCADE)
+
+        class Meta:  # pyright: ignore
+            abstract = True
+
+
+def create_permission_membership_models[M: models.Model](
+    model: type[M]
+) -> tuple[type[ObjectGroupPermissionBase[M]], type[ObjectPersonPermissionBase[M]]]:
+    GroupPermissionMeta = type('Meta', (),{  # noqa: N806
+        'unique_together': (('group', 'object'),),
+    })
+    GroupPermission = type(  # noqa: N806
+        '%sGroupPermission' % model.__name__,
+        (ObjectGroupPermissionBase,),
+        {
+            '__module__': 'people.models',
+            'object': ParentalKey(model, on_delete=models.CASCADE, related_name='group_permissions'),
+            'Meta': GroupPermissionMeta,
+        },
+    )
+    PersonPermissionMeta = type('Meta', (),{  # noqa: N806
+        'unique_together': (('person', 'object'),),
+    })
+    PersonPermission = type(  # noqa: N806
+        '%sPersonPermission' % model.__name__,
+        (ObjectPersonPermissionBase,),
+        {
+            '__module__': 'people.models',
+            'object': ParentalKey(model, on_delete=models.CASCADE, related_name='person_permissions'),
+            'Meta': PersonPermissionMeta,
+        },
+    )
+    return GroupPermission, PersonPermission
