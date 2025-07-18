@@ -17,7 +17,7 @@ from modelcluster.models import ClusterableModel
 from modeltrans.fields import TranslationField
 from wagtail.search import index
 
-import willow
+import willow  # type: ignore
 from image_cropping import ImageRatioField
 
 from users.models import User
