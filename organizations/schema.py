@@ -45,9 +45,6 @@ class OrganizationNode(DjangoNode):
         return parent.get_parent()
 
 
-
-
-
 # class CreateOrganizationMutation(CreateModelInstanceMutation):
 #     class Meta:
 #         abstract = True
