@@ -121,6 +121,8 @@ class BaseOrganizationQuerySet(MP_NodeQuerySet['Organization'], MultilingualQuer
     @abstractmethod
     def editable_by_user(self, user: User):
         raise NotImplementedError('This method should be implemented by subclasses')
+
+
 class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model):
     # Different identifiers, depending on origin (namespace), are stored in OrganizationIdentifier
 
@@ -147,15 +149,6 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
     distinct_name = models.CharField(
         max_length=400, editable=False, null=True, help_text=_('A distinct name for this organization (generated automatically)'),
     )
-    # logo: FK[AplansImage | None] = models.ForeignKey(
-    #     'images.AplansImage',
-    #     null=True,
-    #     blank=True,
-    #     on_delete=models.SET_NULL,
-    #     related_name='+',
-    #     help_text=_("Organization logo. Please provide a square image (min. 250x250px). "
-    #                 "The logo used for the organization's social media often works best."),
-    # )
     description = RichTextField(blank=True, verbose_name=_('description'))
     url = models.URLField(blank=True, verbose_name=_('URL'))
     email = models.EmailField(blank=True, verbose_name=_('email address'))
@@ -219,6 +212,7 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
     def get_parent_choices(cls, user: User, obj: Self | None = None) -> models.QuerySet[Self]:
         raise NotImplementedError('This method should be implemented by subclasses')
 
+
 class BaseNamespace(models.Model):
     identifier = models.CharField(max_length=255, unique=True, editable=False)
     name = models.CharField(max_length=255)
@@ -229,6 +223,7 @@ class BaseNamespace(models.Model):
 
     class Meta:
         abstract = True
+
 
 class BaseOrganizationIdentifier(models.Model):
     organization = ParentalKey('orgs.Organization', on_delete=models.CASCADE, related_name='identifiers')
