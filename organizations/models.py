@@ -194,7 +194,6 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
         index.SearchField('abbreviation'),
     ]
 
-    VIEWSET_CLASS = 'orgs.wagtail_admin.OrganizationViewSet'  # for AdminButtonsMixin
 
     id: int
     classification_id: int | None
