@@ -11,6 +11,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.checks import CheckMessage, Error
 from django.core.exceptions import FieldDoesNotExist
+from django.db import models
 from django.db.models import Model, Q, QuerySet
 from django.db.models.fields.related import ForeignKey
 from wagtail.models import PAGE_PERMISSION_CODENAMES
@@ -418,3 +419,16 @@ class UserPermissionCache:
             objs = role.get_instances_for_user(self.user)
             for obj in objs:
                 role.create_or_update_instance_group(obj)
+
+
+class RoleGroup(models.Model):
+    # We may want to put, e.g., methods here in the future
+
+    if TYPE_CHECKING:
+        Meta: Any
+    else:
+        class Meta:
+            abstract = True
+
+    @abc.abstractmethod
+    def __str__(self) -> str: ...
