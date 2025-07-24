@@ -141,7 +141,7 @@ type SerializableData = dict[str, Any]
 
 class RevisionMixin(models.Model):
     """A mixin that allows a model to have revisions."""
-    latest_revision: models.ForeignKey[Revision[Self] | None]
+    latest_revision: models.ForeignKey[Revision[Self] | None, Revision[Self] | None]
     default_exclude_fields_in_copy: ClassVar[Iterable[str]]
 
     @property
@@ -913,7 +913,7 @@ class Revision[M: Model](models.Model):
     created_at: models.DateTimeField[_DTSet, datetime]
     user: models.ForeignKey[AbstractBaseUser | None]
     object_str: models.TextField
-    content: models.JSONField
+    content: models.JSONField[dict[str, Any], dict[str, Any]]
     approved_go_live_at: _NullableDTF
     objects: ClassVar[RevisionsManager]  # pyright: ignore
     _default_manager: ClassVar[RevisionsManager]
@@ -1151,12 +1151,12 @@ class AbstractGroupApprovalTask(Task):
 
 class GroupApprovalTask(AbstractGroupApprovalTask): ...
 
-class WorkflowStateQuerySet(models.QuerySet):
-    def active(self):
+class WorkflowStateQuerySet(models.QuerySet[WorkflowState]):
+    def active(self) -> Self:
         """
         Filters to only STATUS_IN_PROGRESS and STATUS_NEEDS_CHANGES WorkflowStates
         """
-    def for_instance(self, instance):
+    def for_instance(self, instance) -> Self:
         """
         Filters to only WorkflowStates for the given instance
         """
@@ -1171,17 +1171,17 @@ class WorkflowState(models.Model):
     STATUS_APPROVED: str
     STATUS_NEEDS_CHANGES: str
     STATUS_CANCELLED: str
-    STATUS_CHOICES: Incomplete
-    content_type: Incomplete
-    base_content_type: Incomplete
-    object_id: Incomplete
-    content_object: Incomplete
-    workflow: Incomplete
-    status: Incomplete
-    created_at: Incomplete
-    requested_by: Incomplete
-    current_task_state: Incomplete
-    on_finish: Incomplete
+    STATUS_CHOICES: tuple[tuple[str, StrOrPromise], ...]
+    content_type: models.ForeignKey[ContentType]
+    base_content_type: models.ForeignKey[ContentType]
+    object_id: models.CharField[str, str]
+    content_object: GenericForeignKey
+    workflow: models.ForeignKey[Workflow]
+    status: models.CharField[str, str]
+    created_at: models.DateTimeField[datetime, datetime]
+    requested_by: models.ForeignKey[AbstractBaseUser]
+    current_task_state: models.ForeignKey[TaskState]
+    on_finish: models.ForeignKey[Task]
     objects: ClassVar[WorkflowStateManager]  # pyright: ignore
     _default_manager: ClassVar[WorkflowStateManager]
 

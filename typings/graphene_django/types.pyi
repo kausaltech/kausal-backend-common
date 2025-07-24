@@ -1,3 +1,4 @@
+from typing import Any
 from django.db.models import Model
 from django.db.models.query import QuerySet
 from graphene.relay import Connection
@@ -55,7 +56,7 @@ class DjangoObjectType[M: Model](ObjectType):
         ...
 
     @classmethod
-    def get_queryset[QS: QuerySet](cls, queryset: QS, info) -> QS:
+    def get_queryset[QS: QuerySet[Any]](cls, queryset: QS, info) -> QS:
         ...
 
     @classmethod

@@ -156,17 +156,17 @@ class PageQuerySet(
         (matching the model exactly, not subclasses).
         """
     def private_q(self) -> Q: ...
-    def public(self):
+    def public(self) -> Self:
         """
         Filters the QuerySet to only contain pages that are not in a private
         section and their descendants.
         """
-    def not_public(self):
+    def not_public(self) -> Self:
         """
         Filters the QuerySet to only contain pages that are in a private
         section and their descendants.
         """
-    def private(self):
+    def private(self) -> Self:
         """
         Filters the QuerySet to only contain pages that are in a private
         section and their descendants.
