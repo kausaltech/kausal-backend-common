@@ -150,6 +150,8 @@ class NullTransport(sentry_sdk.Transport):
 DISABLED_DEFAULT_INTEGRATIONS = {'modules', 'argv', 'loguru', 'logging', 'graphene', 'strawberry', 'aiohttp', 'gql', 'tornado'}
 
 def _get_integrations() -> list[Integration]:
+    from django.db.models.signals import post_init, pre_init
+
     from sentry_sdk.integrations import iter_default_integrations
     from sentry_sdk.integrations.boto3 import Boto3Integration
     from sentry_sdk.integrations.celery import CeleryIntegration
@@ -162,7 +164,10 @@ def _get_integrations() -> list[Integration]:
             continue
         integration = integration_cls()
         integrations.append(integration)
-    integrations.append(DjangoIntegration(middleware_spans=False))
+    integrations.append(DjangoIntegration(
+        middleware_spans=False,
+        signals_denylist=[pre_init, post_init]
+    ))
     integrations.append(Boto3Integration())
     integrations.append(CeleryIntegration())
     integrations.append(RedisIntegration())
