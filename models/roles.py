@@ -254,7 +254,7 @@ _ModelT = TypeVar('_ModelT', bound=Model)
 _QS = TypeVar('_QS', bound=QuerySet[Any, Any], default=QuerySet[_ModelT, _ModelT], covariant=True)  # noqa: PLC0105
 
 
-class InstanceFieldGroupRole(Generic[_ModelT, _QS], InstanceSpecificRole[_ModelT], abc.ABC):
+class InstanceFieldGroupRole(Generic[_ModelT, _QS], InstanceSpecificRole[_ModelT], abc.ABC):  # noqa: UP046
     instance_group_field_name: ClassVar[str]
 
     def check(self) -> list[CheckMessage]:
@@ -299,7 +299,7 @@ class InstanceFieldGroupRole(Generic[_ModelT, _QS], InstanceSpecificRole[_ModelT
         if grp is None:
             return
         mgr = self.model._default_manager
-        g_id: int = getattr(self, '%s_id' % self.instance_group_field_name)
+        g_id: int = getattr(obj, '%s_id' % self.instance_group_field_name)
         filters = {
             self.instance_group_field_name: g_id,
         }

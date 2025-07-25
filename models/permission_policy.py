@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypeGuard, cast, overload
 from typing_extensions import TypeVar
 
@@ -15,7 +14,7 @@ from loguru import logger
 from users.models import User
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
     from kausal_common.graphene import GQLInfo
     from kausal_common.models.types import QS
@@ -206,7 +205,7 @@ class ModelPermissionPolicy(Generic[_M, CreateContext, _QS], ABC, WagtailModelPe
 
 class ModelReadOnlyPolicy(ModelPermissionPolicy[_M, CreateContext, _QS]):
     def construct_perm_q(self, user: User, action: BaseObjectAction) -> Q | None:
-        if action == 'view':
+        if user.is_superuser or action == 'view':
             return Q()
         return None
 
@@ -216,13 +215,20 @@ class ModelReadOnlyPolicy(ModelPermissionPolicy[_M, CreateContext, _QS]):
         return None
 
     def user_has_perm(self, user: User, action: ObjectSpecificAction, obj: _M) -> bool:
-        return action == 'view'
+        return user.is_superuser or action == 'view'
 
     def anon_has_perm(self, action: ObjectSpecificAction, obj: _M) -> bool:
         return action == 'view'
 
     def user_can_create(self, user: User, context: CreateContext) -> bool:
+        if user.is_superuser:
+            return True
         return False
+
+    def user_has_permission(self, user: UserOrAnon, action: str) -> bool:
+        if user.is_superuser:
+            return True
+        return action == 'view'
 
 
 _ParentM = TypeVar('_ParentM', bound='PermissionedModel')
