@@ -185,7 +185,12 @@ RUN --mount=type=secret,id=EXTRA_PYPI_INDEX \
 
 # Install node
 COPY package.json package-lock.json ${app_path}/
-RUN npm ci
+ENV NPM_CONFIG_CACHE=${XDG_CACHE_HOME}/npm
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
+  npm ci
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
+  npx -y @cyclonedx/cyclonedx-npm --output-file /sbom/node-js.sbom.cdx.json
+
 
 ARG INSTALL_DEV_DEPS
 COPY requirements-dev.txt ${app_path}/
@@ -197,6 +202,15 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
   else \
     ${PIP_INSTALL} $(cat ${app_path}/requirements-dev.txt | grep '^ipython=') ; \
   fi
+
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
+  set -e ; \
+  mkdir -p /sbom ; \
+  echo "Generating Python SBOM..." ; \
+  ${UV_HOME}/uvx --from cyclonedx-bom cyclonedx-py environment --pyproject ${app_path}/pyproject.toml \
+    -o /sbom/python.sbom.cdx.json ${VIRTUAL_ENV} ; \
+  echo "Generating Node.js SBOM..." ; \
+  npx -y @cyclonedx/cyclonedx-npm --output-file /sbom/node-js.sbom.cdx.json
 
 #
 # Final image
@@ -212,6 +226,7 @@ RUN \
   ldconfig
 COPY --from=builder --chown=${app_user_uid}:${app_user_gid} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 COPY --from=builder --chown=${app_user_uid}:${app_user_gid} ${app_path}/node_modules ${app_path}/node_modules
+COPY --from=builder /sbom/ /sbom/
 
 COPY --chown=${app_user_uid}:${app_user_gid} . ${app_path}/
 
