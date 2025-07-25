@@ -1,7 +1,8 @@
 from typing import ClassVar
 
-from django.utils.functional import StrOrPromise, cached_property as cached_property
+from django.utils.functional import cached_property as cached_property
 from django.views.generic import TemplateView
+from django_stubs_ext import StrOrPromise
 from wagtail.admin.filters import (
     DateRangePickerWidget as DateRangePickerWidget,
     MultipleUserFilter as MultipleUserFilter,

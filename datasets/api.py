@@ -8,13 +8,12 @@ from django.db.models import Q
 from modeltrans.conf import get_available_languages
 from modeltrans.translator import get_i18n_field
 from modeltrans.utils import build_localized_fieldname
-
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from drf_spectacular.types import OpenApiTypes
 from rest_framework import permissions, serializers, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework_nested.routers import NestedSimpleRouter
 
 # from users.models import User
@@ -182,8 +181,8 @@ class DataPointViewSet(viewsets.ModelViewSet):
 
 
 class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
-    schema = serializers.SlugRelatedField(slug_field='uuid', read_only=True)
-    label = serializers.CharField(source='label_i18n')
+    schema: serializers.SlugRelatedField[DatasetSchema] = serializers.SlugRelatedField(slug_field='uuid', read_only=True)  # pyright: ignore
+    label = serializers.CharField(source='label_i18n')  # type: ignore[assignment]
     unit = serializers.CharField(source='unit_i18n', required=False)
 
     class Meta:
@@ -294,7 +293,7 @@ class UserSerializer(serializers.Serializer):
          return instance.get_full_name()
 
 class DataPointCommentSerializer(serializers.ModelSerializer):
-    data_point = serializers.SlugRelatedField(slug_field='uuid', read_only=True)
+    data_point: serializers.SlugRelatedField[DataPoint] = serializers.SlugRelatedField(slug_field='uuid', read_only=True)  # pyright: ignore
     created_by = UserSerializer(read_only=True)
     last_modified_by = UserSerializer(read_only=True)
     resolved_by = UserSerializer(read_only=True)
@@ -409,7 +408,7 @@ class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
 
 
 class DataSourceSerializer(serializers.ModelSerializer):
-    label = serializers.SerializerMethodField()
+    label = serializers.SerializerMethodField()  # type: ignore[assignment]
 
     content_type_app = serializers.CharField(write_only=True, required=True)
     content_type_model = serializers.CharField(write_only=True, required=True)

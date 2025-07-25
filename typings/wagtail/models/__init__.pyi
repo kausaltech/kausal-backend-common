@@ -17,7 +17,8 @@ from django.forms import Form
 from django.http import HttpRequest
 from django.http.response import HttpResponseBase
 from django.template.response import TemplateResponse
-from django.utils.functional import StrOrPromise, cached_property as cached_property
+from django.utils.functional import cached_property as cached_property
+from django_stubs_ext import StrOrPromise
 from modelcluster.models import ClusterableModel
 from wagtail.actions.copy_for_translation import CopyPageForTranslationAction as CopyPageForTranslationAction
 from wagtail.actions.copy_page import CopyPageAction as CopyPageAction

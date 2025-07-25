@@ -1,7 +1,8 @@
 from collections.abc import Callable, Sequence
 from typing import Any
 
-from django.utils.functional import StrOrPromise, cached_property as cached_property
+from django.utils.functional import cached_property as cached_property
+from django_stubs_ext import StrOrPromise
 from wagtail import hooks as hooks
 from wagtail.admin.ui.components import Component as Component
 from wagtail.coreutils import accepts_kwarg as accepts_kwarg
@@ -101,6 +102,5 @@ class ButtonWithDropdownFromHook(BaseDropdownMenuButton):
         next_url: Incomplete | None = None,
         **kwargs,
     ) -> None: ...
-
     @property
     def dropdown_buttons(self) -> Sequence[Button]: ...

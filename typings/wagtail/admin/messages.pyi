@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from django.forms.forms import Form
 from django.http.request import HttpRequest
-from django.utils.functional import StrOrPromise
+from django_stubs_ext import StrOrPromise
 from wagtail.admin.widgets.button import Button
 
 def render(message: StrOrPromise, buttons: Sequence[Button] | None, detail: str = '') -> str: ...

@@ -3,7 +3,8 @@ from typing import Any, ClassVar, TypedDict, Unpack
 
 from django.forms.widgets import Media, MediaDefiningClass
 from django.http.request import HttpRequest
-from django.utils.functional import StrOrPromise, cached_property as cached_property
+from django.utils.functional import cached_property as cached_property
+from django_stubs_ext import StrOrPromise
 from wagtail import hooks as hooks
 from wagtail.admin.ui.sidebar import MenuItem as SidebarMenuItem
 from wagtail.coreutils import cautious_slugify as cautious_slugify

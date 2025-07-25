@@ -1,4 +1,4 @@
-from typing import Any, Callable, ClassVar, Generic, NamedTuple, NotRequired, Sequence, TypedDict
+from typing import Any, ClassVar, Generic, NamedTuple, NotRequired, Sequence, TypedDict
 from typing_extensions import TypeVar
 
 from django.db.models import Model, QuerySet
