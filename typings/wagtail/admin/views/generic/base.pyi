@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Generic, NamedTuple, NotRequired, Sequence, TypedDict
+from typing import Any, Callable, ClassVar, Generic, NamedTuple, NotRequired, Sequence, TypedDict
 from typing_extensions import TypeVar
 
 from django.db.models import Model, QuerySet
@@ -80,7 +80,7 @@ class BaseListingView(WagtailAdminTemplateMixin, BaseListView[_Model]):  # type:
     results_only: bool
     table_class: type[Table]
     table_classname: str | None
-    columns: list[Column]
+    columns: Sequence[Column]
     index_url_name: ClassVar[str | None]
     index_results_url_name: str | None
     page_kwarg: str

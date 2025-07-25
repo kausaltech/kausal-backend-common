@@ -572,7 +572,7 @@ class DjangoDiffModel[ModelT: Model](DiffSyncModel):
         assert type(parent_obj) is type(child_obj)
         assert isinstance(parent_obj, MP_Node)
         #siblings = new_parent.get_children(type(self), ordered=True)
-        child_obj.move(parent_obj, 'last-child')
+        child_obj.move(parent_obj, 'last-child')  # type: ignore[arg-type]
 
     def update(self, attrs: dict) -> Self | None:
         if not isinstance(self.adapter, DjangoAdapter):

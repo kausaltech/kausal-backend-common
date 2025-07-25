@@ -24,3 +24,11 @@ def user_or_none(user: AbstractBaseUser | AnonymousUser | None) -> User | None:
     if is_authenticated(user):
         return user
     return None
+
+
+def user_or_bust(user: AbstractBaseUser | AnonymousUser | None) -> User:
+    if user is None:
+        raise ValueError('User is None')
+    if is_authenticated(user):
+        return user
+    raise ValueError('User is not authenticated')

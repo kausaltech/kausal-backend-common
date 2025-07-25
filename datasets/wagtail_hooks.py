@@ -9,7 +9,7 @@ from wagtail.admin.forms.models import WagtailAdminModelForm
 from wagtail.admin.panels import FieldPanel
 from wagtail.log_actions import log
 from wagtail.snippets.models import register_snippet
-from wagtail.snippets.views.snippets import CreateView, SnippetViewSet
+from wagtail.snippets.views.snippets import CreateView
 
 from kausal_common.admin_site.permissioned_views import PermissionedViewSet
 from kausal_common.const import IS_PATHS, IS_WATCH
@@ -28,6 +28,7 @@ class DataSourceForm(WagtailAdminModelForm[DataSource]):
         model = DataSource
         exclude = ['scope_content_type', 'scope_id']
 
+
 class DataSourceCreateView(CreateView[DataSource, DataSourceForm]):
     def save_instance(self):
         user = cast('User', self.request.user)
@@ -37,9 +38,10 @@ class DataSourceCreateView(CreateView[DataSource, DataSourceForm]):
         scope_id: int
         if IS_PATHS and default_scope_app == 'nodes':
             from paths.context import realm_context
+
             active_instance = realm_context.get().realm
             scope_id = active_instance.pk
-        elif IS_WATCH and default_scope_app == "actions":
+        elif IS_WATCH and default_scope_app == 'actions':
             active_plan = user.get_active_admin_plan()
             scope_id = active_plan.pk
         else:
@@ -50,7 +52,7 @@ class DataSourceCreateView(CreateView[DataSource, DataSourceForm]):
         instance.scope_content_type = scope_content_type
         instance.scope_id = scope_id
         instance.save()
-        log(instance=instance, action="wagtail.create", content_changed=True)
+        log(instance=instance, action='wagtail.create', content_changed=True)
         return instance
 
 
@@ -62,7 +64,7 @@ class DataSourceViewSet(PermissionedViewSet):
     add_to_settings_menu = True
     form_class = DataSourceForm
     copy_view_enabled = False
-    add_view_class = DataSourceCreateView  # type: ignore[override]
+    add_view_class = DataSourceCreateView  # type: ignore[assignment]
     panels = [
         FieldPanel('name'),
         FieldPanel('edition'),
@@ -78,6 +80,7 @@ class DataSourceViewSet(PermissionedViewSet):
         active_obj: Model
         if IS_PATHS:
             from paths.context import realm_context
+
             active_obj = realm_context.get().realm
         elif IS_WATCH:
             active_obj = user.get_active_admin_plan()
@@ -88,5 +91,6 @@ class DataSourceViewSet(PermissionedViewSet):
 
         scope_content_type = ContentType.objects.get(app_label=default_scope_app, model=default_scope_model)
         return qs.filter(scope_content_type=scope_content_type, scope_id=active_obj.pk)
+
 
 register_snippet(DataSourceViewSet)

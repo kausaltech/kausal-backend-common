@@ -3,8 +3,7 @@ from typing import Any, ClassVar, TypedDict, Unpack
 
 from django.forms.widgets import Media, MediaDefiningClass
 from django.http.request import HttpRequest
-from django.utils.functional import cached_property as cached_property
-from django_stubs_ext import StrOrPromise
+from django.utils.functional import StrOrPromise, cached_property as cached_property
 from wagtail import hooks as hooks
 from wagtail.admin.ui.sidebar import MenuItem as SidebarMenuItem
 from wagtail.coreutils import cautious_slugify as cautious_slugify
@@ -29,6 +28,7 @@ class MenuItem(metaclass=MediaDefiningClass):
     def __init__(
         self,
         label: StrOrPromise,
+        url: str,
         **kwargs: Unpack[MenuItemInit]
     ) -> None: ...
     def is_shown(self, request: HttpRequest) -> bool:

@@ -60,6 +60,7 @@ ignore = [
   "TRY400",
   "UP031",
   "UP035",
+  "UP046",
 ]
 flake8-pytest-style.fixture-parentheses = false
 

@@ -5,6 +5,7 @@ from uuid import UUID
 
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db.models import Model
+from django.db.models.query import QuerySet
 from wagtail import hooks as hooks
 from wagtail.models.audit_log import BaseLogEntry
 from wagtail.utils.registry import ObjectTypeRegistry as ObjectTypeRegistry
@@ -67,7 +68,7 @@ class LogActionRegistry:
     def log(
         self, instance: Model, action: str, user: AbstractBaseUser | None = None, uuid: UUID | None = None, **kwargs
     ) -> BaseLogEntry: ...
-    def get_logs_for_instance(self, instance: Model) -> Iterable[BaseLogEntry]: ...
+    def get_logs_for_instance(self, instance: Model) -> QuerySet[BaseLogEntry]: ...
 
 registry: LogActionRegistry
 

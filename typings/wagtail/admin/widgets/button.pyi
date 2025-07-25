@@ -1,8 +1,7 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any
 
-from django.utils.functional import cached_property as cached_property
-from django_stubs_ext import StrOrPromise
+from django.utils.functional import StrOrPromise, cached_property as cached_property
 from wagtail import hooks as hooks
 from wagtail.admin.ui.components import Component as Component
 from wagtail.coreutils import accepts_kwarg as accepts_kwarg
@@ -79,8 +78,8 @@ class PageListingButton(ListingButton):
 class BaseDropdownMenuButton(Button):
     template_name: str
     def __init__(self, *args, **kwargs) -> None: ...
-    @cached_property
-    def dropdown_buttons(self) -> None: ...
+    @property
+    def dropdown_buttons(self) -> Sequence[Button]: ...
     def get_context_data(self, parent_context): ...
 
 class ButtonWithDropdown(BaseDropdownMenuButton):
@@ -102,7 +101,6 @@ class ButtonWithDropdownFromHook(BaseDropdownMenuButton):
         next_url: Incomplete | None = None,
         **kwargs,
     ) -> None: ...
+
     @property
-    def show(self) -> bool: ...
-    @cached_property
-    def dropdown_buttons(self): ...
+    def dropdown_buttons(self) -> Sequence[Button]: ...

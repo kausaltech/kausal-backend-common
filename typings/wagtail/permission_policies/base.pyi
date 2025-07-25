@@ -9,7 +9,7 @@ from django.utils.functional import cached_property
 _Model = TypeVar('_Model', bound=Model, default=Model)
 _UserT = TypeVar('_UserT', bound=AbstractBaseUser, default=AbstractBaseUser)
 _PermT = TypeVar('_PermT', default=Any)
-_AnyUser: TypeAlias = _UserT | AnonymousUser  # noqa: UP040
+_AnyUser: TypeAlias = _UserT | AnonymousUser
 
 class BasePermissionPolicy(Generic[_Model, _UserT, _PermT]):
     """

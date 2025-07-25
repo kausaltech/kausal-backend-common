@@ -97,6 +97,6 @@ class GraphQLContext:
             min_ms=10,
             description=self.operation_name,
         )
-        perf.enabled = settings.ENABLE_PERF_TRACING
+        perf.enabled = getattr(settings, 'ENABLE_PERF_TRACING', False)
         self.graphql_perf = perf
         self.graphql_query_language = None

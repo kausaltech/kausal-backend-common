@@ -95,6 +95,7 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, 
     class Meta:
         verbose_name = _('dimension category')
         verbose_name_plural = _('dimension categories')
+        ordering = ('dimension', 'order')
         constraints = (
             models.UniqueConstraint(
                 fields=['identifier', 'dimension'],
@@ -510,7 +511,7 @@ class DataPoint(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     class Meta:
         verbose_name = _('data point')
         verbose_name_plural = _('data points')
-        ordering = ('date',)
+        ordering = ('date', 'id')
 
         # TODO: Enforce uniqueness constraint.
         # This doesn't work because dimension_categories is a many-to-many field.

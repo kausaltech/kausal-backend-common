@@ -104,7 +104,7 @@ class StreamValue(MutableSequence):
         accessed, any changes to fields within raw data will not propagate back to the BoundBlock
         and will not be saved back when calling get_prep_value.
         """
-        stream_value: Incomplete
+        stream_value: StreamValue
         def __init__(self, stream_value) -> None: ...
         def __getitem__(self, i): ...
         def __len__(self) -> int: ...
@@ -117,16 +117,16 @@ class StreamValue(MutableSequence):
         Uses lazy evaluation on access, so that we're not redundantly constructing StreamChild
         instances for blocks of different names.
         """
-        stream_value: Incomplete
-        block_names: Incomplete
-        find_all: Incomplete
+        stream_value: StreamValue
+        block_names: list[str]
+        find_all: bool
         def __init__(self, stream_value, find_all: bool = True) -> None: ...
         def __getitem__(self, block_name): ...
         def __iter__(self): ...
         def __len__(self) -> int: ...
-    stream_block: Incomplete
-    is_lazy: Incomplete
-    raw_text: Incomplete
+    stream_block: StreamBlock
+    is_lazy: bool
+    raw_text: str | None
     def __init__(self, stream_block, stream_data, is_lazy: bool = False, raw_text: Incomplete | None = None) -> None:
         """
         Construct a StreamValue linked to the given StreamBlock,

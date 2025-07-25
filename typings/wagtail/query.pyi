@@ -140,17 +140,17 @@ class PageQuerySet(
         This filters the QuerySet to only contain pages that are an instance
         of the specified model(s) (including subclasses).
         """
-    def not_type(self, *types):
+    def not_type(self, *types) -> Self:
         """
         This filters the QuerySet to exclude any pages which are an instance of the specified model(s).
         """
     def exact_type_q(self, *types) -> Q: ...
-    def exact_type(self, *types):
+    def exact_type(self, *types) -> Self:
         """
         This filters the QuerySet to only contain pages that are an instance of the specified model(s)
         (matching the model exactly, not subclasses).
         """
-    def not_exact_type(self, *types):
+    def not_exact_type(self, *types) -> Self:
         """
         This filters the QuerySet to exclude any pages which are an instance of the specified model(s)
         (matching the model exactly, not subclasses).
@@ -171,7 +171,7 @@ class PageQuerySet(
         Filters the QuerySet to only contain pages that are in a private
         section and their descendants.
         """
-    def first_common_ancestor(self, include_self: bool = False, strict: bool = False):
+    def first_common_ancestor(self, include_self: bool = False, strict: bool = False) -> Page:
         """
         Find the first ancestor that all pages in this queryset have in common.
         For example, consider a page hierarchy like::

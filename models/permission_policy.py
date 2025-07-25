@@ -113,7 +113,7 @@ class ModelPermissionPolicy(Generic[_M, CreateContext, _QS], ABC, WagtailModelPe
 
     def get_queryset(self) -> _QS:
         mgr = getattr(self.model, 'objects', self.model._default_manager)
-        return cast(_QS, mgr.get_queryset())
+        return cast('_QS', mgr.get_queryset())
 
     @overload
     def gql_action_allowed(
