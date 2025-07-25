@@ -38,8 +38,24 @@ if TYPE_CHECKING:
     from ..models.types import FK, RevMany
     if IS_PATHS:
         from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
+        type ScopeType = InstanceConfig
     elif IS_WATCH:
         from actions.models import Plan
+        type ScopeType = Plan
+
+
+class DimensionQuerySet(PermissionedQuerySet['Dimension']):
+    def for_scope(self, scope: ScopeType) -> Self:
+        return self.filter(
+            scopes__scope_content_type=ContentType.objects.get_for_model(type(scope)),
+            scopes__scope_id=scope.pk,
+        )
+
+
+_DimensionManager = models.Manager.from_queryset(DimensionQuerySet)
+class DimensionManager(PermissionedManager['Dimension', DimensionQuerySet], _DimensionManager):  # pyright: ignore
+    """Model manager for Dimension."""
+del _DimensionManager
 
 
 class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, PermissionedModel):
@@ -52,8 +68,8 @@ class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, Perm
     scopes: RevMany[DimensionScope]
     categories: RevMany[DimensionCategory]
 
-    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
-    _default_manager: ClassVar[PermissionedManager[Self]]
+    objects: ClassVar[DimensionManager] = DimensionManager()
+    _default_manager: ClassVar[DimensionManager]
 
     class Meta:
         verbose_name = _('dimension')
@@ -123,6 +139,13 @@ class DimensionScopeQuerySet(PermissionedQuerySet['DimensionScope']):
         def for_instance_config(self, instance_config: InstanceConfig) -> Self:
             return self.filter(scope_content_type=ContentType.objects.get_for_model(instance_config), scope_id=instance_config.pk)
 
+    def for_scope(self, scope: ScopeType) -> Self:
+        ct = ContentType.objects.get_for_model(type(scope))
+        return self.filter(
+            scope_content_type=ct,
+            scope_id=scope.pk,
+        )
+
 
 _DimensionScopeManager = models.Manager.from_queryset(DimensionScopeQuerySet)
 class DimensionScopeManager(ModelManager['DimensionScope', DimensionScopeQuerySet], _DimensionScopeManager):
@@ -167,6 +190,21 @@ class DimensionScope(OrderedModel, PermissionedModel):
         return qs.filter(scope_content_type=self.scope_content_type, scope_id=self.scope_id)
 
 
+class DatasetSchemaQuerySet(PermissionedQuerySet['DatasetSchema']):
+    def for_scope(self, scope: ScopeType) -> Self:
+        ct = ContentType.objects.get_for_model(type(scope))
+        return self.filter(
+            scopes__scope_id=scope.pk, scopes__scope_content_type=ct
+        )
+
+
+_DatasetSchemaManager = models.Manager.from_queryset(DatasetSchemaQuerySet)
+class DatasetSchemaManager(PermissionedManager['DatasetSchema', DatasetSchemaQuerySet], _DatasetSchemaManager):  # pyright: ignore
+    """Model manager for DatasetSchema."""
+del _DatasetSchemaManager
+
+
+
 class DatasetSchema(ClusterableModel, PermissionedModel):
     class TimeResolution(models.TextChoices):
         """
@@ -206,8 +244,8 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     datasets: RevMany[Dataset]
     scopes: RevMany[DatasetSchemaScope]
 
-    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
-    _default_manager: ClassVar[PermissionedManager[Self]]
+    objects: ClassVar[DatasetSchemaManager] = DatasetSchemaManager()
+    _default_manager: ClassVar[DatasetSchemaQuerySet]
 
     panels = [
         FieldPanel(
@@ -359,6 +397,13 @@ class DatasetQuerySet(PermissionedQuerySet['Dataset']):
             from actions.models import Plan  # type: ignore
 
             return self.filter(scope_content_type=ContentType.objects.get_for_model(Plan), scope_id=plan.pk)
+
+    def for_scope(self, scope: ScopeType) -> Self:
+        ct = ContentType.objects.get_for_model(type(scope))
+        return self.filter(
+            scope_content_type=ct,
+            scope_id=scope.pk,
+        )
 
 
 _DatasetManager = models.Manager.from_queryset(DatasetQuerySet)
