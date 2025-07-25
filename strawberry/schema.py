@@ -12,6 +12,7 @@ from django.core.cache import cache
 from django.http.request import HttpRequest
 from graphql import DirectiveLocation, ExecutionResult, GraphQLError
 from strawberry.channels import ChannelsRequest, GraphQLWSConsumer
+from strawberry.exceptions import StrawberryGraphQLError
 from strawberry.extensions import SchemaExtension as StrawberrySchemaExtension
 from strawberry.types.graphql import OperationType
 
@@ -302,6 +303,15 @@ class ExecutionCacheExtension[Ctx: GraphQLContext](SchemaExtension[Ctx], ABC):
             return {}
         self.store_to_cache(exec_ctx.graphql_cache_key, result)
         return {}
+
+
+class AuthenticationExtension[Ctx: GraphQLContext](SchemaExtension[Ctx], ABC):
+    def on_operation(self) -> Generator[None]:
+        ctx = self.get_context()
+        token_auth = ctx.get_token_auth()
+        if token_auth is not None and token_auth.error:
+            raise StrawberryGraphQLError(str(token_auth.error))
+        yield
 
 
 @strawberry.directive(
