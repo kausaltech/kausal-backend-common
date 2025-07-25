@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+import contextlib
+import hashlib
+import time
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from datetime import datetime
@@ -18,7 +20,7 @@ from kausal_common.logging.rich_logger import styled_http_method
 from kausal_common.users import user_or_none
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Callable, Generator, Iterable
 
     from django.http.request import HttpRequest
 
@@ -59,6 +61,12 @@ class RequestCommonMeta:
     http_path: str | None = None
     """HTTP path."""
 
+    request_body_size: int | None = None
+    """Size of the request body."""
+
+    user_agent: str | None = None
+    """User agent of the request."""
+
     ws_verb: str | None = None
     """WebSocket verb."""
 
@@ -86,14 +94,24 @@ class RequestCommonMeta:
         return cls.generate_correlation_id()
 
     @classmethod
+    def _get_session_id(cls, session_id: str) -> str:
+        return hashlib.md5(session_id.encode('utf-8'), usedforsecurity=False).hexdigest()[0:8]
+
+    @classmethod
     def from_request(cls, request: LoggedHttpRequest) -> RequestCommonMeta:
         session_id = request.session.session_key if request.session else None
         if session_id:
-            session_id = session_id[0:8]
+            session_id = cls._get_session_id(session_id)
         correlation_id = request.headers.get(REQUEST_CORRELATION_ID_HEADER)
         if correlation_id is None:
             correlation_id = cls._get_correlation_id()
             request.correlation_id = correlation_id
+
+        content_length = request.headers.get('content-length')
+        request_body_size = None
+        if content_length:
+            with contextlib.suppress(Exception):
+                request_body_size = int(content_length)
 
         return RequestCommonMeta(
             correlation_id=correlation_id,
@@ -101,6 +119,9 @@ class RequestCommonMeta:
             user=user_or_none(request.user),
             session_id=session_id,
             http_method=request.method,
+            http_path=request.path,
+            user_agent=request.headers.get('x-original-user-agent') or request.headers.get('user-agent'),
+            request_body_size=request_body_size,
             referer=request.headers.get('referer'),
         )
 
@@ -109,7 +130,7 @@ class RequestCommonMeta:
         session = scope.get('session')
         session_id = session.session_key if session else None
         if session_id:
-            session_id = session_id[0:8]
+            session_id = cls._get_session_id(session_id)
         correlation_id = scope.get('correlation_id')
         if correlation_id is None:
             correlation_id = cls._get_correlation_id()
@@ -141,10 +162,11 @@ class RequestCommonMeta:
             referer=referer,
         )
 
-    def get_full_log_context(self) -> dict[str, str]:
-        ctx: dict[str, str] = {
+    def get_full_log_context(self) -> dict[str, str | int]:
+        ctx: dict[str, str | int] = {
             'correlation_id': self.correlation_id,
         }
+
         span = sentry_sdk.get_current_span()
         if span and span.trace_id:
             ctx['trace.id'] = span.trace_id
@@ -159,6 +181,15 @@ class RequestCommonMeta:
             ctx['session.id'] = self.session_id
         if self.referer:
             ctx['http.request.referer'] = self.referer
+        if self.http_path:
+            ctx['http.request.path'] = self.http_path
+        if self.user_agent:
+            ctx['user_agent.original'] = self.user_agent
+        if self.request_body_size is not None:
+            ctx['http.request.body_size'] = self.request_body_size
+        if self.http_path:
+            ctx['url.path'] = self.http_path
+
         return ctx
 
     def to_log_context(self) -> dict[str, str]:
@@ -250,6 +281,9 @@ class RequestCommonMeta:
 
         log = logger.bind(**self.get_full_log_context(), **{'auth.method': auth_method})
         log.info(f'{type_method} {path}')
+        start_ts = time.time()
         with self.contextualize_logger(), self.with_sentry_context() as sentry_scope:
             _rich_traceback_omit = True
             yield sentry_scope
+        end_ts = time.time()
+        log.info('Request completed in %.1f ms' % ((end_ts - start_ts) * 1000))
