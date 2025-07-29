@@ -24,7 +24,7 @@ from orgs.models import Organization
 
 
 if IS_WATCH:
-    from admin_site.views import WatchCreateView as CreateView, WatchEditView as EditView
+    from admin_site.viewsets import WatchCreateView as CreateView, WatchEditView as EditView
     from admin_site.utils import admin_req
 elif IS_PATHS:
     from admin_site.viewsets import PathsCreateView as CreateView, PathsEditView as EditView
