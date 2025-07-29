@@ -176,7 +176,7 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOF
 EOF
 
 # Install extra dependencies
-COPY requirements-kausal.txt ${app_path}/
+COPY requirements-kausal.txt* ${app_path}/
 RUN --mount=type=secret,id=EXTRA_PYPI_INDEX \
     if [ -f /run/secrets/EXTRA_PYPI_INDEX -a -f ${app_path}/requirements-kausal.txt ] ; then \
         UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX) \
@@ -193,15 +193,19 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
 
 
 ARG INSTALL_DEV_DEPS
-COPY requirements-dev.txt ${app_path}/
+COPY requirements-dev.txt* ${app_path}/
 # We'll either install all dev dependencies or only IPython (for convenience)
-RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
-  export LIBRARY_PATH=$(cat /etc/ld.so.conf.d/uv-python.conf) ; \
-  if [ ! -z "${INSTALL_DEV_DEPS}" ] ; then \
-    ${PIP_INSTALL} -r ${app_path}/requirements-dev.txt ; \
-  else \
-    ${PIP_INSTALL} $(cat ${app_path}/requirements-dev.txt | grep '^ipython=') ; \
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOF
+  set -e
+  export LIBRARY_PATH=$(cat /etc/ld.so.conf.d/uv-python.conf)
+  if [ -f ${app_path}/requirements-dev.txt ] ; then
+    if [ ! -z "${INSTALL_DEV_DEPS}" ] ; then
+      ${PIP_INSTALL} -r ${app_path}/requirements-dev.txt
+    else \
+      ${PIP_INSTALL} $(cat ${app_path}/requirements-dev.txt | grep '^ipython=')
+    fi
   fi
+EOF
 
 RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
   set -e ; \
