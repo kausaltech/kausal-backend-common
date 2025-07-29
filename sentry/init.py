@@ -15,12 +15,13 @@ from sentry_sdk.consts import DEFAULT_MAX_VALUE_LENGTH
 from kausal_common.context import get_project_id
 from kausal_common.deployment import coerce_bool, env_bool
 from kausal_common.deployment.types import is_development_environment
-from kausal_common.telemetry import otel_enabled
+from kausal_common.telemetry.traces import init_django_telemetry, otel_traces_enabled
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from sentry_sdk._types import Event, Hint
+    from sentry_sdk.consts import Experiments
     from sentry_sdk.envelope import Envelope
     from sentry_sdk.integrations import Integration
 
@@ -111,6 +112,10 @@ def _get_spotlight_url() -> str | None:
     return DEFAULT_SPOTLIGHT_URL if enabled else None
 
 
+def is_spotlight_enabled() -> bool:
+    return _get_spotlight_url() is not None
+
+
 def _wrap_method[F: Callable](func: F, op: str, get_desc: Callable | None = None) -> F:
     if getattr(func, '_sentry_wrapped', False):
         return func
@@ -145,7 +150,18 @@ def _patch_django_init() -> None:
 
 class NullTransport(sentry_sdk.Transport):
     def capture_envelope(self, envelope: Envelope):
-        pass
+        client = sentry_sdk.get_client()
+        if not client.spotlight:
+            return
+        has_non_log_items = False
+        for item in envelope.items:
+            if item.type != 'log':
+                has_non_log_items = True
+                break
+        if has_non_log_items:
+            return
+        client.spotlight.capture_envelope(envelope)
+
 
 DISABLED_DEFAULT_INTEGRATIONS = {'modules', 'argv', 'loguru', 'logging', 'graphene', 'strawberry', 'aiohttp', 'gql', 'tornado'}
 
@@ -175,6 +191,8 @@ def _get_integrations() -> list[Integration]:
 
 
 def init_sentry(dsn: str | None, deployment_type: str | None = None):
+    from kausal_common.telemetry import init_telemetry
+
     if sentry_sdk.is_initialized():
         return
     spotlight_url = _get_spotlight_url()
@@ -198,6 +216,10 @@ def init_sentry(dsn: str | None, deployment_type: str | None = None):
 
     integrations = _get_integrations()
 
+    experiments: Experiments = {"transport_http2": not bool(spotlight_url)}
+    if is_spotlight_enabled():
+        experiments['enable_logs'] = is_spotlight_enabled()
+
     sentry_sdk.init(
         dsn=dsn,
         debug=env_bool('SENTRY_DEBUG', default=False),
@@ -206,7 +228,7 @@ def init_sentry(dsn: str | None, deployment_type: str | None = None):
         send_default_pii=True,
         traces_sample_rate=1.0,
         profiles_sample_rate=1.0 if env_bool('SENTRY_PROFILING', default=False) else 0.0,
-        instrumenter='otel' if otel_enabled() else None,
+        instrumenter='otel' if otel_traces_enabled() else None,
         release=release,
         integrations=integrations,
         default_integrations=False,
@@ -216,13 +238,10 @@ def init_sentry(dsn: str | None, deployment_type: str | None = None):
         before_send=before_send,
         max_value_length=4096 if spotlight_url else DEFAULT_MAX_VALUE_LENGTH,
         max_request_body_size='always' if spotlight_url else 'medium',
-        _experiments={'transport_http2': not bool(spotlight_url)},
+        _experiments=experiments,
     )
     if env_bool('SENTRY_TRACE_DJANGO_INIT', default=False):
         _patch_django_init()
 
-    if otel_enabled():
-        from kausal_common.telemetry import init_django_telemetry, init_telemetry
-
-        init_telemetry()
-        init_django_telemetry()
+    init_telemetry()
+    init_django_telemetry()
