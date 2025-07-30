@@ -84,8 +84,8 @@ class BasePerson(index.Indexed, ClusterableModel):
         index.AutocompleteField('last_name'),
         index.AutocompleteField('title'),
         index.RelatedFields('organization', [
-        index.AutocompleteField('distinct_name'),
-        index.AutocompleteField('abbreviation'),
+            index.AutocompleteField('distinct_name'),
+            index.AutocompleteField('abbreviation'),
         ]),
     ]
 
@@ -109,7 +109,6 @@ class BasePerson(index.Indexed, ClusterableModel):
     def validate_unique(self, exclude=None):
         super().validate_unique(exclude)
 
-        # Use self.__class__ to get the concrete model class
         qs = self.__class__.objects.all()
 
         if self.email:
