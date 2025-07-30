@@ -227,7 +227,12 @@ check_package_versions() {
     if [ -f "uv.lock" ]; then
       set -e
       echo "🔄 Syncing virtual environment with uv.lock..."
-      uv sync --all-groups
+      if [ -n "$UV_INDEX" ] || [ -n "$UV_EXTRA_INDEX_URL" ]; then
+        extras="--extra kausal"
+      else
+        extras=""
+      fi
+      uv sync --all-groups ${extras}
       return 0
     fi
 

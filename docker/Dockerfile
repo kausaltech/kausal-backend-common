@@ -150,12 +150,12 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
   . ${VIRTUAL_ENV}/bin/activate
   # If uv.lock exists, we'll just do a "uv sync".
   if [ -f uv.lock ] ; then
-    EXTRA_GROUPS=""
+    EXTRAS=""
     if [ -f /run/secrets/EXTRA_PYPI_INDEX ] ; then
       export UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX)
-      EXTRA_GROUPS="--group kausal"
+      EXTRAS="--extra kausal"
     fi
-    ${UV_BIN} sync --no-dev --active --group prod $EXTRA_GROUPS --locked
+    ${UV_BIN} sync --no-dev --active --group prod $EXTRAS --locked
   else
     ${PIP_INSTALL} -r requirements-prod.txt -r requirements.txt
   fi
