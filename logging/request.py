@@ -17,7 +17,6 @@ from kausal_common.const import FORWARDED_FOR_HEADER, FORWARDED_HEADER, REQUEST_
 from kausal_common.deployment.http import parse_forwarded
 from kausal_common.deployment.types import get_cluster_context
 from kausal_common.logging.rich_logger import styled_http_method
-from kausal_common.users import user_or_none
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Iterable
@@ -99,6 +98,8 @@ class RequestCommonMeta:
 
     @classmethod
     def from_request(cls, request: LoggedHttpRequest) -> RequestCommonMeta:
+        from kausal_common.users import user_or_none
+
         session_id = request.session.session_key if request.session else None
         if session_id:
             session_id = cls._get_session_id(session_id)
@@ -127,6 +128,8 @@ class RequestCommonMeta:
 
     @classmethod
     def from_scope(cls, scope: ASGICommonScope) -> RequestCommonMeta:
+        from kausal_common.users import user_or_none
+
         session = scope.get('session')
         session_id = session.session_key if session else None
         if session_id:
@@ -199,6 +202,8 @@ class RequestCommonMeta:
         return ctx
 
     def get_sentry_user_data(self) -> dict[str, str] | None:
+        from kausal_common.users import user_or_none
+
         user_data: dict[str, str] = {}
         if self.client_ip:
             user_data['ip_address'] = self.client_ip
@@ -256,6 +261,8 @@ class RequestCommonMeta:
     def start_request(
         self, *, request: LoggedHttpRequest | None = None, scope: ASGICommonScope | None = None
     ) -> Generator[sentry_sdk.Scope]:
+        from kausal_common.users import user_or_none
+
         if self.http_method:
             type_method = f'HTTP request: {styled_http_method(self.http_method)}'
         else:
