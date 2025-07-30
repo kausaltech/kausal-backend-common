@@ -2,7 +2,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from modelcluster.models import ClusterableModel
 from modeltrans.manager import MultilingualQuerySet
-import reversion
+
 import typing
 import uuid
 
