@@ -6,6 +6,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 if TYPE_CHECKING:
+    from kausal_common.models.types import FK
+
     from users.models import User
 
 
@@ -25,7 +27,7 @@ class UserModifiableModel(models.Model):
     """
 
     created_at = models.DateTimeField(verbose_name=_("Created at"), auto_now_add=True, editable=False)
-    created_by: models.ForeignKey[User | None, User | None] = models.ForeignKey(  # pyright: ignore
+    created_by: FK[User | None] = models.ForeignKey(
         'users.User',
         verbose_name=_("Last modified by"),
         on_delete=models.SET_NULL,
@@ -34,7 +36,7 @@ class UserModifiableModel(models.Model):
         related_name='+',
     )
     last_modified_at = models.DateTimeField(verbose_name=_("Last modified at"), auto_now=True, editable=False)
-    last_modified_by = models.ForeignKey(
+    last_modified_by: FK[User | None] = models.ForeignKey(
         'users.User',
         verbose_name=_("Last modified by"),
         on_delete=models.SET_NULL,
