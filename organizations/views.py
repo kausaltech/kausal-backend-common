@@ -45,7 +45,7 @@ class OrganizationViewMixin:
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()  # type: ignore[misc]
         obj = getattr(self, 'object', None)
-        kwargs['parent_choices'] = Organization.get_parent_choices(obj=obj, user=cast('User', admin_req(self.request).user))
+        kwargs['parent_choices'] = Organization.get_parent_choices(obj=obj, user=admin_req(self.request).user)
         return kwargs
 
 
@@ -88,20 +88,7 @@ class CreateChildNodeView(OrganizationViewMixin, CreateView):
 
 
 class OrganizationCreateView(OrganizationViewMixin, CreateView):
-    def form_valid(self, form):
-        result = super().form_valid(form)
-        # Add the new organization to the related organizations of the user's active plan
-        org = form.instance
-        if IS_WATCH:
-            plan = self.request.user.get_active_admin_plan()
-            plan.related_organizations.add(org)
-        elif IS_PATHS:
-            pass
-            # TODO: add this once we implement related organizations
-            # from paths.context import realm_context
-            # admin_instance = realm_context.get().realm
-            # admin_instance.related_organizations.add(org)
-        return result
+    pass
 
 
 class OrganizationEditView(OrganizationViewMixin, EditView):
@@ -161,14 +148,3 @@ class OrganizationIndexView(IndexView[Organization]):
     # FIXME: in Wagtail 6.2.X this is the default, so this line can be deleted once we upgrade
     any_permission_required = ["add", "change", "delete", "view"]
     view_set: OrganizationViewSet | None = None
-
-    def get_list_more_buttons(self, instance: Organization):
-        assert self.view_set is not None
-        user = admin_req(self.request).user
-        if IS_WATCH:
-            active_instance = user.get_active_admin_plan()
-        elif IS_PATHS:
-            active_instance = user.get_active_instance()
-        else:
-            raise RuntimeError('No active instance found')
-        return self.view_set.get_index_view_buttons(user, instance, active_instance)
