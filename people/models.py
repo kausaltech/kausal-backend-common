@@ -8,7 +8,6 @@ from datetime import timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import reversion
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
@@ -40,7 +39,7 @@ def image_upload_path(instance: BasePerson, filename: str) -> str:
     file_extension = f_path.suffix
     return 'images/%s/%s%s' % (instance._meta.model_name, instance.pk, file_extension)
 
-@reversion.register()
+
 class BasePerson(index.Indexed, ClusterableModel):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     first_name = models.CharField(max_length=100, verbose_name=_('first name'))
