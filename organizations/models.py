@@ -1,37 +1,33 @@
 from __future__ import annotations
-from abc import abstractmethod
-from modelcluster.models import ClusterableModel
-from modeltrans.manager import MultilingualQuerySet
 
 import typing
 import uuid
-
+from abc import abstractmethod
 from typing import TYPE_CHECKING, ClassVar, Self
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.gis.db import models as gis_models
-
-from django.utils.translation import gettext_lazy as _, pgettext_lazy
-
-from django.conf import settings
 from django.db import models
+from django.utils.translation import gettext_lazy as _, pgettext_lazy
+from modelcluster.fields import ParentalKey
+from modelcluster.models import ClusterableModel
+from modeltrans.fields import TranslationField
+from modeltrans.manager import MultilingualQuerySet
+from wagtail.fields import RichTextField
+from wagtail.search import index
+
 from treebeard.mp_tree import MP_Node, MP_NodeQuerySet
 
 from kausal_common.models.language import ModelWithPrimaryLanguage
 
 from ..i18n.helpers import get_supported_languages
-from wagtail.search import index
-from wagtail.fields import RichTextField
-
-from modeltrans.fields import TranslationField
-
-from modelcluster.fields import ParentalKey
-
 
 if TYPE_CHECKING:
-    from users.models import User
-    from people.models import Person
     from orgs.models import OrganizationMetadataAdmin
+    from people.models import Person
+    from users.models import User
+
     from ..models.types import FK, M2M
 
 
@@ -185,7 +181,7 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
 
     i18n = TranslationField(fields=('name', 'abbreviation'), default_language_field='primary_language_lowercase')
 
-    public_fields = ['id', 'uuid', 'name', 'abbreviation', 'internal_abbreviation', 'parent']
+    public_fields: ClassVar[list[str]] = ['id', 'uuid', 'name', 'abbreviation', 'internal_abbreviation', 'parent']
 
     search_fields = [
         index.AutocompleteField('name'),
@@ -217,11 +213,11 @@ class BaseNamespace(models.Model):
     name = models.CharField(max_length=255)
     user_editable = models.BooleanField(default=False)
 
-    def __str__(self):
-        return f'{self.name} ({self.identifier})'
-
     class Meta:
         abstract = True
+
+    def __str__(self):
+        return f'{self.name} ({self.identifier})'
 
 
 class BaseOrganizationIdentifier(models.Model):
