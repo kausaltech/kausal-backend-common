@@ -1,42 +1,35 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from django.apps import apps
 from django.contrib.admin.utils import unquote
 from django.db import transaction
 from django.db.models import ProtectedError
 from django.http.request import HttpRequest
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse
-from django.utils.functional import cached_property
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _, gettext_lazy, ngettext_lazy
-from django.views.generic import TemplateView
-from wagtail.admin import messages
-from wagtail.admin.views.generic.base import BaseObjectMixin, WagtailAdminTemplateMixin
-from wagtail.admin.views.generic.permissions import PermissionCheckedMixin
 from wagtail.snippets.views.snippets import DeleteView, IndexView
 
 from kausal_common.const import IS_PATHS, IS_WATCH
 
-
 from orgs.models import Organization
 
-
 if IS_WATCH:
-    from admin_site.viewsets import WatchCreateView as CreateView, WatchEditView as EditView
     from admin_site.utils import admin_req
+    from admin_site.viewsets import WatchCreateView as CreateView, WatchEditView as EditView
 elif IS_PATHS:
-    from admin_site.viewsets import PathsCreateView as CreateView, PathsEditView as EditView
-    from admin_site.viewsets import admin_req
+    from admin_site.viewsets import PathsCreateView as CreateView, PathsEditView as EditView, admin_req
 else:
     raise RuntimeError('No admin views found')
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
-    from orgs.wagtail_admin import OrganizationViewSet
-    from users.models import User
+    if IS_PATHS:
+        from orgs.wagtail_hooks import OrganizationViewSet
+    elif IS_WATCH:
+        from orgs.wagtail_admin import OrganizationViewSet
 
 
 class OrganizationViewMixin:
