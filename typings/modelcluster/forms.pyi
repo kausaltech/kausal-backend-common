@@ -64,7 +64,7 @@ class ClusterFormMetaclass(ModelFormMetaclass):
 
 
 class ClusterForm(ModelForm[_M], metaclass=ClusterFormMetaclass):
-    formsets: Mapping[str, BaseModelFormSet]
+    formsets: Mapping[str, BaseModelFormSet[Any, Any]]
 
 
 @copy_signature(modelform_factory)

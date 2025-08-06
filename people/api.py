@@ -8,6 +8,8 @@ from kausal_common.models.general import public_fields
 
 from people.models import Person
 
+from django.utils.translation import gettext_lazy as _
+
 
 class PersonSerializer(
     BulkSerializerValidationInstanceMixin,

@@ -8,7 +8,6 @@ from logging.config import dictConfig
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from django.conf import settings
-from django.utils.termcolors import DEFAULT_PALETTE, PALETTES
 
 from loguru import logger
 
@@ -62,7 +61,7 @@ class UserLoggingOptions:
 def get_logging_conf(
     level: GetHandler,
     options: UserLoggingOptions,
-):
+) -> _DictConfigArgs:
     sentry_debug = env_bool('SENTRY_DEBUG', default=False)
     filters = _get_filters(options)
     config: _DictConfigArgs = {
@@ -182,12 +181,20 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
 
     from loguru._colorama import should_colorize
 
+    if 'pytest' in sys.modules:
+        # If running tests, we don't want to see the full debug output
+        log_level = 'WARNING'
+    else:
+        log_level = 'DEBUG'
+
     loguru_handlers: list[BasicHandlerConfig]
     if log_format == 'logfmt':
-        logfmt_handler: BasicHandlerConfig = dict(sink=loguru_logfmt_sink, format='{message}')  # pyright: ignore
+        logfmt_handler: BasicHandlerConfig = dict(sink=loguru_logfmt_sink, format='{message}', level=log_level)  # pyright: ignore
         loguru_handlers = [logfmt_handler]
     else:
-        rich_handler: BasicHandlerConfig = dict(sink=loguru_rich_sink, format='{message}', colorize=should_colorize(sys.stdout))  # pyright: ignore
+        rich_handler: BasicHandlerConfig = dict(
+            sink=loguru_rich_sink, format='{message}', colorize=should_colorize(sys.stdout), level=log_level
+        )  # pyright: ignore
         loguru_handlers = [rich_handler]
 
     # This configures loguru

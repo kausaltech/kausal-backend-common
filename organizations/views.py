@@ -1,42 +1,35 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from django.apps import apps
 from django.contrib.admin.utils import unquote
 from django.db import transaction
 from django.db.models import ProtectedError
 from django.http.request import HttpRequest
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse
-from django.utils.functional import cached_property
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _, gettext_lazy, ngettext_lazy
-from django.views.generic import TemplateView
-from wagtail.admin import messages
-from wagtail.admin.views.generic.base import BaseObjectMixin, WagtailAdminTemplateMixin
-from wagtail.admin.views.generic.permissions import PermissionCheckedMixin
 from wagtail.snippets.views.snippets import DeleteView, IndexView
 
 from kausal_common.const import IS_PATHS, IS_WATCH
 
-
 from orgs.models import Organization
 
-
 if IS_WATCH:
-    from admin_site.views import WatchCreateView as CreateView, WatchEditView as EditView
     from admin_site.utils import admin_req
+    from admin_site.viewsets import WatchCreateView as CreateView, WatchEditView as EditView
 elif IS_PATHS:
-    from admin_site.viewsets import PathsCreateView as CreateView, PathsEditView as EditView
-    from admin_site.viewsets import admin_req
+    from admin_site.viewsets import PathsCreateView as CreateView, PathsEditView as EditView, admin_req
 else:
     raise RuntimeError('No admin views found')
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
-    from orgs.wagtail_admin import OrganizationViewSet
-    from users.models import User
+    if IS_PATHS:
+        from orgs.wagtail_hooks import OrganizationViewSet
+    elif IS_WATCH:
+        from orgs.wagtail_admin import OrganizationViewSet
 
 
 class OrganizationViewMixin:
@@ -45,7 +38,7 @@ class OrganizationViewMixin:
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()  # type: ignore[misc]
         obj = getattr(self, 'object', None)
-        kwargs['parent_choices'] = Organization.get_parent_choices(obj=obj, user=cast('User', admin_req(self.request).user))
+        kwargs['parent_choices'] = Organization.get_parent_choices(obj=obj, user=admin_req(self.request).user)
         return kwargs
 
 
@@ -88,34 +81,12 @@ class CreateChildNodeView(OrganizationViewMixin, CreateView):
 
 
 class OrganizationCreateView(OrganizationViewMixin, CreateView):
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        if IS_PATHS:
-            from paths.context import realm_context
-            admin_instance = realm_context.get().realm
-            kwargs['parent_choices'] = Organization.objects.qs.available_for_instance(admin_instance)
-
-        return kwargs
-
-    def form_valid(self, form):
-        result = super().form_valid(form)
-        # Add the new organization to the related organizations of the user's active plan
-        org = form.instance
-        if IS_WATCH:
-            plan = self.request.user.get_active_admin_plan()
-            plan.related_organizations.add(org)
-        elif IS_PATHS:
-            pass
-            # from paths.context import realm_context
-            # admin_instance = realm_context.get().realm
-            # admin_instance.related_organizations.add(org)
-        return result
+    pass
 
 
 class OrganizationEditView(OrganizationViewMixin, EditView):
     def user_has_permission(self, permission: str) -> bool:
-        # return self.permission_policy.user_has_permission_for_instance(admin_req(self.request).user, permission, self.object)
-        return True
+        return self.permission_policy.user_has_permission_for_instance(admin_req(self.request).user, permission, self.object)
 
 
 class Rollback(Exception):
@@ -170,84 +141,3 @@ class OrganizationIndexView(IndexView[Organization]):
     # FIXME: in Wagtail 6.2.X this is the default, so this line can be deleted once we upgrade
     any_permission_required = ["add", "change", "delete", "view"]
     view_set: OrganizationViewSet | None = None
-
-    def get_list_more_buttons(self, instance: Organization):
-        assert self.view_set is not None
-        user = admin_req(self.request).user
-        if IS_WATCH:
-            active_instance = user.get_active_admin_plan()
-        elif IS_PATHS:
-            active_instance = user.get_active_instance()
-        else:
-            raise RuntimeError('No active instance found')
-        return self.view_set.get_index_view_buttons(user, instance, active_instance)
-
-
-class SetOrganizationRelatedToActivePlanView(
-    BaseObjectMixin[Organization],
-    PermissionCheckedMixin,
-    WagtailAdminTemplateMixin,
-    TemplateView,
-):
-    model = Organization
-    permission_required = 'set_related_to_plan'
-    page_title = gettext_lazy("Add organization to active plan")
-    set_related = True
-    template_name = 'aplans/confirmation.html'
-    index_url_name: str | None = None
-
-    def get_page_title(self):
-        if self.set_related:
-            return _("Add organization to active plan")
-        return _("Exclude organization from active plan")
-
-    def user_has_permission(self, permission):
-        user = admin_req(self.request).user
-        return self.permission_policy.user_has_permission_for_instance(user, permission, self.object)
-
-    def get_page_subtitle(self):
-        plan = admin_req(self.request).user.get_active_admin_plan()
-        if self.set_related:
-            msg = _("Confirm including %(org)s in plan %(plan)s")
-        else:
-            msg = _("Confirm excluding %(org)s from plan %(plan)s")
-        return msg % {'org': self.object.name, 'plan': plan}
-
-    def confirmation_message(self):
-        plan = admin_req(self.request).user.get_active_admin_plan()
-        if self.set_related:
-            msg = _("Do you really want to include the organization '%(org)s' in the plan '%(plan)s'?")
-        else:
-            msg = _("Do you really want to exclude the organization '%(org)s' from the plan '%(plan)s'?")
-        return msg % {'org': self.object.name, 'plan': plan}
-
-    def add_to_plan(self, plan):
-        if self.object.pk in plan.related_organizations.values_list('pk', flat=True):
-            raise ValueError(_("The organization is already included in the plan"))
-        plan.related_organizations.add(self.object)
-
-    def remove_from_plan(self, plan):
-        if self.object.pk not in plan.related_organizations.values_list('pk', flat=True):
-            raise ValueError(_("The organization is not included in the plan"))
-        plan.related_organizations.remove(self.object)
-
-    def post(self, request, *args, **kwargs):
-        plan = request.user.get_active_admin_plan()
-        try:
-            if self.set_related:
-                self.add_to_plan(plan)
-            else:
-                self.remove_from_plan(plan)
-        except ValueError as e:
-            messages.error(request, str(e))
-            return redirect(self.index_url)
-        if self.set_related:
-            msg = _("Organization '%(org)s' has been included in plan '%(plan)s'.")
-        else:
-            msg = _("Organization '%(org)s' has been excluded from plan '%(plan)s'.")
-        messages.success(request, msg % {'org': self.object.name, 'plan': plan})
-        return redirect(self.index_url)
-
-    @cached_property
-    def index_url(self):
-        return reverse(self.index_url_name)

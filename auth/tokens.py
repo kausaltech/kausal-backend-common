@@ -124,7 +124,7 @@ def authenticate_from_authorization_header(
             log_ctx['oauth2.error'] = error.id
             if error.description:
                 log_ctx['oauth2.error_description'] = error.description
-        logger.error('Invalid token: {error}', **log_ctx)
+        logger.error(f'Invalid token: {error}', **log_ctx)
         return TokenAuthResult(error=error)
 
     token = cast('TokenType | None', r.access_token)

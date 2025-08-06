@@ -8,17 +8,15 @@ from datetime import timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import reversion
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
-from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from modeltrans.fields import TranslationField
 from wagtail.search import index
 
-import willow
+import willow  # type: ignore
 from image_cropping import ImageRatioField
 
 from users.models import User
@@ -41,7 +39,7 @@ def image_upload_path(instance: BasePerson, filename: str) -> str:
     file_extension = f_path.suffix
     return 'images/%s/%s%s' % (instance._meta.model_name, instance.pk, file_extension)
 
-@reversion.register()
+
 class BasePerson(index.Indexed, ClusterableModel):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     first_name = models.CharField(max_length=100, verbose_name=_('first name'))
@@ -85,8 +83,8 @@ class BasePerson(index.Indexed, ClusterableModel):
         index.AutocompleteField('last_name'),
         index.AutocompleteField('title'),
         index.RelatedFields('organization', [
-        index.AutocompleteField('distinct_name'),
-        index.AutocompleteField('abbreviation'),
+            index.AutocompleteField('distinct_name'),
+            index.AutocompleteField('abbreviation'),
         ]),
     ]
 
@@ -110,7 +108,6 @@ class BasePerson(index.Indexed, ClusterableModel):
     def validate_unique(self, exclude=None):
         super().validate_unique(exclude)
 
-        # Use self.__class__ to get the concrete model class
         qs = self.__class__.objects.all()
 
         if self.email:

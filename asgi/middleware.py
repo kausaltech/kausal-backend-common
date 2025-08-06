@@ -10,7 +10,6 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from kausal_common.auth.tokens import authenticate_from_authorization_header
-from kausal_common.logging.request import RequestCommonMeta
 
 if TYPE_CHECKING:
     from uvicorn._types import ASGIApplication
@@ -22,6 +21,8 @@ class GeneralRequestMiddleware(BaseMiddleware):
     """General request middleware that performs token auth and log context setup."""
 
     async def __call__(self, scope: ASGICommonScope, receive, send):
+        from kausal_common.logging.request import RequestCommonMeta
+
         headers = dict(scope['headers'])
         auth_header = headers.get(b'authorization')
         if auth_header:

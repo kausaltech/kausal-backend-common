@@ -192,8 +192,14 @@ class GrapheneStrawberrySchema(FederationSchema):
 
     @schema_converter.setter
     def schema_converter(self, value: GraphQLCoreConverter) -> None:
+        opt_kwargs = {}
+        if not hasattr(value, '_get_scalar_registry'):
+            opt_kwargs['scalar_registry'] = value.scalar_registry
+        else:
+            opt_kwargs['scalar_overrides'] = {}
+        # scalar_overrides is missing
         self._schema_converter = UnifiedGraphQLConverter(
             config=value.config,
-            scalar_registry=value.scalar_registry,
             get_fields=value.get_fields,
+            **opt_kwargs,
         )

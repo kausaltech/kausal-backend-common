@@ -8,14 +8,15 @@ from django.db.models import Q
 from modeltrans.conf import get_available_languages
 from modeltrans.translator import get_i18n_field
 from modeltrans.utils import build_localized_fieldname
-
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from drf_spectacular.types import OpenApiTypes
 from rest_framework import permissions, serializers, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework_nested.routers import NestedSimpleRouter
+
+from kausal_common.users import user_or_anon, user_or_bust
 
 # from users.models import User
 from .models import (
@@ -101,7 +102,9 @@ class DataPointSerializer(serializers.ModelSerializer):
         # For each data point, find all points in the same dataset with the same date
         # based on the resolution
         dataset_object = Dataset.objects.get(uuid=dataset)
-        if dataset_object.schema.time_resolution != dataset_object.schema.TimeResolution.YEARLY:
+        schema = dataset_object.schema
+        assert schema is not None
+        if schema.time_resolution != schema.TimeResolution.YEARLY:
             raise ValueError('Only yearly time resolution supported currently.')
         existing_points = DataPoint.objects.filter(
             dataset__uuid=dataset,
@@ -151,13 +154,14 @@ class DataPointViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
         # TODO: check that we don't allow editing instances for which we only have view permissions
-        qs = DataPoint.permission_policy().instances_user_has_permission_for(self.request.user, 'view')
+        user = user_or_anon(self.request.user)
+        qs = DataPoint.permission_policy().instances_user_has_permission_for(user, 'view')
         return qs.filter(dataset__uuid=self.kwargs['dataset_uuid'])
 
     def perform_create(self, serializer):
         dataset_uuid = self.kwargs['dataset_uuid']
         dataset = Dataset.objects.get(uuid=dataset_uuid)
-        user = self.request.user
+        user = user_or_bust(self.request.user)
         serializer.save(dataset=dataset, last_modified_by=user)
         dataset.last_modified_by = user
         dataset.save()
@@ -182,8 +186,8 @@ class DataPointViewSet(viewsets.ModelViewSet):
 
 
 class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
-    schema = serializers.SlugRelatedField(slug_field='uuid', read_only=True)
-    label = serializers.CharField(source='label_i18n')
+    schema: serializers.SlugRelatedField[DatasetSchema] = serializers.SlugRelatedField(slug_field='uuid', read_only=True)  # pyright: ignore
+    label = serializers.CharField(source='label_i18n')  # type: ignore[assignment]
     unit = serializers.CharField(source='unit_i18n', required=False)
 
     class Meta:
@@ -238,7 +242,8 @@ class DatasetSchemaViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
         # TODO: check that we don't allow editing instances for which we only have view permissions
-        return DatasetSchema.permission_policy().instances_user_has_permission_for(self.request.user, 'view')
+        user = user_or_anon(self.request.user)
+        return DatasetSchema.permission_policy().instances_user_has_permission_for(user, 'view')
 
 
 class DatasetSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
@@ -260,7 +265,8 @@ class DatasetViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
         # TODO: check that we don't allow editing instances for which we only have view permissions
-        return Dataset.permission_policy().instances_user_has_permission_for(self.request.user, 'view')
+        user = user_or_anon(self.request.user)
+        return Dataset.permission_policy().instances_user_has_permission_for(user, 'view')
 
 
 class DimensionViewSet(viewsets.ModelViewSet):
@@ -294,7 +300,7 @@ class UserSerializer(serializers.Serializer):
          return instance.get_full_name()
 
 class DataPointCommentSerializer(serializers.ModelSerializer):
-    data_point = serializers.SlugRelatedField(slug_field='uuid', read_only=True)
+    data_point: serializers.SlugRelatedField[DataPoint] = serializers.SlugRelatedField(slug_field='uuid', read_only=True)  # pyright: ignore
     created_by = UserSerializer(read_only=True)
     last_modified_by = UserSerializer(read_only=True)
     resolved_by = UserSerializer(read_only=True)
@@ -375,7 +381,10 @@ class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
         parameters=[
             OpenApiParameter(
                 name='reference_target',
-                description="Type of entity the sources are linked to ('dataset', 'data_point', or 'all'). Defaults to 'dataset'.",
+                description=(
+                    "Type of entity the sources are linked to ('dataset', 'data_point', or 'all'). "
+                    "Defaults to 'dataset'."
+                ),
                 type=OpenApiTypes.STR,
                 enum=['dataset', 'data_point', 'all'],
                 default='dataset',
@@ -395,13 +404,12 @@ class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
             return DatasetSourceReference.objects.filter(
                 data_point__dataset__uuid=dataset_uuid
             ).select_related('data_point', 'data_source')
-        elif reference_target == 'all':
+        if reference_target == 'all':
             return DatasetSourceReference.objects.filter(
                 Q(dataset__uuid=dataset_uuid) |
                 Q(data_point__dataset__uuid=dataset_uuid)
             ).select_related('data_point', 'data_source')
-        else: # default to dataset
-            return DatasetSourceReference.objects.filter(dataset__uuid=dataset_uuid)
+        return DatasetSourceReference.objects.filter(dataset__uuid=dataset_uuid)
 
     def perform_create(self, serializer):
         dataset = Dataset.objects.get(uuid=self.kwargs['dataset_uuid'])
@@ -409,7 +417,7 @@ class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
 
 
 class DataSourceSerializer(serializers.ModelSerializer):
-    label = serializers.SerializerMethodField()
+    label = serializers.SerializerMethodField()  # type: ignore[assignment]
 
     content_type_app = serializers.CharField(write_only=True, required=True)
     content_type_model = serializers.CharField(write_only=True, required=True)
@@ -431,7 +439,7 @@ class DataSourceSerializer(serializers.ModelSerializer):
         except ContentType.DoesNotExist:
             raise serializers.ValidationError(
                 f"ContentType with app_label={content_type_app} and model={content_type_model} does not exist"
-            )
+            ) from None
 
         data_source = DataSource.objects.create(
             **validated_data,
@@ -464,7 +472,8 @@ class DataSourceViewSet(viewsets.ModelViewSet):
         if has_any_scope_param and not has_all_scope_params:
             raise Exception("Must specify either all or none of content_type_app, content_type_model and object_id")
 
-        qs = DataSource.permission_policy().instances_user_has_permission_for(self.request.user, 'view')
+        user = user_or_anon(self.request.user)
+        qs = DataSource.permission_policy().instances_user_has_permission_for(user, 'view')
 
         if has_any_scope_param:
             # Deliberately not catching ContentType.DoesNotExist because this should cause an HTTP error code IMO

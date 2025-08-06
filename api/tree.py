@@ -3,6 +3,8 @@ from uuid import UUID
 from django.core.exceptions import FieldDoesNotExist
 from rest_framework import exceptions, serializers
 
+from orgs.models import Organization
+
 
 class PrevSiblingField(serializers.CharField):
     # Instances must implement method get_prev_sibling(). (Treebeard nodes do that.) Must be used in ModelSerializer so

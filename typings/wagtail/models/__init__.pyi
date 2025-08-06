@@ -70,8 +70,6 @@ from wagtail.utils.timestamps import ensure_utc as ensure_utc
 from _typeshed import Incomplete
 from treebeard.mp_tree import MP_Node, MP_NodeManager
 
-from kausal_common.models.types import copy_signature
-
 from .audit_log import (
     BaseLogEntry as BaseLogEntry,
     BaseLogEntryManager as BaseLogEntryManager,
@@ -141,7 +139,7 @@ type SerializableData = dict[str, Any]
 
 class RevisionMixin(models.Model):
     """A mixin that allows a model to have revisions."""
-    latest_revision: models.ForeignKey[Revision[Self] | None]
+    latest_revision: models.ForeignKey[Revision[Self] | None, Revision[Self] | None]
     default_exclude_fields_in_copy: ClassVar[Iterable[str]]
 
     @property
@@ -185,7 +183,7 @@ class RevisionMixin(models.Model):
         * ``translation_key``
         * ``locale``
         """
-    def save_revision(  # noqa: PLR0913
+    def save_revision(
         self, user: AbstractBaseUser | None = None, approved_go_live_at: str | datetime | None = None,
         changed: bool = True, log_action: bool = False, previous_revision: Revision[Any] | None = None,
         clean: bool = True,
@@ -224,7 +222,7 @@ class DraftStateMixin(models.Model):
     def approved_schedule(self) -> bool: ...
     @property
     def status_string(self) -> StrOrPromise: ...
-    def publish(  # noqa: PLR0913
+    def publish(
         self, revision: Revision[Any], user: AbstractBaseUser | None = None, changed: bool = True, log_action: bool = True,
         previous_revision: Revision[Any] | None = None, skip_permission_checks: bool = False,
     ) -> None:
@@ -411,7 +409,7 @@ class WorkflowMixin:
     def get_lock(self): ...
 
 
-_PageModel = TypeVar('_PageModel', bound=Page, default='Page', covariant=True)
+_PageModel = TypeVar('_PageModel', bound=Page, default=Page, covariant=True)
 
 class BasePageManager(Generic[_PageModel], models.Manager[_PageModel]):
     def get_queryset(self) -> PageQuerySet[_PageModel]: ...
@@ -531,7 +529,7 @@ class Page(  # pyright: ignore[reportGeneralTypeIssues]
 
         This includes translations of site root pages as well.
         """
-    def save(  # noqa: DJ012, PLR0913
+    def save(  # noqa: DJ012
         self, force_insert: bool | tuple[ModelBase, ...] = ..., force_update: bool = ...,
         using: str | None = ..., update_fields: Iterable[str] | None = ...,
         clean: bool = True, user: AbstractBaseUser | None = None, log_action: bool = False,
@@ -747,7 +745,7 @@ class Page(  # pyright: ignore[reportGeneralTypeIssues]
 
         :param log_action: flag for logging the action. Pass None to skip logging. Can be passed an action string. Defaults to 'wagtail.copy'
         """
-    def create_alias(  # noqa: PLR0913
+    def create_alias(
         self,
         *,
         recursive: bool = False,
@@ -913,7 +911,7 @@ class Revision[M: Model](models.Model):
     created_at: models.DateTimeField[_DTSet, datetime]
     user: models.ForeignKey[AbstractBaseUser | None]
     object_str: models.TextField
-    content: models.JSONField
+    content: models.JSONField[dict[str, Any], dict[str, Any]]
     approved_go_live_at: _NullableDTF
     objects: ClassVar[RevisionsManager]  # pyright: ignore
     _default_manager: ClassVar[RevisionsManager]
@@ -1037,7 +1035,7 @@ class TaskManager(models.Manager[Task]):
     def get_queryset(self) -> TaskQuerySet: ...
 
 
-_StateT = TypeVar('_StateT', bound=TaskState, default='TaskState')
+_StateT = TypeVar('_StateT', bound=TaskState, default=TaskState)
 
 
 class Task(Generic[_StateT], SpecificMixin['Task'], models.Model):
@@ -1151,12 +1149,12 @@ class AbstractGroupApprovalTask(Task):
 
 class GroupApprovalTask(AbstractGroupApprovalTask): ...
 
-class WorkflowStateQuerySet(models.QuerySet):
-    def active(self):
+class WorkflowStateQuerySet(models.QuerySet[WorkflowState]):
+    def active(self) -> Self:
         """
         Filters to only STATUS_IN_PROGRESS and STATUS_NEEDS_CHANGES WorkflowStates
         """
-    def for_instance(self, instance):
+    def for_instance(self, instance) -> Self:
         """
         Filters to only WorkflowStates for the given instance
         """
@@ -1171,22 +1169,22 @@ class WorkflowState(models.Model):
     STATUS_APPROVED: str
     STATUS_NEEDS_CHANGES: str
     STATUS_CANCELLED: str
-    STATUS_CHOICES: Incomplete
-    content_type: Incomplete
-    base_content_type: Incomplete
-    object_id: Incomplete
-    content_object: Incomplete
-    workflow: Incomplete
-    status: Incomplete
-    created_at: Incomplete
-    requested_by: Incomplete
-    current_task_state: Incomplete
-    on_finish: Incomplete
+    STATUS_CHOICES: tuple[tuple[str, StrOrPromise], ...]
+    content_type: models.ForeignKey[ContentType]
+    base_content_type: models.ForeignKey[ContentType]
+    object_id: models.CharField[str, str]
+    content_object: GenericForeignKey
+    workflow: models.ForeignKey[Workflow]
+    status: models.CharField[str, str]
+    created_at: models.DateTimeField[datetime, datetime]
+    requested_by: models.ForeignKey[AbstractBaseUser]
+    current_task_state: models.OneToOneField[TaskState | None]
+    on_finish: Callable[[WorkflowState], None]
     objects: ClassVar[WorkflowStateManager]  # pyright: ignore
     _default_manager: ClassVar[WorkflowStateManager]
 
-    def clean(self) -> None: ...
     def save(self, *args, **kwargs): ...
+    def clean(self) -> None: ...
     def resume(self, user: Incomplete | None = None):
         """Put a STATUS_NEEDS_CHANGES workflow state back into STATUS_IN_PROGRESS, and restart the current task"""
     def user_can_cancel(self, user): ...
@@ -1251,18 +1249,18 @@ class TaskState(SpecificMixin['TaskState'], models.Model):
     STATUS_REJECTED: str
     STATUS_SKIPPED: str
     STATUS_CANCELLED: str
-    STATUS_CHOICES: Incomplete
-    workflow_state: Incomplete
-    revision: Incomplete
-    task: Incomplete
-    status: Incomplete
-    started_at: Incomplete
-    finished_at: Incomplete
-    finished_by: Incomplete
-    comment: Incomplete
-    content_type: Incomplete
-    exclude_fields_in_copy: Incomplete
-    default_exclude_fields_in_copy: Incomplete
+    STATUS_CHOICES: tuple[tuple[str, StrOrPromise], ...]
+    workflow_state: models.ForeignKey[WorkflowState]
+    revision: models.ForeignKey[Revision]
+    task: models.ForeignKey[Task[Any], Task[Any]]
+    status: models.CharField[str, str]
+    started_at: models.DateTimeField[datetime, datetime]
+    finished_at: models.DateTimeField[datetime | None, datetime | None]
+    finished_by: models.ForeignKey[AbstractBaseUser | None]
+    comment: models.TextField[str, str]
+    content_type: models.ForeignKey[ContentType]
+    exclude_fields_in_copy: list[str]
+    default_exclude_fields_in_copy: list[str]
 
     objects: ClassVar[TaskStateManager]  # pyright: ignore
     _default_manager: ClassVar[TaskStateManager]

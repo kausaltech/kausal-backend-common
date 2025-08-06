@@ -191,18 +191,19 @@ check_venv() {
 check_package_versions() {
     print_check "Checking installed package versions..." "📦"
 
-    # Extract requirements files from pyproject.toml
-    REQ_FILES=$(sed -n '/^dependencies\|^optional-dependencies\.dev/,/}/p' pyproject.toml | grep -o '".*"' | tr -d '"' | grep -v '^$' | tr '\n' ' ')
-    if [ -z "$REQ_FILES" ]; then
-        print_error "No requirements files found in pyproject.toml"
-        return 1
-    fi
-    if [ -f "requirements-local.txt" ]; then
-        REQ_FILES="$REQ_FILES requirements-local.txt"
-    fi
+    if [ ! -f "uv.lock" ]; then
+      # Extract requirements files from pyproject.toml
+      REQ_FILES=$(sed -n '/^dependencies\|^optional-dependencies\.dev/,/}/p' pyproject.toml | grep -o '".*"' | tr -d '"' | grep -v '^$' | tr '\n' ' ')
+      if [ -z "$REQ_FILES" ]; then
+          print_error "No requirements files found in pyproject.toml"
+          return 1
+      fi
+      if [ -f "requirements-local.txt" ]; then
+          REQ_FILES="$REQ_FILES requirements-local.txt"
+      fi
 
-    echo -e "  📄 Requirements files: ${DIM}$(echo $REQ_FILES | xargs echo)${NC}"
-
+      echo -e "  📄 Requirements files: ${DIM}$(echo $REQ_FILES | xargs echo)${NC}"
+    fi
     # Check if `uv` command (a new Python package manager) is available in path
     echo "📦 Checking for uv..."
 
@@ -221,6 +222,18 @@ check_package_versions() {
             print_error "Failed to install uv"
             return 1
         fi
+    fi
+
+    if [ -f "uv.lock" ]; then
+      set -e
+      echo "🔄 Syncing virtual environment with uv.lock..."
+      if [ -n "$UV_INDEX" ] || [ -n "$UV_EXTRA_INDEX_URL" ]; then
+        extras="--extra kausal"
+      else
+        extras=""
+      fi
+      uv sync --all-groups ${extras}
+      return 0
     fi
 
     # Executing pip-sync with dry run option

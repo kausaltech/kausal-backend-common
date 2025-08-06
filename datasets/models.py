@@ -40,8 +40,24 @@ if TYPE_CHECKING:
     from ..models.types import FK, RevMany
     if IS_PATHS:
         from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
+        type ScopeType = InstanceConfig
     elif IS_WATCH:
         from actions.models import Plan
+        type ScopeType = Plan
+
+
+class DimensionQuerySet(PermissionedQuerySet['Dimension']):
+    def for_scope(self, scope: ScopeType) -> Self:
+        return self.filter(
+            scopes__scope_content_type=ContentType.objects.get_for_model(type(scope)),
+            scopes__scope_id=scope.pk,
+        )
+
+
+_DimensionManager = models.Manager.from_queryset(DimensionQuerySet)
+class DimensionManager(PermissionedManager['Dimension', DimensionQuerySet], _DimensionManager):  # pyright: ignore
+    """Model manager for Dimension."""
+del _DimensionManager
 
 
 class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, PermissionedModel):
@@ -54,8 +70,8 @@ class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, Perm
     scopes: RevMany[DimensionScope]
     categories: RevMany[DimensionCategory]
 
-    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
-    _default_manager: ClassVar[PermissionedManager[Self]]
+    objects: ClassVar[DimensionManager] = DimensionManager()
+    _default_manager: ClassVar[DimensionManager]
 
     class Meta:
         verbose_name = _('dimension')
@@ -97,6 +113,7 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, 
     class Meta:
         verbose_name = _('dimension category')
         verbose_name_plural = _('dimension categories')
+        ordering = ('dimension', 'order')
         constraints = (
             models.UniqueConstraint(
                 fields=['identifier', 'dimension'],
@@ -123,6 +140,13 @@ class DimensionScopeQuerySet(PermissionedQuerySet['DimensionScope']):
     if IS_PATHS:
         def for_instance_config(self, instance_config: InstanceConfig) -> Self:
             return self.filter(scope_content_type=ContentType.objects.get_for_model(instance_config), scope_id=instance_config.pk)
+
+    def for_scope(self, scope: ScopeType) -> Self:
+        ct = ContentType.objects.get_for_model(type(scope))
+        return self.filter(
+            scope_content_type=ct,
+            scope_id=scope.pk,
+        )
 
 
 _DimensionScopeManager = models.Manager.from_queryset(DimensionScopeQuerySet)
@@ -168,6 +192,21 @@ class DimensionScope(OrderedModel, PermissionedModel):
         return qs.filter(scope_content_type=self.scope_content_type, scope_id=self.scope_id)
 
 
+class DatasetSchemaQuerySet(PermissionedQuerySet['DatasetSchema']):
+    def for_scope(self, scope: ScopeType) -> Self:
+        ct = ContentType.objects.get_for_model(type(scope))
+        return self.filter(
+            scopes__scope_id=scope.pk, scopes__scope_content_type=ct
+        )
+
+
+_DatasetSchemaManager = models.Manager.from_queryset(DatasetSchemaQuerySet)
+class DatasetSchemaManager(PermissionedManager['DatasetSchema', DatasetSchemaQuerySet], _DatasetSchemaManager):  # pyright: ignore
+    """Model manager for DatasetSchema."""
+del _DatasetSchemaManager
+
+
+
 class DatasetSchema(ClusterableModel, PermissionedModel):
     class TimeResolution(models.TextChoices):
         """
@@ -209,8 +248,8 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     person_permissions: RevMany[DatasetSchemaPersonPermission]
     group_permissions: RevMany[DatasetSchemaGroupPermission]
 
-    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
-    _default_manager: ClassVar[PermissionedManager[Self]]
+    objects: ClassVar[DatasetSchemaManager] = DatasetSchemaManager()
+    _default_manager: ClassVar[DatasetSchemaQuerySet]
 
     panels = [
         FieldPanel(
@@ -404,6 +443,13 @@ class DatasetQuerySet(PermissionedQuerySet['Dataset']):
 
             return self.filter(scope_content_type=ContentType.objects.get_for_model(Plan), scope_id=plan.pk)
 
+    def for_scope(self, scope: ScopeType) -> Self:
+        ct = ContentType.objects.get_for_model(type(scope))
+        return self.filter(
+            scope_content_type=ct,
+            scope_id=scope.pk,
+        )
+
 
 _DatasetManager = models.Manager.from_queryset(DatasetQuerySet)
 class DatasetManager(ModelManager['Dataset', DatasetQuerySet], _DatasetManager):  # pyright: ignore
@@ -555,7 +601,7 @@ class DataPoint(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     class Meta:
         verbose_name = _('data point')
         verbose_name_plural = _('data points')
-        ordering = ('date',)
+        ordering = ('date', 'id')
 
         # TODO: Enforce uniqueness constraint.
         # This doesn't work because dimension_categories is a many-to-many field.

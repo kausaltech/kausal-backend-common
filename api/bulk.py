@@ -186,7 +186,7 @@ class BulkListSerializer(serializers.ListSerializer):
 
 
 class BulkModelViewSet(viewsets.ModelViewSet):
-    request: APIRequest
+    request: APIRequest  # type: ignore[override]
 
     def bulk_create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, many=True)

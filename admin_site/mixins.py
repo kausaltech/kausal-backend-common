@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from typings.wagtail.admin.views.generic.base import BreadcrumbItem
+    from wagtail.admin.views.generic.base import BreadcrumbItem
 
 
 class HideSnippetsFromBreadcrumbsMixin:
