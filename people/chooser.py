@@ -61,4 +61,3 @@ class PersonChooser(AdminChooser):
     link_to_chosen_text = _('Edit this person')
     model = Person
     choose_modal_url_name = 'person_chooser:choose'
-
