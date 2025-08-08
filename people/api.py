@@ -19,10 +19,6 @@ class PersonSerializer(
     uuid = serializers.UUIDField(required=False)
     avatar_url = serializers.SerializerMethodField()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.context.get('authorized_for_instance') is None:
-            self.fields.pop('email')
 
     def get_avatar_url(self, obj: Person) -> str | None:
         return obj.get_avatar_url(self.context['request'])
