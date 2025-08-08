@@ -12,7 +12,7 @@ if typing.TYPE_CHECKING:
     if IS_PATHS:
         from paths.types import PathsAPIRequest as APIRequest
     elif IS_WATCH:
-        from watch.types import WatchAPIRequest as APIRequest
+        from aplans.types import WatchAPIRequest as APIRequest
 
 
 class BulkSerializerValidationInstanceMixin:
