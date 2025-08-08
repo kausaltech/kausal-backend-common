@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from django.forms.models import modelform_factory
 from django.utils.translation import gettext_lazy as _
+from wagtail.snippets.views.chooser import SnippetChooserViewSet
 
 from dal import autocomplete
-
-from generic_chooser.views import ModelChooserCreateTabMixin, ModelChooserMixin, ModelChooserViewSet
+from generic_chooser.views import ModelChooserCreateTabMixin, ModelChooserMixin
 from generic_chooser.widgets import AdminChooser
+
 from people.models import Person
 
 
@@ -46,7 +47,7 @@ class PersonModelChooserCreateTabMixin(ModelChooserCreateTabMixin):
         return self.form_class
 
 
-class PersonChooserViewSet(ModelChooserViewSet):
+class PersonChooserViewSet(SnippetChooserViewSet):
     icon = 'user'
     model = Person
     page_title = _("Choose person")
