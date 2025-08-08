@@ -84,3 +84,14 @@ def convert_language_code(
             format_options = ["kausal", "django", "modeltrans", "next.js", "wagtail"]
             error_message = f"'{output_format}' is not a valid language code format. Valid formats are {format_options}"
             raise ValueError(error_message)
+
+
+def get_supported_languages():
+    yield from settings.LANGUAGES
+
+def get_default_language():
+    """Return the global default language from Django settings."""
+    return settings.LANGUAGES[0][0]
+
+def get_default_language_lowercase():
+    return get_default_language().lower()

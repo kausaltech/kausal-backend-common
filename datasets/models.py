@@ -11,13 +11,14 @@ from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from modeltrans.fields import TranslationField
 from wagtail.admin.panels.field_panel import FieldPanel
+from wagtail.admin.panels.group import MultiFieldPanel
 from wagtail.admin.panels.inline_panel import InlinePanel
 
 from kausal_common.const import IS_PATHS, IS_WATCH
 from kausal_common.datasets.permission_policy import get_permission_policy
 from kausal_common.models.fields import IdentifierField
-from kausal_common.models.permission_policy import ModelPermissionPolicy
 from kausal_common.models.uuid import UUIDIdentifiedModel
+from kausal_common.people.models import ObjectRole
 
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
@@ -33,6 +34,7 @@ if TYPE_CHECKING:
     from kausal_common.models.permission_policy import ModelPermissionPolicy
     from kausal_common.models.types import QS
 
+    from people.models import DatasetSchemaGroupPermission, DatasetSchemaPersonPermission
     from users.models import User
 
     from ..models.types import FK, RevMany
@@ -243,6 +245,8 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
 
     datasets: RevMany[Dataset]
     scopes: RevMany[DatasetSchemaScope]
+    person_permissions: RevMany[DatasetSchemaPersonPermission]
+    group_permissions: RevMany[DatasetSchemaGroupPermission]
 
     objects: ClassVar[DatasetSchemaManager] = DatasetSchemaManager()
     _default_manager: ClassVar[DatasetSchemaQuerySet]
@@ -283,6 +287,26 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
                 FieldPanel('dimension'),
             ]
         ),
+        MultiFieldPanel([
+            InlinePanel(
+                'person_permissions',
+                heading=_("Person permissions"),
+                help_text=_("Grants permissions on datasets of this schema to certain persons"),
+                panels=[
+                    FieldPanel('person'),
+                    FieldPanel('role'),
+                ]
+            ),
+            InlinePanel(
+                'group_permissions',
+                heading=_("Group permissions"),
+                help_text=_("Grants permissions on datasets of this schema to certain person groups"),
+                panels=[
+                    FieldPanel('group'),
+                    FieldPanel('role'),
+                ]
+            ),
+        ], _("Permissions")),
     ]
 
     class Meta:
@@ -391,6 +415,27 @@ class DatasetQuerySet(PermissionedQuerySet['Dataset']):
                 scope_content_type=ContentType.objects.get_for_model(instance_config),
                 scope_id=instance_config.pk,
             )
+
+        def with_viewable_schema(self, user: User) -> Self:
+            """
+            Restrict the queryset to those datasets whose schema is viewable.
+
+            For determining whether a schema is viewable, we check if the user has an explicit person or group
+            permission that allows them to view the particular instance of DatasetSchema. It does not matter whether the
+            user has view permissions on the schema model.
+            """
+            from people.models import DatasetSchemaGroupPermission, DatasetSchemaPersonPermission
+
+            viewable_schemas_for_user = DatasetSchemaPersonPermission.objects.filter(
+                role__in=[ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
+                person=user.person,
+            ).values_list('object')
+            viewable_schemas_for_group = DatasetSchemaGroupPermission.objects.filter(
+                role__in=[ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
+                group__users=user,
+            ).values_list('object')
+            return self.filter(models.Q(schema__in=viewable_schemas_for_user)
+                               | models.Q(schema__in=viewable_schemas_for_group))
 
     if IS_WATCH:
         def for_plan(self, plan: Plan) -> Self:
