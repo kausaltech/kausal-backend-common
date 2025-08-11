@@ -259,7 +259,7 @@ class EmailBlock(FieldBlock):
     class Meta:
         icon: str
 
-class IntegerBlock[IntegerField](FieldBlock):
+class IntegerBlock(FieldBlock[IntegerField]):
     field: Incomplete
     def __init__(
         self,
