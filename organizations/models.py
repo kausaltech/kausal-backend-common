@@ -136,6 +136,7 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
     abbreviation = models.CharField(
         max_length=50,
         blank=True,
+        null=True,
         verbose_name=_('Short name'),
         help_text=_('A simplified short version of name for the general public'),
     )
