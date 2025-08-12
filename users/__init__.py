@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeGuard
 
-from django.contrib.auth.models import AnonymousUser
-
 if TYPE_CHECKING:
     from django.contrib.auth.base_user import AbstractBaseUser
+    from django.contrib.auth.models import AnonymousUser
 
     from users.models import User
 
@@ -28,6 +27,8 @@ def user_or_none(user: AbstractBaseUser | AnonymousUser | None) -> User | None:
 
 
 def user_or_anon(user: AbstractBaseUser | AnonymousUser | None) -> User | AnonymousUser:
+    from django.contrib.auth.models import AnonymousUser
+
     from users.models import User
 
     if user is None:

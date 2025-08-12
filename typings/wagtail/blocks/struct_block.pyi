@@ -1,12 +1,14 @@
 import collections
-from .base import Block, BoundBlock, DeclarativeSubBlocksMetaclass
-from _typeshed import Incomplete
 from collections.abc import Generator
+from typing import Sequence
+
 from django.core.exceptions import ValidationError
 from django.utils.functional import cached_property
 from wagtail.telepath import Adapter
 
-__all__ = ['BaseStructBlock', 'StructBlock', 'StructValue', 'StructBlockValidationError']
+from _typeshed import Incomplete
+
+from .base import BaseBlock, Block, BoundBlock, DeclarativeSubBlocksMetaclass
 
 class StructBlockValidationError(ValidationError):
     non_block_errors: Incomplete
@@ -33,7 +35,7 @@ class PlaceholderBoundBlock(BoundBlock):
 class BaseStructBlock(Block):
     search_index: Incomplete
     child_blocks: Incomplete
-    def __init__(self, local_blocks: Incomplete | None = None, search_index: bool = True, **kwargs) -> None: ...
+    def __init__(self, local_blocks: Sequence[tuple[str, BaseBlock]] | None = None, search_index: bool = True, **kwargs) -> None: ...
     @classmethod
     def construct_from_lookup(cls, lookup, child_blocks, **kwargs): ...
     def get_default(self):

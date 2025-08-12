@@ -1,11 +1,15 @@
-from .base import Block, BoundBlock, DeclarativeSubBlocksMetaclass
-from _typeshed import Incomplete
 from collections.abc import Generator, Mapping, MutableSequence
+from typing import OrderedDict, Sequence
+
 from django.core.exceptions import ValidationError
 from django.utils.functional import cached_property
 from wagtail.telepath import Adapter
 
-__all__ = ['BaseStreamBlock', 'StreamBlock', 'StreamValue', 'StreamBlockValidationError']
+from _typeshed import Incomplete
+
+from .base import Block, BoundBlock, DeclarativeSubBlocksMetaclass
+
+__all__ = ['BaseStreamBlock', 'StreamBlock', 'StreamBlockValidationError', 'StreamValue']
 
 class StreamBlockValidationError(ValidationError):
     non_block_errors: Incomplete
@@ -15,8 +19,8 @@ class StreamBlockValidationError(ValidationError):
 
 class BaseStreamBlock(Block):
     search_index: Incomplete
-    child_blocks: Incomplete
-    def __init__(self, local_blocks: Incomplete | None = None, search_index: bool = True, **kwargs) -> None: ...
+    child_blocks: OrderedDict[str, Block]
+    def __init__(self, local_blocks: Sequence[tuple[str, Block]] | None = None, search_index: bool = True, **kwargs) -> None: ...
     @classmethod
     def construct_from_lookup(cls, lookup, child_blocks, **kwargs): ...
     def empty_value(self, raw_text: Incomplete | None = None): ...
@@ -31,7 +35,7 @@ class BaseStreamBlock(Block):
     def value_from_datadict(self, data, files, prefix): ...
     def value_omitted_from_data(self, data, files, prefix): ...
     @property
-    def required(self): ...
+    def required(self) -> bool: ...
     def clean(self, value): ...
     def to_python(self, value): ...
     def bulk_to_python(self, values): ...

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from typing import TYPE_CHECKING, ClassVar, Self
+from typing_extensions import deprecated
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -33,19 +34,25 @@ if TYPE_CHECKING:
     from kausal_common.models.permission_policy import ModelPermissionPolicy
     from kausal_common.models.types import QS
 
+    from actions.models.action import Action
+    from actions.models.category import Category
     from users.models import User
 
     from ..models.types import FK, RevMany
     if IS_PATHS:
         from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
-        type ScopeType = InstanceConfig
+        type DatasetScopeType = InstanceConfig
+        type DimensionScopeType = InstanceConfig
+        type DatasetSchemaScopeType = InstanceConfig
     elif IS_WATCH:
-        from actions.models import Plan
-        type ScopeType = Plan
+        from actions.models import CategoryType, Plan
+        type DatasetScopeType = Action | Category
+        type DatasetSchemaScopeType = Plan | CategoryType
+        type DimensionScopeType = Plan | CategoryType
 
 
 class DimensionQuerySet(PermissionedQuerySet['Dimension']):
-    def for_scope(self, scope: ScopeType) -> Self:
+    def for_scope(self, scope: DimensionScopeType) -> Self:
         return self.filter(
             scopes__scope_content_type=ContentType.objects.get_for_model(type(scope)),
             scopes__scope_id=scope.pk,
@@ -139,7 +146,7 @@ class DimensionScopeQuerySet(PermissionedQuerySet['DimensionScope']):
         def for_instance_config(self, instance_config: InstanceConfig) -> Self:
             return self.filter(scope_content_type=ContentType.objects.get_for_model(instance_config), scope_id=instance_config.pk)
 
-    def for_scope(self, scope: ScopeType) -> Self:
+    def for_scope(self, scope: DimensionScopeType) -> Self:
         ct = ContentType.objects.get_for_model(type(scope))
         return self.filter(
             scope_content_type=ct,
@@ -191,7 +198,7 @@ class DimensionScope(OrderedModel, PermissionedModel):
 
 
 class DatasetSchemaQuerySet(PermissionedQuerySet['DatasetSchema']):
-    def for_scope(self, scope: ScopeType) -> Self:
+    def for_scope(self, scope: DatasetSchemaScopeType) -> Self:
         ct = ContentType.objects.get_for_model(type(scope))
         return self.filter(
             scopes__scope_id=scope.pk, scopes__scope_content_type=ct
@@ -308,15 +315,14 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         return get_permission_policy('SCHEMA_PERMISSION_POLICY')
 
     @staticmethod
-    def get_for_scope(scope_id: int, scope_content_type_id: int) -> list[DatasetSchema]:
-        return list(
-            DatasetSchema.objects.filter(
-                scopes__scope_id=scope_id, scopes__scope_content_type__id=scope_content_type_id,
-            ),
+    @deprecated('Use DatasetSchema.objects.get_queryset().for_scope() instead')
+    def get_for_scope(scope_id: int, scope_content_type_id: int) -> DatasetSchemaQuerySet:
+        return DatasetSchema.objects.get_queryset().filter(
+            scopes__scope_id=scope_id, scopes__scope_content_type__id=scope_content_type_id,
         )
 
     @staticmethod
-    def get_for_model(obj: models.Model) -> list[DatasetSchema]:
+    def get_for_model(obj: DatasetScopeType) -> DatasetSchemaQuerySet:
         """Get schemas for any model that can have datasets."""
         content_type = ContentType.objects.get_for_model(obj)
 
@@ -335,7 +341,7 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
                 return DatasetSchema.get_for_scope(category_type.pk, type_content_type.id)
         elif content_type.app_label == 'nodes' and content_type.model == 'instanceconfig':
             return DatasetSchema.get_for_scope(obj.pk, content_type.id)
-        return []
+        return DatasetSchema.objects.get_queryset().none()
 
     def delete(self, *args, **kwargs):
         retval = super().delete(*args, **kwargs)
@@ -398,7 +404,7 @@ class DatasetQuerySet(PermissionedQuerySet['Dataset']):
 
             return self.filter(scope_content_type=ContentType.objects.get_for_model(Plan), scope_id=plan.pk)
 
-    def for_scope(self, scope: ScopeType) -> Self:
+    def for_scope(self, scope: DatasetScopeType) -> Self:
         ct = ContentType.objects.get_for_model(type(scope))
         return self.filter(
             scope_content_type=ct,
@@ -709,9 +715,7 @@ class DataSource(UserModifiableModel, PermissionedModel):
 
 
 class DatasetSourceReference(UserModifiableModel, PermissionedModel):
-    """
-    Link a data source to a data point or dataset.
-    """
+    """Link a data source to a data point or dataset."""
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     data_point: FK[DataPoint | None] = models.ForeignKey(

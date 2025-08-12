@@ -1,11 +1,18 @@
-from graphene_django import DjangoObjectType
-from kausal_common.datasets.models import (
-    Dataset,
-    DatasetSchemaScope,
-    DimensionScope,
-)
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, cast
 
 import graphene
+from graphene_django import DjangoObjectType
+
+if TYPE_CHECKING:
+    from kausal_common.datasets.models import (
+        Dataset,
+        DatasetSchemaScope,
+        DatasetScopeType,
+        DimensionScope,
+        DimensionScopeType,
+    )
 
 
 class DimensionNode(DjangoObjectType):
@@ -30,8 +37,8 @@ class DimensionScopeNode(DjangoObjectType):
         abstract = True
 
     @staticmethod
-    def resolve_scope(root: DimensionScope, info):
-        return root.scope
+    def resolve_scope(root: DimensionScope, info) -> DimensionScopeType:
+        return cast('DimensionScopeType', root.scope)
 
 
 class DimensionScopeTypeNode(graphene.Union):
@@ -41,6 +48,7 @@ class DimensionScopeTypeNode(graphene.Union):
 
 class DataPointNode(DjangoObjectType):
     value = graphene.Float()
+
     class Meta:
         abstract = True
 
@@ -52,8 +60,8 @@ class DatasetSchemaScopeNode(DjangoObjectType):
         abstract = True
 
     @staticmethod
-    def resolve_scope(root: DatasetSchemaScope, info):
-        return root.scope
+    def resolve_scope(root: DatasetSchemaScope, info) -> DatasetScopeType:
+        return cast('DatasetScopeType', root.scope)
 
 
 class DatasetSchemaScopeTypeNode(graphene.Union):
@@ -68,8 +76,8 @@ class DatasetNode(DjangoObjectType):
         abstract = True
 
     @staticmethod
-    def resolve_scope(root: Dataset, info):
-        return root.scope
+    def resolve_scope(root: Dataset, info) -> DatasetScopeType:
+        return cast('DatasetScopeType', root.scope)
 
 
 class DatasetScopeTypeNode(graphene.Union):
