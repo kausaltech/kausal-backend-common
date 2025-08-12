@@ -12,6 +12,7 @@ from graphql import (
     GraphQLObjectType,
     assert_named_type,
 )
+from strawberry.annotation import StrawberryAnnotation
 from strawberry.federation.schema import Schema as FederationSchema
 from strawberry.schema.schema_converter import GraphQLCoreConverter
 from strawberry.schema.types import ConcreteType
@@ -20,11 +21,12 @@ from strawberry.types import has_object_definition
 from strawberry.types.base import StrawberryObjectDefinition, StrawberryType
 from strawberry.types.enum import EnumDefinition
 from strawberry.types.scalar import ScalarDefinition
+from strawberry.types.union import StrawberryUnion
 
 type StrawberryObjectType = StrawberryObjectDefinition | EnumDefinition | ScalarDefinition
 
 
-def get_sb_definition(type_: type) -> StrawberryObjectType:
+def get_sb_definition(type_: type) -> StrawberryObjectType | StrawberryUnion:
     from strawberry.types.base import StrawberryObjectDefinition
     from strawberry.types.enum import EnumDefinition
     from strawberry.types.scalar import ScalarDefinition
@@ -35,9 +37,10 @@ def get_sb_definition(type_: type) -> StrawberryObjectType:
         from graphene.types.interface import InterfaceOptions
         from graphene.types.objecttype import ObjectTypeOptions
         from graphene.types.scalars import ScalarOptions
+        from graphene.types.union import UnionOptions
 
     type_meta = getattr(type_, '_meta', None)
-    meta: ObjectTypeOptions | InterfaceOptions | EnumOptions | ScalarOptions | InputObjectTypeOptions
+    meta: ObjectTypeOptions | InterfaceOptions | EnumOptions | ScalarOptions | InputObjectTypeOptions | UnionOptions
     if issubclass(type_, graphene.ObjectType):
         meta = cast('ObjectTypeOptions', type_meta)
         return StrawberryObjectDefinition(
@@ -83,6 +86,15 @@ def get_sb_definition(type_: type) -> StrawberryObjectType:
             resolve_type=None,
             fields=[],
         )
+    if issubclass(type_, graphene.Union):
+        meta = cast('UnionOptions', type_meta)
+        ret = StrawberryUnion(
+            name=meta.name,
+            type_annotations=tuple(StrawberryAnnotation(type_) for type_ in meta.types),
+            description=meta.description,
+        )
+        return ret
+
     if issubclass(type_, graphene.Enum):
         meta = cast('EnumOptions', type_meta)
         return EnumDefinition(
@@ -155,9 +167,14 @@ class UnifiedGraphQLConverter(GraphQLCoreConverter):
 
     def from_type(self, type_: StrawberryType | type) -> GraphQLNullableType:
         if inspect.isclass(type_):  # noqa: SIM102
-            if issubclass(type_, (graphene.ObjectType, graphene.Interface)):
+            if issubclass(type_, (graphene.ObjectType, graphene.Interface, graphene.Union)):
                 return cast('GraphQLNullableType', self.add_graphene_type(type_))
-        return super().from_type(type_)
+        try:
+            ret = super().from_type(type_)
+        except Exception as e:
+            import ipdb; ipdb.set_trace()
+            raise e
+        return ret
 
     def _merge_graphene_object_fields(self, gql_type: GraphQLObjectType, graphene_type: type[graphene.ObjectType]) -> None:
         fields: dict[str, GraphQLField] = self.graphene_type_map.create_fields_for_type(graphene_type)
