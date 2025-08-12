@@ -1,18 +1,27 @@
 from __future__ import annotations
 
+from collections import defaultdict
 import enum
 import inspect
+import sys
+import sysconfig
 import time
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, ClassVar
+import traceback
+from types import TracebackType
+from typing import TYPE_CHECKING, Any, ClassVar, Self
+
+from django.db.models.base import Model
 
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+
 class PerfCounterContext:
     depth = 0
+
 
 _pc_context = ContextVar[PerfCounterContext]('PerfCounterContext', default=PerfCounterContext())
 
@@ -33,16 +42,16 @@ class PerfCounter:
         VERBOSE_DEBUG = 2
 
     label: str | None = None
-    "Identifier for the performance counter"
+    'Identifier for the performance counter'
 
     show_time_to_last: bool = False
-    "Flag to display time since last measurement"
+    'Flag to display time since last measurement'
 
     level: Level = Level.INFO
-    "Logging level for this counter"
+    'Logging level for this counter'
 
     shown_level: ClassVar[int] = Level.INFO.value
-    "Global logging level threshold for all counters"
+    'Global logging level threshold for all counters'
 
     _start_time: int = field(init=False)
     _last_time: int = field(init=False)
@@ -206,4 +215,124 @@ class PerfCounter:
         pc = cls(label=label, level=level)
         yield pc
         if not pc._is_finished:
-            pc.display("All done")
+            pc.display('All done')
+
+
+
+STDLIB_PATH = sysconfig.get_path('stdlib')
+PLATLIB_PATH = sysconfig.get_path('platlib')
+
+@dataclass(slots=True)
+class ModelCreationFrameCount:
+    stack: traceback.StackSummary | None = None
+    gql_path: tuple[str, ...] | None = None
+    count: int = 1
+
+    def __str__(self):
+        from django.conf import settings
+        if self.stack is None:
+            assert self.gql_path is not None
+            return f'GraphQL path: {'.'.join(self.gql_path)} ({self.count})'
+        last_frame = self.stack[-1]
+        filename = last_frame.filename.removeprefix(settings.BASE_DIR)
+        return f'{filename}:{last_frame.lineno} ({self.count})'
+
+@dataclass(slots=True)
+class ModelCreation:
+    count: int = 0
+    by_stack_trace: dict[int, ModelCreationFrameCount] = field(default_factory=dict, init=False)
+    unknown_count: int = 0
+
+    def mark(self):
+        self.count += 1
+
+        frame = sys._getframe().f_back.f_back.f_back  # type: ignore[union-attr]
+        list_value_frame = None
+        while frame := frame.f_back:  # type: ignore[union-attr]
+            if frame.f_code.co_name == 'complete_list_value':
+                list_value_frame = frame
+            if frame.f_code.co_filename.startswith(STDLIB_PATH):
+                continue
+            if frame.f_code.co_filename.startswith(PLATLIB_PATH):
+                continue
+            if frame.f_code.co_name == '__init__':
+                continue
+            break
+
+        if frame is None:
+            if list_value_frame is not None:
+                info = list_value_frame.f_locals['info']
+                info_path = tuple(info.path.as_list())
+                path_hash = hash(info_path)
+                by_stack = self.by_stack_trace.get(path_hash)
+                if by_stack is None:
+                    self.by_stack_trace[path_hash] = ModelCreationFrameCount(stack=None, gql_path=info_path)
+                else:
+                    by_stack.count += 1
+                return
+
+            print("Unknown frame:\n%s" % '\n'.join(traceback.format_stack(limit=20)))
+            self.unknown_count += 1
+            return
+
+        code_hash = hash(frame.f_code)
+        by_stack = self.by_stack_trace.get(code_hash)
+        if by_stack is None:
+            ss = traceback.extract_stack(frame, limit=3)
+            self.by_stack_trace[code_hash] = ModelCreationFrameCount(ss)
+        else:
+            by_stack.count += 1
+
+
+@dataclass
+class ModelCreationCounter(AbstractContextManager):
+    """
+    Track model instance creation counts.
+
+    This is useful to debug performance issues by finding out which models are
+    instanciated the most. Used as a context manager to ensure that the Django
+    signal receivers are disconnected when the context is exited.
+
+    Note: It doesn't track model saving in the database, but only what gets
+    instanciated in the Python process through e.g. queries.
+    """
+
+    creation_per_model: dict[str, ModelCreation] = field(default_factory=dict, init=False)
+
+    def __enter__(self) -> Self:
+        from django.db.models.signals import post_init
+
+        self.creation_per_model = dict()
+        post_init.connect(self.model_post_init)
+        return self
+
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None, /):
+        from django.db.models.signals import post_init
+
+        post_init.disconnect(self.model_post_init)
+        self.display()
+
+    def model_post_init(self, /, sender: type[Model], instance: Any, **kwargs):
+        name = f'{sender.__module__}.{sender.__name__}'
+        per_model = self.creation_per_model.get(name)
+        if per_model is None:
+            per_model = ModelCreation()
+            self.creation_per_model[name] = per_model
+        per_model.mark()
+
+    def display(self):
+        sorted_items = sorted(self.creation_per_model.items(), key=lambda x: x[1].count, reverse=True)
+        for name, per_model in sorted_items:
+            print(f'{name}: {per_model.count}')
+            if per_model.count < 10:
+                continue
+            if per_model.unknown_count > 0:
+                print('  %d unknown creations' % per_model.unknown_count)
+            for _, frame_count in sorted(per_model.by_stack_trace.items(), key=lambda x: x[1].count, reverse=True):
+                print('  %d creations' % frame_count.count)
+                if frame_count.stack is not None:
+                    printed_stack = frame_count.stack.format()
+                    print('\n'.join(['    %s' % f for f in printed_stack]))
+                else:
+                    print('    %s' % frame_count)
+
