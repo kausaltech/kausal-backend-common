@@ -4,9 +4,11 @@ import time
 from dataclasses import dataclass, field
 from functools import cached_property
 from typing import TYPE_CHECKING, cast
+from urllib.parse import urljoin, urlsplit
 
 from django.contrib.auth.models import AnonymousUser
 from django.http.request import HttpRequest
+from django.utils.encoding import iri_to_uri
 from strawberry.channels import ChannelsRequest, GraphQLWSConsumer
 
 from kausal_common.perf.perf_context import PerfContext
@@ -20,7 +22,7 @@ if TYPE_CHECKING:
     from kausal_common.deployment.types import LoggedHttpRequest
     from kausal_common.users import UserOrAnon
 
-    from .schema import GraphQLPerfNode
+    from .extensions import GraphQLPerfNode
 
 
 @dataclass
@@ -58,6 +60,17 @@ class GraphQLContext:
         scope = self.get_scope()
         return scope.get('token_auth')
 
+    def get_host(self) -> str:
+        scope = self.get_scope()
+        for header, value in scope['headers']:
+            if header == b'host':
+                return value.decode('utf-8')
+        raise ValueError('Host header not found')
+
+    def get_scheme_host(self) -> str:
+        scope = self.get_scope()
+        return scope['scheme'] + '://' + self.get_host()
+
     def get_user(self) -> UserOrAnon:
         req = self.request
         if isinstance(req, HttpRequest):
@@ -72,18 +85,35 @@ class GraphQLContext:
             return AnonymousUser()
         return cast('UserOrAnon', user)
 
-    def build_absolute_uri(self, path: str) -> str:
+    def build_absolute_uri(self, location: str | None) -> str:
         if isinstance(self.request, HttpRequest):
-            return self.request.build_absolute_uri(path)
+            return self.request.build_absolute_uri(location)
         scope = self.get_scope()
-        for header, value in scope['headers']:
-            if header == b'host':
-                host = value.decode('utf-8')
-                break
+        if location is None:
+            location = '//%s' % scope['path']
+        bits = urlsplit(location)
+        if bits.scheme and bits.netloc:
+            return iri_to_uri(location)
+        # Handle the simple, most common case. If the location is absolute
+        # and a scheme or host (netloc) isn't provided, skip an expensive
+        # urljoin() as long as no path segments are '.' or '..'.
+        if (
+            bits.path.startswith("/")
+            and not bits.scheme
+            and not bits.netloc
+            and "/./" not in bits.path
+            and "/../" not in bits.path
+        ):
+            # If location starts with '//' but has no netloc, reuse the
+            # schema and netloc from the current request. Strip the double
+            # slashes and continue as if it wasn't specified.
+            location = self.get_scheme_host() + location.removeprefix("//")
         else:
-            raise ValueError('Host header not found')
-        scheme = scope['scheme']
-        return f'{scheme}://{host}{path}'
+            # Join the constructed URL with the provided location, which
+            # allows the provided location to apply query strings to the
+            # base path.
+            location = urljoin(self.get_scheme_host() + scope['path'], location)
+        return iri_to_uri(location)
 
     @cached_property
     def user(self) -> UserOrAnon:
