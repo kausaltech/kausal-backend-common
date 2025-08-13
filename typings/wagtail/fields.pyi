@@ -35,7 +35,7 @@ type StreamFieldBlocks = Block[Any] | type[Block[Any]] | Sequence[StreamFieldNam
 
 
 class StreamField[GT: StreamValue | None = StreamValue](models.Field[Any, GT]):
-    stream_block: Block
+    stream_block: StreamBlock
 
     @classmethod
     def __new__(

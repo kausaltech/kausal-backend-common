@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import typing
+from typing import Any
 
 from django.db import models
+from django.db.models.base import Model
+from django.db.models.query import QuerySet
 from rest_framework import response, serializers, status, viewsets
 from rest_framework.exceptions import ValidationError
 
-from kausal_common.const import IS_PATHS, IS_WATCH
-
 if typing.TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
+    from kausal_common.const import IS_PATHS, IS_WATCH
     if IS_PATHS:
         from paths.types import PathsAPIRequest as APIRequest
     elif IS_WATCH:
@@ -16,7 +20,7 @@ if typing.TYPE_CHECKING:
 
 
 class BulkSerializerValidationInstanceMixin:
-    def run_validation(self, data: dict):
+    def run_validation(self, data: dict[str, Any]):
         if self.parent and self.instance is not None:
             assert isinstance(self.instance, models.query.QuerySet)
             self._instance = self.parent.objs_by_id.get(data['id'])
@@ -25,9 +29,9 @@ class BulkSerializerValidationInstanceMixin:
         return super().run_validation(data)
 
 
-class BulkListSerializer(serializers.ListSerializer):
-    child: serializers.ModelSerializer
-    instance: models.query.QuerySet | None
+class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
+    child: serializers.ModelSerializer[M]
+    # instance: models.QuerySet[M] | None
     update_lookup_field = 'id'
     _refresh_cache: bool
 
@@ -47,10 +51,9 @@ class BulkListSerializer(serializers.ListSerializer):
                     errors.append({id_attr: "Must not set attribute"})
                     continue
                 obj_ids.add(obj_id)
-            else:
-                if qs is not None:
-                    errors.append({id_attr: "Attribute missing"})
-                    continue
+            elif qs is not None:
+                errors.append({id_attr: "Attribute missing"})
+                continue
         if any(errors):
             raise ValidationError(errors)
 
@@ -78,7 +81,7 @@ class BulkListSerializer(serializers.ListSerializer):
 
         return super().to_internal_value(data)
 
-    def _handle_updates(self, update_ops):
+    def _handle_updates(self, update_ops: Mapping[type[M], Sequence[tuple[M, Sequence[str]]]]) -> None:
         for model, ops in update_ops.items():
             # TODO: build the deferred operations structure
             # like this from the get go
@@ -87,39 +90,39 @@ class BulkListSerializer(serializers.ListSerializer):
             # will do nasty stuff. (If we use an instance as a dict key, only the PK matters, so the other values
             # could different but we'd still map to the same value). We merge all ops with the same instance PK by
             # only taking the latest instance having that PK and unifying the fields.
-            fields_for_instance = {}
+            fields_for_instance: dict[M, frozenset[str]] = {}
             for instance, fields in ops:
-                fields = frozenset(fields)  # merge duplicate fields
-                if instance in fields_for_instance:
+                frozen_fields = frozenset(fields)  # merge duplicate fields
+                if instance in fields_for_instance.keys():
                     # Actually not necessarily the exact instance occurs, but one with the same PK
                     existing_fields = fields_for_instance.pop(instance)
-                    fields_for_instance[instance] = existing_fields | fields
+                    fields_for_instance[instance] = existing_fields | frozen_fields
                 else:
-                    fields_for_instance[instance] = fields
-            instances_for_fields = {}
-            for instance, fields in fields_for_instance.items():
-                instances_for_fields.setdefault(fields, []).append(instance)
-            for fields, instances in instances_for_fields.items():
-                model.objects.bulk_update(instances, fields)
+                    fields_for_instance[instance] = frozen_fields
+            instances_for_fields: dict[frozenset[str], list[M]] = {}
+            for instance, fr_fields in fields_for_instance.items():
+                instances_for_fields.setdefault(fr_fields, []).append(instance)
+            for fr_fields, instances in instances_for_fields.items():
+                model._default_manager.bulk_update(instances, fr_fields)
 
-    def _handle_deletes(self, delete_ops):
+    def _handle_deletes(self, delete_ops) -> None:
         for model in delete_ops.keys():
             pks = [o[0].pk for o in delete_ops[model]]
             model.objects.filter(pk__in=pks).delete()
 
-    def _handle_creates(self, create_ops):
+    def _handle_creates(self, create_ops) -> None:
         for model in create_ops.keys():
             instances = [o[0] for o in create_ops[model]]
             model.objects.bulk_create(instances)
 
-    def _handle_set_related(self, set_ops):
+    def _handle_set_related(self, set_ops) -> None:
         for model in set_ops.keys():
             # TODO: actually batch this up
             for instance, field_name, related_ids in set_ops[model]:
                 setattr(instance, field_name, related_ids)
 
-    def _execute_deferred_operations(self, ops):
-        grouped_by_operation_and_model = dict()
+    def _execute_deferred_operations(self, ops) -> None:
+        grouped_by_operation_and_model: dict[str, dict[type[M], list[tuple[M, list[str]]]]] = {}
         for operation, obj, *rest in ops:
             grouped_by_operation_and_model.setdefault(
                 operation, {},
@@ -142,7 +145,7 @@ class BulkListSerializer(serializers.ListSerializer):
             deferred = True
         except AttributeError:
             deferred = False
-        for obj_id, obj_data in zip(self.obj_ids, all_validated_data):
+        for obj_id, obj_data in zip(self.obj_ids, all_validated_data, strict=True):
             obj = self.objs_by_id[obj_id]
             updated_data.append(self.child.update(obj, obj_data))
         if deferred:
@@ -185,9 +188,7 @@ class BulkListSerializer(serializers.ListSerializer):
         return super().run_validation(*args, **kwargs)
 
 
-class BulkModelViewSet(viewsets.ModelViewSet):
-    request: APIRequest  # type: ignore[override]
-
+class BulkModelViewSet[M: Model](viewsets.ModelViewSet[M]):
     def bulk_create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)

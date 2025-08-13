@@ -6,10 +6,11 @@ from graphene.types.base import BaseType
 from graphene.types.structures import UnmountedType
 
 type GrapheneType = BaseType | UnmountedType
+type GrapheneFieldType = GrapheneType | Callable[[], GrapheneType] | Callable[[], type[BaseType]]
 
 class GraphQLField:
     field_name: str
-    field_type: GrapheneType | Callable[[], GrapheneType] | None
+    field_type: GrapheneFieldType | None
     field_source: str | None
     description: str | None
     deprecation_reason: str | None
@@ -17,7 +18,7 @@ class GraphQLField:
     def __init__(
         self,
         field_name: str,
-        field_type: GrapheneType | Callable[[], GrapheneType] | None = None,
+        field_type: GrapheneFieldType | None = None,
         *,
         required: bool | None = None,
         **kwargs,

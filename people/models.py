@@ -6,7 +6,7 @@ import uuid
 from abc import abstractmethod
 from datetime import timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -41,6 +41,7 @@ def image_upload_path(instance: BasePerson, filename: str) -> str:
 
 
 class BasePerson(index.Indexed, ClusterableModel):
+    id = models.AutoField[int, int](primary_key=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     first_name = models.CharField(max_length=100, verbose_name=_('first name'))
     last_name = models.CharField(max_length=100, verbose_name=_('last name'))
@@ -101,7 +102,7 @@ class BasePerson(index.Indexed, ClusterableModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # FIXME: This is hacky
-        field: ImageRatioField = self._meta.get_field('image_cropping')  # type: ignore
+        field = cast('ImageRatioField', self._meta.get_field('image_cropping'))
         field.width = DEFAULT_AVATAR_SIZE
         field.height = DEFAULT_AVATAR_SIZE
 
@@ -210,5 +211,6 @@ class BasePerson(index.Indexed, ClusterableModel):
 
         Returns:
             bool: True if visible, False otherwise
+
         """
         raise NotImplementedError("This method should be implemented by subclasses")

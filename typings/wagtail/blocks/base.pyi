@@ -1,6 +1,6 @@
 # ruff: noqa: D400, D415, D205, D401, D200, D204
 from collections.abc import Iterable
-from typing import Any, ClassVar, Generic, Mapping, Protocol, Self, TypeVar, type_check_only
+from typing import Any, ClassVar, Generic, Mapping, OrderedDict, Protocol, Self, TypeVar, type_check_only
 
 from django import forms
 from django.core.files.base import File
@@ -234,6 +234,10 @@ class DeclarativeSubBlocksMetaclass(BaseBlock):
     Metaclass that collects sub-blocks declared on the base classes.
     (cheerfully stolen from https://github.com/django/django/blob/main/django/forms/forms.py)
     """
+
+    declared_blocks: ClassVar[OrderedDict[str, BaseBlock]]
+    base_blocks: ClassVar[OrderedDict[str, BaseBlock]]
+
     def __new__(mcs, name, bases, attrs): ...  # noqa: N804
 
 class BlockWidget(forms.Widget):

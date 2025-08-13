@@ -45,7 +45,7 @@ if TYPE_CHECKING:
     else:
         @type_check_only
         class GQLInfo(GraphQLResolveInfo):
-            context: GQLContext  # type: ignore[override]
+            context: GraphQLContext
 
 
 class ModelWithI18n(Model):
@@ -59,7 +59,7 @@ def get_i18n_field_with_fallback(field_name: str, obj: ModelWithI18n, info: GQLI
     i18n_field = get_i18n_field(obj._meta.model)
     assert i18n_field is not None
     fallback_value = getattr(obj, field_name)
-    fallback_lang = get_language_from_default_language_field(obj, i18n_field)  # pyright: ignore
+    fallback_lang = get_language_from_default_language_field(obj, i18n_field)
     fallback = (fallback_value, fallback_lang)
 
     active_language = getattr(info.context, '_graphql_query_language', None)
@@ -82,7 +82,7 @@ def get_i18n_field_with_fallback(field_name: str, obj: ModelWithI18n, info: GQLI
 
 
 def resolve_i18n_field(field_name, obj, info):
-    value, lang = get_i18n_field_with_fallback(field_name, obj, info)
+    value, _lang = get_i18n_field_with_fallback(field_name, obj, info)
     return value
 
 
@@ -94,7 +94,7 @@ class DjangoNodeMeta:
     name: str
     description: str
     fields: dict[str, Field] | Iterable[str]
-    interfaces: Iterable[type[Interface]]
+    interfaces: Iterable[type[Interface[Any]]]
 
 
 def _get_user(info: GQLInfo) -> UserOrAnon:
@@ -132,10 +132,10 @@ def resolve_user_permissions(obj: PermissionedModel, info: GQLInfo) -> UserPermi
 UserRolesField = graphene.List(graphene.NonNull(graphene.String), required=False)
 
 
-class DjangoNode(DjangoObjectType, Generic[M]):
+class DjangoNode(DjangoObjectType[M], Generic[M]):
     user_permissions = graphene.Field(UserPermissionsType, resolver=resolve_user_permissions)
     user_roles = graphene.Field(UserRolesField, resolver=resolve_user_roles)
-    _meta: DjangoObjectTypeOptions
+    _meta: DjangoObjectTypeOptions[M]
 
     @classmethod
     def _resolve_i18n_fields(cls) -> None:

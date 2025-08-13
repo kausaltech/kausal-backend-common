@@ -1,27 +1,36 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.core.exceptions import FieldDoesNotExist
+from django.db.models.base import Model
 from rest_framework import exceptions, serializers
+
+from treebeard.mp_tree import MP_Node
 
 from orgs.models import Organization
 
+if TYPE_CHECKING:
+    from typing import Any
 
-class PrevSiblingField(serializers.CharField):
+
+class PrevSiblingField[M: Model](serializers.CharField):
     # Instances must implement method get_prev_sibling(). (Treebeard nodes do that.) Must be used in ModelSerializer so
     # we can get the model for to_internal_value().
     # FIXME: This is ugly.
-    def get_attribute(self, instance):
-        return instance.get_prev_sibling()
+    def get_attribute(self, instance: M):
+        return instance.get_prev_sibling()  # type: ignore[attr-defined]
 
-    def to_representation(self, value):
+    def to_representation(self, value: M | None):  # type: ignore[override]
         # value is the left sibling of the original instance
         if value is None:
             return None
         try:
             value._meta.get_field('uuid')
-            return str(value.uuid)
+            return str(value.uuid)  # type: ignore[attr-defined]
         except FieldDoesNotExist:
-            return value.id
+            return value.pk
 
     def to_internal_value(self, data):
         # FIXME: No validation (e.g., permission checking)
@@ -36,9 +45,9 @@ class PrevSiblingField(serializers.CharField):
 
 
 
-class TreebeardParentField(serializers.CharField):
+class TreebeardParentField[M: MP_Node[Any]](serializers.CharField):
     # For serializers of Treebeard node models
-    def get_attribute(self, instance):
+    def get_attribute(self, instance: M):
         return instance.get_parent()
 
     def to_representation(self, value):
@@ -64,9 +73,9 @@ class TreebeardParentField(serializers.CharField):
 
 # Regarding the metaclass: https://stackoverflow.com/a/58304791/14595546
 
-class TreebeardModelSerializerMixin(metaclass=serializers.SerializerMetaclass):
-    parent = TreebeardParentField(allow_null=True, required=False)
-    left_sibling = PrevSiblingField(allow_null=True, required=False)
+class TreebeardModelSerializerMixin[M: MP_Node[Any]](metaclass=serializers.SerializerMetaclass):
+    parent = TreebeardParentField[M](allow_null=True, required=False)
+    left_sibling = PrevSiblingField[M](allow_null=True, required=False)
 
     def get_field_names(self, declared_fields, info):
         fields = super().get_field_names(declared_fields, info)

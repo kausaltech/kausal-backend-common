@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing
 import uuid
 from abc import abstractmethod
-from typing import TYPE_CHECKING, ClassVar, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 from django.conf import settings
 from django.contrib import admin
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 
 # TODO: Generalize and put in some other app's models.py
-class Node[QS: MP_NodeQuerySet](MP_Node[QS], ClusterableModel):
+class Node[QS: MP_NodeQuerySet[Any]](MP_Node[QS], ClusterableModel):
     class Meta:
         abstract = True
 
@@ -113,7 +113,7 @@ class BaseOrganizationMetadataAdmin(models.Model):
         return str(self.person)
 
 
-class BaseOrganizationQuerySet(MP_NodeQuerySet['Organization'], MultilingualQuerySet['Organization']):
+class BaseOrganizationQuerySet[M: models.Model](MP_NodeQuerySet[M], MultilingualQuerySet[M]):  # type: ignore[override]
     @abstractmethod
     def editable_by_user(self, user: User):
         raise NotImplementedError('This method should be implemented by subclasses')
@@ -195,13 +195,13 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
     id: int
     classification_id: int | None
 
-    class Meta:
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         verbose_name = _("organization")
         verbose_name_plural = _("organizations")
         abstract = True
 
     @property
-    def parent(self):
+    def parent(self) -> Self | None:
         return self.get_parent()
 
     @classmethod

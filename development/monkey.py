@@ -22,13 +22,24 @@ def _monkeypath_init() -> None:
 
     from treebeard.models import Node
 
-    django_stubs_ext.monkeypatch([
+    extra_classes: list[type] = [
         ModelViewSet, ParentalKey, ParentalManyToManyField,
         JSONField, ManyToManyField, Node,
         Panel, Panel.BoundPanel, BaseObjectMixin,
         BasePermissionPolicy, ObjectType,
         Block
-    ], include_builtins=True)
+    ]
+
+    try:
+        from generic_chooser.views import ChooserCreateTabMixin, ChooserListingTabMixin, ChooserMixin, ChooserViewSet
+        extra_classes.append(ChooserMixin)
+        extra_classes.append(ChooserViewSet)
+        extra_classes.append(ChooserCreateTabMixin)
+        extra_classes.append(ChooserListingTabMixin)
+    except ImportError:
+        pass
+
+    django_stubs_ext.monkeypatch(extra_classes=extra_classes, include_builtins=True)
 
 
 def monkeypatch_generic_support(kls: type | Sequence[type] | None = None):

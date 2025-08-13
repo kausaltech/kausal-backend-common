@@ -172,7 +172,6 @@ class UnifiedGraphQLConverter(GraphQLCoreConverter):
         try:
             ret = super().from_type(type_)
         except Exception as e:
-            import ipdb; ipdb.set_trace()
             raise e
         return ret
 

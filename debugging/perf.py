@@ -1,22 +1,21 @@
 from __future__ import annotations
 
-from collections import defaultdict
 import enum
 import inspect
 import sys
 import sysconfig
 import time
+import traceback
 from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-import traceback
-from types import TracebackType
 from typing import TYPE_CHECKING, Any, ClassVar, Self
-
-from django.db.models.base import Model
 
 if TYPE_CHECKING:
     from collections.abc import Generator
+    from types import TracebackType
+
+    from django.db.models.base import Model
 
 
 class PerfCounterContext:
@@ -188,7 +187,7 @@ class PerfCounter:
 
     @classmethod
     @contextmanager
-    def time_it(cls, label: str | None = None, level: Level = Level.INFO) -> Generator[PerfCounter, Any, None]:
+    def time_it(cls, label: str | None = None, level: Level = Level.INFO) -> Generator[PerfCounter, Any]:
         """
         Create a context for timing code execution.
 
@@ -285,7 +284,7 @@ class ModelCreation:
 
 
 @dataclass
-class ModelCreationCounter(AbstractContextManager):
+class ModelCreationCounter(AbstractContextManager['ModelCreationCounter', None]):
     """
     Track model instance creation counts.
 

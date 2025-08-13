@@ -1,18 +1,25 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from django.forms.models import modelform_factory
 from django.utils.translation import gettext_lazy as _
 
 from dal import autocomplete
-
 from generic_chooser.views import ModelChooserCreateTabMixin, ModelChooserMixin, ModelChooserViewSet
 from generic_chooser.widgets import AdminChooser
-from people.models import Person
+
+from people.models import Person, PersonQuerySet
+
+if TYPE_CHECKING:
+    from django.http.request import HttpRequest
 
 
-class PersonChooserMixin(ModelChooserMixin):
-    def get_unfiltered_object_list(self):
-        objects = self.model.objects.all()  # type: ignore[attr-defined]
+class PersonChooserMixin(ModelChooserMixin[Person, PersonQuerySet]):
+    request: HttpRequest
+
+    def get_unfiltered_object_list(self) -> PersonQuerySet:
+        objects = self.model.objects.get_queryset()
         if self.order_by:
             objects = objects.order_by('last_name', 'first_name')
         return objects
@@ -31,7 +38,8 @@ class PersonChooserMixin(ModelChooserMixin):
         return 'kausal_common/people/chooser_results.html'
 
 
-class PersonModelChooserCreateTabMixin(ModelChooserCreateTabMixin):
+class PersonModelChooserCreateTabMixin(ModelChooserCreateTabMixin[Person]):
+    model: type[Person]
     create_tab_label = _("Create new")
 
     def get_form_class(self):
@@ -46,7 +54,7 @@ class PersonModelChooserCreateTabMixin(ModelChooserCreateTabMixin):
         return self.form_class
 
 
-class PersonChooserViewSet(ModelChooserViewSet):
+class PersonChooserViewSet(ModelChooserViewSet[Person]):
     icon = 'user'
     model = Person
     page_title = _("Choose person")

@@ -64,7 +64,6 @@ class ListBlock(Block):
         min_num: Incomplete
         max_num: Incomplete
         collapsed: bool
-    MUTABLE_META_ATTRIBUTES: Incomplete
 
 class ListBlockAdapter(Adapter):
     js_constructor: str

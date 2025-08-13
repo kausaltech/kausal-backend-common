@@ -71,7 +71,6 @@ class BaseStreamBlock(Block):
         max_num: Incomplete
         block_counts: Incomplete
         collapsed: bool
-    MUTABLE_META_ATTRIBUTES: Incomplete
 
 class StreamBlock(BaseStreamBlock, metaclass=DeclarativeSubBlocksMetaclass): ...
 

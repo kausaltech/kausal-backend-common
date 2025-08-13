@@ -1,6 +1,6 @@
 import collections
 from collections.abc import Generator
-from typing import Sequence
+from typing import Any, Sequence
 
 from django.core.exceptions import ValidationError
 from django.utils.functional import cached_property
@@ -35,7 +35,7 @@ class PlaceholderBoundBlock(BoundBlock):
 class BaseStructBlock(Block):
     search_index: Incomplete
     child_blocks: Incomplete
-    def __init__(self, local_blocks: Sequence[tuple[str, BaseBlock]] | None = None, search_index: bool = True, **kwargs) -> None: ...
+    def __init__(self, local_blocks: Sequence[tuple[str, Block[Any] | BaseBlock]] | None = None, search_index: bool = True, **kwargs) -> None: ...
     @classmethod
     def construct_from_lookup(cls, lookup, child_blocks, **kwargs): ...
     def get_default(self):

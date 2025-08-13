@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypedDict, cast
+from typing import TYPE_CHECKING, Any, TypedDict
 from uuid import UUID, uuid4
 
 from django.contrib.postgres.expressions import ArraySubquery
 from django.db import models, transaction
 from django.db.models.expressions import F, OuterRef
-from django.db.models.functions.json import JSONObject
 from django.db.utils import IntegrityError
 from pydantic import Field
 
@@ -30,7 +29,7 @@ from .models import (
 if TYPE_CHECKING:
     from django.db.models import QuerySet
 
-    from .models import ScopeType
+    from .models import DatasetSchemaScopeType, DimensionScopeType
 
 
 class ScopeAwareDjangoDiffModel[M: models.Model](DjangoDiffModel[M]):
@@ -74,7 +73,7 @@ class DimensionCategoryModel(ScopeAwareDjangoDiffModel[DimensionCategory]):
     @classmethod
     def get_create_kwargs(cls, adapter: DjangoAdapter, ids: dict, attrs: dict) -> dict:
         kwargs = super().get_create_kwargs(adapter, ids, attrs)
-        dim = cast('DimensionModel', adapter.get(DimensionModel, str(kwargs.pop('dimension'))))
+        dim = adapter.get(DimensionModel, str(kwargs.pop('dimension')))
         assert dim._instance_pk is not None
         kwargs['dimension_id'] = dim._instance_pk
         return kwargs
@@ -138,7 +137,7 @@ class DimensionModel(ScopeAwareDjangoDiffModel[Dimension]):
     uuid: UUID = Field(default_factory=uuid4)
 
     @classmethod
-    def get_queryset(cls, scope: ScopeType) -> QuerySet[Dimension, dict[str, Any]]:
+    def get_queryset(cls, scope: DimensionScopeType) -> QuerySet[Dimension, dict[str, Any]]:
         dim_fields = list(cls._django_fields.plain_fields.keys())
         dimensions = (
             Dimension.objects.get_queryset().for_scope(scope)
@@ -175,7 +174,7 @@ class DatasetMetricModel(ScopeAwareDjangoDiffModel[DatasetMetric]):
     ds_schema: UUID
 
     @classmethod
-    def get_queryset(cls, scope: ScopeType) -> QuerySet[DatasetMetric, dict[str, Any]]:
+    def get_queryset(cls, scope: DatasetSchemaScopeType) -> QuerySet[DatasetMetric, dict[str, Any]]:
         schemas = DatasetSchema.objects.get_queryset().for_scope(scope)
         metric_fields = cls._django_fields.field_names - {'ds_schema'}
         metrics = (
@@ -190,7 +189,7 @@ class DatasetMetricModel(ScopeAwareDjangoDiffModel[DatasetMetric]):
     @classmethod
     def get_create_kwargs(cls, adapter: DjangoAdapter, ids: dict, attrs: dict) -> dict:
         kwargs = super().get_create_kwargs(adapter, ids, attrs)
-        schema = cast('DatasetSchemaModel', adapter.get(DatasetSchemaModel, str(kwargs.pop('ds_schema'))))
+        schema = adapter.get(DatasetSchemaModel, str(kwargs.pop('ds_schema')))
         assert schema._instance_pk is not None
         kwargs['schema_id'] = schema._instance_pk
         return kwargs
@@ -212,7 +211,7 @@ class DatasetSchemaModel(ScopeAwareDjangoDiffModel[DatasetSchema]):
     uuid: UUID = Field(default_factory=uuid4)
 
     @classmethod
-    def get_queryset(cls, scope: ScopeType) -> QuerySet[DatasetSchema, dict[str, Any]]:
+    def get_queryset(cls, scope: DatasetSchemaScopeType) -> QuerySet[DatasetSchema, dict[str, Any]]:
         schema_fields = cls._django_fields.field_names - {'dimensions'}
 
         # dp_cats = (
@@ -341,10 +340,11 @@ class DatasetModel(DjangoDiffModel[Dataset]):
     uuid: UUID = Field(default_factory=uuid4)
 
     @classmethod
-    def get_queryset(cls, scope: ScopeType) -> QuerySet[Dataset, dict[str, Any]]:
+    def get_queryset(cls, scope: DatasetSchemaScopeType) -> QuerySet[Dataset, dict[str, Any]]:
+        schemas = DatasetSchema.objects.get_queryset().for_scope(scope)
         dataset_fields = cls._django_fields.field_names - {'ds_schema'}
         datasets = (
-            Dataset.objects.get_queryset().for_scope(scope)
+            Dataset.objects.filter(schema__in=schemas)
             .values(*dataset_fields)
             .annotate(_instance_pk=F('pk'))
             .annotate(ds_schema=F('schema__uuid'))
@@ -364,7 +364,7 @@ class DatasetModel(DjangoDiffModel[Dataset]):
         schema_uuid = kwargs.pop('ds_schema', None)
 
         if schema_uuid:
-            schema = cast('DatasetSchemaModel', adapter.get(DatasetSchemaModel, str(schema_uuid)))
+            schema = adapter.get(DatasetSchemaModel, str(schema_uuid))
             assert schema._instance_pk is not None
             kwargs['schema_id'] = schema._instance_pk
         kwargs['scope'] = adapter.scope
@@ -383,7 +383,7 @@ class DatasetAdapter(TypedAdapter):
 
 
 class DatasetDjangoAdapter(DjangoAdapter, DatasetAdapter):
-    def __init__(self, scope: ScopeType, **kwargs):
+    def __init__(self, scope: DatasetSchemaScopeType, **kwargs):
         super().__init__(**kwargs)
         self.scope = scope
 
@@ -395,7 +395,7 @@ class DatasetDjangoAdapter(DjangoAdapter, DatasetAdapter):
             cat_model = self.dimension_category.from_django(cat_data)
             self.add_child(dim, cat_model)
 
-    def load_dataset_metrics(self, schema_qs: DatasetSchemaQuerySet):
+    def load_dataset_metrics(self, _schema_qs: DatasetSchemaQuerySet):
         metrics = self.dataset_metric.get_queryset(scope=self.scope)
         for metric in metrics:
             metric_model = self.dataset_metric.from_django(metric)
