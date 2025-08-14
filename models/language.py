@@ -8,7 +8,7 @@ LANGUAGE_MAX_LENGTH = 8
 
 
 class ModelWithPrimaryLanguage(models.Model):
-    primary_language = models.CharField[str, str](
+    primary_language: models.CharField[str, str] = models.CharField[str, str](
         max_length=LANGUAGE_MAX_LENGTH,
         choices=get_supported_languages(),
         default=get_default_language,
@@ -17,7 +17,7 @@ class ModelWithPrimaryLanguage(models.Model):
     # The lowercase field must be used as the modeltrans default language field instead of the primary language field itself,
     # because modeltrans is using lowercase language codes. Otherwise primary languages with variant suffixes do not match,
     # causing all sorts of problems.
-    primary_language_lowercase = models.CharField[str, str](
+    primary_language_lowercase: models.CharField[str, str] = models.CharField[str, str](
         max_length=LANGUAGE_MAX_LENGTH, default=get_default_language_lowercase
     )
 
