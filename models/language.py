@@ -21,6 +21,9 @@ class ModelWithPrimaryLanguage(models.Model):
         max_length=LANGUAGE_MAX_LENGTH, default=get_default_language_lowercase
     )
 
+    primary_language: str
+    primary_language_lowercase: str
+
     class Meta:
         abstract = True
 
