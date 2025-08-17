@@ -55,8 +55,6 @@ class LanguageAwareAdminModelForm[ModelT: Model](WagtailAdminModelForm[ModelT]):
         if not i18n_field:
             return
         languages_to_show = self.get_languages_to_show(i18n_field)
-        if not languages_to_show:
-            return
         for base_field_name in i18n_field.fields:
             langs = list(get_available_languages(include_default=True))
             for lang in langs:
