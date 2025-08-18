@@ -47,7 +47,8 @@ class LanguageAwareAdminModelForm[ModelT: Model](WagtailAdminModelForm[ModelT]):
         # without the language suffix which is saved directly to the original db
         # field and not in the i18n field -- is never shown twice (once here and once as the
         # PrimaryLanguagePanel which was added as a separate panel.
-        languages_to_show.remove(original_field_language)
+        if original_field_language in languages_to_show:
+            languages_to_show.remove(original_field_language)
         return languages_to_show
 
     def prune_i18n_fields(self):
