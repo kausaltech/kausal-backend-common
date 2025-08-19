@@ -16,7 +16,7 @@ def _filter_recipient_email(sender: Any, message: EmailMessage, **kwargs) -> Non
 
     logger = logger.bind(name='kausal_common.mail')
 
-    domains: set[str] = set(settings.ALLOWED_RECIPIENT_EMAIL_DOMAINS)
+    domains: set[str] = set(getattr(settings, 'ALLOWED_RECIPIENT_EMAIL_DOMAINS', []))
 
     def validate_email(email: str) -> None:
         domain = email.split('@')[1].lower()
@@ -37,5 +37,5 @@ def register_signal_handlers():
 
     from anymail.signals import pre_send
 
-    if settings.ALLOWED_RECIPIENT_EMAIL_DOMAINS:
+    if getattr(settings, 'ALLOWED_RECIPIENT_EMAIL_DOMAINS', []):
         pre_send.connect(receiver=_filter_recipient_email)
