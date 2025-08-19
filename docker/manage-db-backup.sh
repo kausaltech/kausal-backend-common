@@ -76,6 +76,6 @@ fi
 
 if [ "$1" == "restore" ] ; then
     echo "Restoring from backup..."
-    restic dump latest database.sql | python manage.py dbshell
+    restic dump --no-lock latest database.sql | python manage.py dbshell
     exit 0
 fi
