@@ -1,17 +1,23 @@
-# ruff: noqa: N806
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, cast
 
-def register_settings(settings: dict):
+if TYPE_CHECKING:
+    from typing import Any
+
+    from environ import Env
+
+
+def register_settings(settings: dict[str, Any]):
     # All local variables here (except `settings` itself) will be put in `settings`
     # Pull some out for convenience
-    env = settings['env']
+    env: Env = settings['env']
     DEBUG = settings['DEBUG']
 
     settings['INSTALLED_APPS'].append('anymail')
 
-    ALLOWED_SENDER_EMAILS = env('ALLOWED_SENDER_EMAILS')
-    SERVER_EMAIL = env('SERVER_EMAIL')
+    ALLOWED_SENDER_EMAILS = cast('list[str]', env('ALLOWED_SENDER_EMAILS'))
+    SERVER_EMAIL = env.str('SERVER_EMAIL')
     if not SERVER_EMAIL and ALLOWED_SENDER_EMAILS:
         SERVER_EMAIL = ALLOWED_SENDER_EMAILS[0]
     DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
@@ -39,6 +45,14 @@ def register_settings(settings: dict):
         ANYMAIL['MAILJET_SECRET_KEY'] = env.str('MAILJET_SECRET_KEY')
 
     if DEBUG:
-        EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+        EMAIL_BACKEND = 'anymail.backends.console.EmailBackend'
 
-    settings.update({key: value for key, value in locals().items() if key != 'settings'})
+    settings.update({
+        'EMAIL_BACKEND': EMAIL_BACKEND,
+        'ANYMAIL': ANYMAIL,
+        'DEFAULT_FROM_EMAIL': DEFAULT_FROM_EMAIL,
+        'DEFAULT_FROM_NAME': DEFAULT_FROM_NAME,
+        'SERVER_EMAIL': SERVER_EMAIL,
+        'ALLOWED_SENDER_EMAILS': ALLOWED_SENDER_EMAILS,
+        'ALLOWED_RECIPIENT_EMAIL_DOMAINS': env('ALLOWED_RECIPIENT_EMAIL_DOMAINS'),
+    })

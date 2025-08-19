@@ -12,4 +12,5 @@ ENV_SCHEMA = dict(
     MAILJET_API_KEY=(str, ''),
     MAILJET_SECRET_KEY=(str, ''),
     SENDGRID_API_KEY=(str, ''),
+    ALLOWED_RECIPIENT_EMAIL_DOMAINS=(list, []),
 )
