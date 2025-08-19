@@ -62,7 +62,7 @@ def get_i18n_field_with_fallback(field_name: str, obj: ModelWithI18n, info: GQLI
     fallback_lang = get_language_from_default_language_field(obj, i18n_field)
     fallback = (fallback_value, fallback_lang)
 
-    active_language = getattr(info.context, '_graphql_query_language', None)
+    active_language = info.context.graphql_query_language
     if not active_language:
         return fallback
 

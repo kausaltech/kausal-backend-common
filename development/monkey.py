@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from wagtail.admin.views.generic.base import BaseObjectMixin
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def _monkeypatch_one_class(kls: type) -> None:
@@ -13,7 +16,7 @@ def _monkeypath_init() -> None:
     import django_stubs_ext
     from django.db.models import ManyToManyField
     from django.db.models.fields.json import JSONField
-    from graphene import ObjectType
+    from graphene import Interface, ObjectType
     from modelcluster.fields import ParentalKey, ParentalManyToManyField
     from wagtail.admin.panels import Panel
     from wagtail.admin.viewsets.model import ModelViewSet
@@ -26,7 +29,7 @@ def _monkeypath_init() -> None:
         ModelViewSet, ParentalKey, ParentalManyToManyField,
         JSONField, ManyToManyField, Node,
         Panel, Panel.BoundPanel, BaseObjectMixin,
-        BasePermissionPolicy, ObjectType,
+        BasePermissionPolicy, ObjectType, Interface,
         Block
     ]
 
