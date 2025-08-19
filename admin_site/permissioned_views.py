@@ -16,7 +16,7 @@ from wagtail.snippets.views.snippets import (
 )
 
 from kausal_common.admin_site.mixins import HideSnippetsFromBreadcrumbsMixin
-from kausal_common.models.permission_policy import ModelPermissionPolicy
+from kausal_common.models.permission_policy import ModelPermissionPolicy, CreateContext
 from kausal_common.models.permissions import PermissionedModel
 
 from users.models import User
@@ -85,8 +85,11 @@ class PermissionedCreateView(HideSnippetsFromBreadcrumbsMixin, CreateView[_Model
             cast('UserOrAnon', self.request.user),
             permission,
             None,
-            context=self.request,
+            context=self.get_create_context()
         )
+
+    def get_create_context(self) -> CreateContext:
+        return self.request
 
 
 class PermissionedViewSet(Generic[_ModelT, _QS, _FormT], SnippetViewSet[_ModelT, _FormT]):
