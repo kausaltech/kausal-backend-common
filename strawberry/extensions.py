@@ -186,6 +186,16 @@ class LoggingTracingExtension(SchemaExtension[GraphQLContext]):
         if (current_span := sentry_sdk.get_current_span()) and (transaction := current_span.containing_transaction):
             start_span = transaction.start_child
 
+        query = self.execution_context.query
+        if env_bool('LOG_GRAPHQL_QUERIES', default=False) and query:
+            from rich.console import Console
+            from rich.syntax import Syntax
+            console = Console()
+            syntax = Syntax(code=query, lexer="graphql")
+            console.print(syntax)
+            console.print('Variables:')
+            console.print(self.execution_context.variables)
+
         with start_span(op='graphql.execute', name=span_name), logger.contextualize(**self.get_log_context()):
             _rich_traceback_omit = True
             yield None
