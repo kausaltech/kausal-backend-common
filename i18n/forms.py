@@ -40,8 +40,15 @@ class LanguageAwareAdminModelForm[ModelT: Model](WagtailAdminModelForm[ModelT]):
         languages_to_show: set[str] = self.get_all_realm_languages()
 
         if i18n_field.default_language_field:
-            original_field_language = get_language_from_default_language_field(self.instance, i18n_field)
-            original_field_language = convert_language_code(original_field_language, 'django')
+            try:
+                original_field_language = get_language_from_default_language_field(self.instance, i18n_field)
+            except ValueError:
+                # We might expect to get a value error for newly created objects which might
+                # not have the related model that the default language field references.
+                # In that case display only the primary field
+                pass
+            else:
+                original_field_language = convert_language_code(original_field_language, 'django')
 
         # In the end, we make sure the modeltrans original field -- ie. the field
         # without the language suffix which is saved directly to the original db
