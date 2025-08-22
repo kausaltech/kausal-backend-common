@@ -34,8 +34,6 @@ if TYPE_CHECKING:
     from kausal_common.models.permission_policy import ModelPermissionPolicy
     from kausal_common.models.types import QS
 
-    from actions.models.action import Action
-    from actions.models.category import Category
     from users.models import User
 
     from ..models.types import FK, RevMany
@@ -45,7 +43,7 @@ if TYPE_CHECKING:
         type DimensionScopeType = InstanceConfig
         type DatasetSchemaScopeType = InstanceConfig
     elif IS_WATCH:
-        from actions.models import CategoryType, Plan
+        from actions.models import Action, Category, CategoryType, Plan
         type DatasetScopeType = Action | Category
         type DatasetSchemaScopeType = Plan | CategoryType
         type DimensionScopeType = Plan | CategoryType
