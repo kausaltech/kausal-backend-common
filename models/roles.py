@@ -58,6 +58,7 @@ def join_perms(model_perms: list[tuple[str, list[str]]]):
 class ConcreteRoleProtocol(Protocol):
     id: ClassVar[str]
     name: StrPromise
+    description: StrPromise
     group_name: str
 
 
