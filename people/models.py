@@ -145,7 +145,11 @@ class BasePerson(index.Indexed, ClusterableModel):
             return
         with self.image.open() as f:
             image = willow.Image.open(f)
-            faces = image.detect_faces()
+            try:
+                faces = image.detect_faces()
+            except AttributeError as e:
+                logger.warning('Face detection library not available.')
+                faces = None
 
         if not faces:
             logger.warning('No faces detected for %s' % self)
