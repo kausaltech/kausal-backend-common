@@ -24,11 +24,9 @@ from kausal_common.models.language import ModelWithPrimaryLanguage
 from ..i18n.helpers import get_supported_languages
 
 if TYPE_CHECKING:
-    from orgs.models import OrganizationMetadataAdmin
-    from people.models import Person
     from users.models import User
 
-    from ..models.types import FK, M2M
+    from ..models.types import FK
 
 
 # TODO: Generalize and put in some other app's models.py
@@ -86,33 +84,6 @@ class BaseOrganizationClass(models.Model):
         return self.name
 
 
-class BaseOrganizationMetadataAdmin(models.Model):
-    """Person who can administer data of (descendants of) an organization but, in general, no plan-specific content."""
-
-    organization = ParentalKey(
-        'orgs.Organization',
-        on_delete=models.CASCADE,
-        verbose_name=_('organization'),
-        related_name='organization_metadata_admins',
-    )
-    person = models.ForeignKey(
-        'people.Person',
-        on_delete=models.CASCADE,
-        verbose_name=_('person'),
-    )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['organization', 'person'], name='unique_organization_metadata_admin'),
-        ]
-        verbose_name = _("metadata admin")
-        verbose_name_plural = _("metadata admins")
-        abstract = True
-
-    def __str__(self):
-        return str(self.person)
-
-
 class BaseOrganizationQuerySet[M: models.Model](MP_NodeQuerySet[M], MultilingualQuerySet[M]):  # type: ignore[override]
     @abstractmethod
     def editable_by_user(self, user: User):
@@ -168,9 +139,6 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
         blank=True,
         editable=False,
         on_delete=models.SET_NULL,
-    )
-    metadata_admins: M2M[Person, OrganizationMetadataAdmin] = models.ManyToManyField(
-        'people.Person', through='orgs.OrganizationMetadataAdmin', related_name='metadata_adminable_organizations', blank=True,
     )
 
     # Intentionally overrides ModelWithPrimaryLanguage.primary_language
