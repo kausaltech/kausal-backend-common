@@ -110,9 +110,10 @@ class BasePerson(index.Indexed, ClusterableModel):
         super().validate_unique(exclude)
 
         qs = self.__class__.objects.all()
+        if not self.email:
+            return
+        qs = qs.filter(email__iexact=self.email)
 
-        if self.email:
-            qs = qs.filter(email__iexact=self.email)
         if self.pk:
             qs = qs.exclude(pk=self.pk)
         if qs.exists():
