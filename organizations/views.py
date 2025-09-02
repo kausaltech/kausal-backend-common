@@ -42,7 +42,7 @@ class OrganizationViewMixin:
         return kwargs
 
 
-class CreateChildNodeView(OrganizationViewMixin, CreateView[Organization]):
+class CreateChildNodeView(OrganizationViewMixin, CreateView):
     """
     View class that can take an additional URL param for parent id.
 

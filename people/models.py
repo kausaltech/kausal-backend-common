@@ -131,7 +131,6 @@ class BasePerson(index.Indexed, ClusterableModel):
         self.avatar_updated_at = timezone.now()
         self.save(update_fields=update_fields)
 
-    @abstractmethod
     def download_avatar(self):
         raise NotImplementedError('This method should be implemented by subclasses')
 
@@ -161,7 +160,6 @@ class BasePerson(index.Indexed, ClusterableModel):
         bottom = max(face[3] for face in faces)
         self.image_cropping = ','.join([str(x) for x in (left, top, right, bottom)])
 
-    @abstractmethod
     def get_avatar_url(self, request: HttpRequest, size: str | None = None) -> str | None:
         raise NotImplementedError('This method should be implemented by subclasses')
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing
 import uuid
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, ClassVar, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Self, override
 
 from django.conf import settings
 from django.contrib import admin
@@ -207,6 +207,10 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
     @classmethod
     def get_parent_choices(cls, user: User, obj: Self | None = None) -> models.QuerySet[Self]:
         raise NotImplementedError('This method should be implemented by subclasses')
+
+    @override
+    def __str__(self):
+        return self.name
 
 
 class BaseNamespace(models.Model):
