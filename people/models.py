@@ -6,7 +6,7 @@ import uuid
 from abc import abstractmethod
 from datetime import timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Self, cast
 
 from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile
@@ -23,17 +23,16 @@ from image_cropping import ImageRatioField
 from loguru import logger
 from sentry_sdk import capture_exception
 
-from kausal_common.const import IS_PATHS, IS_WATCH
-
-from users.models import User
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
+    from kausal_common.models.permission_policy import BaseObjectAction
     from kausal_common.models.types import FK, OneToOne
     from kausal_common.users import UserOrAnon
 
     from orgs.models import Organization
+    from users.models import User
 
     if IS_WATCH:
         from actions.models.plan import Plan
@@ -65,7 +64,7 @@ class BasePerson(index.Indexed, ClusterableModel):
         help_text=_("What is this person's organization"),
     )
     user: OneToOne[User | None] = models.OneToOneField(
-        User, null=True, blank=True, related_name='person', on_delete=models.SET_NULL,
+        'users.User', null=True, blank=True, related_name='person', on_delete=models.SET_NULL,
         editable=False, verbose_name=_('user'),
         help_text=_('Set if the person has an user account'),
     )
@@ -82,7 +81,7 @@ class BasePerson(index.Indexed, ClusterableModel):
     avatar_updated_at = models.DateTimeField(null=True, editable=False)
 
     created_by: FK[User | None] = models.ForeignKey(
-        User, related_name='created_persons', blank=True, null=True, on_delete=models.SET_NULL,
+        'users.User', related_name='created_persons', blank=True, null=True, on_delete=models.SET_NULL,
         verbose_name=_('created by'),
     )
     i18n = TranslationField(fields=('title',), default_language_field='organization__primary_language_lowercase')
@@ -202,11 +201,10 @@ class BasePerson(index.Indexed, ClusterableModel):
 
         return ret
 
-
     def get_corresponding_user(self):
         if self.user:
             return self.user
-
+        from users.models import User
         return User.objects.filter(email__iexact=self.email).first()
 
     @abstractmethod
