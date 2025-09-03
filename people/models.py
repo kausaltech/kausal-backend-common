@@ -242,6 +242,17 @@ class ObjectRole(models.TextChoices):
     EDITOR = 'editor'
     ADMIN = 'admin'
 
+    @classmethod
+    def get_roles_for_action(cls, action: BaseObjectAction) -> list[ObjectRole]:
+        return OBJECT_ROLE_MAPPINGS.get(action, [])
+
+
+OBJECT_ROLE_MAPPINGS = {
+    'change': [ObjectRole.EDITOR, ObjectRole.ADMIN],
+    'delete': [ObjectRole.ADMIN],
+    'view': [ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
+}
+
 
 # Workaround for https://code.djangoproject.com/ticket/33174
 # Once this has been fixed in Django, we can probably use the code in the `if` branch below unconditionally and
