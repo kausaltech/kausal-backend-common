@@ -105,7 +105,7 @@ def test_duplicate_data_point_validation(existing_data_point, metric, dimension_
         serializer.is_valid(raise_exception=True)
 
     # Check error message
-    assert 'A data point with this date and dimension category combination already exists' in str(exc_info.value)
+    assert 'A data point with this date, dimension category, and metric combination already exists.' in str(exc_info.value)
 
 
 def test_different_dimension_categories_passes(existing_data_point, metric, dimension_categories, serializer_context):
@@ -132,6 +132,25 @@ def test_different_date_passes(existing_data_point, metric, dimension_categories
         'date': '2024-01-01',
         'dimension_categories': [str(category1.uuid)],
         'metric': str(metric.uuid),
+        'value': '200'
+    }
+
+    # Test that validation passes
+    serializer = DataPointSerializer(data=data, context=serializer_context)
+    assert serializer.is_valid()
+
+
+def test_different_metric_passes(existing_data_point, dimension_categories, serializer_context, dataset_metric_factory, schema):
+    """Test that creating data points with different metrics passes."""
+    category1, _ = dimension_categories
+
+    # Create a different metric for the same schema
+    different_metric = dataset_metric_factory(schema=schema)
+
+    data = {
+        'date': '2023-01-01',
+        'dimension_categories': [str(category1.uuid)],
+        'metric': str(different_metric.uuid),
         'value': '200'
     }
 
