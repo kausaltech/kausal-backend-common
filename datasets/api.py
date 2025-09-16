@@ -87,12 +87,13 @@ class DataPointSerializer(serializers.ModelSerializer):
         fields = ['uuid', 'dataset', 'dimension_categories', 'date', 'value', 'metric']
 
     def validate(self, data):
-        """Validate that no duplicate data point exists with the same date and dimension category combination."""
+        """Validate that no duplicate data point exists with the same date, dimension category, and metric combination."""
         date = data.get('date')
         dimension_categories = data.get('dimension_categories')
+        metric = data.get('metric')
         dataset = self.context['view'].kwargs.get('dataset_uuid')
 
-        if not all([date, dimension_categories, dataset]):
+        if not all([date, dimension_categories, metric, dataset]):
             return data
 
         # Skip validation on update (when we have an instance)
@@ -109,6 +110,7 @@ class DataPointSerializer(serializers.ModelSerializer):
         existing_points = DataPoint.objects.filter(
             dataset__uuid=dataset,
             date__year=date.year,
+            metric=metric,
         ).prefetch_related('dimension_categories')
 
         if not existing_points.exists():
@@ -120,7 +122,7 @@ class DataPointSerializer(serializers.ModelSerializer):
             point_categories = set(dc.uuid for dc in point.dimension_categories.all())
             if point_categories == dimension_category_uuids:
                 raise serializers.ValidationError(
-                    "A data point with this date and dimension category combination already exists."
+                    "A data point with this date, dimension category, and metric combination already exists."
                 )
 
         return data
