@@ -111,9 +111,6 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
         verbose_name=_('Short name'),
         help_text=_('A simplified short version of name for the general public'),
     )
-    internal_abbreviation = models.CharField(
-        max_length=50, blank=True, verbose_name=_('Internal abbreviation'), help_text=_('An internally used abbreviation'),
-    )
     distinct_name = models.CharField(
         max_length=400, editable=False, null=True, help_text=_('A distinct name for this organization (generated automatically)'),
     )
@@ -150,7 +147,7 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
 
     i18n = TranslationField(fields=('name', 'abbreviation'), default_language_field='primary_language_lowercase')
 
-    public_fields: ClassVar[list[str]] = ['id', 'uuid', 'name', 'abbreviation', 'internal_abbreviation', 'parent']
+    public_fields: ClassVar[list[str]] = ['id', 'uuid', 'name', 'abbreviation', 'parent']
 
     search_fields = [
         index.AutocompleteField('name'),
