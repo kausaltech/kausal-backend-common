@@ -50,7 +50,7 @@ if [ $needs_db -eq 1 ]; then
     if [ $needs_migrations -eq 1 ] && [ "$KUBERNETES_MODE" != "1" ]; then
         echo "Running database migrations..."
         python manage.py migrate --no-input
-        if [ "$TEST_MODE" == "1" ]; then
+        if [ "$TEST_MODE" == "1" ] && [ -f '/code/paths/settings.py' ]; then
             populate_paths_test_instances
         fi
     fi
