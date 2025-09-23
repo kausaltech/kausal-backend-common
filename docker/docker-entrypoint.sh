@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -eo pipefail
 
 DB_ENDPOINT=${DB_ENDPOINT:-db:5432}
 APP_ENDPOINT=${APP_ENDPOINT:-app:8000}
@@ -18,7 +18,7 @@ function wait_for_db {
 }
 
 function populate_paths_test_instances() {
-  echo "Populating test data..."
+  echo "Populating Kausal Paths database with test data..."
   if [ -z "$TEST_INSTANCE_IDENTIFIERS" ] ; then
     echo "You must set TEST_INSTANCE_IDENTIFIERS."
     exit 1
@@ -28,6 +28,26 @@ function populate_paths_test_instances() {
     echo "Populating instance ${instance}..."
     python load_nodes.py --config configs/${instance}.yaml --update-instance
   done
+}
+
+function populate_watch_test_data() {
+  for var in TEST_DB_FILE TEST_DB_S3_BUCKET TEST_DB_S3_ENDPOINT AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY ; do
+      [ -z "${!var}" ] && { echo "$var is not set" >&2; exit 1; }
+  done
+
+  echo "Downloading test database dump from S3..."
+  s3cmd get "s3://${TEST_DB_S3_BUCKET}/${TEST_DB_FILE}" /tmp/test-db.sql.gz \
+    --host "${TEST_DB_S3_ENDPOINT}" \
+    --host-bucket "${TEST_DB_S3_ENDPOINT}"
+
+  echo "Deleting and recreating database..."
+  DB_HOST=${DB_ENDPOINT%:*}
+  DB_PORT=${DB_ENDPOINT##*:}
+  dropdb -h $DB_HOST -p $DB_PORT -U $DB_USER --if-exists $DB_NAME -f
+  createdb -h $DB_HOST -p $DB_PORT -U $DB_USER -T template0 -l fi_FI.UTF-8 $DB_NAME
+  psql -h $DB_HOST -p $DB_PORT -U $DB_USER -c "CREATE EXTENSION postgis" $DB_NAME
+  echo "Populating Kausal Watch database with test data..."
+  gunzip -c /tmp/test-db.sql.gz | psql -h $DB_HOST -p $DB_PORT -U $DB_USER -v ON_ERROR_STOP=1 $DB_NAME > /dev/null
 }
 
 needs_app=0
@@ -50,8 +70,15 @@ if [ $needs_db -eq 1 ]; then
     if [ $needs_migrations -eq 1 ] && [ "$KUBERNETES_MODE" != "1" ]; then
         echo "Running database migrations..."
         python manage.py migrate --no-input
-        if [ "$TEST_MODE" == "1" ] && [ -f '/code/paths/settings.py' ]; then
+        if [ "$TEST_MODE" == "1" ]; then
+          if [ -f '/code/paths/settings.py' ]; then
             populate_paths_test_instances
+          elif [ -f '/code/aplans/settings.py' ]; then
+            populate_watch_test_data
+          else
+            echo "No Django settings file recognized for Kausal Paths or Watch." >& 2
+            exit 2
+          fi
         fi
     fi
     if [ -d '/docker-entrypoint.d' ]; then
