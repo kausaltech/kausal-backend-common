@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypeGuard, cast, overload
 from typing_extensions import TypeVar
 
@@ -234,7 +234,7 @@ class ModelReadOnlyPolicy(ModelPermissionPolicy[_M, CreateContext, _QS]):
 _ParentM = TypeVar('_ParentM', bound='PermissionedModel')
 
 
-class ParentInheritedPolicy(Generic[_M, _ParentM, _QS], ModelPermissionPolicy[_M, _ParentM, _QS]):
+class ParentInheritedPolicy(Generic[_M, _ParentM, _QS], ModelPermissionPolicy[_M, _ParentM, _QS], metaclass=ABCMeta):
     parent_model: type[_ParentM]
     parent_policy: ModelPermissionPolicy[_ParentM, Any, QS[_ParentM]]
     disallowed_actions: set[BaseObjectAction]

@@ -378,6 +378,16 @@ class UserPermissionCache:
     user: User
     instance_roles: dict[str, set[int]] = field(default_factory=dict)
 
+    def _get_instance_role_objects_by_role_id[M: Model](self, role: InstanceSpecificRole[M]) -> set[int]:
+        role_objs = self.instance_roles.get(role.id)
+        if role_objs is None:
+            role_objs = set(obj.pk for obj in role.get_instances_for_user(self.user))
+            self.instance_roles[role.id] = role_objs
+        return role_objs
+
+    def has_instance_role_in_any_instance[M: Model](self, role: InstanceSpecificRole[M]) -> bool:
+        return bool(self._get_instance_role_objects_by_role_id(role))
+
     @overload
     def has_instance_role[M: Model](self, role: InstanceSpecificRole[M], obj: M) -> bool: ...
 
@@ -389,10 +399,7 @@ class UserPermissionCache:
             role = role_registry.get_role(role)
         if not isinstance(obj, role.model):
             raise TypeError('%s is not an instance of %s' % (obj, role.model))
-        role_objs = self.instance_roles.get(role.id)
-        if role_objs is None:
-            role_objs = set(obj.pk for obj in role.get_instances_for_user(self.user))
-            self.instance_roles[role.id] = role_objs
+        role_objs = self._get_instance_role_objects_by_role_id(role)
         return obj.pk in role_objs
 
     def get_roles_for_instance(self, obj: Model) -> list[InstanceSpecificRole[Any]] | None:
