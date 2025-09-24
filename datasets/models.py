@@ -652,6 +652,10 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
     def __str__(self):
         return 'Comment on data point %s (created by %s at %s)' % (self.data_point, self.created_by, self.created_at)
 
+    @classmethod
+    def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
+        return get_permission_policy('DATA_POINT_COMMENT_PERMISSION_POLICY')
+
     class Meta:
         ordering = ('data_point', '-created_at')
         verbose_name = _('comment')
