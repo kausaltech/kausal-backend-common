@@ -88,7 +88,7 @@ class PermissionedCreateView(HideSnippetsFromBreadcrumbsMixin, CreateView[_Model
             context=self.get_create_context()
         )
 
-    def get_create_context(self) -> HttpRequest:
+    def get_create_context(self) -> Any:
         return self.request
 
 
