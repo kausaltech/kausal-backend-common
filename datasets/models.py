@@ -652,6 +652,15 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
     def __str__(self):
         return 'Comment on data point %s (created by %s at %s)' % (self.data_point, self.created_by, self.created_at)
 
+    def __rich_repr__(self) -> RichReprResult:
+        yield self.data_point
+        yield self.created_by
+        yield self.created_at
+
+    @classmethod
+    def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
+        return get_permission_policy('DATA_POINT_COMMENT_PERMISSION_POLICY')
+
     class Meta:
         ordering = ('data_point', '-created_at')
         verbose_name = _('comment')
@@ -735,6 +744,24 @@ class DatasetSourceReference(UserModifiableModel, PermissionedModel):
         if ds:
             return f"Source reference for dataset {ds.uuid}: {self.data_source}"
         return 'Source reference without data point or dataset'
+
+    def __rich_repr__(self) -> RichReprResult:
+        dp = self.data_point
+        ds = self.dataset
+        if dp:
+            yield 'data_point', dp
+            yield 'dataset', dp.dataset
+        elif ds:
+            yield 'data_point', None
+            yield 'dataset', ds
+        else:
+            yield 'data_point', None
+            yield 'dataset', None
+
+
+    @classmethod
+    def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
+        return get_permission_policy('DATASET_SOURCE_REFERENCE_PERMISSION_POLICY')
 
     class Meta:
         ordering = ('data_point__dataset', 'data_point')
