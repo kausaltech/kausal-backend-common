@@ -5,6 +5,7 @@ import typing
 # from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
+from django.forms import IntegerField
 from modeltrans.conf import get_available_languages
 from modeltrans.translator import get_i18n_field
 from modeltrans.utils import build_localized_fieldname
@@ -234,7 +235,7 @@ class DatasetSchemaSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
         fields = ['uuid', 'time_resolution', 'name', 'dimensions', 'metrics', 'start_date']
 
 
-class DatasetSchemaViewSet(viewsets.ModelViewSet):
+class DatasetSchemaViewSet(viewsets.ModelViewSet[DatasetSchema]):
     lookup_field = 'uuid'
     serializer_class = DatasetSchemaSerializer
     permission_classes = (
@@ -247,10 +248,24 @@ class DatasetSchemaViewSet(viewsets.ModelViewSet):
         user = user_or_anon(self.request.user)
         return DatasetSchema.permission_policy().instances_user_has_permission_for(user, 'view')
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.datasets.exists():
+            raise serializers.ValidationError('Other resources have references to this dataset schema. Please delete those other resources first.')
+        return super().destroy(request, *args, **kwargs)
+
+
+class DatasetScopeContentTypeField(serializers.StringRelatedField):
+    def to_internal_value(self, data):
+        app_label, model = data
+        content_type = ContentType.objects.get(app_label=app_label, model=model)
+        return content_type.pk
+
 
 class DatasetSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
     data_points: Field = serializers.SlugRelatedField(slug_field='uuid', read_only=True, many=True)
     schema = serializers.SlugRelatedField(slug_field='uuid', queryset=DatasetSchema.objects.all())
+    scope_content_type = DatasetScopeContentTypeField()
 
     class Meta:
         model = Dataset
@@ -474,6 +489,7 @@ class DataSourceViewSet(viewsets.ModelViewSet):
         if has_any_scope_param and not has_all_scope_params:
             raise Exception("Must specify either all or none of content_type_app, content_type_model and object_id")
 
+        object_id = typing.cast('str', object_id)
         user = user_or_anon(self.request.user)
         qs = DataSource.permission_policy().instances_user_has_permission_for(user, 'view')
 
