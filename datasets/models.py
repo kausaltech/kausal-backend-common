@@ -745,6 +745,24 @@ class DatasetSourceReference(UserModifiableModel, PermissionedModel):
             return f"Source reference for dataset {ds.uuid}: {self.data_source}"
         return 'Source reference without data point or dataset'
 
+    def __rich_repr__(self) -> RichReprResult:
+        dp = self.data_point
+        ds = self.dataset
+        if dp:
+            yield 'data_point', dp
+            yield 'dataset', dp.dataset
+        elif ds:
+            yield 'data_point', None
+            yield 'dataset', ds
+        else:
+            yield 'data_point', None
+            yield 'dataset', None
+
+
+    @classmethod
+    def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
+        return get_permission_policy('DATASET_SOURCE_REFERENCE_PERMISSION_POLICY')
+
     class Meta:
         ordering = ('data_point__dataset', 'data_point')
         verbose_name = _('data source reference')
