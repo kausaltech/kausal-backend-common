@@ -68,11 +68,12 @@ flake8-pytest-style.fixture-parentheses = false
 "../typings/**" = ["D", "A002", "ANN401", "PLC0105"]
 "../typings/django/**" = ["ALL"]
 "../../**/migrations/*" = ["I001", "I002", "E501"]
-"../../**/tests/test_*" = [
+"../../**/tests/{test_*,fixtures.py}" = [
   "PLR0913",
   "ANN202",  # no type annotations required for tests
   "S106",    # skip inline password security checks
   "INP001",  # part of an implicit namespace package. Add an `__init__.py`
+  "F403",    # allow importing fixtures and the likes into tests with *
 ]
 "../../**/tests/*" = ["I002"]
 
