@@ -5,7 +5,6 @@ import typing
 # from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
-from django.forms import IntegerField
 from modeltrans.conf import get_available_languages
 from modeltrans.translator import get_i18n_field
 from modeltrans.utils import build_localized_fieldname
@@ -365,9 +364,36 @@ class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
         ).select_related('data_point', 'created_by', 'last_modified_by', 'resolved_by')
 
 class BaseSourceReferenceSerializer(serializers.ModelSerializer):
-    data_point = serializers.SlugRelatedField(slug_field='uuid', queryset=DataPoint.objects.all())
-    dataset = serializers.SlugRelatedField(slug_field='uuid', queryset=Dataset.objects.all())
+    data_point = serializers.SlugRelatedField(slug_field='uuid', queryset=DataPoint.objects.all(), required=False)
+    dataset = serializers.SlugRelatedField(slug_field='uuid', queryset=Dataset.objects.all(), required=False)
     data_source = serializers.SlugRelatedField(slug_field='uuid', queryset=DataSource.objects.all())
+
+    def to_internal_value(self, data: _DT) -> _VT:
+        # The parameters in the context come from the API endpoint URL
+        dataset_uuid = self.context.get('dataset_uuid')
+        data_point_uuid = self.context.get('datapoint_uuid')
+
+        if dataset_uuid != data.get('dataset', dataset_uuid):
+            raise serializers.ValidationError(
+                'Dataset UUID in payload different from that in the URL path'
+            )
+        if data_point_uuid != data.get('datapoint', data_point_uuid):
+            raise serializers.ValidationError(
+                'DataPoint UUID in payload different from that in the URL path'
+            )
+
+        if dataset_uuid:
+            data['dataset'] = dataset_uuid
+        if data_point_uuid:
+            data['data_point'] = data_point_uuid
+        return super().to_internal_value(data)
+
+    def validate(self, data):
+        """
+        """
+        if 'data_point' not in data and 'dataset' not in data:
+            raise serializers.ValidationError("Please supply either data_point or dataset as reference target")
+        return data
 
     class Meta:
         model = DatasetSourceReference
@@ -384,9 +410,11 @@ class DataPointSourceReferenceViewSet(viewsets.ModelViewSet):
             data_point__uuid=self.kwargs['datapoint_uuid']
         ).select_related('data_source')
 
-    def perform_create(self, serializer):
-        data_point = DataPoint.objects.get(uuid=self.kwargs['datapoint_uuid'])
-        serializer.save(data_point=data_point, dataset=None)
+    def get_serializer_context(self) -> dict[str, str]:
+        context = super().get_serializer_context()
+        context['dataset_uuid'] = self.kwargs['dataset_uuid']
+        context['data_point_uuid'] = self.kwargs['datapoint_uuid']
+        return context
 
 class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
     pagination_class = None
@@ -428,9 +456,12 @@ class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
             ).select_related('data_point', 'data_source')
         return DatasetSourceReference.objects.filter(dataset__uuid=dataset_uuid)
 
-    def perform_create(self, serializer):
-        dataset = Dataset.objects.get(uuid=self.kwargs['dataset_uuid'])
-        serializer.save(dataset=dataset, data_point=None)
+    def get_serializer_context(self) -> dict[str, str]:
+        context = super().get_serializer_context()
+        context['dataset_uuid'] = self.kwargs.get('dataset_uuid')
+        context['data_point_uuid'] = self.kwargs.get('datapoint_uuid')
+        return context
+
 
 
 class DataSourceSerializer(serializers.ModelSerializer):
