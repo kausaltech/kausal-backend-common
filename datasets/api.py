@@ -197,7 +197,7 @@ class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
         fields = ['uuid', 'schema', 'label', 'unit', 'order']
 
 
-class DatasetMetricViewSet(viewsets.ModelViewSet):
+class DatasetMetricViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DatasetMetric.objects.all()
     lookup_field = 'uuid'
     serializer_class = DatasetMetricSerializer
