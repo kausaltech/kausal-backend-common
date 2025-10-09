@@ -372,6 +372,10 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
     def filter_siblings(self, qs: models.QuerySet[DatasetMetric]) -> models.QuerySet[DatasetMetric]:
         return qs.filter(schema=self.schema)
 
+    @classmethod
+    def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
+        return get_permission_policy('DATASET_METRIC_PERMISSION_POLICY')
+
 
 class DatasetSchemaDimension(OrderedModel, PermissionedModel):
     schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='dimensions', null=False, blank=False)
