@@ -250,7 +250,9 @@ class DatasetSchemaViewSet(viewsets.ModelViewSet[DatasetSchema]):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         if instance.datasets.exists():
-            raise serializers.ValidationError('Other resources have references to this dataset schema. Please delete those other resources first.')
+            raise serializers.ValidationError(
+                'Other resources have references to this dataset schema. Please delete those other resources first.'
+            )
         return super().destroy(request, *args, **kwargs)
 
 
