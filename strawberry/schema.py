@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC
 from typing import TYPE_CHECKING, Annotated, Any
 
+import sentry_sdk
 import strawberry
 from django.conf import settings
 from graphql import DirectiveLocation, GraphQLError
@@ -54,9 +55,14 @@ class Schema(ABC, GrapheneStrawberrySchema):
         return extensions
 
     def process_errors(self, errors: list[GraphQLError], execution_context: ExecutionContext | None = None) -> None:
+        errors_sent = 0
         for error in errors:
             path_str = '.'.join(str(part) for part in error.path) if error.path else 'unknown'
             logger.opt(exception=error.original_error).bind(graphql_path=path_str).error(error)
+            if error.original_error and errors_sent < 5:
+                sentry_sdk.capture_exception(error.original_error)
+                errors_sent += 1
+
         if errors and execution_context and execution_context.query and settings.DEBUG:
             console = Console()
             syntax = Syntax(execution_context.query, 'graphql')
