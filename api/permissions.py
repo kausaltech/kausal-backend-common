@@ -16,10 +16,8 @@ if TYPE_CHECKING:
 
     from kausal_common.models.permission_policy import BaseObjectAction, ModelPermissionPolicy
 
-    from users.models import User
 
-
-class _MetaClass(permissions.BasePermissionMetaclass, ABCMeta):
+class _MetaClass(permissions.BasePermissionMetaclass, ABCMeta):  # type: ignore[misc]
     pass
 
 
@@ -111,25 +109,25 @@ class PermissionPolicyDRFPermission[_M: PermissionedModel, CreateContext](  # py
         return super().has_permission(request, view)
 
 
-class NestedPermissionModelMeta[_M: PermissionedModel, NestedParent: PermissionedModel](PermissionModelMeta[_M]):
+class NestedPermissionModelMeta[M: PermissionedModel, NestedParent: PermissionedModel](PermissionModelMeta[M]):
     view_kwargs_parent_key: str
     nested_parent_key_field: str = 'uuid'
     nested_parent_model: type[NestedParent]
 
 
 class NestedResourcePermissionPolicyDRFPermission[  # pyright: ignore[reportImplicitAbstractClass]
-    _M: PermissionedModel, CreateContext, NestedParent: PermissionedModel
+    M: PermissionedModel, CreateContext, NestedParent: PermissionedModel
 ](
-    permissions.DjangoModelPermissions, PermissionPolicyDRFPermissionBase[_M, CreateContext], metaclass=_MetaClass
+    permissions.DjangoModelPermissions, PermissionPolicyDRFPermissionBase[M, CreateContext], metaclass=_MetaClass
 ):
-    Meta: NestedPermissionModelMeta[_M, NestedParent]
+    Meta: NestedPermissionModelMeta[M, NestedParent]
 
     perms_map = PermissionPolicyDRFPermissionBase.perms_map
 
     def get_nested_parent_from_api_view(self, view: APIView) -> NestedParent:
         lookup_value = view.kwargs[self.Meta.view_kwargs_parent_key]
         try:
-            object = self.Meta.nested_parent_model.objects.get(**{self.Meta.nested_parent_key_field: lookup_value})
+            object = self.Meta.nested_parent_model._default_manager.get(**{self.Meta.nested_parent_key_field: lookup_value})
         except ObjectDoesNotExist as e:
             raise NotFound() from e
         return object

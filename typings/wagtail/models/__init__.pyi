@@ -17,8 +17,7 @@ from django.forms import Form
 from django.http import HttpRequest
 from django.http.response import HttpResponseBase
 from django.template.response import TemplateResponse
-from django.utils.functional import cached_property as cached_property
-from django_stubs_ext import StrOrPromise
+from django.utils.functional import _StrOrPromise as StrOrPromise, cached_property as cached_property
 from modelcluster.models import ClusterableModel
 from wagtail.actions.copy_for_translation import CopyPageForTranslationAction as CopyPageForTranslationAction
 from wagtail.actions.copy_page import CopyPageAction as CopyPageAction
@@ -874,10 +873,6 @@ class Orderable(models.Model):
     sort_order: models.IntegerField[int | None, int | None]
     sort_order_field: str
 
-    class Meta:
-        abstract: bool = ...
-        ordering: list[str]
-
 
 _RevTargetT = TypeVar('_RevTargetT', bound=Model, default=Model)
 
@@ -1025,10 +1020,8 @@ class WorkflowTask(Orderable):
     workflow: Workflow
     task: WorkflowTask
 
-    class Meta(Orderable.Meta): ...
 
-
-class TaskQuerySet(SpecificQuerySetMixin, models.QuerySet):
+class TaskQuerySet(SpecificQuerySetMixin, models.QuerySet[Task]):
     def active(self): ...
 
 class TaskManager(models.Manager[Task]):
@@ -1120,10 +1113,6 @@ class AbstractWorkflow(ClusterableModel):
         """
         Returns a queryset of all the pages that this Workflow applies to.
         """
-    class Meta:
-        verbose_name: Incomplete
-        verbose_name_plural: Incomplete
-        abstract: bool
 
 class Workflow(AbstractWorkflow): ...
 
@@ -1131,11 +1120,6 @@ class AbstractGroupApprovalTask(Task):
     groups: ManyToManyField[Group, Any]
     admin_form_fields: Incomplete
     admin_form_widgets: Incomplete
-
-    class Meta:
-        abstract: bool
-        verbose_name: Incomplete
-        verbose_name_plural: Incomplete
 
     def start(self, workflow_state, user: Incomplete | None = None): ...
     def user_can_access_editor(self, obj, user): ...
@@ -1180,7 +1164,7 @@ class WorkflowState(models.Model):
     requested_by: models.ForeignKey[AbstractBaseUser]
     current_task_state: models.OneToOneField[TaskState | None]
     on_finish: Callable[[WorkflowState], None]
-    objects: ClassVar[WorkflowStateManager]  # pyright: ignore
+    objects: ClassVar[WorkflowStateManager]
     _default_manager: ClassVar[WorkflowStateManager]
 
     def save(self, *args, **kwargs): ...
@@ -1325,9 +1309,7 @@ class Comment(ClusterableModel):
     revision_created: Incomplete
     resolved_at: Incomplete
     resolved_by: Incomplete
-    class Meta:
-        verbose_name: Incomplete
-        verbose_name_plural: Incomplete
+
     def save(self, update_position: bool = False, **kwargs): ...  # type: ignore
     def log_create(self, **kwargs) -> None: ...
     def log_edit(self, **kwargs) -> None: ...
@@ -1345,9 +1327,7 @@ class CommentReply(models.Model):
     text: Incomplete
     created_at: Incomplete
     updated_at: Incomplete
-    class Meta:
-        verbose_name: Incomplete
-        verbose_name_plural: Incomplete
+
     def log_create(self, **kwargs) -> None: ...
     def log_edit(self, **kwargs) -> None: ...
     def log_delete(self, **kwargs) -> None: ...
@@ -1357,5 +1337,3 @@ class PageSubscription(models.Model):
     page: Incomplete
     comment_notifications: Incomplete
     wagtail_reference_index_ignore: bool
-    class Meta:
-        unique_together: Incomplete

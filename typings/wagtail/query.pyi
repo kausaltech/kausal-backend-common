@@ -1,4 +1,4 @@
-from typing import Generic, Self
+from typing import Any, Generic, Self
 from typing_extensions import TypeVar
 
 from django.db import models
@@ -81,7 +81,7 @@ class TreeQuerySet(QuerySet[_NodeT, _NodeT]):
     @classmethod
     def as_manager(cls) -> models.Manager[_NodeT]: ...
 
-_BaseModelQS = TypeVar('_BaseModelQS', bound=QuerySet, covariant=True)  # noqa: PLC0105
+_BaseModelQS = TypeVar('_BaseModelQS', bound=QuerySet[Any], covariant=True)
 
 class SpecificQuerySetMixin(Generic[_BaseModelQS]):
     def __init__(self, *args, **kwargs) -> None:

@@ -19,6 +19,8 @@ from wagtail.search import index
 import willow  # type: ignore
 from image_cropping import ImageRatioField
 
+from kausal_common.const import IS_PATHS, IS_WATCH
+
 from users.models import User
 
 if TYPE_CHECKING:
@@ -28,6 +30,9 @@ if TYPE_CHECKING:
     from kausal_common.users import UserOrAnon
 
     from orgs.models import Organization
+
+    if IS_WATCH:
+        from actions.models.plan import Plan
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +70,7 @@ class BasePerson(index.Indexed, ClusterableModel):
         blank=True, upload_to=image_upload_path, verbose_name=_('image'),
         height_field='image_height', width_field='image_width',
     )
-    image_cropping = ImageRatioField('image', '1280x720', verbose_name=_('image cropping'))  # pyright: ignore
+    image_cropping = ImageRatioField('image', '1280x720', verbose_name=_('image cropping'))
     image_height = models.PositiveIntegerField(null=True, editable=False)
     image_width = models.PositiveIntegerField(null=True, editable=False)
     avatar_updated_at = models.DateTimeField(null=True, editable=False)
@@ -76,7 +81,7 @@ class BasePerson(index.Indexed, ClusterableModel):
     )
     i18n = TranslationField(fields=('title',), default_language_field='organization__primary_language_lowercase')
 
-    # objects: ClassVar[PersonManager] = PersonManager()  # pyright: ignore
+    # objects: ClassVar[PersonManager] = PersonManager()
 
     search_fields = [
         index.FilterField('id'),
@@ -203,17 +208,33 @@ class BasePerson(index.Indexed, ClusterableModel):
             target_user.deactivate(acting_admin_user)
         self.delete()
 
-    @abstractmethod
-    def visible_for_user(self, user: UserOrAnon, **kwargs) -> bool:
-        """
-        Determine if this person is visible to the given user.
+    if IS_WATCH:
+        @abstractmethod
+        def visible_for_user(self, user: UserOrAnon, *, plan: Plan | None = None, **kwargs) -> bool:
+            """
+            Determine if this person is visible to the given user.
 
-        Args:
-            user: The user requesting access
-            **kwargs: Additional context (e.g., plan, organization, etc.)
+            Args:
+                user: The user requesting access
+                **kwargs: Additional context (e.g., plan, organization, etc.)
 
-        Returns:
-            bool: True if visible, False otherwise
+            Returns:
+                bool: True if visible, False otherwise
 
-        """
-        raise NotImplementedError("This method should be implemented by subclasses")
+            """
+            raise NotImplementedError("This method should be implemented by subclasses")
+    elif IS_PATHS:
+        @abstractmethod
+        def visible_for_user(self, user: UserOrAnon, **kwargs) -> bool:
+            """
+            Determine if this person is visible to the given user.
+
+            Args:
+                user: The user requesting access
+                **kwargs: Additional context (e.g., plan, organization, etc.)
+
+            Returns:
+                bool: True if visible, False otherwise
+
+            """
+            raise NotImplementedError("This method should be implemented by subclasses")

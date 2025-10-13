@@ -1,8 +1,9 @@
-from _typeshed import Incomplete
 from django.db import models
 from django.utils.functional import cached_property as cached_property
 from wagtail.blocks import StreamBlock as StreamBlock
 from wagtail.fields import StreamField as StreamField
+
+from _typeshed import Incomplete
 
 class ReferenceGroups:
     """
@@ -33,7 +34,7 @@ class ReferenceGroups:
         """
     def __getitem__(self, key): ...
 
-class ReferenceIndexQuerySet(models.QuerySet):
+class ReferenceIndexQuerySet(models.QuerySet[ReferenceIndex]):
     def group_by_source_object(self):
         """
         Returns a ReferenceGroups object for this queryset that will yield
@@ -59,8 +60,7 @@ class ReferenceIndex(models.Model):
     wagtail_reference_index_ignore: bool
     tracked_models: Incomplete
     indexed_models: Incomplete
-    class Meta:
-        unique_together: Incomplete
+
     @classmethod
     def model_is_indexable(cls, model, allow_child_models: bool = False):
         """

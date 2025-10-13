@@ -366,12 +366,12 @@ class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
             data_point__dataset__uuid=self.kwargs['dataset_uuid']
         ).select_related('data_point', 'created_by', 'last_modified_by', 'resolved_by')
 
-class BaseSourceReferenceSerializer(serializers.ModelSerializer):
+class BaseSourceReferenceSerializer(serializers.ModelSerializer[DatasetSourceReference]):
     data_point = serializers.SlugRelatedField(slug_field='uuid', queryset=DataPoint.objects.all(), required=False)
     dataset = serializers.SlugRelatedField(slug_field='uuid', queryset=Dataset.objects.all(), required=False)
     data_source = serializers.SlugRelatedField(slug_field='uuid', queryset=DataSource.objects.all())
 
-    def to_internal_value(self, data: _DT) -> _VT:
+    def to_internal_value(self, data: dict[str, typing.Any]) -> DatasetSourceReference:
         # The parameters in the context come from the API endpoint URL
         dataset_uuid = self.context.get('dataset_uuid')
         data_point_uuid = self.context.get('datapoint_uuid')
@@ -392,8 +392,6 @@ class BaseSourceReferenceSerializer(serializers.ModelSerializer):
         return super().to_internal_value(data)
 
     def validate(self, data):
-        """
-        """
         if 'data_point' not in data and 'dataset' not in data:
             raise serializers.ValidationError("Please supply either data_point or dataset as reference target")
         return data

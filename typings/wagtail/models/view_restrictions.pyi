@@ -17,8 +17,3 @@ class BaseViewRestriction(models.Model):
         Update the session data in the request to mark the user as having passed this
         view restriction
         """
-
-    class Meta:
-        abstract: bool
-        verbose_name: Incomplete
-        verbose_name_plural: Incomplete

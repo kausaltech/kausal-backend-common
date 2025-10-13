@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from typing import ClassVar
 
 from django.db import models
-from django.db.models import CharField, ForeignKey, Model
+from django.db.models import CharField, ForeignKey
 from django_stubs_ext import StrPromise
 from wagtail.query import TreeQuerySet as TreeQuerySet
 from wagtail.search import index as index
@@ -29,9 +29,9 @@ class CollectionManager(BaseCollectionManager): ...
 class CollectionViewRestriction(BaseViewRestriction):
     collection: models.ForeignKey[Collection, Collection]
     passed_view_restrictions_session_key: str
-    class Meta:  # pyright: ignore
-        verbose_name: StrPromise
-        verbose_name_plural: StrPromise
+    class Meta:
+        verbose_name: ClassVar[StrPromise]
+        verbose_name_plural: ClassVar[StrPromise]
 
 
 class Collection(MP_Node[CollectionQuerySet]):
@@ -61,8 +61,8 @@ class Collection(MP_Node[CollectionQuerySet]):
         Example HTML output: "&nbsp;&nbsp;&nbsp;&nbsp;&#x21b3 Pies"
         '''
     class Meta:
-        verbose_name: Incomplete
-        verbose_name_plural: Incomplete
+        verbose_name: ClassVar[StrPromise]
+        verbose_name_plural: ClassVar[StrPromise]
 
 def get_root_collection_id(): ...
 
@@ -74,7 +74,7 @@ class CollectionMember(models.Model):
     search_fields: Sequence[index.BaseField]
 
 
-class GroupCollectionPermissionManager(models.Manager):
+class GroupCollectionPermissionManager(models.Manager[GroupCollectionPermission]):
     def get_by_natural_key(self, group, collection, permission): ...
 
 

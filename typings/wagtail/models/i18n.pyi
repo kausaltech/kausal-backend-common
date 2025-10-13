@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import ClassVar, Generic, Self
+from typing import Any, ClassVar, Generic, Self
 from typing_extensions import TypeVar
 
 from django.core.checks import CheckMessage
@@ -24,7 +24,7 @@ class LocaleManager(models.Manager[Locale]):
 
 class Locale(models.Model):
     language_code: CharField[str, str]
-    objects: ClassVar[LocaleManager]  # pyright: ignore
+    objects: ClassVar[LocaleManager]
     all_objects: ClassVar[models.Manager[Locale]]
 
     @classmethod
@@ -43,7 +43,7 @@ class Locale(models.Model):
     def language_code_is_valid(self) -> bool: ...
     def get_display_name(self) -> str: ...
     @property
-    def language_info(self) -> dict: ...
+    def language_info(self) -> dict[str, Any]: ...
     @property
     def language_name(self) -> str:
         '''
@@ -92,10 +92,10 @@ class Locale(models.Model):
         Returns a boolean indicating whether this object is the currently active locale.
         """
 
-_QS = TypeVar('_QS', bound=models.QuerySet, default=models.QuerySet, covariant=True)  # noqa: PLC0105
+_QS = TypeVar('_QS', bound=models.QuerySet[Any], default=models.QuerySet[Model], covariant=True)
 
 
-class TranslatableMixin(Generic[_QS], models.Model):
+class TranslatableMixin(models.Model, Generic[_QS]):
     translation_key: models.UUIDField
     locale: models.ForeignKey[Locale, Locale]
 
@@ -196,8 +196,7 @@ class BootstrapTranslatableMixin(TranslatableMixin):
     locale: Incomplete
     @classmethod
     def check(cls, **kwargs) -> list[CheckMessage]: ...
-    class Meta:  # noqa: DJ012
-        abstract: bool
+
 
 def get_translatable_models(include_subclasses: bool = False) -> list[type[Model]]:
     """

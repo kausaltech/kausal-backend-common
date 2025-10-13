@@ -3,11 +3,11 @@ from __future__ import annotations
 from abc import ABC
 from typing import TYPE_CHECKING, Annotated, Any
 
-import sentry_sdk
 import strawberry
 from django.conf import settings
 from graphql import DirectiveLocation, GraphQLError
 
+import sentry_sdk
 from loguru import logger
 from rich.console import Console
 from rich.syntax import Syntax

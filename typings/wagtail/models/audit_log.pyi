@@ -1,8 +1,12 @@
-from _typeshed import Incomplete
 from collections.abc import Generator
+from typing import ClassVar
+
 from django.db import models
 from django.utils.functional import cached_property as cached_property
+from django_stubs_ext import StrPromise
 from wagtail.users.utils import get_deleted_user_display_name as get_deleted_user_display_name
+
+from _typeshed import Incomplete
 
 class LogEntryQuerySet(models.QuerySet):
     def get_actions(self):
@@ -62,11 +66,7 @@ class BaseLogEntry(models.Model):
     deleted: Incomplete
     objects: Incomplete
     wagtail_reference_index_ignore: bool
-    class Meta:
-        abstract: bool
-        verbose_name: Incomplete
-        verbose_name_plural: Incomplete
-        ordering: Incomplete
+
     def save(self, *args, **kwargs): ...
     def clean(self) -> None: ...
     @cached_property
@@ -96,7 +96,3 @@ class ModelLogEntry(BaseLogEntry):
     """
     object_id: Incomplete
     objects: Incomplete
-    class Meta:
-        ordering: Incomplete
-        verbose_name: Incomplete
-        verbose_name_plural: Incomplete
