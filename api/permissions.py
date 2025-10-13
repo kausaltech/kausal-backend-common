@@ -48,6 +48,7 @@ class PermissionPolicyDRFPermissionBase[_M: PermissionedModel, CreateContext](me
         'HEAD': 'view',
         'POST': 'add',
         'PUT': 'change',
+        'OPTIONS': 'view',
         'PATCH': 'change',
         'DELETE': 'delete',
     }
