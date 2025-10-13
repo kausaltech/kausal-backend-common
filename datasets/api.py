@@ -331,6 +331,7 @@ class DataPointCommentSerializer(serializers.ModelSerializer):
                            'last_modified_at', 'last_modified_by']
 
 class DataPointCommentViewSet(viewsets.ModelViewSet):
+    pagination_class = None
     lookup_field = 'uuid'
     serializer_class = DataPointCommentSerializer
     permission_classes = (
