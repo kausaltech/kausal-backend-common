@@ -1,4 +1,3 @@
-# ruff: noqa[ANN401]
 from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
 from typing import Any, ClassVar, Generic, Self, type_check_only
