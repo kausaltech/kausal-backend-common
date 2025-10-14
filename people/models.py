@@ -23,6 +23,8 @@ from image_cropping import ImageRatioField
 from loguru import logger
 from sentry_sdk import capture_exception
 
+from kausal_common.const import IS_WATCH
+
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
