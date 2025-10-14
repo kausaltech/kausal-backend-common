@@ -194,7 +194,7 @@ class LoggingTracingExtension(SchemaExtension[GraphQLContext]):
             syntax = Syntax(code=query, lexer="graphql")
             console.print(syntax)
             console.print('Variables:')
-            console.print(self.execution_context.variables)
+            console.print(json.dumps(self.execution_context.variables, indent=2))
 
         with start_span(op='graphql.execute', name=span_name), logger.contextualize(**self.get_log_context()):
             _rich_traceback_omit = True
@@ -270,12 +270,13 @@ class ExecutionCacheExtension[Ctx: GraphQLContext](SchemaExtension[Ctx], ABC):
 
         span = sentry_sdk.get_current_span()
 
-        with enter('get query cache key'):
+        with enter('get query cache key'), sentry_sdk.start_span(op='graphql.cache.key', name='get query cache key'):
             cache_key = self.get_cache_key()
 
         result: ExecutionResult | None = None
         if cache_key is not None:
-            result = self.get_from_cache(cache_key)
+            with sentry_sdk.start_span(op='graphql.cache.get', name='get query cache value'):
+                result = self.get_from_cache(cache_key)
 
         cache_reason = ''
         if cache_key is None:
