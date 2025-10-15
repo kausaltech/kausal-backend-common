@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import hashlib
 import io
-import logging
 import uuid
 from abc import abstractmethod
 from datetime import timedelta
@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from django.core.exceptions import ValidationError
+from django.core.files.images import ImageFile
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
@@ -18,6 +19,8 @@ from wagtail.search import index
 
 import willow  # type: ignore
 from image_cropping import ImageRatioField
+from loguru import logger
+from sentry_sdk import capture_exception
 
 from kausal_common.const import IS_PATHS, IS_WATCH
 
@@ -34,7 +37,7 @@ if TYPE_CHECKING:
     if IS_WATCH:
         from actions.models.plan import Plan
 
-logger = logging.getLogger(__name__)
+logger = logger.bind(name='people.models')
 
 DEFAULT_AVATAR_SIZE = 360
 
@@ -73,6 +76,8 @@ class BasePerson(index.Indexed, ClusterableModel):
     image_cropping = ImageRatioField('image', '1280x720', verbose_name=_('image cropping'))
     image_height = models.PositiveIntegerField(null=True, editable=False)
     image_width = models.PositiveIntegerField(null=True, editable=False)
+    image_hash = models.CharField(max_length=64, null=True, editable=False)
+    image_msgraph_etag = models.CharField(max_length=128, null=True, editable=False)
     avatar_updated_at = models.DateTimeField(null=True, editable=False)
 
     created_by: FK[User | None] = models.ForeignKey(
@@ -126,16 +131,22 @@ class BasePerson(index.Indexed, ClusterableModel):
                 'email': _('Person with this email already exists'),
             })
 
-    def set_avatar(self, photo):
-        update_fields = ['avatar_updated_at']
+    def set_avatar(self, photo: bytes, msgraph_etag: str | None = None):
+        update_fields = ['avatar_updated_at', 'image_hash', 'image_msgraph_etag']
+        photo_hash = hashlib.md5(photo, usedforsecurity=False).hexdigest()
         try:
-            if not self.image or self.image.read() != photo:
-                self.image.save('avatar.jpg', io.BytesIO(photo))  # type: ignore
-                update_fields += ['image', 'image_height', 'image_width', 'image_cropping']
-        except ValueError:
+            image = ImageFile(io.BytesIO(photo), 'avatar.jpg')
+            self.image.save('avatar.jpg', image)
+            update_fields += ['image', 'image_height', 'image_width', 'image_cropping']
+        except Exception as e:
+            logger.exception('Failed to set avatar for person', exc_info=e, **{'person.id': self.id})
+            capture_exception(e)
             pass
+        self.image_msgraph_etag = msgraph_etag
+        self.image_hash = photo_hash
         self.avatar_updated_at = timezone.now()
-        self.save(update_fields=update_fields)
+        # We don't use `save` here because we don't want to trigger the signal handlers
+        self.__class__.objects.filter(pk=self.pk).update(**{field: getattr(self, field) for field in update_fields})
 
     def download_avatar(self):
         raise NotImplementedError('This method should be implemented by subclasses')

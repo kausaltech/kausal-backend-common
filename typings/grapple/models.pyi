@@ -10,7 +10,7 @@ type GrapheneFieldType = GrapheneType | Callable[[], GrapheneType] | Callable[[]
 
 class GraphQLField:
     field_name: str
-    field_type: GrapheneFieldType | None
+    field_type: GrapheneFieldType | str | None
     field_source: str | None
     description: str | None
     deprecation_reason: str | None
@@ -18,7 +18,7 @@ class GraphQLField:
     def __init__(
         self,
         field_name: str,
-        field_type: GrapheneFieldType | None = None,
+        field_type: GrapheneFieldType | str | None = None,
         *,
         required: bool | None = None,
         **kwargs,
