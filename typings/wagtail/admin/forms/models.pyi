@@ -63,7 +63,7 @@ _M = TypeVar('_M', bound=Model, default=Model)
 
 
 class WagtailAdminModelForm(
-    Generic[_M, _U], PermissionedForm, ClusterForm[_M], metaclass=WagtailAdminModelFormMetaclass,
+    PermissionedForm, ClusterForm[_M], Generic[_M, _U], metaclass=WagtailAdminModelFormMetaclass,
 ):
     for_user: _U | None
 

@@ -80,7 +80,7 @@ class Panel(Generic[_Model, _Panel_Form]):
     heading: StrOrPromise
     classname: str
     help_text: StrOrPromise
-    base_form_class: type[WagtailAdminModelForm] | None
+    base_form_class: type[WagtailAdminModelForm[_Model, Any]] | None
     icon: str
     model: type[_Model] | None
     attrs: dict[str, str]

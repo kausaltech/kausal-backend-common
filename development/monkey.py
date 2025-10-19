@@ -42,6 +42,12 @@ def _monkeypath_init() -> None:
     except ImportError:
         pass
 
+    try:
+        from wagtail_modeladmin.helpers.permission import PermissionHelper
+        extra_classes.append(PermissionHelper)
+    except ImportError:
+        pass
+
     django_stubs_ext.monkeypatch(extra_classes=extra_classes, include_builtins=True)
 
 

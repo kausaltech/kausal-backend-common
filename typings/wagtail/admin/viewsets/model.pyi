@@ -92,7 +92,7 @@ class ModelViewSet(Generic[_ModelT, _FormT], ViewSet):
     list_display: ClassVar[Sequence[str | Column]]
     list_filter: ClassVar[list[str] | dict[str, list[str]]]
     filterset_class: ClassVar[Any]
-    search_fields: ClassVar[list[str] | None]
+    search_fields: ClassVar[Sequence[str] | None]
     search_backend_name: ClassVar[str | None]
     list_export: ClassVar[list[str]]
     export_headings: ClassVar[dict[str, str]]

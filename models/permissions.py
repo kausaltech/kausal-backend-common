@@ -83,7 +83,7 @@ class PermissionedManager(MultilingualManager[_PM], ModelManager[_PM, _PQS]):
     If the model has an i18n field, the queryset will also inherit from `MultilingualQuerySet`.
     """
 
-    _queryset_class: type[QuerySet]
+    _queryset_class: type[QuerySet[Any]]
 
     def __init__(self) -> None:
         super().__init__()

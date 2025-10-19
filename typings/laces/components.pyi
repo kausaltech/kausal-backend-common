@@ -1,0 +1,69 @@
+from django.forms.widgets import Media, MediaDefiningClass
+from django.utils.safestring import SafeString
+
+from .typing import HasMediaProperty, RenderContext
+
+class Component(metaclass=MediaDefiningClass):
+    """
+    A class that knows how to render itself.
+
+    Extracted from Wagtail. See:
+    https://github.com/wagtail/wagtail/blob/094834909d5c4b48517fd2703eb1f6d386572ffa/wagtail/admin/ui/components.py#L8-L22  # noqa: E501
+
+    A component uses the `MetaDefiningClass` metaclass to add a `media` property, which
+    allows the definitions of CSS and JavaScript assets that are associated with the
+    component. This works the same as `Media` class used by Django forms.
+    See also: https://docs.djangoproject.com/en/4.2/topics/forms/media/
+    """  # noqa: E501
+    template_name: str
+    def render_html(self, parent_context: RenderContext | None = None) -> SafeString:
+        """
+        Return string representation of the object.
+
+        Given a context dictionary from the calling template (which may be a
+        `django.template.Context` object or a plain `dict` of context variables),
+        returns the string representation to be rendered.
+
+        This will be subject to Django's HTML escaping rules, so a return value
+        consisting of HTML should typically be returned as a
+        `django.utils.safestring.SafeString` instance.
+        """
+
+    def get_context_data(self, parent_context: RenderContext | None = None) -> RenderContext | None:
+        """Return the context data to render this component with."""
+
+    @property
+    def media(self) -> Media:
+        """Return the media definitions for this component."""
+
+
+
+class MediaContainer(list[HasMediaProperty]):
+    """
+    A list that provides a `media` property that combines the media definitions
+    of its members.
+
+    Extracted from Wagtail. See:
+    https://github.com/wagtail/wagtail/blob/ca8a87077b82e20397e5a5b80154d923995e6ca9/wagtail/admin/ui/components.py#L25-L36  # noqa: E501
+
+    The `MediaContainer` functionality depends on the `django.forms.widgets.Media`
+    class. The `Media` class provides the logic to combine the media definitions of
+    multiple objects through its `__add__` method. The `MediaContainer` relies on this
+    functionality to provide a `media` property that combines the media definitions of
+    its members.
+
+    See also:
+    https://docs.djangoproject.com/en/4.2/topics/forms/media
+    """  # noqa: E501
+    @property
+    def media(self) -> Media:
+        """
+        Return a `Media` object containing the media definitions of all members.
+
+        This makes use of the `Media.__add__` method, which combines the media
+        definitions of two `Media` objects.
+
+        """
+
+
+

@@ -196,6 +196,10 @@ class DimensionScope(OrderedModel, PermissionedModel):
 
 
 class DatasetSchemaQuerySet(PermissionedQuerySet['DatasetSchema']):
+    def for_model(self, scope_model: type[DatasetSchemaScopeType]) -> Self:
+        ct = ContentType.objects.get_for_model(scope_model)
+        return self.filter(scopes__scope_content_type=ct)
+
     def for_scope(self, scope: DatasetSchemaScopeType) -> Self:
         ct = ContentType.objects.get_for_model(type(scope))
         return self.filter(

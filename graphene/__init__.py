@@ -15,6 +15,7 @@ from modeltrans.translator import get_i18n_field
 import graphene_django_optimizer as gql_optimizer
 from graphene_pydantic import PydanticObjectType
 
+from kausal_common.const import IS_PATHS
 from kausal_common.i18n.helpers import get_language_from_default_language_field
 from kausal_common.models.permissions import PermissionedModel, UserPermissions, get_user_permissions_for_instance
 from kausal_common.strawberry.context import GraphQLContext
@@ -30,7 +31,6 @@ if TYPE_CHECKING:
     from graphql import GraphQLResolveInfo
     from modeltrans.fields import TranslationField
 
-    from kausal_common.const import IS_PATHS
     from kausal_common.users import UserOrAnon
 
     @type_check_only
@@ -105,16 +105,17 @@ def _get_user(info: GQLInfo) -> UserOrAnon:
     return user
 
 
-def resolve_user_roles(obj: Model, info: GQLInfo) -> list[str]:
-    assert isinstance(obj, PermissionedModel)
-    user = _get_user(info)
-    if user is None or not is_authenticated(user):
-        return []
+if IS_PATHS:
+    def resolve_user_roles(obj: Model, info: GQLInfo) -> list[str]:
+        assert isinstance(obj, PermissionedModel)
+        user = _get_user(info)
+        if user is None or not is_authenticated(user):
+            return []
 
-    roles = user.perms.get_roles_for_instance(obj)
-    if roles is None:
-        return []
-    return [role.id for role in roles]
+        roles = user.perms.get_roles_for_instance(obj)
+        if roles is None:
+            return []
+        return [role.id for role in roles]
 
 
 class UserPermissionsType(PydanticObjectType):
@@ -134,7 +135,8 @@ UserRolesField = graphene.List(graphene.NonNull(graphene.String), required=False
 
 class DjangoNode(DjangoObjectType[M], Generic[M]):
     user_permissions = graphene.Field(UserPermissionsType, resolver=resolve_user_permissions)
-    user_roles = graphene.Field(UserRolesField, resolver=resolve_user_roles)
+    if IS_PATHS:
+        user_roles = graphene.Field(UserRolesField, resolver=resolve_user_roles)
     _meta: DjangoObjectTypeOptions[M]
 
     @classmethod

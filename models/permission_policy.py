@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 _M = TypeVar('_M', bound='PermissionedModel')
-_QS = TypeVar('_QS', bound=QuerySet, default=QuerySet[_M])
+_QS = TypeVar('_QS', bound=QuerySet[Any], default=QuerySet[_M])
 CreateContext = TypeVar('CreateContext', default=Any)
 
 type BaseObjectAction = Literal['view', 'add', 'change', 'delete']
@@ -37,7 +37,7 @@ def is_base_action(action: str) -> TypeGuard[ObjectSpecificAction]:
     return action in ('view', 'change', 'delete')
 
 
-class ModelPermissionPolicy(Generic[_M, CreateContext, _QS], ABC, WagtailModelPermissionPolicy[_M, User, Any]):
+class ModelPermissionPolicy(ABC, WagtailModelPermissionPolicy[_M, User, Any], Generic[_M, CreateContext, _QS]):
     public_fields: list[str]
     """List of fields that are public."""
 
@@ -52,7 +52,7 @@ class ModelPermissionPolicy(Generic[_M, CreateContext, _QS], ABC, WagtailModelPe
                 self_pf = []
         self.public_fields = self_pf
 
-    def is_create_context_valid(self, context: Any) -> TypeGuard[CreateContext]:
+    def is_create_context_valid(self, context: Any) -> TypeGuard[CreateContext]:  # pyright: ignore[reportUnusedParameter]
         return False
 
     @staticmethod
@@ -79,7 +79,7 @@ class ModelPermissionPolicy(Generic[_M, CreateContext, _QS], ABC, WagtailModelPe
 
     @abstractmethod
     def user_has_perm(self, user: User, action: ObjectSpecificAction, obj: _M) -> bool:
-        """Check if user has permission to perform an action on an instance."""
+        """Check if (authenticated) user has permission to perform an action on an instance."""
 
     @abstractmethod
     def anon_has_perm(self, action: ObjectSpecificAction, obj: _M) -> bool:
@@ -106,7 +106,7 @@ class ModelPermissionPolicy(Generic[_M, CreateContext, _QS], ABC, WagtailModelPe
                     creatable_child_models.append(child_model)
         return creatable_child_models
 
-    def anon_can_create(self, context: CreateContext) -> bool:
+    def anon_can_create(self, context: CreateContext) -> bool:  # pyright: ignore[reportUnusedParameter]
         """Check if an unauthenticated user can create a new object."""
         return False
 
@@ -234,7 +234,7 @@ class ModelReadOnlyPolicy(ModelPermissionPolicy[_M, CreateContext, _QS]):
 _ParentM = TypeVar('_ParentM', bound='PermissionedModel')
 
 
-class ParentInheritedPolicy(Generic[_M, _ParentM, _QS], ModelPermissionPolicy[_M, _ParentM, _QS], metaclass=ABCMeta):
+class ParentInheritedPolicy(ModelPermissionPolicy[_M, _ParentM, _QS], Generic[_M, _ParentM, _QS], metaclass=ABCMeta):
     parent_model: type[_ParentM]
     parent_policy: ModelPermissionPolicy[_ParentM, Any, QS[_ParentM]]
     disallowed_actions: set[BaseObjectAction]
@@ -254,7 +254,7 @@ class ParentInheritedPolicy(Generic[_M, _ParentM, _QS], ModelPermissionPolicy[_M
             self.parent_model.child_models.append(model)
         self.disallowed_actions = set(disallowed_actions)
 
-    def parent_in_q(self, val: QuerySet) -> Q:
+    def parent_in_q(self, val: QuerySet[Any]) -> Q:
         key = '%s__in' % self.parent_field
         return Q(**{key: val})
 
