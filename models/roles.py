@@ -427,16 +427,3 @@ class UserPermissionCache:
             objs = role.get_instances_for_user(self.user)
             for obj in objs:
                 role.create_or_update_instance_group(obj)
-
-
-class RoleGroup(models.Model):
-    # We may want to put, e.g., methods here in the future
-
-    if TYPE_CHECKING:
-        Meta: Any
-    else:
-        class Meta:
-            abstract = True
-
-    @abc.abstractmethod
-    def __str__(self) -> str: ...
