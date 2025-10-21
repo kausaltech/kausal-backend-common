@@ -31,6 +31,7 @@ ignore = [
   "FIX002",
   "G002",
   "G004",
+  "ISC003",  # Implicit string concat can cause subtle bugs
   "N806",
   "PD011",
   "PGH003",
