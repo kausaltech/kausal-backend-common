@@ -1,4 +1,4 @@
-from typing import ClassVar, Generic, Sequence, TypedDict, Unpack, type_check_only
+from typing import Any, ClassVar, Generic, Sequence, TypedDict, Unpack, type_check_only
 from typing_extensions import TypeVar
 
 from django.db.models import ManyToOneRel, Model
@@ -28,11 +28,11 @@ class InlinePanelOwnInitArgs(TypedDict, total=False):
 
 
 @type_check_only
-class InlinePanelInitArgs(PanelInitArgs, InlinePanelOwnInitArgs): ...
+class InlinePanelInitArgs(PanelInitArgs[Any], InlinePanelOwnInitArgs): ...
 
 
 
-class InlinePanel(Generic[_Model, _RelatedModel], Panel[_Model]):
+class InlinePanel(Panel[_Model], Generic[_Model, _RelatedModel]):
     relation_name: str
     panels: Sequence[Panel[_RelatedModel]] | None
     label: StrOrPromise
@@ -53,10 +53,8 @@ class InlinePanel(Generic[_Model, _RelatedModel], Panel[_Model]):
     def child_edit_handler(self) -> MultiFieldPanel[_RelatedModel]: ...
 
     class BoundPanel(
-        Generic[_IPPanel_co, _ChildForm, _ChildFormSet, _ChildModel, _BPModel],
-        Panel.BoundPanel[_IPPanel_co, _ChildForm, _ChildModel],
+        Panel.BoundPanel[_IPPanel_co, _ChildForm, _ChildModel], Generic[_IPPanel_co, _ChildForm, _ChildFormSet, _ChildModel, _BPModel],
     ):
-        template_name: ClassVar[str]
         panel: _IPPanel_co
         formset: _ChildFormSet
         label: StrOrPromise

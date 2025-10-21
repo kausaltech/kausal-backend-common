@@ -18,6 +18,8 @@ from wagtail.models import DraftStateMixin as DraftStateMixin
 from wagtail.rich_text import RichText as RichText
 from wagtail.utils.text import text_from_html as text_from_html
 
+from laces.typing import RenderContext
+
 class PanelComparison[Obj](Protocol):
     is_field: bool
     is_child_relation: bool
@@ -39,7 +41,7 @@ def get_form_for_model[FormT: ModelForm](model: type[Model], form_class: type[Fo
     """
 
 
-type PanelContext = dict[str, Any]
+type PanelContext = RenderContext
 
 _Model = TypeVar('_Model', bound=Model, default=Model)
 _Panel_co = TypeVar('_Panel_co', bound=Panel, covariant=True)
@@ -48,7 +50,7 @@ _Panel_Form = TypeVar('_Panel_Form', bound=ModelForm, default=WagtailAdminModelF
 _BPPanel_Form = TypeVar('_BPPanel_Form', bound=ModelForm, default=WagtailAdminModelForm)
 
 @type_check_only
-class PanelInitArgs[F: ModelForm](TypedDict, total=False):
+class PanelInitArgs[F: ModelForm[Any]](TypedDict, total=False):
     heading: StrOrPromise
     classname: str
     help_text: StrOrPromise
@@ -156,7 +158,7 @@ class Panel(Generic[_Model, _Panel_Form]):
         to generate a safer display value.
         """
 
-    class BoundPanel(Generic[_Panel_co, _BPPanel_Form, _BPModel], Component):
+    class BoundPanel(Component, Generic[_Panel_co, _BPPanel_Form, _BPModel]):
         """
         A template component for a panel that has been associated with a model instance, form, and request.
         """

@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Any, ClassVar, Generic, TypedDict, TypeVar
+from typing import Any, ClassVar, Generic, Sequence, TypedDict, TypeVar
 
 from django.db.models import Model, QuerySet
 from django.forms import BaseModelForm
@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.urls import URLPattern
 from django.utils.functional import cached_property
+from laces.typing import Renderable
 from wagtail.admin.forms import WagtailAdminModelForm
 from wagtail.admin.panels import ObjectList, TabbedInterface
 from wagtail.admin.ui.components import MediaContainer
@@ -46,7 +47,7 @@ class CreateView(
     view_name: ClassVar[str]
     def run_before_hook(self) -> HttpResponse | None: ...
     def run_after_hook(self) -> HttpResponse | None: ...
-    def get_side_panels(self) -> MediaContainer: ...
+    def get_side_panels(self) -> Sequence[Renderable]: ...
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
 
 class CopyView(generic.CopyViewMixin[_ModelT], CreateView[_ModelT, _FormT]): ...

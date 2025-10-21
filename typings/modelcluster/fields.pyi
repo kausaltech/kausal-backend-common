@@ -12,7 +12,7 @@ _ST = TypeVar("_ST")
 _GT = TypeVar("_GT", default=_ST)
 
 
-class ParentalKey(ForeignKey[_ST, _GT]): ...  # pyright: ignore
+class ParentalKey(ForeignKey[_ST, _GT]): ...
 
 type PK[M: Model] = ParentalKey[M, M]
 

@@ -1,6 +1,5 @@
-# ruff: noqa: ANN401
 from datetime import datetime
-from typing import Any, ClassVar, Generic, TypedDict
+from typing import Any, ClassVar, Generic, Sequence, TypedDict
 from typing_extensions import TypeVar
 
 from django.db.models import Model, QuerySet
@@ -20,6 +19,8 @@ from wagtail.admin.widgets.button import Button, HeaderButton, ListingButton
 from wagtail.models import DraftStateMixin, ReferenceIndex
 from wagtail.models.audit_log import ModelLogEntry
 
+from laces.typing import Renderable
+
 from .base import BaseListingView, WagtailAdminTemplateMixin
 from .mixins import BeforeAfterHookMixin, HookResponseMixin, LocaleMixin, PanelMixin
 from .permissions import PermissionCheckedMixin
@@ -28,7 +29,7 @@ _ModelT = TypeVar('_ModelT', bound=Model, default=Model, covariant=True)
 _FormT = TypeVar('_FormT', bound=BaseModelForm, default=WagtailAdminModelForm[Any], covariant=True)
 
 
-class IndexView(Generic[_ModelT], SpreadsheetExportMixin, LocaleMixin, PermissionCheckedMixin, BaseListingView[_ModelT]):
+class IndexView(SpreadsheetExportMixin, LocaleMixin, PermissionCheckedMixin, BaseListingView[_ModelT], Generic[_ModelT]):
     model: type[_ModelT] | None
     add_url_name: ClassVar[str | None]
     edit_url_name: ClassVar[str | None]
@@ -70,13 +71,12 @@ class IndexView(Generic[_ModelT], SpreadsheetExportMixin, LocaleMixin, Permissio
 type SuccessButton = tuple[str, str, bool]
 
 class CreateView(  # type: ignore[type-var]
-    Generic[_ModelT, _FormT],
     LocaleMixin,
     PanelMixin[_FormT],
     PermissionCheckedMixin,
     BeforeAfterHookMixin[_FormT],
     WagtailAdminTemplateMixin,
-    BaseCreateView[_ModelT, _FormT],  # type: ignore[type-var]
+    BaseCreateView[_ModelT, _FormT], Generic[_ModelT, _FormT],  # type: ignore[type-var]
 ):  # pyright: ignore
     index_url_name: ClassVar[str | None]
     add_url_name: ClassVar[str | None]
@@ -99,7 +99,7 @@ class CreateView(  # type: ignore[type-var]
     def get_success_message(self, instance: _ModelT) -> str | None: ... # type: ignore
     def get_success_buttons(self) -> list[SuccessButton]: ...
     def get_error_message(self) -> str | None: ...
-    def get_side_panels(self) -> Component: ...
+    def get_side_panels(self) -> Sequence[Renderable]: ...
     def get_translations(self) -> list[dict[str, Any]]: ...  # type: ignore[override]
     def get_initial_form_instance(self) -> _ModelT | None: ...
     def get_form_kwargs(self) -> dict[str, Any]: ...

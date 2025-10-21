@@ -19,14 +19,14 @@ class FieldPanelOwnInitArgs(TypedDict, total=False):
 
 
 @type_check_only
-class FieldPanelInitArgs(PanelInitArgs, FieldPanelOwnInitArgs): ...
+class FieldPanelInitArgs(PanelInitArgs[Any], FieldPanelOwnInitArgs): ...
 
 
 _FPanel_co = TypeVar('_FPanel_co', bound=FieldPanel, covariant=True)
 _DB_field = TypeVar('_DB_field', bound=Field, default=Field)
 
 
-class FieldPanel(Generic[_Model, _DB_field], Panel[_Model]):
+class FieldPanel(Panel[_Model], Generic[_Model, _DB_field]):
     TEMPLATE_VAR: Final[Literal['field_panel']]
     read_only_output_template_name: str
     field_name: str
@@ -51,9 +51,8 @@ class FieldPanel(Generic[_Model, _DB_field], Panel[_Model]):
         for choice fields.
         """
 
-    class BoundPanel(Generic[_FPanel_co, _FC, _BPModel], Panel.BoundPanel[_FPanel_co, _FC, _BPModel]):
+    class BoundPanel(Panel.BoundPanel[_FPanel_co, _FC, _BPModel], Generic[_FPanel_co, _FC, _BPModel]):
         panel: _FPanel_co
-        template_name: ClassVar[str]
         default_field_icons: ClassVar[dict[str, str]]
         bound_field: BoundField
         read_only: bool
