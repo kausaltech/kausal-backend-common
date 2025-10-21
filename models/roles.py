@@ -146,8 +146,12 @@ class Role(abc.ABC, ConcreteRoleProtocol):
         return self._get_actions_for_model(model._meta.app_label, model._meta.model_name)
 
     def refresh(self):
-        group, _ = Group.objects.get_or_create(name=str(self.name))
+        group = self.get_group()
         self._update_model_perms(group)
+
+    def get_group(self) -> Group:
+        group, _ = Group.objects.get_or_create(name=str(self.name))
+        return group
 
     def __rich_repr__(self) -> Generator[tuple[str, Any], Any]:
         yield 'id', self.id

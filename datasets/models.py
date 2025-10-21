@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING, ClassVar, Self
+from typing import TYPE_CHECKING, ClassVar, Self, final
 from typing_extensions import deprecated
 
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -40,12 +40,16 @@ if TYPE_CHECKING:
 
     from ..models.types import FK, RevMany
     if IS_PATHS:
+        from paths.dataset_permission_policy import DatasetSchemaPermissionPolicy
+
         from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
         type DatasetScopeType = InstanceConfig
         type DimensionScopeType = InstanceConfig
         type DatasetSchemaScopeType = InstanceConfig
     elif IS_WATCH:
         from actions.models import Action, Category, CategoryType, Plan
+
+        from aplans.dataset_permission_policy import DatasetSchemaPermissionPolicy
         type DatasetScopeType = Action | Category
         type DatasetSchemaScopeType = Plan | CategoryType
         type DimensionScopeType = Plan | CategoryType
@@ -337,8 +341,17 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         super().save(*args, **kwargs)
 
     @classmethod
-    def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
-        return get_permission_policy('SCHEMA_PERMISSION_POLICY')
+    def permission_policy(cls) -> DatasetSchemaPermissionPolicy:
+        if IS_PATHS:
+            from paths.dataset_permission_policy import DatasetSchemaPermissionPolicy
+        elif IS_WATCH:
+            from aplans.dataset_permission_policy import DatasetSchemaPermissionPolicy
+        return DatasetSchemaPermissionPolicy()
+
+    @classmethod
+    def accessible_by_user_q(cls, user: User) -> models.Q | None:
+        pp = cls.permission_policy()
+        return pp._construct_q(user, 'view')
 
     @staticmethod
     @deprecated('Use DatasetSchema.objects.get_queryset().for_scope() instead')
@@ -444,7 +457,7 @@ class DatasetQuerySet(PermissionedQuerySet['Dataset']):
             ).values_list('object')
             viewable_schemas_for_group = DatasetSchemaGroupPermission.objects.filter(
                 role__in=[ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
-                group__users=user,
+                group__persons=user.person,
             ).values_list('object')
             return self.filter(models.Q(schema__in=viewable_schemas_for_user)
                                | models.Q(schema__in=viewable_schemas_for_group))
