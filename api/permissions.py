@@ -151,4 +151,10 @@ class NestedResourcePermissionPolicyDRFPermission[  # pyright: ignore[reportImpl
             return False
         if not pp.user_has_any_permission_for_instance(user, ['view'], parent_obj):
             raise NotFound()
+        if action == 'add':
+            try:
+                context = self.get_create_context_from_api_view(view)
+            except ObjectDoesNotExist as e:
+                raise NotFound() from e
+            return self.permission_policy.user_can_create(user, context)
         return True
