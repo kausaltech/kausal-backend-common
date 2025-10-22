@@ -637,6 +637,14 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
     data_point = models.ForeignKey(DataPoint, null=True, blank=True, on_delete=models.CASCADE, related_name='comments')
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     text = models.TextField()
+    is_sticky = models.BooleanField(
+        default=False,
+        verbose_name=_('Sticky comment'),
+    )
+    is_review = models.BooleanField(
+        default=False,
+        verbose_name=_('Review comment'),
+    )
     type = models.CharField(
         default=CommentType.PLAIN,
         max_length=20,
