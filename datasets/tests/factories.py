@@ -11,6 +11,7 @@ from kausal_common.datasets.models import (
     Dataset,
     DatasetMetric,
     DatasetSchema,
+    DatasetSchemaDimension,
     Dimension,
     DimensionCategory,
 )
@@ -44,6 +45,14 @@ class DatasetMetricFactory(DjangoModelFactory):
 
     schema = SubFactory(DatasetSchemaFactory)
     label = Sequence(lambda n: f'Test Metric {n}')
+
+
+class DatasetSchemaDimensionFactory(DjangoModelFactory):
+    class Meta:
+        model = DatasetSchemaDimension
+
+    schema = SubFactory(DatasetSchemaFactory)
+    dimension = SubFactory(DimensionFactory)
 
 
 class DatasetFactory(DjangoModelFactory):

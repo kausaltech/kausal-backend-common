@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing
+from uuid import UUID
 
 # from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -16,6 +17,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework_nested.routers import NestedSimpleRouter
 
+from kausal_common.api.bulk import BulkListSerializer, BulkModelViewSet
 from kausal_common.users import user_or_anon, user_or_bust
 
 # from users.models import User
@@ -37,6 +39,40 @@ if typing.TYPE_CHECKING:
 
 router = DefaultRouter()
 all_routers: list[SimpleRouter]  = []
+
+
+class UuidBasedBulkListSerializer(BulkListSerializer):
+    update_lookup_field = 'uuid'
+
+
+class UuidSlugRelatedField(serializers.SlugRelatedField):
+    """
+    SlugRelatedField for UUIDs.
+
+    When we use `SlugRelatedField` to refer to a UUID, `SlugRelatedField.to_representation()` would return that UUID as
+    a `UUID` object. However, `to_representation()` seems to be supposed to return a primitive type according to the DRF
+    documentation. Or at least something that the renderer (e.g., JSONRenderer) can handle.
+
+    https://www.django-rest-framework.org/api-guide/serializers/
+
+    > Takes the object instance that requires serialization, and should return a primitive representation. Typically
+    > this means returning a structure of built-in Python datatypes.
+
+    In some places, we use `UUIDField`, whose `to_representation()` method gives us a string. If now we used
+    `SlugRelatedField` in other places, we would get `UUID` objects there. This mix of types may lead to problems with,
+    e.g., `BulkListSerializer`, which may be unable to find objects because it expects them to be identified by a value
+    of a different type.
+    """
+
+    def __init__(self, slug_field=None, **kwargs):
+        if slug_field is None:
+            slug_field = 'uuid'
+        super().__init__(slug_field=slug_field, **kwargs)
+
+    def to_representation(self, obj):
+        uuid = super().to_representation(obj)
+        assert isinstance(uuid, UUID)  # otherwise you shouldn't use this class for the field
+        return str(uuid)
 
 
 class I18nFieldSerializerMixin:
@@ -63,7 +99,7 @@ class I18nFieldSerializerMixin:
 
 
 class DimensionCategorySerializer(I18nFieldSerializerMixin, serializers.ModelSerializer[DimensionCategory]):
-    dimension = serializers.SlugRelatedField(slug_field='uuid', read_only=True)  # type: ignore[var-annotated]
+    dimension = UuidSlugRelatedField(read_only=True)  # type: ignore[var-annotated]
     label = serializers.CharField(source='label_i18n')  # type: ignore[assignment]
 
     class Meta:
@@ -72,19 +108,20 @@ class DimensionCategorySerializer(I18nFieldSerializerMixin, serializers.ModelSer
 
 
 class DataPointSerializer(serializers.ModelSerializer):
-    dataset: Field = serializers.SlugRelatedField(slug_field='uuid', read_only=True)
-    dimension_categories = serializers.SlugRelatedField(
+    dataset: Field = UuidSlugRelatedField(read_only=True)
+    dimension_categories = UuidSlugRelatedField(
         # FIXME: Restrict queryset to dimension categories available to the dataset
-        slug_field='uuid', many=True, queryset=DimensionCategory.objects.all(),
+        many=True, queryset=DimensionCategory.objects.all(),
     )
-    metric = serializers.SlugRelatedField(
-        slug_field='uuid', many=False, queryset=DatasetMetric.objects.all()
+    metric = UuidSlugRelatedField(
+        many=False, queryset=DatasetMetric.objects.all()
     )
     value = serializers.DecimalField(max_digits=32, decimal_places=16, coerce_to_string=False, allow_null=True)
 
     class Meta:
         model = DataPoint
         fields = ['uuid', 'dataset', 'dimension_categories', 'date', 'value', 'metric']
+        list_serializer_class = UuidBasedBulkListSerializer
 
     def validate(self, data):
         """Validate that no duplicate data point exists with the same date, dimension category, and metric combination."""
@@ -145,7 +182,7 @@ class DataPointSerializer(serializers.ModelSerializer):
         return data_point
 
 
-class DataPointViewSet(viewsets.ModelViewSet):
+class DataPointViewSet(BulkModelViewSet[DataPoint]):
     pagination_class = PageNumberPagination
     lookup_field = 'uuid'
     serializer_class = DataPointSerializer
@@ -188,7 +225,7 @@ class DataPointViewSet(viewsets.ModelViewSet):
 
 
 class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
-    schema: serializers.SlugRelatedField[DatasetSchema] = serializers.SlugRelatedField(slug_field='uuid', read_only=True)  # pyright: ignore
+    schema: UuidSlugRelatedField[DatasetSchema] = UuidSlugRelatedField(read_only=True)  # pyright: ignore
     label = serializers.CharField(source='label_i18n')  # type: ignore[assignment]
     unit = serializers.CharField(source='unit_i18n', required=False)
 
@@ -264,8 +301,8 @@ class DatasetScopeContentTypeField(serializers.StringRelatedField):
 
 
 class DatasetSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
-    data_points: Field = serializers.SlugRelatedField(slug_field='uuid', read_only=True, many=True)
-    schema = serializers.SlugRelatedField(slug_field='uuid', queryset=DatasetSchema.objects.all())
+    data_points: Field = UuidSlugRelatedField(read_only=True, many=True)
+    schema = UuidSlugRelatedField(queryset=DatasetSchema.objects.all())
     scope_content_type = DatasetScopeContentTypeField()
 
     class Meta:
@@ -318,7 +355,7 @@ class UserSerializer(serializers.Serializer):
          return instance.get_full_name()
 
 class DataPointCommentSerializer(serializers.ModelSerializer):
-    data_point: serializers.SlugRelatedField[DataPoint] = serializers.SlugRelatedField(slug_field='uuid', read_only=True)  # pyright: ignore
+    data_point: UuidSlugRelatedField[DataPoint] = UuidSlugRelatedField(read_only=True)  # pyright: ignore
     created_by = UserSerializer(read_only=True)
     last_modified_by = UserSerializer(read_only=True)
     resolved_by = UserSerializer(read_only=True)
@@ -367,9 +404,9 @@ class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
         ).select_related('data_point', 'created_by', 'last_modified_by', 'resolved_by')
 
 class BaseSourceReferenceSerializer(serializers.ModelSerializer[DatasetSourceReference]):
-    data_point = serializers.SlugRelatedField(slug_field='uuid', queryset=DataPoint.objects.all(), required=False)
-    dataset = serializers.SlugRelatedField(slug_field='uuid', queryset=Dataset.objects.all(), required=False)
-    data_source = serializers.SlugRelatedField(slug_field='uuid', queryset=DataSource.objects.all())
+    data_point = UuidSlugRelatedField(queryset=DataPoint.objects.all(), required=False)
+    dataset = UuidSlugRelatedField(queryset=Dataset.objects.all(), required=False)
+    data_source = UuidSlugRelatedField(queryset=DataSource.objects.all())
 
     def to_internal_value(self, data: dict[str, typing.Any]) -> DatasetSourceReference:
         # The parameters in the context come from the API endpoint URL

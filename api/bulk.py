@@ -62,16 +62,25 @@ class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
             self.obj_ids = []
             qs = qs.filter(**{'%s__in' % id_attr: obj_ids})
             for obj in qs:
-                objs_by_id[getattr(obj, id_attr)] = obj
+                # Get serialized value of `id_attr`. We need the serialized value here and not the plain attribute value
+                # obtainable by `getattr(obj, id_attr)` because `objs_by_id` will be used to find objects referenced by
+                # their ID. This is a problem if the serialization of the ID attribute is different from the plain
+                # attribute value, which happens, e.g., for UUIDs. Then we need to make sure that we never mix the two
+                # representations, otherwise we may be unable to find the right object. Let's use the convention that we
+                # always use serialized values to refer to objects.
+                id_field = self.child.fields[id_attr]
+                attr_value = id_field.get_attribute(obj)
+                id = id_field.to_representation(attr_value)
+                objs_by_id[id] = obj
             seen_ids = set()
-            for idx, item in enumerate(data):
+            for item in data:
                 obj_id = item[id_attr]
                 self.obj_ids.append(obj_id)
                 if obj_id not in objs_by_id:
-                    errors[idx] = {id_attr: "Unable to find object"}
+                    errors.append({id_attr: "Unable to find object"})
                     continue
                 if obj_id in seen_ids:
-                    errors[idx] = {id_attr: "Duplicate value"}
+                    errors.append({id_attr: "Duplicate value"})
                     continue
                 seen_ids.add(obj_id)
             self.objs_by_id = objs_by_id
