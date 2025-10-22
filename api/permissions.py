@@ -78,6 +78,10 @@ class PermissionPolicyDRFPermissionBase[_M: PermissionedModel, CreateContext](me
             return False
         model_action = self.HTTP_METHOD_TO_DJANGO_ACTION[request.method]
         assert model_action != 'add'
+        if not self.permission_policy.user_has_perm(user, 'view', obj):
+            # We want to report 404 so the existence of the resource
+            # is not deducible from 404 vs 403
+            self.code = 'not_found'
         return self.permission_policy.user_has_perm(user, model_action, obj)
 
     @abstractmethod
