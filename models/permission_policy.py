@@ -11,14 +11,14 @@ from wagtail.permission_policies.base import ModelPermissionPolicy as WagtailMod
 
 from loguru import logger
 
+from users.models import User
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
     from kausal_common.graphene import GQLInfo
     from kausal_common.models.types import QS
     from kausal_common.users import UserOrAnon
-
-    from users.models import User
 
     from .permissions import PermissionedModel
 
