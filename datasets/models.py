@@ -625,11 +625,6 @@ class DataPointDimensionCategory(models.Model):
 
 
 class DataPointComment(UserModifiableModel, PermissionedModel):
-    class CommentType(models.TextChoices):
-        REVIEW = 'review', _('Review comment')
-        STICKY = 'sticky', _('Sticky comment')
-        PLAIN = 'plain', _('Comment')
-
     class ReviewState(models.TextChoices):
         RESOLVED = 'resolved', _('Resolved')
         UNRESOLVED = 'unresolved', _('Unresolved')
@@ -637,11 +632,15 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
     data_point = models.ForeignKey(DataPoint, null=True, blank=True, on_delete=models.CASCADE, related_name='comments')
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     text = models.TextField()
-    type = models.CharField(
-        default=CommentType.PLAIN,
-        max_length=20,
-        choices=CommentType.choices,
+    is_sticky = models.BooleanField(
+        default=False,
+        verbose_name=_('Sticky comment'),
     )
+    is_review = models.BooleanField(
+        default=False,
+        verbose_name=_('Review comment'),
+    )
+
     review_state = models.CharField(
         blank=True,
         max_length=20,
