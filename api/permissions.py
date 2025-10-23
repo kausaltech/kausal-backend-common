@@ -122,7 +122,7 @@ class NestedPermissionModelMeta[M: PermissionedModel, NestedParent: Permissioned
 class NestedResourcePermissionPolicyDRFPermission[  # pyright: ignore[reportImplicitAbstractClass]
     M: PermissionedModel, CreateContext, NestedParent: PermissionedModel
 ](
-    permissions.DjangoModelPermissions, PermissionPolicyDRFPermissionBase[M, CreateContext], metaclass=_MetaClass
+    PermissionPolicyDRFPermissionBase[M, CreateContext], permissions.DjangoModelPermissions, metaclass=_MetaClass
 ):
     Meta: NestedPermissionModelMeta[M, NestedParent]
 
