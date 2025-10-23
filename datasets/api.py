@@ -190,6 +190,12 @@ class DataPointViewSet(BulkModelViewSet[DataPoint]):
         permissions.DjangoModelPermissions,
     )
 
+    def patch(self, request, *args, **kwargs):
+        return self.partial_bulk_update(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.bulk_update(request, *args, **kwargs)
+
     def get_queryset(self):
         # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
         # TODO: check that we don't allow editing instances for which we only have view permissions
@@ -206,14 +212,20 @@ class DataPointViewSet(BulkModelViewSet[DataPoint]):
         dataset.save()
         dataset.clear_scope_instance_cache()
 
-
     def perform_update(self, serializer):
         user = self.request.user
         instance = serializer.save(last_modified_by=user)
-        dataset = instance.dataset
-        dataset.last_modified_by = self.request.user
-        dataset.save()
-        dataset.clear_scope_instance_cache()
+        if isinstance(instance, list):
+            # Actually the datasets should be all the same as we're specifying a dataset in the URL. This fact is also
+            # used by perform_create(), which gets the dataset not from the saved instances but from `self.kwargs`. But
+            # who knows, maybe at some point we'll change this view set.
+            datasets = {i.dataset for i in instance}
+        else:
+            datasets = {instance.dataset}
+        for dataset in datasets:
+            dataset.last_modified_by = self.request.user
+            dataset.save()
+            dataset.clear_scope_instance_cache()
 
     def perform_destroy(self, instance):
         dataset = instance.dataset

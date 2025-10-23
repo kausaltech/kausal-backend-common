@@ -83,6 +83,7 @@ class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
                     errors.append({id_attr: "Duplicate value"})
                     continue
                 seen_ids.add(obj_id)
+                errors.append({})  # no error for this item
             self.objs_by_id = objs_by_id
 
         if any(errors):
