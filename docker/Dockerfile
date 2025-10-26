@@ -9,8 +9,9 @@ FROM caddy:2 AS caddy
 #
 FROM ${base_image} AS base
 
-ARG POSTGRESQL_MAJOR_VERSION=16
-ARG UV_VERSION=0.7.15
+ARG POSTGRESQL_MAJOR_VERSION=18
+ARG UV_VERSION=0.9.5
+ARG NVM_VERSION=0.40.3
 ARG ubuntu_codename="noble"
 
 ARG runtime_deps="libpq5 gettext \
@@ -66,7 +67,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked <<EOF
   apt-get update -qq
   echo Installing PostgreSQL client libraries
   apt-get install -qq --no-install-recommends -y \
-    postgresql-client-16 postgresql-client-17
+    postgresql-client-17 postgresql-client-18
   rm -rf /var/lib/apt/lists/*
 EOF
 
@@ -75,7 +76,7 @@ EOF
 #
 RUN \
   mkdir -p $NVM_DIR && export METHOD=script ; export PROFILE=/dev/null ; \
-  curl -LsSf https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+  curl -LsSf https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash
 COPY .nvmrc ${app_path}/
 RUN \
   cd ${app_path} && \
