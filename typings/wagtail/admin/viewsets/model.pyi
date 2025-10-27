@@ -21,15 +21,15 @@ _ModelT = TypeVar('_ModelT', bound=Model, default=Model, covariant=True)
 _FormT = TypeVar('_FormT', bound=BaseModelForm, default=WagtailAdminModelForm[_ModelT], covariant=True)
 
 
-class ModelViewSet(Generic[_ModelT, _FormT], ViewSet):
+class ModelViewSet(ViewSet, Generic[_ModelT, _FormT]):
     add_to_reference_index: ClassVar[bool]
-    index_view_class: ClassVar[type[generic.IndexView[_ModelT]]]  # type: ignore[misc]
-    add_view_class: ClassVar[type[generic.CreateView[_ModelT, _FormT]]]  # type: ignore[misc]
-    edit_view_class: ClassVar[type[generic.EditView[_ModelT, _FormT]]]  # type: ignore[misc]
+    index_view_class: ClassVar[type[generic.IndexView[Any]]]
+    add_view_class: ClassVar[type[generic.CreateView[Any, Any]]]
+    edit_view_class: ClassVar[type[generic.EditView[Any, Any]]]
     delete_view_class: ClassVar[type[generic.DeleteView]]
     history_view_class: ClassVar[type[HistoryView]]
     usage_view_class: ClassVar[type[UsageView]]
-    copy_view_class: ClassVar[type[generic.CopyView[_ModelT]]]  # type: ignore[misc]
+    copy_view_class: ClassVar[type[generic.CopyView[Any]]]
     inspect_view_class: ClassVar[type[generic.InspectView]]
     _show_breadcrumbs: ClassVar[bool]
     template_prefix: ClassVar[str]

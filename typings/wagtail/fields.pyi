@@ -11,8 +11,6 @@ from wagtail.rich_text import (
     get_text_for_indexing as get_text_for_indexing,
 )
 
-from _typeshed import Incomplete
-
 _RTF_ST = TypeVar('_RTF_ST', default=str | Combinable)
 _RTF_GT = TypeVar('_RTF_GT', default=str)
 
@@ -27,7 +25,7 @@ class RichTextField(Generic[_RTF_ST, _RTF_GT], models.TextField[_RTF_ST, _RTF_GT
 
     def clone(self): ...
     def get_searchable_content(self, value): ...
-    def extract_references(self, value) -> Generator[Incomplete, Incomplete, None]: ...
+    def extract_references(self, value) -> Generator[None]: ...
 
 
 type StreamFieldNamedBlock = tuple[str, Block[Any]]

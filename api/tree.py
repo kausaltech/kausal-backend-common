@@ -34,6 +34,7 @@ class PrevSiblingField[M: Model](serializers.CharField):
 
     def to_internal_value(self, data):
         # FIXME: No validation (e.g., permission checking)
+        assert isinstance(self.parent, serializers.ModelSerializer)
         model = self.parent.Meta.model
         # We use a UUID as the value for this field if the model has a field called uuid. Otherwise we use the
         # related model instance itself.

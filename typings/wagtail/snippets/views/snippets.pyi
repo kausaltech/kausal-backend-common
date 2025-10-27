@@ -36,7 +36,7 @@ class ModelIndexView[M: Model](base.BaseListingView[M]):
     def get_template_names(self) -> list[str]: ...
 
 
-class IndexView(Generic[_ModelT, _QS], mixins.IndexViewOptionalFeaturesMixin, generic_models.IndexView[_ModelT]):
+class IndexView(mixins.IndexViewOptionalFeaturesMixin[_QS], generic_models.IndexView[_ModelT], Generic[_ModelT, _QS]):
     view_name: ClassVar[str]
     def get_base_queryset(self) -> _QS: ...
 
@@ -107,18 +107,18 @@ class WorkflowHistoryView(generic.PermissionCheckedMixin, history.WorkflowHistor
 class WorkflowHistoryDetailView(generic.PermissionCheckedMixin, history.WorkflowHistoryDetailView):
     ...
 
-class SnippetViewSet(Generic[_ModelT, _FormT], ModelViewSet[_ModelT, _FormT]):
+class SnippetViewSet(ModelViewSet[_ModelT, _FormT], Generic[_ModelT, _FormT]):
     model: type[_ModelT]
     chooser_per_page: ClassVar[int]
     admin_url_namespace: ClassVar[str | None]
     base_url_path: ClassVar[str | None]
     chooser_admin_url_namespace: ClassVar[str | None]
     chooser_base_url_path: ClassVar[str | None]
-    index_view_class: ClassVar[type[IndexView[_ModelT, Any]]]  # type: ignore[misc]
-    add_view_class: ClassVar[type[CreateView[_ModelT, Any]]]  # type: ignore[misc]
-    copy_view_class: ClassVar[type[CopyView[_ModelT]]]  # type: ignore[misc,assignment]
-    edit_view_class: ClassVar[type[EditView[_ModelT, Any]]]  # type: ignore[misc]
-    delete_view_class: ClassVar[type[DeleteView[_ModelT, Any]]]  # type: ignore[misc]
+    index_view_class: ClassVar[type[IndexView[Any, Any]]]
+    add_view_class: ClassVar[type[CreateView[Any, Any]]]
+    copy_view_class: ClassVar[type[CopyView[Any]]]  # type: ignore[assignment]
+    edit_view_class: ClassVar[type[EditView[Any, Any]]]
+    delete_view_class: ClassVar[type[DeleteView[Any, Any]]]
     usage_view_class: ClassVar[type[UsageView]]
     history_view_class: ClassVar[type[HistoryView]]
     inspect_view_class: ClassVar[type[InspectView]]
