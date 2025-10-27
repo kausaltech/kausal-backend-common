@@ -766,6 +766,17 @@ class DatasetSourceReference(UserModifiableModel, PermissionedModel):
             yield 'dataset', None
 
 
+    def get_admin_display_title(self):
+        """Provide a clear title for admin display."""
+        dp = self.data_point
+        if dp and dp.dataset:
+            schema_name = dp.dataset.schema.name if dp.dataset.schema else _("Unknown schema")
+            return _("Data source reference in: %(schema)s") % {'schema': schema_name}
+        ds = self.dataset
+        if ds and ds.schema:
+            return _("Data source reference in: %(schema)s") % {'schema': ds.schema.name}
+        return _('Data source reference')
+
     @classmethod
     def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
         return get_permission_policy('DATASET_SOURCE_REFERENCE_PERMISSION_POLICY')
