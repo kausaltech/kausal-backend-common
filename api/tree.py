@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from django.core.exceptions import FieldDoesNotExist
@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 
 
 class PrevSiblingField[M: Model](serializers.CharField):
+    parent: serializers.ModelSerializer[M]
+
     # Instances must implement method get_prev_sibling(). (Treebeard nodes do that.) Must be used in ModelSerializer so
     # we can get the model for to_internal_value().
     # FIXME: This is ugly.
@@ -34,15 +36,15 @@ class PrevSiblingField[M: Model](serializers.CharField):
 
     def to_internal_value(self, data):
         # FIXME: No validation (e.g., permission checking)
-        assert isinstance(self.parent, serializers.ModelSerializer)
-        model = self.parent.Meta.model
+        # assert isinstance(self.parent, serializers.ModelSerializer)
+        model = cast('Model', self.parent.Meta.model)
         # We use a UUID as the value for this field if the model has a field called uuid. Otherwise we use the
         # related model instance itself.
         try:
-            model._meta.get_field('uuid')
+            model._meta.get_field('uuid')  # type: ignore[misc]
             return UUID(data)
         except FieldDoesNotExist:
-            return model.objects.get(id=data)
+            return model.objects.get(id=data)  # type: ignore[attr-defined]
 
 
 
