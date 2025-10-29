@@ -5,8 +5,10 @@ from typing import TYPE_CHECKING, cast
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
+from wagtail.admin.admin_url_finder import AdminURLFinder
 from wagtail.admin.forms.models import WagtailAdminModelForm
 from wagtail.admin.panels import FieldPanel
+from wagtail.admin.views.generic.usage import UsageView
 from wagtail.log_actions import log
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import CreateView
@@ -56,6 +58,60 @@ class DataSourceCreateView(CreateView[DataSource, DataSourceForm]):
         return instance
 
 
+class DataSourceUsageView(UsageView):
+    """Custom usage view that links DatasetSourceReference to their parent Datasets."""
+
+    def get_table(self, object_list, **kwargs):
+        """Override to provide Dataset edit URLs for DatasetSourceReference objects."""
+        url_finder = AdminURLFinder(self.request.user)
+        results = []
+
+        for object, references in object_list:
+            from kausal_common.datasets.models import DatasetSourceReference
+
+            row = {"object": object, "references": references}
+
+            if isinstance(object, DatasetSourceReference):
+                dataset = None
+                if object.data_point:
+                    dataset = object.data_point.dataset
+                elif object.dataset:
+                    dataset = object.dataset
+
+                # Get the edit URL for the dataset
+                if dataset:
+                    row["edit_url"] = url_finder.get_edit_url(dataset)
+                else:
+                    row["edit_url"] = None
+
+                if hasattr(object, 'get_admin_display_title'):
+                    row["label"] = object.get_admin_display_title()
+                else:
+                    row["label"] = str(object)
+
+                if row["edit_url"]:
+                    row["edit_link_title"] = _("Edit dataset")
+                else:
+                    row["edit_link_title"] = None
+            else:
+                # Default behavior for other objects
+                row["edit_url"] = url_finder.get_edit_url(object)
+                if row["edit_url"] is None:
+                    row["label"] = _("(Private %(object)s)") % {
+                        "object": object._meta.verbose_name
+                    }
+                    row["edit_link_title"] = None
+                else:
+                    row["label"] = str(object)
+                    row["edit_link_title"] = _("Edit this %(object)s") % {
+                        "object": object._meta.verbose_name
+                    }
+
+            results.append(row)
+
+        return super(UsageView, self).get_table(results, **kwargs)
+
+
 class DataSourceViewSet(PermissionedViewSet):
     model = DataSource
     menu_label = _('Data sources')
@@ -65,6 +121,8 @@ class DataSourceViewSet(PermissionedViewSet):
     form_class = DataSourceForm
     copy_view_enabled = False
     add_view_class = DataSourceCreateView  # type: ignore[assignment]
+    add_to_reference_index = True
+    usage_view_class = DataSourceUsageView  # type: ignore[assignment]
     panels = [
         FieldPanel('name'),
         FieldPanel('edition'),
