@@ -318,8 +318,11 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
                     FieldPanel('group'),
                     FieldPanel('role'),
                 ]
-            ),
-        ], _("Permissions")),
+            ),],
+            _("Permissions"),
+            # Only super admins or superusers have access
+            permission='people.change_person'
+        ),
     ]
 
     class Meta:
