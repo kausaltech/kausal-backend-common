@@ -8,10 +8,11 @@ from django.utils.translation import gettext_lazy as _
 from wagtail.admin.admin_url_finder import AdminURLFinder
 from wagtail.admin.forms.models import WagtailAdminModelForm
 from wagtail.admin.panels import FieldPanel
+from wagtail.admin.ui.tables import BulkActionsCheckboxColumn
 from wagtail.admin.views.generic.usage import UsageView
 from wagtail.log_actions import log
 from wagtail.snippets.models import register_snippet
-from wagtail.snippets.views.snippets import CreateView
+from wagtail.snippets.views.snippets import CreateView, IndexView
 
 from kausal_common.admin_site.permissioned_views import PermissionedViewSet
 from kausal_common.const import IS_PATHS, IS_WATCH
@@ -112,6 +113,13 @@ class DataSourceUsageView(UsageView):
         return super(UsageView, self).get_table(results, **kwargs)
 
 
+class DataSourceIndexView(IndexView):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Hide the bulk delete to avoid ProtectedError when deleting referenced datasources.
+        # Remove this if usage checks are implemented for bulk actions.
+        self.columns = [c for c in super().columns if not isinstance(c, BulkActionsCheckboxColumn)]
+
 class DataSourceViewSet(PermissionedViewSet):
     model = DataSource
     menu_label = _('Data sources')
@@ -123,6 +131,7 @@ class DataSourceViewSet(PermissionedViewSet):
     add_view_class = DataSourceCreateView  # type: ignore[assignment]
     add_to_reference_index = True
     usage_view_class = DataSourceUsageView  # type: ignore[assignment]
+    index_view_class = DataSourceIndexView # type: ignore[assignment]
     panels = [
         FieldPanel('name'),
         FieldPanel('edition'),
