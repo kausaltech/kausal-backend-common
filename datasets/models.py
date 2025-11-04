@@ -4,9 +4,11 @@ import uuid
 from typing import TYPE_CHECKING, ClassVar, Self
 from typing_extensions import deprecated
 
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
@@ -686,8 +688,33 @@ class DataPointDimensionCategory(models.Model):
         yield 'dimension_category', self.dimension_category
 
 
+class PermissionedSoftDeleteManager(PermissionedManager['DataPointComment']):
+    """
+    Manager combining PermissionedManager and soft deletion manager.
+
+    Returns what PermissionedManager would return, also filtering out
+    instances that have been soft deleted.
+    """
+
+    def get_queryset(self):
+        return super().get_queryset().exclude(is_soft_deleted=True)
+
 
 class DataPointComment(UserModifiableModel, PermissionedModel):
+    """
+    Model for comments on data points.
+
+    DataPointComment instances can be soft deleted. Soft deleted instances are
+    not deleted from the database, they are only flagged as deleted with the
+    attribute 'is_soft_deleted'. Soft deleted instances are not returned by the
+    default object manager 'objects'. All instances can be found using the
+    additional object manager 'objects_including_soft_deleted'.
+
+    Note that the default 'delete' method of Model is not tampered with and
+    deleting instances permanently is still possible using that method. Make
+    sure 'soft_delete' is called whenever you only want to do a soft delete.
+    """
+
     class ReviewState(models.TextChoices):
         RESOLVED = 'resolved', _('Resolved')
         UNRESOLVED = 'unresolved', _('Unresolved')
@@ -716,8 +743,24 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
         'users.User', null=True, on_delete=models.SET_NULL, related_name='resolved_comments',
     )
 
-    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
-    _default_manager: ClassVar[PermissionedManager[Self]]
+    is_soft_deleted = models.BooleanField(
+        default=False,
+    )
+    soft_deleted_by: FK[User | None] = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='soft_deleted_messages',
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.SET_NULL,
+    )
+    soft_deleted_at = models.DateTimeField(
+        null=True, editable=False
+    )
+
+    objects: ClassVar[PermissionedSoftDeleteManager] = PermissionedSoftDeleteManager()
+    objects_including_soft_deleted: ClassVar[PermissionedManager[Self]] = PermissionedManager()
+    _default_manager: ClassVar[PermissionedSoftDeleteManager]
 
     def __str__(self):
         return 'Comment on data point %s (created by %s at %s)' % (self.data_point, self.created_by, self.created_at)
@@ -735,6 +778,20 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
         ordering = ('data_point', '-created_at')
         verbose_name = _('comment')
         verbose_name_plural = _('comments')
+
+    def soft_delete(self, user: User) -> None:
+        """Flag this instance as deleted."""
+        self.is_soft_deleted = True
+        self.soft_deleted_by = user
+        self.soft_deleted_at = timezone.now()
+        self.save()
+
+    def restore_soft_deleted(self) -> None:
+        """Flag this instance as not having been deleted."""
+        self.is_soft_deleted = False
+        self.soft_deleted_at = None
+        self.soft_deleted_by = None
+        self.save()
 
 
 class DataSource(UserModifiableModel, PermissionedModel):
