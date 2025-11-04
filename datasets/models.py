@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING, ClassVar, Self, final
+from typing import TYPE_CHECKING, ClassVar, Self
 from typing_extensions import deprecated
 
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -35,21 +35,21 @@ if TYPE_CHECKING:
     from kausal_common.models.permission_policy import ModelPermissionPolicy
     from kausal_common.models.types import QS
 
-    from people.models import DatasetSchemaGroupPermission, DatasetSchemaPersonPermission
     from users.models import User
 
     from ..models.types import FK, RevMany
     if IS_PATHS:
+        from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
+
         from paths.dataset_permission_policy import DatasetSchemaPermissionPolicy
 
-        from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
+        from people.models import DatasetSchemaGroupPermission, DatasetSchemaPersonPermission
         type DatasetScopeType = InstanceConfig
         type DimensionScopeType = InstanceConfig
         type DatasetSchemaScopeType = InstanceConfig
     elif IS_WATCH:
         from actions.models import Action, Category, CategoryType, Plan
-
-        from aplans.dataset_permission_policy import DatasetSchemaPermissionPolicy
+        from datasets.permission_policy import DatasetSchemaPermissionPolicy
         type DatasetScopeType = Action | Category
         type DatasetSchemaScopeType = Plan | CategoryType
         type DimensionScopeType = Plan | CategoryType
@@ -258,8 +258,10 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
 
     datasets: RevMany[Dataset]
     scopes: RevMany[DatasetSchemaScope]
-    person_permissions: RevMany[DatasetSchemaPersonPermission]
-    group_permissions: RevMany[DatasetSchemaGroupPermission]
+    if IS_PATHS:
+        # FIXME: Remove the condition when PersonPermission and GroupPermission are implemented in KW
+        person_permissions: RevMany[DatasetSchemaPersonPermission]
+        group_permissions: RevMany[DatasetSchemaGroupPermission]
 
     objects: ClassVar[DatasetSchemaManager] = DatasetSchemaManager()
     _default_manager: ClassVar[DatasetSchemaQuerySet]
@@ -348,7 +350,7 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         if IS_PATHS:
             from paths.dataset_permission_policy import DatasetSchemaPermissionPolicy
         elif IS_WATCH:
-            from aplans.dataset_permission_policy import DatasetSchemaPermissionPolicy
+            from datasets.permission_policy import DatasetSchemaPermissionPolicy
         return DatasetSchemaPermissionPolicy()
 
     @classmethod
@@ -516,7 +518,7 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     mgr: ClassVar[DatasetManager] = DatasetManager()
     _default_manager: ClassVar[DatasetManager]
 
-    class Meta:  # pyright:ignore
+    class Meta:
         verbose_name = _('dataset')
         verbose_name_plural = _('datasets')
         ordering = ('id',)

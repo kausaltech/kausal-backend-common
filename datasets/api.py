@@ -6,7 +6,7 @@ from uuid import UUID
 
 # from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
+from django.db.models import Model, Q
 from modeltrans.conf import get_available_languages
 from modeltrans.translator import get_i18n_field
 from modeltrans.utils import build_localized_fieldname
@@ -60,11 +60,11 @@ def get_item_with_deprecated_fallback(
     return default
 
 
-class UuidBasedBulkListSerializer(BulkListSerializer):
+class UuidBasedBulkListSerializer[M: Model](BulkListSerializer[M]):
     update_lookup_field = 'uuid'
 
 
-class UuidSlugRelatedField(serializers.SlugRelatedField):
+class UuidSlugRelatedField[M: Model](serializers.SlugRelatedField[M]):
     """
     SlugRelatedField for UUIDs.
 
@@ -126,13 +126,13 @@ class DimensionCategorySerializer(I18nFieldSerializerMixin, serializers.ModelSer
         fields = ['uuid', 'label', 'dimension']
 
 
-class DataPointSerializer(serializers.ModelSerializer):
-    dataset: Field = UuidSlugRelatedField(read_only=True)
-    dimension_categories = UuidSlugRelatedField(
+class DataPointSerializer(serializers.ModelSerializer[DataPoint]):
+    dataset = UuidSlugRelatedField[Dataset](read_only=True)
+    dimension_categories = UuidSlugRelatedField[DimensionCategory](
         # FIXME: Restrict queryset to dimension categories available to the dataset
         many=True, queryset=DimensionCategory.objects.all(),
     )
-    metric = UuidSlugRelatedField(
+    metric = UuidSlugRelatedField[DatasetMetric](
         many=False, queryset=DatasetMetric.objects.all()
     )
     value = serializers.DecimalField(max_digits=32, decimal_places=16, coerce_to_string=False, allow_null=True)
@@ -189,7 +189,9 @@ class DataPointSerializer(serializers.ModelSerializer):
         dataset = data_point.dataset
         assert dataset == validated_data['dataset']
 
-        schema_dimensions = list(dataset.schema.dimensions.all())
+        schema = dataset.schema
+        assert schema is not None
+        schema_dimensions = list(schema.dimensions.all())
         categories_lists = [schema_dimension.dimension.categories.all() for schema_dimension in schema_dimensions]
         allowed_dimension_categories = [category for categories_list in categories_lists for category in categories_list]
         for dimension_category in dimension_categories:
@@ -197,7 +199,7 @@ class DataPointSerializer(serializers.ModelSerializer):
             assert dimension_category in allowed_dimension_categories
             data_point.dimension_categories.add(dimension_category)
         metric = validated_data.pop('metric')
-        assert metric in dataset.schema.metrics.all()
+        assert metric in schema.metrics.all()
         return data_point
 
 
@@ -255,7 +257,7 @@ class DataPointViewSet(BulkModelViewSet[DataPoint]):
         instance.delete()
 
 
-class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
+class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer[DatasetMetric]):
     schema: UuidSlugRelatedField[DatasetSchema] = UuidSlugRelatedField(read_only=True)  # pyright: ignore
     label = serializers.CharField(source='label_i18n')  # type: ignore[assignment]
     unit = serializers.CharField(source='unit_i18n', required=False)
@@ -333,7 +335,7 @@ class DatasetScopeContentTypeField(serializers.StringRelatedField):
 
 class DatasetSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
     data_points: Field = UuidSlugRelatedField(read_only=True, many=True)
-    schema = UuidSlugRelatedField(queryset=DatasetSchema.objects.all())
+    schema = UuidSlugRelatedField[DatasetSchema](queryset=DatasetSchema.objects.all())
     scope_content_type = DatasetScopeContentTypeField()
 
     class Meta:
@@ -436,9 +438,9 @@ class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
         ).select_related('data_point', 'created_by', 'last_modified_by', 'resolved_by')
 
 class BaseSourceReferenceSerializer(serializers.ModelSerializer[DatasetSourceReference]):
-    data_point = UuidSlugRelatedField(queryset=DataPoint.objects.all(), required=False)
-    dataset = UuidSlugRelatedField(queryset=Dataset.objects.all(), required=False)
-    data_source = UuidSlugRelatedField(queryset=DataSource.objects.all())
+    data_point = UuidSlugRelatedField[DataPoint](queryset=DataPoint.objects.all(), required=False)
+    dataset = UuidSlugRelatedField[Dataset](queryset=Dataset.objects.all(), required=False)
+    data_source = UuidSlugRelatedField[DataSource](queryset=DataSource.objects.all())
 
     def to_internal_value(self, data: dict[str, typing.Any]) -> DatasetSourceReference:
         # The parameters in the context come from the API endpoint URL

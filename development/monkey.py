@@ -21,6 +21,7 @@ def _monkeypath_init() -> None:
     from wagtail.admin.panels import Panel
     from wagtail.admin.viewsets.model import ModelViewSet
     from wagtail.blocks.base import Block
+    from wagtail.models import Revision
     from wagtail.permission_policies.base import BasePermissionPolicy
 
     from treebeard.models import Node
@@ -30,7 +31,7 @@ def _monkeypath_init() -> None:
         JSONField, ManyToManyField, Node,
         Panel, Panel.BoundPanel, BaseObjectMixin,
         BasePermissionPolicy, ObjectType, Interface,
-        Block
+        Block, Revision
     ]
 
     try:

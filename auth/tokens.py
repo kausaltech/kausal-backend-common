@@ -128,7 +128,7 @@ def authenticate_from_authorization_header(
         return TokenAuthResult(error=error)
 
     token = cast('TokenType | None', r.access_token)
-    return TokenAuthResult(user=cast('User', r.user), token=token)
+    return TokenAuthResult(user=cast('User', r.user), token=token)  # pyright: ignore[reportInvalidCast]
 
 
 def authenticate_api_request(request: HttpRequest, api_type: Literal['graphql', 'rest-api']) -> TokenAuthResult | None:
@@ -141,7 +141,7 @@ def authenticate_api_request(request: HttpRequest, api_type: Literal['graphql', 
 
         auth = id_token_auth()
         try:
-            ret = auth.authenticate(cast('Request', request))
+            ret = auth.authenticate(cast('Request', request))  # pyright: ignore[reportInvalidCast]
         except InvalidJWSObject:
             ret = None
         if ret is not None:
@@ -153,7 +153,7 @@ def authenticate_api_request(request: HttpRequest, api_type: Literal['graphql', 
     if access_token_auth is None:
         return None
     auth = access_token_auth(api_type)
-    ret = auth.authenticate(cast('Request', request))
+    ret = auth.authenticate(cast('Request', request))  # pyright: ignore[reportInvalidCast]
     if ret is not None:
         request.user = ret[0]
         request.token_auth = TokenAuthResult(user=ret[0], token=ret[1])

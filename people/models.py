@@ -6,7 +6,7 @@ import uuid
 from abc import abstractmethod
 from datetime import timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Self, cast
+from typing import TYPE_CHECKING, cast
 
 from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile
@@ -25,7 +25,6 @@ from sentry_sdk import capture_exception
 
 from kausal_common.const import IS_WATCH
 
-
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
@@ -34,6 +33,7 @@ if TYPE_CHECKING:
     from kausal_common.users import UserOrAnon
 
     from orgs.models import Organization
+    from people.models import Person
     from users.models import User
 
     if IS_WATCH:
@@ -165,7 +165,7 @@ class BasePerson(index.Indexed, ClusterableModel):
             image = willow.Image.open(f)
             try:
                 faces = image.detect_faces()
-            except AttributeError as e:
+            except AttributeError:
                 logger.warning('Face detection library not available.')
                 faces = None
 
@@ -273,45 +273,46 @@ else:
 
 if TYPE_CHECKING:
     class ObjectGroupPermissionBase[M: models.Model](ObjectRoleBase[M]):
+        # FIXME: Add type annotation for PersonGroup when it appears in `main`
         group = models.ForeignKey('people.PersonGroup', on_delete=models.CASCADE)
 
         object: FK[M]
-        objects: models.Manager[f'{M.__name__}GroupPermission']  # pyright: ignore
+        objects: models.Manager[ObjectGroupPermissionBase[M]]
 
-        class Meta:  # pyright: ignore
+        class Meta:
             abstract = True
 else:
     class ObjectGroupPermissionBase(ObjectRoleBase):
         group = models.ForeignKey('people.PersonGroup', on_delete=models.CASCADE)
 
-        class Meta:  # pyright: ignore
+        class Meta:
             abstract = True
 
 
 if TYPE_CHECKING:
     class ObjectPersonPermissionBase[M: models.Model](ObjectRoleBase[M]):
-        person = models.ForeignKey('people.Person', on_delete=models.CASCADE)
+        person: FK[Person] = models.ForeignKey('people.Person', on_delete=models.CASCADE)
 
         object: FK[M]
-        objects: models.Manager[f'{M.__name__}PersonPermission']  # pyright: ignore
+        objects: models.Manager[ObjectPersonPermissionBase[M]]
 
-        class Meta:  # pyright: ignore
+        class Meta:
             abstract = True
 else:
     class ObjectPersonPermissionBase(ObjectRoleBase):
         person = models.ForeignKey('people.Person', on_delete=models.CASCADE)
 
-        class Meta:  # pyright: ignore
+        class Meta:
             abstract = True
 
 
 def create_permission_membership_models[M: models.Model](
     model: type[M]
 ) -> tuple[type[ObjectGroupPermissionBase[M]], type[ObjectPersonPermissionBase[M]]]:
-    GroupPermissionMeta = type('Meta', (),{  # noqa: N806
+    GroupPermissionMeta = type('Meta', (),{
         'unique_together': (('group', 'object'),),
     })
-    GroupPermission = type(  # noqa: N806
+    GroupPermission = type(
         '%sGroupPermission' % model.__name__,
         (ObjectGroupPermissionBase,),
         {
@@ -320,10 +321,10 @@ def create_permission_membership_models[M: models.Model](
             'Meta': GroupPermissionMeta,
         },
     )
-    PersonPermissionMeta = type('Meta', (),{  # noqa: N806
+    PersonPermissionMeta = type('Meta', (),{
         'unique_together': (('person', 'object'),),
     })
-    PersonPermission = type(  # noqa: N806
+    PersonPermission = type(
         '%sPersonPermission' % model.__name__,
         (ObjectPersonPermissionBase,),
         {
