@@ -1,17 +1,27 @@
-import logging
-from typing import cast
+from __future__ import annotations
 
+from typing import TYPE_CHECKING, cast
+
+from django.apps import apps
 from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
-from django.http import HttpRequest
 from django.utils.deprecation import MiddlewareMixin
-from django.apps import apps
 
+from loguru import logger
 from sentry_sdk import capture_exception
 
+if TYPE_CHECKING:
+    from django.http import HttpRequest
 
-logger = logging.getLogger(__name__)
+logger = logger.bind(name=__name__)
 
+IGNORE_PATHS = [
+    '/admin/editing-sessions/',
+    '/admin/login/',
+    '/admin/logout/',
+    '/login/check/',
+    '/o/token/',
+]
 
 class LogUnsafeRequestMiddleware(MiddlewareMixin):
     def process_request(self, request: HttpRequest):
@@ -21,18 +31,20 @@ class LogUnsafeRequestMiddleware(MiddlewareMixin):
         try:
             self._log_request(request)
         except Exception as e:
-            logger.exception(f'Error logging request: {e}')
+            logger.exception('Error logging request')
             capture_exception(e)
 
     def _should_process(self, request: HttpRequest) -> bool:
         path = request.get_full_path()
         if request.method not in settings.REQUEST_LOG_METHODS:
             return False
-        if path in settings.REQUEST_LOG_IGNORE_PATHS:
+        if any(path.startswith(ignore_path) for ignore_path in IGNORE_PATHS):
+            return False
+        if any(path in ignore_path for ignore_path in settings.REQUEST_LOG_IGNORE_PATHS):
             return False
         return True
 
-    def _serialize_file_upload_request(self, request: HttpRequest, content_type: str):
+    def _serialize_file_upload_request(self, request: HttpRequest, content_type: str) -> str:
         # For file uploads, we want to store only the form part
         # and keep the text as close to the original HTTP body as possible
         if content_type.startswith('multipart/form-data'):
@@ -64,7 +76,7 @@ class LogUnsafeRequestMiddleware(MiddlewareMixin):
             request_body = '[File upload content not logged]'
         return request_body
 
-    def _log_request(self, request: HttpRequest):
+    def _log_request(self, request: HttpRequest) -> None:
         path = request.get_full_path()
         raw_request = f'{request.method} {path} HTTP/1.1\r\n'
         for header, value in request.META.items():
@@ -94,7 +106,7 @@ class LogUnsafeRequestMiddleware(MiddlewareMixin):
         user_id = getattr(request.user, 'id', None)
 
         log_data = {
-            'method': cast(str, request.method),
+            'method': cast('str', request.method),
             'path': path,
             'raw_request': raw_request,
             'user_id': user_id,
@@ -105,6 +117,10 @@ class LogUnsafeRequestMiddleware(MiddlewareMixin):
         LoggedRequest = apps.get_model('request_log', 'LoggedRequest')
         LoggedRequest.objects.create(**log_data)
 
-    def _add_extra_log_data(self, request, log_data):
-        """Hook for subclasses to add additional data"""
+    def _add_extra_log_data(self, request, log_data) -> None:  # pyright: ignore[reportUnusedParameter]
+        """
+        Add additional data to the log.
+
+        Implement in a subclass.
+        """
         pass
