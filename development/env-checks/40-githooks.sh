@@ -41,8 +41,8 @@ check_git_hooks() {
     echo "🔗 Checking git hooks..."
 
     # Check if pre-commit is available
-    if ! command -v pre-commit >/dev/null 2>&1; then
-        print_error "pre-commit is not installed"
+    if ! command -v prek >/dev/null 2>&1; then
+        print_error "prek is not installed"
         return 1
     fi
 
@@ -53,12 +53,22 @@ check_git_hooks() {
     fi
 
     # Check if pre-commit hooks are installed
-    if pre-commit install --install-hooks >/dev/null; then
+    if prek install >/dev/null; then
         print_success "Git hooks are properly installed"
     else
-        print_error "Error running pre-commit"
+        print_error "Error running prek install"
         return 1
     fi
+
+    (
+      cd kausal_common || exit 1
+      if prek install >/dev/null; then
+          print_success "Git hooks are properly installed in kausal_common"
+      else
+          print_error "Error running prek install in kausal_common"
+          exit 1
+      fi
+    )
 
     return 0
 }
