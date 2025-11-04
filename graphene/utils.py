@@ -3,11 +3,13 @@ from __future__ import annotations
 import dataclasses
 import typing
 from types import NoneType, UnionType
-from typing import get_type_hints
+from typing import Any, get_type_hints
 
 import graphene
 
 if typing.TYPE_CHECKING:
+    from graphene.types.base import BaseOptions
+
     from _typeshed import DataclassInstance
 
 
@@ -38,3 +40,14 @@ def create_from_dataclass(kls: type[DataclassInstance]):
         gfields[field.name] = gf(required=required)
     out = type(kls.__name__ + 'Type', (graphene.ObjectType,), gfields)
     return out
+
+
+def get_graphene_meta(type_: type[Any]) -> BaseOptions | None:
+    from graphene.types.base import BaseOptions
+
+    type_meta = getattr(type_, '_meta', None)
+    if type_meta is None:
+        return None
+    if not isinstance(type_meta, BaseOptions):
+        raise TypeError(f"Type {type_} has _meta with invalid type: {type(type_meta)}")
+    return type_meta

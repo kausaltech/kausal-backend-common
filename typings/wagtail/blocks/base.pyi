@@ -1,6 +1,6 @@
 # ruff: noqa: D400, D415, D205, D401, D200, D204
 from collections.abc import Iterable
-from typing import Any, ClassVar, Generic, Mapping, OrderedDict, Protocol, Self, TypeVar, type_check_only
+from typing import Any, ClassVar, Generic, Mapping, OrderedDict, Protocol, Self, Sequence, TypeVar, type_check_only
 
 from django import forms
 from django.core.files.base import File
@@ -13,10 +13,10 @@ from _typeshed import Incomplete
 
 from .definition_lookup import BlockDefinitionLookup
 
-__all__ = ['BaseBlock', 'Block', 'BoundBlock', 'DeclarativeSubBlocksMetaclass', 'BlockWidget', 'BlockField']
+__all__ = ['BaseBlock', 'Block', 'BlockField', 'BlockWidget', 'BoundBlock', 'DeclarativeSubBlocksMetaclass']
 
 class BaseBlock(type):
-    def __new__(mcs, name, bases, attrs): ...  # noqa: N804
+    def __new__(mcs, name, bases, attrs): ...
 
 @type_check_only
 class BlockMeta(Protocol):
@@ -28,19 +28,19 @@ class BlockMeta(Protocol):
 BlockMetaT = TypeVar('BlockMetaT', bound=BlockMeta, default=BlockMeta)  # noqa: PYI001
 
 
-class Block(Generic[BlockMetaT],metaclass=BaseBlock):
+class Block[BlockMetaT: BlockMeta = BlockMeta](metaclass=BaseBlock):
     name: str
     creation_counter: int
     TEMPLATE_VAR: str
 
-    Meta: type[Any]
+    Meta: type[BlockMetaT]
     # class Meta:
     #     label: StrOrPromise | None
     #     icon: str
     #     classname: str | None
     #     group: str
 
-    MUTABLE_META_ATTRIBUTES: ClassVar[list[str]]
+    MUTABLE_META_ATTRIBUTES: ClassVar[Iterable[str]]
     def __new__(cls, *args, **kwargs): ...
     meta: BlockMetaT
     definition_prefix: str
@@ -212,9 +212,9 @@ class Block(Generic[BlockMetaT],metaclass=BaseBlock):
         reason to break it).
         """
 
-class BoundBlock:
-    block: Block[Any]
-    value: Incomplete
+class BoundBlock[B: Block = Block, ValueT = Any]:
+    block: B
+    value: ValueT
     prefix: Incomplete
     errors: Incomplete
     def __init__(self, block, value, prefix: Incomplete | None = None, errors: Incomplete | None = None) -> None: ...

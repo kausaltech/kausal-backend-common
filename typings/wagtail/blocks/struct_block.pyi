@@ -8,7 +8,7 @@ from wagtail.telepath import Adapter
 
 from _typeshed import Incomplete
 
-from .base import BaseBlock, Block, BoundBlock, DeclarativeSubBlocksMetaclass
+from .base import BaseBlock, Block, BlockMeta, BoundBlock, DeclarativeSubBlocksMetaclass
 
 class StructBlockValidationError(ValidationError):
     non_block_errors: Incomplete
@@ -16,14 +16,14 @@ class StructBlockValidationError(ValidationError):
     def __init__(self, block_errors: Incomplete | None = None, non_block_errors: Incomplete | None = None) -> None: ...
     def as_json_data(self): ...
 
-class StructValue(collections.OrderedDict):
+class StructValue[B: StructBlock = StructBlock](collections.OrderedDict[str, Block]):
     """A class that generates a StructBlock value from provided sub-blocks"""
-    block: Incomplete
-    def __init__(self, block, *args) -> None: ...
+    block: B
+    def __init__(self, block: B, *args) -> None: ...
     def __html__(self): ...
     def render_as_block(self, context: Incomplete | None = None): ...
     @cached_property
-    def bound_blocks(self): ...
+    def bound_blocks(self) -> collections.OrderedDict[str, BoundBlock]: ...
     def __reduce__(self): ...
 
 class PlaceholderBoundBlock(BoundBlock):
@@ -32,9 +32,9 @@ class PlaceholderBoundBlock(BoundBlock):
     """
     def render_form(self): ...
 
-class BaseStructBlock(Block):
-    search_index: Incomplete
-    child_blocks: Incomplete
+class BaseStructBlock[M: BlockMeta = BlockMeta](Block[M]):
+    search_index: bool
+    child_blocks: collections.OrderedDict[str, Block]
     def __init__(self, local_blocks: Sequence[tuple[str, Block[Any] | BaseBlock]] | None = None, search_index: bool = True, **kwargs) -> None: ...
     @classmethod
     def construct_from_lookup(cls, lookup, child_blocks, **kwargs): ...
@@ -85,7 +85,7 @@ class BaseStructBlock(Block):
         label_format: Incomplete
         icon: str
 
-class StructBlock(BaseStructBlock, metaclass=DeclarativeSubBlocksMetaclass): ...
+class StructBlock[M: BlockMeta = BlockMeta](BaseStructBlock[M], metaclass=DeclarativeSubBlocksMetaclass): ...
 
 class StructBlockAdapter(Adapter):
     js_constructor: str

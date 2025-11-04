@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import graphene
 from graphene.types.schema import TypeMap as GrapheneTypeMap
@@ -124,7 +124,7 @@ class UnifiedGrapheneTypeMap(GrapheneTypeMap):
         self.sb_converter = sb_converter
         super().__init__(types=())
 
-    def add_type(self, type_: type[graphene.ObjectType] | type) -> GraphQLNamedType:
+    def add_type(self, type_: type[graphene.ObjectType[Any]] | type) -> GraphQLNamedType:
         from graphene.types.base import SubclassWithMeta
 
         if isinstance(type_, (graphene.NonNull, graphene.List)):
