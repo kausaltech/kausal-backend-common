@@ -228,13 +228,14 @@ class BasePerson(index.Indexed, ClusterableModel):
 
             Args:
                 user: The user requesting access
+                plan: The plan in the context of which the visibility is checked
                 **kwargs: Additional context (e.g., plan, organization, etc.)
 
             Returns:
                 bool: True if visible, False otherwise
 
-        """
-        raise NotImplementedError("This method should be implemented by subclasses")
+            """
+            raise NotImplementedError("This method should be implemented by subclasses")
 
 
 class ObjectRole(models.TextChoices):
