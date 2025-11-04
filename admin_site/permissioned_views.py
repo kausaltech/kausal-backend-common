@@ -93,10 +93,10 @@ class PermissionedCreateView(HideSnippetsFromBreadcrumbsMixin, CreateView[_Model
 
 
 class PermissionedViewSet(Generic[_ModelT, _QS, _FormT], SnippetViewSet[_ModelT, _FormT]):
-    add_view_class: ClassVar[type[PermissionedCreateView[_ModelT, _FormT]]]  # type: ignore[misc]
-    edit_view_class: ClassVar[type[PermissionedEditView[_ModelT, _FormT]]]  # type: ignore[misc]
+    add_view_class: ClassVar = PermissionedCreateView
+    edit_view_class: ClassVar = PermissionedEditView
+    delete_view_class: ClassVar = PermissionedDeleteView
     # index_view_class: ClassVar = PathsIndexView[_ModelT, _QS]
-    # delete_view_class: ClassVar = PathsDeleteView
     # usage_view_class: ClassVar = PathsUsageView
 
     add_to_admin_menu = True
