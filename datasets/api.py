@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing
+import warnings
 from uuid import UUID
 
 # from django.contrib.auth.models import AnonymousUser
@@ -39,6 +40,24 @@ if typing.TYPE_CHECKING:
 
 router = DefaultRouter()
 all_routers: list[SimpleRouter]  = []
+
+
+def get_item_with_deprecated_fallback(
+    mapping: dict, key: str, deprecated_key: str, fail_if_not_exists: bool = True, default=None
+):
+    if key in mapping:
+        return mapping[key]
+    if deprecated_key in mapping:
+        warnings.warn(
+            f"The key '{deprecated_key}' is deprecated and will be removed in a future version. "
+            f"Please use '{key}' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return mapping[deprecated_key]
+    if fail_if_not_exists:
+        raise KeyError(f"Found neither {key} nor deprecated {deprecated_key}")
+    return default
 
 
 class UuidBasedBulkListSerializer(BulkListSerializer):
@@ -388,10 +407,11 @@ class DataPointCommentViewSet(viewsets.ModelViewSet):
     )
 
     def get_queryset(self):
-        return DataPointComment.objects.filter(data_point__uuid=self.kwargs['datapoint_uuid'])
+        data_point_uuid = get_item_with_deprecated_fallback(self.kwargs, 'data_point_uuid', 'datapoint_uuid')
+        return DataPointComment.objects.filter(data_point__uuid=data_point_uuid)
 
     def perform_create(self, serializer):
-        data_point_uuid = self.kwargs['datapoint_uuid']
+        data_point_uuid = get_item_with_deprecated_fallback(self.kwargs, 'data_point_uuid', 'datapoint_uuid')
         data_point = DataPoint.objects.get(uuid=data_point_uuid)
         serializer.save(
             data_point=data_point,
@@ -423,13 +443,17 @@ class BaseSourceReferenceSerializer(serializers.ModelSerializer[DatasetSourceRef
     def to_internal_value(self, data: dict[str, typing.Any]) -> DatasetSourceReference:
         # The parameters in the context come from the API endpoint URL
         dataset_uuid = self.context.get('dataset_uuid')
-        data_point_uuid = self.context.get('datapoint_uuid')
+        data_point_uuid = get_item_with_deprecated_fallback(
+            self.context, 'data_point_uuid', 'datapoint_uuid', fail_if_not_exists=False
+        )
 
         if dataset_uuid != data.get('dataset', dataset_uuid):
             raise serializers.ValidationError(
                 'Dataset UUID in payload different from that in the URL path'
             )
-        if data_point_uuid != data.get('datapoint', data_point_uuid):
+        if data_point_uuid != get_item_with_deprecated_fallback(
+            data, 'data_point', 'datapoint', fail_if_not_exists=False, default=data_point_uuid
+        ):
             raise serializers.ValidationError(
                 'DataPoint UUID in payload different from that in the URL path'
             )
@@ -456,14 +480,16 @@ class DataPointSourceReferenceViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.DjangoModelPermissions,)
 
     def get_queryset(self):
+        data_point_uuid = get_item_with_deprecated_fallback(self.kwargs, 'data_point_uuid', 'datapoint_uuid')
         return DatasetSourceReference.objects.filter(
-            data_point__uuid=self.kwargs['datapoint_uuid']
+            data_point__uuid=data_point_uuid
         ).select_related('data_source')
 
     def get_serializer_context(self) -> dict[str, str]:
         context = super().get_serializer_context()
         context['dataset_uuid'] = self.kwargs['dataset_uuid']
-        context['data_point_uuid'] = self.kwargs['datapoint_uuid']
+        data_point_uuid = get_item_with_deprecated_fallback(self.kwargs, 'data_point_uuid', 'datapoint_uuid')
+        context['data_point_uuid'] = data_point_uuid
         return context
 
 class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
@@ -509,7 +535,10 @@ class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
     def get_serializer_context(self) -> dict[str, str]:
         context = super().get_serializer_context()
         context['dataset_uuid'] = self.kwargs.get('dataset_uuid')
-        context['data_point_uuid'] = self.kwargs.get('datapoint_uuid')
+        data_point_uuid = get_item_with_deprecated_fallback(
+            self.kwargs, 'data_point_uuid', 'datapoint_uuid', fail_if_not_exists=False,
+        )
+        context['data_point_uuid'] = data_point_uuid
         return context
 
 
