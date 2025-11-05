@@ -64,6 +64,10 @@ class ColumnBlockBase(blocks.StructBlock):
     class Meta:
         field_name: str | None = None
 
+    def bulk_to_python(self, values):
+        values = static_block_to_struct_compat(values)
+        return super().bulk_to_python(values)
+
 
 def get_field_label(model: type[Model], field_name: str) -> str | None:
     if not apps.ready:
