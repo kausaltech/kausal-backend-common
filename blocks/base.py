@@ -65,7 +65,7 @@ class ColumnBlockBase(blocks.StructBlock):
         field_name: str | None = None
 
     def bulk_to_python(self, values):
-        values = static_block_to_struct_compat(values)
+        values = static_block_to_struct_compat(self, values)
         return super().bulk_to_python(values)
 
 
@@ -88,10 +88,16 @@ def get_field_label(model: type[Model], field_name: str) -> str | None:
 lazy_field_label = lazy(get_field_label, str)
 
 
-def static_block_to_struct_compat(values: list[Any]):
+def static_block_to_struct_compat(_block: blocks.StructBlock[Any], values: list[Any]):
+    # We need to convert None values to empty dicts for StructBlock.bulk_to_python to work
     li = list(values)
-    if len(li) == 1 and li[0] is None:
-        values = [{}]
+    changed = False
+    for idx, val in enumerate(list(li)):
+        if val is None:
+            li[idx] = dict()
+            changed = True
+    if changed:
+        return li
     return values
 
 
@@ -141,7 +147,7 @@ class GeneralFieldBlockBase[M: BlockMetaWithFieldName = BlockMetaWithFieldName](
 
     # Workaround for migration from StaticBlock to StructBlock
     def bulk_to_python(self, values):
-        values = static_block_to_struct_compat(values)
+        values = static_block_to_struct_compat(self, values)
         return super().bulk_to_python(values)
 
 
