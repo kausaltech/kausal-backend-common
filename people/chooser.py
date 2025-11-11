@@ -7,8 +7,10 @@ from django.utils.translation import gettext_lazy as _
 from wagtail.snippets.views.chooser import SnippetChooserViewSet
 
 from dal import autocomplete
-from generic_chooser.views import ModelChooserCreateTabMixin, ModelChooserMixin
+from generic_chooser.views import ModelChooserCreateTabMixin, ModelChooserMixin, ModelChooserViewSet
 from generic_chooser.widgets import AdminChooser
+
+from kausal_common.const import IS_PATHS
 
 from people.models import Person
 
@@ -49,7 +51,14 @@ class PersonModelChooserCreateTabMixin(ModelChooserCreateTabMixin):
         return self.form_class
 
 
-class PersonChooserViewSet(SnippetChooserViewSet):
+# TODO: below is a hotfix, we should remove it
+# and register the PersonSnippetViewSet in watch too.
+if IS_PATHS:
+    base_class = SnippetChooserViewSet
+else:
+    base_class = ModelChooserViewSet
+
+class PersonChooserViewSet(base_class):
     icon = 'user'
     model = Person
     page_title = _("Choose person")
@@ -64,4 +73,3 @@ class PersonChooser(AdminChooser):
     link_to_chosen_text = _('Edit this person')
     model = Person
     choose_modal_url_name = 'person_chooser:choose'
-
