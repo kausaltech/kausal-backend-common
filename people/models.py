@@ -63,7 +63,6 @@ class BasePerson(index.Indexed, ClusterableModel):
     postal_address = models.TextField(max_length=100, verbose_name=_('postal address'), null=True, blank=True)
     organization: FK[Organization] = models.ForeignKey(
         'orgs.Organization', related_name='people', on_delete=models.CASCADE, verbose_name=_('organization'),
-        help_text=_("What is this person's organization"),
     )
     user: OneToOne[User | None] = models.OneToOneField(
         'users.User', null=True, blank=True, related_name='person', on_delete=models.SET_NULL,
