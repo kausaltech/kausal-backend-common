@@ -406,6 +406,10 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
     objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
     _default_manager: ClassVar[PermissionedManager[Self]]
 
+    class Meta:
+        verbose_name = _('dataset metric')
+        verbose_name_plural = _('dataset metrics')
+
     def __str__(self):
         return self.label or self.name or str(self.uuid)
 
