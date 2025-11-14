@@ -424,6 +424,10 @@ class DataPointCommentViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         serializer.save(last_modified_by=self.request.user)
 
+    def perform_destroy(self, instance: DataPointComment):
+        user = user_or_bust(self.request.user)
+        instance.soft_delete(user)
+
 
 class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
