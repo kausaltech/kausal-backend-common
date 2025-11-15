@@ -1,34 +1,38 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 import graphene
 
 import graphene_django_optimizer as gql_optimizer
 
-from kausal_common.graphene import DjangoNode, DjangoObjectType
+from kausal_common.graphene import DjangoNode
 from kausal_common.graphene.graphql_helpers import (
     CreateModelInstanceMutation,
     DeleteModelInstanceMutation,
     UpdateModelInstanceMutation,
 )
-
-from orgs.models import Organization, OrganizationQuerySet
+from kausal_common.organizations.models import BaseOrganization
 
 from .forms import NodeForm
 
+if TYPE_CHECKING:
+    from orgs.models import Organization, OrganizationClass, OrganizationQuerySet
 
-class OrganizationForm(NodeForm):
+
+class OrganizationForm[OrgM: BaseOrganization[Any]](NodeForm[OrgM]):
     class Meta:
         abstract = True
 
 
-class OrganizationClassNode(DjangoNode):
+class OrganizationClassNode(DjangoNode['OrganizationClass']):
     class Meta:
         abstract = True
 
 
 
-class OrganizationNode(DjangoNode):
-    ancestors = graphene.List('orgs.schema.OrganizationNode')
+class OrganizationNode[OrgM: BaseOrganization[Any]](DjangoNode[OrgM]):
+    ancestors = graphene.List(graphene.NonNull('orgs.schema.OrganizationNode'), required=True)
     descendants = graphene.List('orgs.schema.OrganizationNode')
     parent = graphene.Field('orgs.schema.OrganizationNode', required=False)
 
@@ -47,7 +51,7 @@ class OrganizationNode(DjangoNode):
         only=('path', 'depth'),
     )
     @staticmethod
-    def resolve_parent(parent: Organization, info) -> Organization | None:
+    def resolve_parent(parent: OrgM, info) -> OrgM | None:
         return parent.get_parent()
 
 

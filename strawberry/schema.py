@@ -35,12 +35,21 @@ def locale_directive(info, lang: Annotated[str, strawberry.argument(description=
 class Schema(ABC, GrapheneStrawberrySchema):
     @copy_signature(GrapheneStrawberrySchema.__init__)
     def __init__(self, *args, **kwargs: Any):
+        FEDERATION_VERSIONS: Any
+        try:
+            from strawberry.federation.versions import FEDERATION_VERSIONS  # type: ignore
+        except ImportError:
+            FEDERATION_VERSIONS = None
+
         directives = [
             *kwargs.pop('directives', []),
             locale_directive,
         ]
         kwargs['directives'] = directives
-        kwargs['enable_federation_2'] = True
+        if FEDERATION_VERSIONS is None:
+            kwargs['enable_federation_2'] = True
+        else:
+            kwargs['federation_version'] = '2.11'
         super().__init__(*args, **kwargs)
 
     def get_extensions(self, sync: bool = False) -> list[StrawberrySchemaExtension]:

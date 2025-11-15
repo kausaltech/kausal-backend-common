@@ -4,6 +4,7 @@ target-version = "py312"
 
 [lint]
 select = ["ALL"]
+extend-safe-fixes = ["TC002", "TC003", "TC004", "PYI059"]
 ignore = [
   "ANN0",
   "ANN201",
@@ -105,6 +106,7 @@ django = [
   "graphene_django",
   "graphene",
   "strawberry",
+  "strawberry_django",
   "graphql",
   "modelcluster",
   "modeltrans",
@@ -122,4 +124,4 @@ django = [
 quote-style = "single"
 
 [lint.flake8-builtins]
-builtins-ignorelist = ["id", "format", "print", "input", "next"]
+builtins-ignorelist = ["id", "format", "print", "input", "next", "type"]

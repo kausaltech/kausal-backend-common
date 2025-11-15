@@ -15,6 +15,11 @@ console = rich.get_console()
 _warning_traceback_enabled = False
 
 
+IGNORE_WARNINGS = [
+    "Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.",
+]
+
+
 def warn_with_traceback(
     message: Warning | str,
     category: type[Warning],
@@ -25,6 +30,8 @@ def warn_with_traceback(
 ) -> None:
     tb = None
     depth = 2
+    if str(message) in IGNORE_WARNINGS:
+        return
     while True:
         try:
             frame = sys._getframe(depth)
@@ -38,7 +45,7 @@ def warn_with_traceback(
     else:
         exc = message.with_traceback(tb)
 
-    tbp = Traceback.from_exception(type(exc), exc, traceback=tb, max_frames=20)
+    tbp = Traceback.from_exception(type(exc), exc, traceback=tb, max_frames=100)
     console.print(tbp)
 
 

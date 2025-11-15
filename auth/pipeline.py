@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import hashlib
+import io
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
+
+from wagtail.users.models import UserProfile
 
 import sentry_sdk
 from loguru import logger
@@ -10,47 +14,57 @@ from social_core.backends.oauth import OAuthAuth
 from social_core.backends.okta_openidconnect import OktaOpenIdConnect
 from social_core.exceptions import AuthAlreadyAssociated, AuthForbidden
 
-from kausal_common.auth.msgraph import get_user_photo
+from kausal_common.auth.msgraph import get_user_photo_with_etag
 from kausal_common.deployment import env_bool
 from kausal_common.users.models import uuid_to_username
 
 from users.models import User
 
 if TYPE_CHECKING:
+    from social_core.strategy import BaseStrategy
     from social_django import BaseAuth
     from social_django.models import UserSocialAuth
 
 logger = logger.bind(name='auth.pipeline')
 
 
-def log_login_attempt(backend: BaseAuth, details: dict[str, Any], *args, **kwargs):
-    response = kwargs.get('response', {})
-    request = kwargs['request']
+def log_login_attempt(
+    backend: BaseAuth, response: dict[str, Any] | None = None, **_kwargs
+):
+    response = response or {}
 
-    host = request.get_host()
-    id_parts = ['backend=%s' % backend.name, 'host=%s' % host]
+    user_ctx: dict[str, str] = {}
+    log_ctx: dict[str, str] = {
+        'auth.backend': backend.name,
+    }
     email = response.get('email')
     if email:
-        id_parts.append('email=%s' % email)
+        user_ctx['email'] = email
     tid = response.get('tid')
     if tid:
-        id_parts.append('tid=%s' % tid)
+        log_ctx['auth.tid'] = tid
 
     oid = response.get('oid')
     if oid:
-        id_parts.append('oid=%s' % oid)
+        log_ctx['auth.oid'] = oid
+        user_ctx['uuid'] = oid
     else:
         sub = response.get('sub')
         if sub:
-            id_parts.append('sub=%s' % sub)
+            log_ctx['auth.sub'] = sub
+            user_ctx['uuid'] = sub
 
-    logger.info('Login attempt (%s)' % ', '.join(id_parts))
+    log = logger.bind(**log_ctx, **{'user.%s' % k: v for k, v in user_ctx.items()})
+    log.info('Login attempt')
     if 'id_token' in response and env_bool('SSO_DEBUG_LOG', default=False):
-        logger.debug('ID token: %s' % response['id_token'])
+        log.debug('ID token: %s' % response['id_token'])
 
     response_data = {key: val for key, val in response.items() if not key.endswith('token')}
     sentry_sdk.set_context('response', response_data)
     logger.info('Response data', **response_data)
+
+    scope = sentry_sdk.get_isolation_scope()
+    scope.set_user(user_ctx)
 
     if isinstance(backend, OAuthAuth):
         try:
@@ -59,7 +73,7 @@ def log_login_attempt(backend: BaseAuth, details: dict[str, Any], *args, **kwarg
             logger.warning('Login failed with invalid state: %s' % str(e))
 
 
-def get_username(details: dict[str, Any], backend, response, *args, **kwargs):
+def get_username(details: dict[str, Any], backend: BaseAuth, response: dict[str, Any], **kwargs):
     """
     Set the `username` argument.
 
@@ -122,7 +136,7 @@ def associate_existing_social_user(backend: BaseAuth, uid: str, response: dict[s
     }
 
 
-def find_user_by_email(backend, details, user=None, social=None, *args, **kwargs) -> dict[str, Any] | None:
+def find_user_by_email(details: dict[str, Any], user: User | None = None, **_kwargs) -> dict[str, Any] | None:
     if user is not None:
         return None
 
@@ -138,7 +152,7 @@ def find_user_by_email(backend, details, user=None, social=None, *args, **kwargs
     }
 
 
-def create_or_update_user(backend, details, user, *args, **kwargs):
+def create_or_update_user(backend: BaseAuth, details: dict[str, Any], user: User | None = None, **kwargs):
     if backend.name == 'password':
         return None
 
@@ -148,8 +162,13 @@ def create_or_update_user(backend, details, user, *args, **kwargs):
         msg = 'Created new user'
     else:
         msg = 'Existing user found'
-        uuid = user.uuid
-    logger.info('%s (uuid=%s, email=%s)' % (msg, uuid, details.get('email')))
+        uuid = str(user.uuid)
+
+    log_ctx = {
+        'user.uuid': uuid,
+        'user.email': details.get('email'),
+    }
+    logger.info(msg, **log_ctx)
 
     changed = False
     for field in ('first_name', 'last_name', 'email'):
@@ -170,7 +189,7 @@ def create_or_update_user(backend, details, user, *args, **kwargs):
         changed = True
 
     if changed:
-        logger.info('User saved (uuid=%s, email=%s)' % (uuid, details.get('email')))
+        logger.info('User saved', **log_ctx)
         user.save()
 
     return {
@@ -178,64 +197,59 @@ def create_or_update_user(backend, details, user, *args, **kwargs):
     }
 
 
-def update_avatar(backend, details, user, *args, **kwargs):
-    if backend.name != 'azure_ad':
-        return
-    if user is None:
+def update_avatar(backend: BaseAuth, details: dict[str, Any], user: User | None = None, **_kwargs):
+    if backend.name != 'azure_ad' or user is None:
         return
 
-    logger.info('Updating user photo (uuid=%s, email=%s)' % (user.uuid, details.get('email')))
+    log_ctx = {
+        'user.uuid': str(user.uuid),
+        'user.email': details.get('email'),
+    }
+    log = logger.bind(**log_ctx)
+    log.info('Updating user photo')
+
+    person = user.get_corresponding_person()
 
     photo = None
     try:
-        photo = get_user_photo(user)
+        photo = get_user_photo_with_etag(user, old_etag=person.image_msgraph_etag if person else None)
     except Exception as e:
-        logger.error('Failed to get user photo: %s' % str(e))
+        log.exception('Failed to get user photo')
         capture_exception(e)
 
     if not photo:
-        logger.info('No photo found (uuid=%s, email=%s)' % (user.uuid, details.get('email')))
+        log.info('No photo found')
         return
 
-    # FIXME
-    """
-    person = user.get_corresponding_person()
-    if person:
-        try:
-            person.set_avatar(photo.content)
-        except Exception as e:
-            logger.error('Failed to set avatar for person %s: %s' % (str(person), str(e)))
-            capture_exception(e)
+    if photo.value is None:
+        log.info('Photo unchanged; etag matched')
+        return
 
     profile = UserProfile.get_for_user(user)
+
+    photo_bytes = photo.value.content
+    photo_hash = hashlib.md5(photo_bytes, usedforsecurity=False).hexdigest()
+    if person:
+        if person.image_hash == photo_hash:
+            log.info('Photo unchanged; hashes match')
+            person.image_msgraph_etag = photo.etag
+            person.__class__.objects.filter(pk=person.pk).update(image_msgraph_etag=photo.etag)
+            return
+        try:
+            person.set_avatar(photo_bytes, msgraph_etag=photo.etag)
+        except Exception as e:
+            log.exception('Failed to set avatar for person', **{'person.id': person.id})
+            capture_exception(e)
+
     try:
-        if not profile.avatar or profile.avatar.read() != photo.content:
-            profile.avatar.save('avatar.jpg', io.BytesIO(photo.content))  # type: ignore
+        if not profile.avatar:
+            profile.avatar.save('avatar.jpg', io.BytesIO(photo.value.content))
     except Exception as e:
-        logger.error('Failed to set user profile photo: %s' % str(e))
+        log.exception('Failed to set user profile photo')
         capture_exception(e)
-    """
 
 
-def store_end_session_url(details, backend, response, user=None, *args, **kwargs):
-    if not user or not user.is_authenticated:
-        return
-
-    if not hasattr(backend, 'get_end_session_url'):
-        return
-    request = kwargs['request']
-    if not request:
-        return
-
-    end_session_url = backend.get_end_session_url(request, response['id_token'])
-    if not end_session_url:
-        return
-
-    request.session['social_auth_end_session_url'] = end_session_url
-    if 'id_token' in response:
-        request.session['social_auth_id_token'] = response['id_token']
-
-def validate_user_password(strategy, backend, user, *args, **kwargs):
+def validate_user_password(strategy: BaseStrategy, backend: BaseAuth, user: User | None, **_kwargs):
     if backend.name != 'password':
         return
 

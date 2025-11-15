@@ -14,6 +14,7 @@ import sentry_sdk
 from loguru import logger
 
 from kausal_common.const import FORWARDED_FOR_HEADER, FORWARDED_HEADER, REQUEST_CORRELATION_ID_HEADER
+from kausal_common.deployment import env_bool
 from kausal_common.deployment.http import parse_forwarded
 from kausal_common.deployment.types import get_cluster_context
 from kausal_common.logging.rich_logger import styled_http_method
@@ -141,6 +142,8 @@ class RequestCommonMeta:
         client = scope.get('client')
         if client:
             client_ip = client[0]
+        else:
+            client_ip = None
         if scope.get('type') == 'http':
             http_method = scope.get('method')
         else:
@@ -218,7 +221,9 @@ class RequestCommonMeta:
 
         from viztracer import VizTracer  # type: ignore
 
-        def trace_sql_query(execute: Callable, sql: str, params: Iterable[Any], many: bool, context: dict) -> Any:
+        def trace_sql_query(
+            execute: Callable[..., Any], sql: str, params: Iterable[Any], many: bool, context: dict[str, Any]
+        ) -> Any:
             with tracer.log_event('sql_query'):
                 res = execute(sql, params, many, context)
             return res
@@ -226,7 +231,7 @@ class RequestCommonMeta:
         now_ts = datetime.now().strftime('%Y%m%d_%H%M%S')  # noqa: DTZ005
         Path('perf-traces').mkdir(exist_ok=True)
         trace_fn = f'perf-traces/{operation_name}_{now_ts}.json'
-        tracer = VizTracer(output_file=trace_fn, max_stack_depth=15, log_async=True, tracer_entries=3000000)
+        tracer = VizTracer(output_file=trace_fn, max_stack_depth=60, log_async=True, tracer_entries=3000000)
         stack.enter_context(tracer)
         stack.enter_context(connection.execute_wrapper(trace_sql_query))
         logger.info(f'Saving trace to {trace_fn}')
@@ -277,6 +282,8 @@ class RequestCommonMeta:
             token_auth = scope.get('token_auth')
             user = user_or_none(scope.get('user'))
 
+        operation_name = (path or 'unknown').strip('/').replace('/', '.')
+
         auth_method: str
         if user:
             if token_auth is not None and token_auth.token_type:
@@ -289,8 +296,12 @@ class RequestCommonMeta:
         log = logger.bind(**self.get_full_log_context(), **{'auth.method': auth_method})
         log.info(f'{type_method} {path}')
         start_ts = time.time()
-        with self.contextualize_logger(), self.with_sentry_context() as sentry_scope:
+        with ExitStack() as stack:
             _rich_traceback_omit = True
+            if env_bool('PROFILE_REQUESTS', default=False):
+                self._enter_viztracer_stack(stack, operation_name)
+            stack.enter_context(self.contextualize_logger())
+            sentry_scope = stack.enter_context(self.with_sentry_context())
             yield sentry_scope
         end_ts = time.time()
         log.info('Request completed in %.1f ms' % ((end_ts - start_ts) * 1000))

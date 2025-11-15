@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.gis.db import models as gis_models
 from django.db import models
+from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
@@ -20,6 +21,7 @@ from wagtail.search import index
 from treebeard.mp_tree import MP_Node, MP_NodeQuerySet
 
 from kausal_common.models.language import ModelWithPrimaryLanguage
+from kausal_common.models.types import copy_signature
 
 from ..i18n.helpers import get_supported_languages
 
@@ -29,47 +31,12 @@ if TYPE_CHECKING:
     from ..models.types import FK
 
 
-# TODO: Generalize and put in some other app's models.py
-class Node[QS: MP_NodeQuerySet[Any]](MP_Node[QS], ClusterableModel):
-    class Meta:
-        abstract = True
-
-    name = models.CharField[str, str](max_length=255, verbose_name=_("name"))
-
-    # Disabled `node_order_by` for now. If we used this, then we wouldn't be able to use "left sibling" to specify a
-    # position of a node, e.g., when calling the REST API from the grid editor. Since it would be significant work to
-    # change it (e.g., disable move handles in grid editor, distinguish cases in the backend whether model has
-    # node_order_by, etc.) and some customers might want to order their organizations in some way, I decided to disable
-    # `node_order_by`.
-    # node_order_by = ['name']
-
-    public_fields = ['id', 'name']
-
-    # Duplicate get_parent from super class just to set short_description below
-    @admin.display(
-        description=pgettext_lazy('node', 'Parent'),
-    )
-    def get_parent(self, *args, **kwargs) -> Self | None:
-        return super().get_parent(*args, **kwargs)
-
-    def __str__(self) -> str:
-        return self.name
-
-    def get_parent_path(self, update=False) -> str | None:
-        depth = int(len(self.path) / self.steplen)
-        if depth <= 1:
-            return None
-        parentpath = self._get_basepath(self.path, depth - 1)
-        return parentpath
-
 class BaseOrganizationClass(models.Model):
     identifier = models.CharField(max_length=255, unique=True, editable=False)
     name = models.CharField(max_length=255)
 
-    created_time = models.DateTimeField(auto_now_add=True,
-                                        help_text=_('The time at which the resource was created'))
-    last_modified_time = models.DateTimeField(auto_now=True,
-                                              help_text=_('The time at which the resource was updated'))
+    created_time = models.DateTimeField(auto_now_add=True, help_text=_('The time at which the resource was created'))
+    last_modified_time = models.DateTimeField(auto_now=True, help_text=_('The time at which the resource was updated'))
 
     i18n = TranslationField(fields=('name',))
 
@@ -85,12 +52,13 @@ class BaseOrganizationClass(models.Model):
 
 
 class BaseOrganizationQuerySet[M: models.Model](MP_NodeQuerySet[M], MultilingualQuerySet[M]):  # type: ignore[override]
-    @abstractmethod
     def editable_by_user(self, user: User):
         raise NotImplementedError('This method should be implemented by subclasses')
 
 
-class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model):
+class BaseOrganization[QS: QuerySet[Any]](
+    MP_Node[QS], ClusterableModel, index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
+):
     # Different identifiers, depending on origin (namespace), are stored in OrganizationIdentifier
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -112,7 +80,10 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
         help_text=_('A simplified short version of name for the general public'),
     )
     distinct_name = models.CharField(
-        max_length=400, editable=False, null=True, help_text=_('A distinct name for this organization (generated automatically)'),
+        max_length=400,
+        editable=False,
+        null=True,
+        help_text=_('A distinct name for this organization (generated automatically)'),
     )
     description = RichTextField(blank=True, verbose_name=_('description'))
     url = models.URLField(blank=True, verbose_name=_('URL'))
@@ -141,7 +112,9 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
     # Intentionally overrides ModelWithPrimaryLanguage.primary_language
     # leaving out the default keyword argument
     primary_language = models.CharField(
-        max_length=8, choices=get_supported_languages, verbose_name=_('primary language'),
+        max_length=8,
+        choices=get_supported_languages,
+        verbose_name=_('primary language'),
     )
     location = gis_models.PointField(verbose_name=_('Location'), srid=4326, null=True, blank=True)
 
@@ -156,22 +129,34 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
         index.SearchField('abbreviation'),
     ]
 
-
     id: int
     classification_id: int | None
 
-    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
-        verbose_name = _("organization")
-        verbose_name_plural = _("organizations")
+    class Meta:
+        verbose_name = _('organization')
+        verbose_name_plural = _('organizations')
         abstract = True
 
     @property
     def parent(self) -> Self | None:
         return self.get_parent()
 
+    @admin.display(
+        description=pgettext_lazy('node', 'Parent'),
+    )
+    def get_parent(self, update: bool = False) -> Self | None:
+        return super().get_parent(update=update)
+
     @classmethod
     def get_parent_choices(cls, user: User, obj: Self | None = None) -> models.QuerySet[Self]:
         raise NotImplementedError('This method should be implemented by subclasses')
+
+    def get_parent_path(self) -> str | None:
+        depth = int(len(self.path) / self.steplen)
+        if depth <= 1:
+            return None
+        parentpath = self._get_basepath(self.path, depth - 1)
+        return parentpath
 
     @override
     def __str__(self):
