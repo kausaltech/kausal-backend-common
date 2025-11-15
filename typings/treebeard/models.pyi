@@ -1,18 +1,13 @@
-# ruff: noqa: ANN401
-from typing import Any, Generic, Literal, Self, TypedDict, Unpack, overload
-from typing_extensions import TypeVar
+from typing import Any, Literal, Self, TypedDict, Unpack, overload
 
 from django.db.models import Model, QuerySet
 
 from treebeard.exceptions import InvalidPosition as InvalidPosition, MissingNodeOrderBy as MissingNodeOrderBy
 
-_QS = TypeVar('_QS', bound=QuerySet, default=QuerySet)
-_ModelT = TypeVar('_ModelT', bound=Model)
+class _InstanceKwargs[M: Model](TypedDict, total=True):
+    instance: M
 
-class _InstanceKwargs(Generic[_ModelT], TypedDict, total=True):
-    instance: _ModelT
-
-class Node(Model, Generic[_QS]):
+class Node[QS: QuerySet[Any]](Model):
     """Node class"""
 
     @overload
@@ -79,7 +74,7 @@ class Node(Model, Generic[_QS]):
         :returns: A list of the added node ids.
         """
     @classmethod
-    def dump_bulk(cls, parent: Self | None = None, keep_ids: bool = True) -> list[dict]:
+    def dump_bulk(cls, parent: Self | None = None, keep_ids: bool = True) -> list[dict[str, Any]]:
         """
         Dumps a tree branch to a python data structure.
 
@@ -97,7 +92,7 @@ class Node(Model, Generic[_QS]):
                   :meth:`load_bulk`
         """
     @classmethod
-    def get_root_nodes(cls) -> _QS:
+    def get_root_nodes(cls) -> QS:
         """:returns: A queryset containing the root nodes in the tree."""
 
     @classmethod
@@ -124,7 +119,7 @@ class Node(Model, Generic[_QS]):
         a piece of code breaks, leaving the tree in an inconsistent state.
         """
     @classmethod
-    def get_tree(cls, parent: Self | None = None) -> _QS:
+    def get_tree(cls, parent: Self | None = None) -> QS:
         """
         :returns:
 
@@ -149,18 +144,18 @@ class Node(Model, Generic[_QS]):
         """
     def get_depth(self) -> int:
         """:returns: the depth (level) of the node"""
-    def get_siblings(self) -> _QS:
+    def get_siblings(self) -> QS:
         """
         :returns:
 
             A queryset of all the node's siblings, including the node
             itself.
         """
-    def get_children(self) -> _QS:
+    def get_children(self) -> QS:
         """:returns: A queryset of all the node's children"""
     def get_children_count(self) -> int:
         """:returns: The number of the node's children"""
-    def get_descendants(self) -> _QS:
+    def get_descendants(self) -> QS:
         """
         :returns:
 
@@ -311,7 +306,7 @@ class Node(Model, Generic[_QS]):
         """:returns: True if the node is a root node (else, returns False)"""
     def is_leaf(self) -> bool:
         """:returns: True if the node is a leaf node (else, returns False)"""
-    def get_ancestors(self) -> _QS:
+    def get_ancestors(self) -> QS:
         """
         :returns:
 
@@ -384,7 +379,7 @@ class Node(Model, Generic[_QS]):
     def delete(self, *args, **kwargs) -> tuple[int, dict[str, int]]:
         """Removes a node and all it's descendants."""
 
-    def get_sorted_pos_queryset(self, siblings: _QS, newobj: Self):
+    def get_sorted_pos_queryset(self, siblings: QS, newobj: Self):
         """
         :returns:
 
@@ -396,12 +391,12 @@ class Node(Model, Generic[_QS]):
         https://github.com/django-mptt/django-mptt/blob/0.3.0/mptt/signals.py
         """
     @classmethod
-    def get_annotated_list_qs(cls, qs: _QS) -> list:
+    def get_annotated_list_qs(cls, qs: QS) -> list[tuple[Self, dict[str, Any]]]:
         """
         Gets an annotated list from a queryset.
         """
     @classmethod
-    def get_annotated_list(cls, parent: Self | None = None, max_depth: int | None = None) -> list:
+    def get_annotated_list(cls, parent: Self | None = None, max_depth: int | None = None) -> list[tuple[Self, dict[str, Any]]]:
         """
         Gets an annotated list from a tree branch.
 

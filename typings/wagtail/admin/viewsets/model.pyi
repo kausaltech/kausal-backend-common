@@ -2,7 +2,7 @@
 from typing import Any, Callable, ClassVar, Generic, Sequence, TypeVar
 
 from django.db import models
-from django.db.models import Model
+from django.db.models import Model, QuerySet
 from django.db.models.options import Options
 from django.forms import BaseModelForm, ModelForm
 from django.http import HttpRequest, HttpResponse
@@ -17,11 +17,9 @@ from wagtail.admin.views.generic.usage import UsageView
 from wagtail.admin.viewsets.base import ViewSet, ViewSetGroup
 from wagtail.permission_policies.base import BasePermissionPolicy
 
-_ModelT = TypeVar('_ModelT', bound=Model, default=Model, covariant=True)
-_FormT = TypeVar('_FormT', bound=BaseModelForm, default=WagtailAdminModelForm[_ModelT], covariant=True)
-
-
-class ModelViewSet(ViewSet, Generic[_ModelT, _FormT]):
+class ModelViewSet[M: Model, FormT: BaseModelForm[Any] = WagtailAdminModelForm[Model], QS: QuerySet[Any] = QuerySet[Model]](
+    ViewSet
+):
     add_to_reference_index: ClassVar[bool]
     index_view_class: ClassVar[type[generic.IndexView[Any]]]
     add_view_class: ClassVar[type[generic.CreateView[Any, Any]]]
@@ -29,7 +27,7 @@ class ModelViewSet(ViewSet, Generic[_ModelT, _FormT]):
     delete_view_class: ClassVar[type[generic.DeleteView]]
     history_view_class: ClassVar[type[HistoryView]]
     usage_view_class: ClassVar[type[UsageView]]
-    copy_view_class: ClassVar[type[generic.CopyView[Any]]]
+    copy_view_class: ClassVar[type[generic.CopyView[Any, Any]]]
     inspect_view_class: ClassVar[type[generic.InspectView]]
     _show_breadcrumbs: ClassVar[bool]
     template_prefix: ClassVar[str]
@@ -39,14 +37,29 @@ class ModelViewSet(ViewSet, Generic[_ModelT, _FormT]):
     inspect_view_fields: ClassVar[list[str]]
     inspect_view_fields_exclude: ClassVar[list[str]]
     copy_view_enabled: ClassVar[bool]
-    model: type[_ModelT]
-    model_opts: Options[_ModelT]
+    model: type[M]
+    model_opts: Options[M]
     app_label: str
     model_name: str
 
+    index_template_name: ClassVar[str | list[str]]
+    index_results_template_name: ClassVar[str | list[str]]
+    create_template_name: ClassVar[str | list[str]]
+    edit_template_name: ClassVar[str | list[str]]
+    delete_template_name: ClassVar[str | list[str]]
+    history_template_name: ClassVar[str | list[str]]
+    inspect_template_name: ClassVar[str | list[str]]
+    list_display: ClassVar[Sequence[str | Column]]
+    list_filter: ClassVar[list[str] | dict[str, list[str]]]
+    filterset_class: ClassVar[Any]
+    search_fields: ClassVar[Sequence[str] | None]
+    search_backend_name: ClassVar[str | None]
+    list_export: ClassVar[list[str]]
+    export_headings: ClassVar[dict[str, str]]
+    export_filename: ClassVar[str]
+
     @property
     def permission_policy(self) -> BasePermissionPolicy[Any, Any, Any]: ...
-
     def __init__(self, name: str | None = None, **kwargs: Any) -> None: ...
     def get_common_view_kwargs(self, **kwargs: Any) -> dict[str, Any]: ...
     def get_index_view_kwargs(self, **kwargs: Any) -> dict[str, Any]: ...
@@ -81,22 +94,7 @@ class ModelViewSet(ViewSet, Generic[_ModelT, _FormT]):
     def inspect_view(self) -> generic.InspectView: ...
     @property
     def copy_view(self) -> generic.CopyView: ...
-    def get_templates(self, name: str = "index", fallback: str = "") -> list[str]: ...
-    index_template_name: ClassVar[str | list[str]]
-    index_results_template_name: ClassVar[str | list[str]]
-    create_template_name: ClassVar[str | list[str]]
-    edit_template_name: ClassVar[str | list[str]]
-    delete_template_name: ClassVar[str | list[str]]
-    history_template_name: ClassVar[str | list[str]]
-    inspect_template_name: ClassVar[str | list[str]]
-    list_display: ClassVar[Sequence[str | Column]]
-    list_filter: ClassVar[list[str] | dict[str, list[str]]]
-    filterset_class: ClassVar[Any]
-    search_fields: ClassVar[Sequence[str] | None]
-    search_backend_name: ClassVar[str | None]
-    list_export: ClassVar[list[str]]
-    export_headings: ClassVar[dict[str, str]]
-    export_filename: ClassVar[str]
+    def get_templates(self, name: str = 'index', fallback: str = '') -> list[str]: ...
 
     def formfield_for_dbfield(self, db_field: models.Field, **kwargs: Any) -> Any: ...
     def get_form_class(self, for_update: bool = False) -> type[ModelForm]: ...

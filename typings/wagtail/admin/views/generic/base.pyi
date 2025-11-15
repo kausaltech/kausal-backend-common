@@ -1,5 +1,4 @@
-from typing import Any, ClassVar, Generic, NamedTuple, NotRequired, Sequence, TypedDict
-from typing_extensions import TypeVar
+from typing import Any, ClassVar, NamedTuple, NotRequired, Sequence, TypedDict
 
 from django.db.models import Model, QuerySet
 from django.db.models.options import Options
@@ -12,10 +11,6 @@ from django_stubs_ext import StrOrPromise
 from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.ui.tables import Column, Table
 from wagtail.admin.widgets import Button
-
-_Model = TypeVar('_Model', bound=Model, default=Model, covariant=True)
-_PKT = TypeVar('_PKT', default=Any)
-
 
 class BreadcrumbItem(TypedDict):
     url: StrOrPromise
@@ -45,18 +40,18 @@ class WagtailAdminTemplateMixin(TemplateResponseMixin, ContextMixin):
 
 
 
-class BaseObjectMixin(Generic[_Model, _PKT]):
+class BaseObjectMixin[M: Model, QS: QuerySet[Any] = QuerySet[Model], PKT: Any = int]:
     # model: type[ModelT]
     pk_url_kwarg: str
-    pk: _PKT
-    object: _Model
-    model_opts: Options[_Model]
+    pk: PKT
+    object: M
+    model_opts: Options[M]
 
-    def get_pk(self) -> _PKT: ...
-    def get_base_object_queryset(self) -> QuerySet: ...
-    def get_object(self) -> _Model: ...
+    def get_pk(self) -> PKT: ...
+    def get_base_object_queryset(self) -> QS: ...
+    def get_object(self) -> M: ...
 
-class BaseOperationView(BaseObjectMixin, View):
+class BaseOperationView[M: Model, QS: QuerySet[Any] = QuerySet[Model]](BaseObjectMixin[M, QS], View):
     success_message: str | None
     success_message_extra_tags: str
     success_url_name: str | None
@@ -75,7 +70,7 @@ class ActiveFilter(NamedTuple):
     value: Any
     removed_filter_url: str
 
-class BaseListingView(WagtailAdminTemplateMixin, BaseListView[_Model]):  # type: ignore[type-var]
+class BaseListingView[M: Model, QS: QuerySet[Any] = QuerySet[Model]](WagtailAdminTemplateMixin, BaseListView[M]):
     results_template_name: str
     results_only: bool
     table_class: type[Table]
@@ -92,7 +87,7 @@ class BaseListingView(WagtailAdminTemplateMixin, BaseListView[_Model]):  # type:
     @cached_property
     def is_filtering(self) -> bool: ...
     def get_filterset_kwargs(self) -> dict[str, Any]: ...
-    def filter_queryset[QS: QuerySet](self, queryset: QS) -> QS: ...
+    def filter_queryset(self, queryset: QS) -> QS: ...
     def get_url_without_filter_param(self, param: str | list[str] | tuple[str, ...]) -> str: ...
     def get_url_without_filter_param_value(self, param: str, value: Any) -> str: ...
     @cached_property
@@ -101,8 +96,9 @@ class BaseListingView(WagtailAdminTemplateMixin, BaseListView[_Model]):  # type:
     @cached_property
     def is_explicitly_ordered(self) -> bool: ...
     def get_ordering(self) -> str | None: ...
-    def order_queryset[QS: QuerySet](self, queryset: QS) -> QS: ...
-    def get_queryset(self) -> QuerySet: ...
+    def get_base_queryset(self) -> QS: ...
+    def order_queryset(self, queryset: QS) -> QS: ...
+    def get_queryset(self) -> QS: ...
     def get_table_kwargs(self) -> dict[str, Any]: ...
     def get_table(self, object_list: list[Any]) -> Table: ...
     @cached_property
