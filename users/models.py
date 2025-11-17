@@ -138,7 +138,7 @@ class BaseUser(AbstractUser):
         return True
 
 
-def uuid_to_username(uuid: UUID | str):
+def uuid_to_username(unique_user_id: UUID | str):
     """
     Convert UUID to username.
 
@@ -150,10 +150,14 @@ def uuid_to_username(uuid: UUID | str):
     """
 
     uuid_data: bytes
-    if isinstance(uuid, UUID):
-        uuid_data = uuid.bytes
+    if isinstance(unique_user_id, UUID):
+        uuid_data = unique_user_id.bytes
     else:
-        uuid_data = UUID(uuid).bytes
+        try:
+            uuid_data = UUID(unique_user_id).bytes
+        except ValueError:
+            uuid_data = unique_user_id.encode('utf-8')
+
     b32coded = base64.b32encode(uuid_data)
     return 'u-' + b32coded.decode('ascii').replace('=', '').lower()
 

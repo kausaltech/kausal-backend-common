@@ -1,20 +1,24 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
+from uuid import UUID
 
+import sentry_sdk
 from loguru import logger
 from sentry_sdk import capture_exception
 from social_core.backends.oauth import OAuthAuth
-from social_core.exceptions import AuthForbidden
+from social_core.backends.okta_openidconnect import OktaOpenIdConnect
+from social_core.exceptions import AuthAlreadyAssociated, AuthForbidden
 
 from kausal_common.auth.msgraph import get_user_photo
 from kausal_common.deployment import env_bool
+from kausal_common.users.models import uuid_to_username
 
-from users.base import uuid_to_username
 from users.models import User
 
 if TYPE_CHECKING:
     from social_django import BaseAuth
+    from social_django.models import UserSocialAuth
 
 logger = logger.bind(name='auth.pipeline')
 
@@ -44,6 +48,10 @@ def log_login_attempt(backend: BaseAuth, details: dict[str, Any], *args, **kwarg
     if 'id_token' in response and env_bool('SSO_DEBUG_LOG', default=False):
         logger.debug('ID token: %s' % response['id_token'])
 
+    response_data = {key: val for key, val in response.items() if not key.endswith('token')}
+    sentry_sdk.set_context('response', response_data)
+    logger.info('Response data', **response_data)
+
     if isinstance(backend, OAuthAuth):
         try:
             backend.validate_state()
@@ -67,13 +75,50 @@ def get_username(details: dict[str, Any], backend, response, *args, **kwargs):
         user_uuid = kwargs.get('uid')
         if not user_uuid:
             return None
+        try:
+            user_uuid = UUID(user_uuid)
+        except ValueError:
+            user_uuid = None
 
+        if user_uuid is None:
+            user_uuid = response.get('sub')
+            if not user_uuid:
+                return None
         username = uuid_to_username(user_uuid)
     else:
         username = user.username
 
     return {
         'username': username,
+    }
+
+
+def associate_existing_social_user(backend: BaseAuth, uid: str, response: dict[str, Any], user: User | None = None, **kwargs):
+    provider = backend.name
+    social: UserSocialAuth | None = None
+    social = backend.strategy.storage.user.get_social_auth(provider, uid)
+    save_new_uid = False
+    username = response.get('preferred_username')
+    if social is None and isinstance(backend, OktaOpenIdConnect) and username and username != uid:
+        # Okta OpenID Connect used to have the preferred_username as the unique identifier, so we check
+        # for that too.
+        social = cast('UserSocialAuth | None', backend.strategy.storage.user.get_social_auth(provider, username))
+        if social is not None and uid != username:
+            save_new_uid = True
+    if social:
+        if user and social.user != user:
+            raise AuthAlreadyAssociated(backend)
+        if not user:
+            user = social.user
+        elif save_new_uid:
+            social.uid = uid
+            social.save()
+
+    return {
+        "social": social,
+        "user": user,
+        "is_new": user is None,
+        "new_association": social is None,
     }
 
 
@@ -98,7 +143,7 @@ def create_or_update_user(backend, details, user, *args, **kwargs):
         return None
 
     if user is None:
-        uuid = cast(str, details.get('uuid') or kwargs.get('uid'))
+        uuid = cast('str', details.get('uuid') or kwargs.get('uid'))
         user = User(uuid=uuid)
         msg = 'Created new user'
     else:
