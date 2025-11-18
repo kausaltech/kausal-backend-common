@@ -19,6 +19,7 @@ def _monkeypatch_second() -> None:
     import django_stubs_ext
     from django.db.models import ManyToManyField
     from django.db.models.fields.json import JSONField
+    from django.views import View
     from graphene import Interface, ObjectType
     from modelcluster.fields import ParentalKey, ParentalManyToManyField
     from wagtail.admin.panels import Panel
@@ -35,7 +36,7 @@ def _monkeypatch_second() -> None:
         JSONField, ManyToManyField, Node,
         Panel, Panel.BoundPanel, BaseObjectMixin,
         BasePermissionPolicy, ObjectType, Interface,
-        Block, Revision
+        Block, Revision, View
     ]
 
     try:

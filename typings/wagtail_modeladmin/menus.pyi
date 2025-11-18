@@ -11,10 +11,10 @@ class ModelAdminMenuItem(MenuItem):
     """
     def __init__(self, model_admin, order) -> None:
         ...
-    
+
     def is_shown(self, request):
         ...
-    
+
 
 
 class GroupMenuItem(SubmenuMenuItem):
@@ -25,6 +25,3 @@ class GroupMenuItem(SubmenuMenuItem):
     """
     def __init__(self, modeladmingroup, order, menu) -> None:
         ...
-    
-
-

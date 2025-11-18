@@ -1,4 +1,4 @@
-from typing import Any, Sequence
+from typing import Any, ClassVar, Sequence
 
 from django.contrib.admin.filters import ListFilter
 from django.contrib.admin.options import _ListDisplayT, _ListFilterT
@@ -70,13 +70,13 @@ class ModelAdmin[M: Model](WagtailRegisterable):
     ordering: str | Sequence[str] | None
     parent = ...
     prepopulated_fields = ...
-    index_view_class: type[IndexView[Any]]
-    create_view_class: type[CreateView[Any, Any]]
-    edit_view_class: type[EditView[Any, Any]]
-    inspect_view_class: type[InspectView[Any]]
-    delete_view_class: type[DeleteView[Any]]
-    history_view_class: type[HistoryView[Any]]
-    choose_parent_view_class: type[ChooseParentView[Any]]
+    index_view_class: ClassVar[type[IndexView[Any]]]
+    create_view_class: ClassVar[type[CreateView[Any, Any]]]
+    edit_view_class: ClassVar[type[EditView[Any, Any]]]
+    inspect_view_class: ClassVar[type[InspectView[Any]]]
+    delete_view_class: ClassVar[type[DeleteView[Any]]]
+    history_view_class: ClassVar[type[HistoryView[Any]]]
+    choose_parent_view_class: ClassVar[type[ChooseParentView[Any]]]
     index_template_name: str
     create_template_name: str
     edit_template_name: str
@@ -446,18 +446,17 @@ class ModelAdminGroup(WagtailRegisterable):
     SnippetModelAdmin instances. Creates a menu item with a submenu for
     accessing the listing pages of those instances
     """
-    items = ...
-    menu_label = ...
+    items: Sequence[type[ModelAdmin[Any]]] = ...
+    menu_label: StrOrPromise | None
     menu_item_name = ...
-    menu_order = ...
-    menu_icon = ...
+    menu_order: int | None
+    menu_icon: str | None
     def __init__(self) -> None:
         """
         When initialising, instantiate the classes within 'items', and assign
         the instances to a 'modeladmin_instances' attribute for convenient
         access later
         """
-        ...
 
     def get_menu_label(self): # -> Literal['']:
         ...

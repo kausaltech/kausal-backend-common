@@ -1,5 +1,4 @@
-from collections.abc import Callable
-from typing import Any, ClassVar, Generic, Sequence, TypedDict, TypeVar
+from typing import Any, ClassVar, Sequence, TypedDict
 
 from django.db.models import Model, QuerySet
 from django.forms import BaseModelForm
@@ -7,21 +6,17 @@ from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.urls import URLPattern
 from django.utils.functional import cached_property
-from laces.typing import Renderable
 from wagtail.admin.forms import WagtailAdminModelForm
 from wagtail.admin.panels import ObjectList, TabbedInterface
-from wagtail.admin.ui.components import MediaContainer
 from wagtail.admin.views import generic
 from wagtail.admin.views.generic import base, history, lock, mixins, models as generic_models, preview, workflow
 from wagtail.admin.viewsets.model import ModelViewSet
+from wagtail.models import DraftStateMixin
 from wagtail.snippets.views.chooser import SnippetChooserViewSet
 
+from laces.typing import Renderable
+
 def get_snippet_model_from_url_params(app_name: str, model_name: str) -> type[Model]: ...
-
-
-_ModelT = TypeVar('_ModelT', bound=Model, default=Model, covariant=True)
-_QS = TypeVar('_QS', bound=QuerySet[Any, Any], default=QuerySet[_ModelT])
-_FormT = TypeVar('_FormT', bound=BaseModelForm[Any], default=WagtailAdminModelForm[_ModelT], covariant=True)
 
 
 class SnippetType(TypedDict):
@@ -35,14 +30,15 @@ class ModelIndexView[M: Model](base.BaseListingView[M]):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
     def get_template_names(self) -> list[str]: ...
 
-
-class IndexView(mixins.IndexViewOptionalFeaturesMixin[_QS], generic_models.IndexView[_ModelT], Generic[_ModelT, _QS]):
+class IndexView[M: Model, QS: QuerySet[Any] = QuerySet[Model]](
+    mixins.IndexViewOptionalFeaturesMixin[QS], generic_models.IndexView[M, QS]
+):
     view_name: ClassVar[str]
-    def get_base_queryset(self) -> _QS: ...
+    def get_base_queryset(self) -> QS: ...
 
-
-class CreateView(
-    mixins.CreateEditViewOptionalFeaturesMixin[_ModelT, _FormT], generic_models.CreateView[_ModelT, _FormT],
+class CreateView[M: Model, FormT: BaseModelForm[Any] = WagtailAdminModelForm[Model]](
+    mixins.CreateEditViewOptionalFeaturesMixin[M, FormT],
+    generic_models.CreateView[M, FormT],
 ):
     view_name: ClassVar[str]
     def run_before_hook(self) -> HttpResponse | None: ...
@@ -50,45 +46,39 @@ class CreateView(
     def get_side_panels(self) -> Sequence[Renderable]: ...
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
 
-class CopyView(generic.CopyViewMixin[_ModelT], CreateView[_ModelT, _FormT]): ...
+class CopyView[M: Model](generic.CopyViewMixin[M], CreateView[M]): ...
 
-class EditView(generic.CreateEditViewOptionalFeaturesMixin[_ModelT, _FormT], generic.EditView[_ModelT, _FormT]):
+class EditView[M: Model, FormT: BaseModelForm[Any] = WagtailAdminModelForm[Model]](
+    generic.CreateEditViewOptionalFeaturesMixin[M, FormT], generic.EditView[M, FormT]
+):
     view_name: ClassVar[str]
     def run_before_hook(self) -> HttpResponse | None: ...
     def run_after_hook(self) -> HttpResponse | None: ...
     def get_side_panels(self) -> Any: ...
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
 
-
-class DeleteView(generic.DeleteView[_ModelT, _FormT]):
+class DeleteView[M: Model, FormT: BaseModelForm[Any] = WagtailAdminModelForm[Model]](
+    generic.DeleteView[M, FormT]
+):
     view_name: ClassVar[str]
     def run_before_hook(self) -> HttpResponse | None: ...
     def run_after_hook(self) -> HttpResponse | None: ...
 
-class UsageView(generic.UsageView):
+class UsageView[M: Model](generic.UsageView[M]):
     view_name: ClassVar[str]
 
 class HistoryView(history.HistoryView):
     view_name: ClassVar[str]
 
-class InspectView(generic.InspectView):
+class InspectView[ModelT: Model](generic.InspectView[ModelT]):
     view_name: ClassVar[str]
 
 class PreviewOnCreateView(preview.PreviewOnCreate): ...
 class PreviewOnEditView(preview.PreviewOnEdit): ...
-
-class PreviewRevisionView(generic.PermissionCheckedMixin, preview.PreviewRevision):
-    ...
-
-
-class RevisionsCompareView(generic.PermissionCheckedMixin, generic.RevisionsCompareView):
-    ...
-
-class UnpublishView(generic.PermissionCheckedMixin, generic.UnpublishView):
-    ...
-
-class RevisionsUnscheduleView(generic.PermissionCheckedMixin, generic.RevisionsUnscheduleView):
-    ...
+class PreviewRevisionView(generic.PermissionCheckedMixin, preview.PreviewRevision): ...
+class RevisionsCompareView[M: Model](generic.PermissionCheckedMixin, generic.RevisionsCompareView[M]): ...
+class UnpublishView[M: Model](generic.PermissionCheckedMixin, generic.UnpublishView[M]): ...
+class RevisionsUnscheduleView[M: DraftStateMixin](generic.PermissionCheckedMixin, generic.RevisionsUnscheduleView[M]): ...
 
 class LockView(generic.PermissionCheckedMixin, lock.LockView):
     def user_has_permission(self, permission: str) -> bool: ...
@@ -100,15 +90,13 @@ class WorkflowActionView(workflow.WorkflowAction): ...
 class CollectWorkflowActionDataView(workflow.CollectWorkflowActionData): ...
 class ConfirmWorkflowCancellationView(workflow.ConfirmWorkflowCancellation): ...
 class WorkflowPreviewView(workflow.PreviewRevisionForTask): ...
+class WorkflowHistoryView(generic.PermissionCheckedMixin, history.WorkflowHistoryView): ...
+class WorkflowHistoryDetailView(generic.PermissionCheckedMixin, history.WorkflowHistoryDetailView): ...
 
-class WorkflowHistoryView(generic.PermissionCheckedMixin, history.WorkflowHistoryView):
-    ...
-
-class WorkflowHistoryDetailView(generic.PermissionCheckedMixin, history.WorkflowHistoryDetailView):
-    ...
-
-class SnippetViewSet(ModelViewSet[_ModelT, _FormT], Generic[_ModelT, _FormT]):
-    model: type[_ModelT]
+class SnippetViewSet[M: Model, FormT: BaseModelForm[Any] = WagtailAdminModelForm[Any], QS: QuerySet[Any] = QuerySet[Model]](
+    ModelViewSet[M, FormT, QS]
+):
+    model: type[M]
     chooser_per_page: ClassVar[int]
     admin_url_namespace: ClassVar[str | None]
     base_url_path: ClassVar[str | None]
@@ -119,13 +107,13 @@ class SnippetViewSet(ModelViewSet[_ModelT, _FormT], Generic[_ModelT, _FormT]):
     copy_view_class: ClassVar[type[CopyView[Any]]]  # type: ignore[assignment]
     edit_view_class: ClassVar[type[EditView[Any, Any]]]
     delete_view_class: ClassVar[type[DeleteView[Any, Any]]]
-    usage_view_class: ClassVar[type[UsageView]]
+    usage_view_class: ClassVar[type[UsageView[Any]]]
     history_view_class: ClassVar[type[HistoryView]]
-    inspect_view_class: ClassVar[type[InspectView]]
+    inspect_view_class: ClassVar[type[InspectView[Any]]]
     revisions_view_class: ClassVar[type[PreviewRevisionView]]
-    revisions_compare_view_class: ClassVar[type[RevisionsCompareView]]
-    revisions_unschedule_view_class: ClassVar[type[RevisionsUnscheduleView]]
-    unpublish_view_class: ClassVar[type[UnpublishView]]
+    revisions_compare_view_class: ClassVar[type[RevisionsCompareView[Any]]]
+    revisions_unschedule_view_class: ClassVar[type[RevisionsUnscheduleView[Any]]]
+    unpublish_view_class: ClassVar[type[UnpublishView[Any]]]
     preview_on_add_view_class: ClassVar[type[PreviewOnCreateView]]
     preview_on_edit_view_class: ClassVar[type[PreviewOnEditView]]
     lock_view_class: ClassVar[type[LockView]]
@@ -198,7 +186,7 @@ class SnippetViewSet(ModelViewSet[_ModelT, _FormT], Generic[_ModelT, _FormT]):
     def chooser_viewset(self) -> Any: ...
     icon: ClassVar[str]
     breadcrumbs_items: ClassVar[list[base.BreadcrumbItem]]
-    def get_queryset(self, request: HttpRequest) -> QuerySet | None: ...
+    def get_queryset(self, request: HttpRequest) -> QS | None: ...
     def get_admin_url_namespace(self) -> str: ...
     def get_admin_base_path(self) -> str: ...
     def get_chooser_admin_url_namespace(self) -> str: ...
@@ -206,11 +194,11 @@ class SnippetViewSet(ModelViewSet[_ModelT, _FormT], Generic[_ModelT, _FormT]):
     @property
     def url_finder_class(self) -> type[Any]: ...
     def get_urlpatterns(self) -> list[URLPattern]: ...
-    def get_edit_handler(self) -> ObjectList | TabbedInterface | None: ...
+    def get_edit_handler(self) -> ObjectList | TabbedInterface[Any, Any] | None: ...
     def register_chooser_viewset(self) -> None: ...
     def register_model_check(self) -> None: ...
     def register_snippet_model(self) -> None: ...
     def on_register(self) -> None: ...
 
-class SnippetViewSetGroup(ModelViewSet):
+class SnippetViewSetGroup(ModelViewSet[Any, Any, Any]):
     def __init__(self) -> None: ...
