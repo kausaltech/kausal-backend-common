@@ -14,6 +14,7 @@ from rich.logging import RichHandler
 from rich.style import Style
 from rich.text import Text, TextType
 
+from kausal_common.deployment import env_bool
 from kausal_common.logging.handler import loguru_make_record
 
 if TYPE_CHECKING:
@@ -42,7 +43,7 @@ class LogRender:
         self.level_width = level_width
         self._last_time: Text | None = None
 
-    def __call__(
+    def __call__(  # noqa: C901, PLR0912
         self,
         console: Console,
         renderables: Sequence[ConsoleRenderable],
@@ -107,7 +108,9 @@ class LogRender:
 
         output.add_row(*row)
 
-        return Renderables([output] + renderables)  # type: ignore
+        combined_renderables: list[ConsoleRenderable] = [output]
+        combined_renderables.extend(renderables)
+        return Renderables(combined_renderables)
 
 
 RICH_TIME_FORMAT = '%H:%M:%S.%f'
@@ -125,7 +128,12 @@ class RichLogHandler(RichHandler):
     _log_render: LogRender  # type: ignore[assignment]
 
     def __init__(self):
-        super().__init__(log_time_format=RICH_TIME_FORMAT, console=get_rich_log_console(), rich_tracebacks=True)
+        super().__init__(
+            log_time_format=RICH_TIME_FORMAT,
+            console=get_rich_log_console(),
+            rich_tracebacks=True,
+            tracebacks_show_locals=env_bool('TRACEBACK_SHOW_LOCALS', default=False),
+        )
         lr = self._log_render
         self._log_render = LogRender(
             show_time=lr.show_time,
@@ -152,22 +160,26 @@ class RichLogHandler(RichHandler):
 
         correlation_id = extra.pop('correlation_id', None)
         if correlation_id:
-            scope_parts.append(Text.assemble(
-                '[',
-                Text.styled(correlation_id, Style(color=identifier_color(correlation_id), underline=True)),
-                ']',
-            ))
+            scope_parts.append(
+                Text.assemble(
+                    '[',
+                    Text.styled(correlation_id, Style(color=identifier_color(correlation_id), underline=True)),
+                    ']',
+                )
+            )
 
         trace_id = extra.pop('trace.id', None)
         if trace_id:
             sampled = extra.pop('trace.sampled', None)
-            scope_parts.append(Text.assemble(
-                '[Trace ',
-                Text.styled(trace_id, Style(color=identifier_color(trace_id), underline=True)),
-                ' (sampled: ',
-                Text.styled(sampled, Style(color='green' if sampled else 'red')),
-                ')]',
-            ))
+            scope_parts.append(
+                Text.assemble(
+                    '[Trace ',
+                    Text.styled(trace_id, Style(color=identifier_color(trace_id), underline=True)),
+                    ' (sampled: ',
+                    Text.styled(sampled, Style(color='green' if sampled else 'red')),
+                    ')]',
+                )
+            )
 
         def add_scope(style: str, key: str) -> None:
             if key not in extra:
@@ -254,7 +266,9 @@ def loguru_rich_sink(message: loguru.Message):
     finally:
         rich_handler.release()
 
+
 daphne_logger = loguru.logger.bind(name='daphne.request', markup=True)
+
 
 def styled_http_method(method: str) -> str:
     match method:
@@ -272,9 +286,10 @@ def styled_http_method(method: str) -> str:
             method_style = 'white'
     return f'[{method_style}]{method}[/]'
 
-def _daphne_log_action(self, protocol: str, action: str, details: dict[str, Any]) -> None:  # noqa: C901, PLR0912, PLR0915
+
+def _daphne_log_action(self, protocol: str, action: str, details: dict[str, Any]) -> None:  # noqa: C901, PLR0912, PLR0915  # pyright: ignore[reportUnusedParameter]
     # HTTP requests
-    if protocol == "http" and action == "complete":
+    if protocol == 'http' and action == 'complete':
         log_level: str = 'INFO'
         status_style: str
         status = details['status']
@@ -349,9 +364,32 @@ def _daphne_log_action(self, protocol: str, action: str, details: dict[str, Any]
             ws_verb = 'REJECT'
         case _:
             ws_verb = action
-    daphne_logger.info("WebSocket [yellow]{ws_verb}[/] {path} [dim yellow]{client}[/]", ws_verb=ws_verb, **details)
+    daphne_logger.info('WebSocket [yellow]{ws_verb}[/] {path} [dim yellow]{client}[/]', ws_verb=ws_verb, **details)
 
-IDENTIFIER_COLORS = ["#42952e", "#d6061a", "#26cdca", "#a44e74", "#8de990", "#c551dc", "#acf82f", "#4067be", "#dfb8f5", "#33837f", "#c8e6ff", "#e01e82", "#20f53d", "#b24b29", "#fbe423", "#937056", "#e1e995", "#fa1bfc", "#f8ba7c", "#ff8889"]  # noqa: E501
+
+IDENTIFIER_COLORS = [
+    '#42952e',
+    '#d6061a',
+    '#26cdca',
+    '#a44e74',
+    '#8de990',
+    '#c551dc',
+    '#acf82f',
+    '#4067be',
+    '#dfb8f5',
+    '#33837f',
+    '#c8e6ff',
+    '#e01e82',
+    '#20f53d',
+    '#b24b29',
+    '#fbe423',
+    '#937056',
+    '#e1e995',
+    '#fa1bfc',
+    '#f8ba7c',
+    '#ff8889',
+]
+
 
 def identifier_color(identifier: str) -> str:
     val = 0
