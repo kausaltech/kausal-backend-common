@@ -183,7 +183,7 @@ class RevisionMixin(models.Model):
         """
     def save_revision(
         self, user: AbstractBaseUser | None = None, approved_go_live_at: str | datetime | None = None,
-        changed: bool = True, log_action: bool = False, previous_revision: Revision[Any] | None = None,
+        changed: bool = True, log_action: bool | str = False, previous_revision: Revision[Any] | None = None,
         clean: bool = True,
     ) -> Revision[Any]:
         '''
