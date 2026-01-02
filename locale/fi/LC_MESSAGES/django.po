@@ -702,15 +702,3 @@ msgstr "henkilöt"
 #| msgid "organization"
 msgid "Organization"
 msgstr "organisaatio"
-
-#~ msgid "A primary name, e.g. a legally recognized name"
-#~ msgstr "Virallinen nimi"
-
-#~ msgid "A simplified short version of name for the general public"
-#~ msgstr "Lyhyt ja tunnistettava versio nimestä suurta yleisöä varten"
-
-#~ msgid "A date of founding"
-#~ msgstr "Perustamispäivämäärä"
-
-#~ msgid "A date of dissolution"
-#~ msgstr "Lakkauttamispäivämäärä"

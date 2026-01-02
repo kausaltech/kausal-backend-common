@@ -714,15 +714,3 @@ msgstr "cilvēki"
 #| msgid "organization"
 msgid "Organization"
 msgstr "organizācija"
-
-#~ msgid "A primary name, e.g. a legally recognized name"
-#~ msgstr "Galvenais vārds, piemēram, juridiski atzīts vārds"
-
-#~ msgid "A simplified short version of name for the general public"
-#~ msgstr "Vienkāršota īsa nosaukuma versija plašai sabiedrībai"
-
-#~ msgid "A date of founding"
-#~ msgstr "Dibināšanas datums"
-
-#~ msgid "A date of dissolution"
-#~ msgstr "Izbeigšanas datums"

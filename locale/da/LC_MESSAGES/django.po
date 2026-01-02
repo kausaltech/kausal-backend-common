@@ -731,15 +731,3 @@ msgstr "mennesker"
 #| msgid "organization"
 msgid "Organization"
 msgstr "organisation"
-
-#~ msgid "A primary name, e.g. a legally recognized name"
-#~ msgstr "Et primært navn, f.eks. et juridisk anerkendt navn"
-
-#~ msgid "A simplified short version of name for the general public"
-#~ msgstr "En forenklet kort version af navnet til den brede offentlighed"
-
-#~ msgid "A date of founding"
-#~ msgstr "En dato for grundlæggelsen"
-
-#~ msgid "A date of dissolution"
-#~ msgstr "En dato for opløsning"

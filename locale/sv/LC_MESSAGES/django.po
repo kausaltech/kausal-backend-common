@@ -713,16 +713,3 @@ msgstr "personer"
 #| msgid "organization"
 msgid "Organization"
 msgstr "organisation"
-
-#~ msgid "A primary name, e.g. a legally recognized name"
-#~ msgstr "Ett primärt namn, t.ex. ett juridiskt erkänt namn"
-
-#~ msgid "A simplified short version of name for the general public"
-#~ msgstr "En förenklad kortversion av namnet för allmänheten"
-
-#~ msgid "A date of founding"
-#~ msgstr "Datum för grundandet"
-
-#, fuzzy
-#~ msgid "A date of dissolution"
-#~ msgstr "tidsupplösning"

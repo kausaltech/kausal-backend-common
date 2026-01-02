@@ -706,15 +706,3 @@ msgstr "άνθρωποι"
 #| msgid "organization"
 msgid "Organization"
 msgstr "οργάνωση"
-
-#~ msgid "A primary name, e.g. a legally recognized name"
-#~ msgstr "Ένα κύριο όνομα, π.χ. ένα νομικά αναγνωρισμένο όνομα"
-
-#~ msgid "A simplified short version of name for the general public"
-#~ msgstr "Μια απλουστευμένη σύντομη εκδοχή του ονόματος για το ευρύ κοινό"
-
-#~ msgid "A date of founding"
-#~ msgstr "Ημερομηνία ίδρυσης"
-
-#~ msgid "A date of dissolution"
-#~ msgstr "Ημερομηνία διάλυσης"

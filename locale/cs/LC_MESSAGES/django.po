@@ -3,12 +3,11 @@
 # This file is distributed under the same license as the PACKAGE package.
 # Claude <EMAIL@ADDRESS>, YEAR.
 #
-#: nodes/explanations.py
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-12 17:25+0200\n"
+"POT-Creation-Date: 2026-01-02 15:33+0100\n"
 "PO-Revision-Date: 2025-04-01 12:20+0000\n"
 "Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
 "Language-Team: Czech <https://weblate.kausal.tech/projects/paths/django/cs/>\n"
@@ -18,11 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Weblate 5.4.2\n"
-
-#: frameworks/models.py kausal_common/datasets/models.py
-#: kausal_common/templates/kausal_common/people/chooser_results.html
-msgid "Name"
-msgstr "Název"
 
 #: kausal_common/admin_site/tables.py
 #: kausal_common/models/modification_tracking.py
@@ -99,7 +93,6 @@ msgid "Choose another dataset"
 msgstr "Vyberte instanci"
 
 #: kausal_common/datasets/models.py kausal_common/organizations/models.py
-#: nodes/models.py
 msgid "name"
 msgstr "název"
 
@@ -132,7 +125,6 @@ msgid "dimension categories"
 msgstr ""
 
 #: kausal_common/datasets/models.py kausal_common/models/fields.py
-#: paths/utils.py
 msgid "identifier"
 msgstr "identifikátor"
 
@@ -169,10 +161,15 @@ msgid "For a newly created dataset, start entering values from this year"
 msgstr "Pro nově vytvořený soubor dat začněte zadávat hodnoty z tohoto roku"
 
 #: kausal_common/datasets/models.py
+#: kausal_common/templates/kausal_common/people/chooser_results.html
+msgid "Name"
+msgstr "Název"
+
+#: kausal_common/datasets/models.py
 msgid "Descriptive name of the dataset schema"
 msgstr "Popisný název schématu datové sady"
 
-#: kausal_common/datasets/models.py nodes/models.py
+#: kausal_common/datasets/models.py
 msgid "Description"
 msgstr "Popis"
 
@@ -207,6 +204,7 @@ msgid "Used when metrics are tracked for multiple categories"
 msgstr "Používá se, pokud se metriky sledují pro více kategorií"
 
 #: kausal_common/datasets/models.py
+msgctxt "list of persons and their respective permissions on a dataset schema"
 msgid "Person permissions"
 msgstr ""
 
@@ -215,6 +213,7 @@ msgid "Grants permissions on datasets of this schema to certain persons"
 msgstr ""
 
 #: kausal_common/datasets/models.py
+msgctxt "list of person groups and their respective permissions on a dataset schema"
 msgid "Group permissions"
 msgstr ""
 
@@ -222,7 +221,7 @@ msgstr ""
 msgid "Grants permissions on datasets of this schema to certain person groups"
 msgstr ""
 
-#: kausal_common/datasets/models.py people/forms.py
+#: kausal_common/datasets/models.py
 msgid "Permissions"
 msgstr ""
 
@@ -238,7 +237,7 @@ msgstr "datové sady"
 msgid "dataset schemas"
 msgstr "datové sady"
 
-#: kausal_common/datasets/models.py paths/utils.py
+#: kausal_common/datasets/models.py
 msgid "unit"
 msgstr "jednotka"
 
@@ -327,12 +326,14 @@ msgstr ""
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "resolved at"
+msgctxt "review state of data point comment"
 msgid "Resolved"
 msgstr "vyřešeno v"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "resolved at"
+msgctxt "review state of data point comment"
 msgid "Unresolved"
 msgstr "vyřešeno v"
 
@@ -341,10 +342,16 @@ msgid "Sticky comment"
 msgstr "Trvalý komentář"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Review comment"
+msgctxt "Boolean to indicate if this comment is a review"
 msgid "Review comment"
 msgstr "Komentář k revizi"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "resolved at"
+msgctxt "date and time when a data point comment was resolved"
 msgid "resolved at"
 msgstr "vyřešeno v"
 
@@ -359,10 +366,14 @@ msgstr "komentáře"
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "Description"
+msgctxt "data source"
 msgid "edition"
 msgstr "Popis"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "authority"
+msgctxt "authority (responsible organization) for data source"
 msgid "authority"
 msgstr "autorita"
 
@@ -420,12 +431,14 @@ msgstr "datová sada"
 
 #: kausal_common/datasets/wagtail_hooks.py
 #, python-format
-msgid "(Private %(object)s)"
+msgctxt "label to show for a private instance of the given model"
+msgid "(Private %(model)s)"
 msgstr ""
 
 #: kausal_common/datasets/wagtail_hooks.py
 #, python-format
-msgid "Edit this %(object)s"
+msgctxt "title of a link to edit an instance of the given model"
+msgid "Edit this %(model)s"
 msgstr ""
 
 #: kausal_common/models/modification_tracking.py
@@ -439,6 +452,9 @@ msgid "Last modified by"
 msgstr ""
 
 #: kausal_common/models/ordered.py
+#, fuzzy
+#| msgid "order"
+msgctxt "integer to specify the sorting order of model instances"
 msgid "order"
 msgstr "pořadí"
 
@@ -464,43 +480,86 @@ msgid "The time at which the resource was updated"
 msgstr ""
 
 #: kausal_common/organizations/models.py
+msgctxt "organization"
 msgid "Classification"
 msgstr ""
 
 #: kausal_common/organizations/models.py
-msgid "An organization category, e.g. committee"
+msgid "An organization category (e.g., committee)"
 msgstr ""
 
 #: kausal_common/organizations/models.py
-msgid "A primary name, e.g. a legally recognized name"
+msgid "Full name of the organization"
 msgstr ""
 
 #: kausal_common/organizations/models.py
 #, fuzzy
 #| msgid "Scanario name"
-msgid "Short name"
+msgctxt "organization"
+msgid "short name"
 msgstr "Název scénáře"
 
 #: kausal_common/organizations/models.py
-msgid "A simplified short version of name for the general public"
+msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
 msgstr ""
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "name"
+msgctxt "organization"
+msgid "distinct name"
+msgstr "název"
 
 #: kausal_common/organizations/models.py
 msgid "A distinct name for this organization (generated automatically)"
 msgstr ""
 
 #: kausal_common/organizations/models.py kausal_common/people/models.py
-#: kausal_common/users/models.py users/models.py
+#: kausal_common/users/models.py
 msgid "email address"
 msgstr "e-mailová adresa"
 
 #: kausal_common/organizations/models.py
-msgid "A date of founding"
+msgctxt "organization"
+msgid "founding date"
 msgstr ""
 
 #: kausal_common/organizations/models.py
-msgid "A date of dissolution"
+msgctxt "organization"
+msgid "dissolution date"
 msgstr ""
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "created at"
+msgid "created at"
+msgstr "vytvořeno v"
+
+#: kausal_common/organizations/models.py
+msgid "The time at which the object for this organization was created"
+msgstr ""
+
+#: kausal_common/organizations/models.py kausal_common/people/models.py
+#, fuzzy
+#| msgid "created at"
+msgid "created by"
+msgstr "vytvořeno v"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "created at"
+msgid "updated at"
+msgstr "vytvořeno v"
+
+#: kausal_common/organizations/models.py
+msgid "The time at which the object for this organization was last updated"
+msgstr ""
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "created at"
+msgid "updated by"
+msgstr "vytvořeno v"
 
 #: kausal_common/organizations/models.py
 msgid "primary language"
@@ -509,11 +568,10 @@ msgstr ""
 #: kausal_common/organizations/models.py
 #, fuzzy
 #| msgid "Actions"
-msgid "Location"
+msgid "location"
 msgstr "Akce"
 
 #: kausal_common/organizations/models.py kausal_common/people/models.py
-#: nodes/models.py
 msgid "organization"
 msgstr ""
 
@@ -547,6 +605,7 @@ msgstr "e-mailová adresa"
 #: kausal_common/people/chooser.py
 #, fuzzy
 #| msgid "created at"
+msgctxt "person chooser"
 msgid "Create new"
 msgstr "vytvořeno v"
 
@@ -590,6 +649,10 @@ msgid "title"
 msgstr "Hlavní nadpis"
 
 #: kausal_common/people/models.py
+msgid "Job title or role of this person"
+msgstr ""
+
+#: kausal_common/people/models.py
 #, fuzzy
 #| msgid "email address"
 msgid "postal address"
@@ -612,15 +675,13 @@ msgid "image cropping"
 msgstr ""
 
 #: kausal_common/people/models.py
-#, fuzzy
-#| msgid "created at"
-msgid "created by"
-msgstr "vytvořeno v"
-
-#: kausal_common/people/models.py
 msgid "person"
 msgstr ""
 
 #: kausal_common/people/models.py
 msgid "people"
+msgstr ""
+
+#: kausal_common/templates/kausal_common/people/chooser_results.html
+msgid "Organization"
 msgstr ""

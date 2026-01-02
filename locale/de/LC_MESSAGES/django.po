@@ -644,15 +644,3 @@ msgstr "Personen"
 #: kausal_common/templates/kausal_common/people/chooser_results.html
 msgid "Organization"
 msgstr "Organisation"
-
-#~ msgid "A primary name, e.g. a legally recognized name"
-#~ msgstr "Ein primärer Name, z. B. ein gesetzlich anerkannter Name"
-
-#~ msgid "A simplified short version of name for the general public"
-#~ msgstr "Eine vereinfachte Kurzversion des Namens für die breite Öffentlichkeit"
-
-#~ msgid "A date of founding"
-#~ msgstr "Ein Gründungsdatum"
-
-#~ msgid "A date of dissolution"
-#~ msgstr "Ein Auflösungsdatum"
