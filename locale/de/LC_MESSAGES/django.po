@@ -11,9 +11,10 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-01-02 11:42+0100\n"
-"PO-Revision-Date: 2025-12-31 15:32+0200\n"
+"PO-Revision-Date: 2026-01-02 14:21+0000\n"
 "Last-Translator: Bernhard Bliem <bernhard.bliem@kausal.tech>\n"
-"Language-Team: German <https://weblate.kausal.tech/projects/watch/django/de/>\n"
+"Language-Team: German <https://weblate.kausal.tech/projects/kausal-backend-"
+"common/django/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -33,7 +34,9 @@ msgstr "Instanz kann nicht gelöscht werden, da andere Objekte darauf verweisen.
 #: kausal_common/api/exceptions.py
 #, python-format
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
-msgstr "„%s“-Objekt kann nicht gelöscht werden, da es mit anderen Objekten wie Instanzen, Personen oder Maßnahmen verknüpft ist."
+msgstr ""
+"„%s“ kann nicht gelöscht werden, da das Objekt mit anderen Objekten wie "
+"Instanzen, Personen oder Maßnahmen verknüpft ist."
 
 #: kausal_common/blocks/base.py
 msgid "Label"
@@ -172,7 +175,7 @@ msgstr "Ausgangsdatum"
 
 #: kausal_common/datasets/models.py
 msgid "Metrics"
-msgstr "Metriken"
+msgstr "Messgrößen"
 
 #: kausal_common/datasets/models.py
 msgid "Defines the interpretation and units for the values of the dataset"
@@ -196,7 +199,7 @@ msgstr "Erteilt bestimmten Personen Berechtigungen für Datensätze dieses Schem
 
 #: kausal_common/datasets/models.py
 msgid "Group permissions"
-msgstr "Gruppenberechtigungen"
+msgstr "Berechtigungen für Gruppen"
 
 #: kausal_common/datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain person groups"
@@ -240,7 +243,9 @@ msgstr "Schema"
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the dataset's scope"
-msgstr "Optionaler Bezeichner, der, falls gesetzt, im Geltungsbereich des Datensatzes eindeutig sein muss"
+msgstr ""
+"Optionale Kennung, die, falls gesetzt, im Geltungsbereich des Datensatzes "
+"eindeutig sein muss"
 
 #: kausal_common/datasets/models.py
 msgid "dataset"
@@ -555,7 +560,5 @@ msgid "people"
 msgstr "Personen"
 
 #: kausal_common/templates/kausal_common/people/chooser_results.html
-#, fuzzy
-#| msgid "organization"
 msgid "Organization"
 msgstr "Organisation"
