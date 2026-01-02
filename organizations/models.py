@@ -99,27 +99,50 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
         on_delete=models.PROTECT,
         blank=True,
         null=True,
-        verbose_name=_('Classification'),
-        help_text=_('An organization category, e.g. committee'),
+        verbose_name=pgettext_lazy('organization', 'Classification'),
+        help_text=_('An organization category (e.g., committee)'),
     )
     # TODO: Check if we can / should remove this since already `Node` specifies `name`
-    name = models.CharField[str, str](max_length=255, help_text=_('A primary name, e.g. a legally recognized name'))
+    name = models.CharField[str, str](
+        max_length=255,
+        verbose_name=_('name'),
+        help_text=_('Full name of the organization'),
+    )
     abbreviation = models.CharField(
         max_length=50,
         blank=True,
         null=True,
-        verbose_name=_('Short name'),
-        help_text=_('A simplified short version of name for the general public'),
+        verbose_name=pgettext_lazy('organization', 'short name'),
+        help_text=_(
+            'Short version or abbreviation of the organization name to be displayed when it is not necessary to show '
+            'the full name'
+        ),
     )
     distinct_name = models.CharField(
-        max_length=400, editable=False, null=True, help_text=_('A distinct name for this organization (generated automatically)'),
+        max_length=400,
+        editable=False,
+        null=True,
+        verbose_name=pgettext_lazy('organization', 'distinct name'),
+        help_text=_('A distinct name for this organization (generated automatically)'),
     )
     description = RichTextField(blank=True, verbose_name=_('description'))
     url = models.URLField(blank=True, verbose_name=_('URL'))
     email = models.EmailField(blank=True, verbose_name=_('email address'))
-    founding_date = models.DateField(blank=True, null=True, help_text=_('A date of founding'))
-    dissolution_date = models.DateField(blank=True, null=True, help_text=_('A date of dissolution'))
-    created_time = models.DateTimeField(auto_now_add=True, help_text=_('The time at which the resource was created'))
+    founding_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name=pgettext_lazy('organization', 'founding date'),
+    )
+    dissolution_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name=pgettext_lazy('organization', 'dissolution date'),
+    )
+    created_time = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_('created at'),
+        help_text=_('The time at which the object for this organization was created'),
+    )
     created_by: FK[User | None] = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='created_organizations',
@@ -127,8 +150,13 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
         blank=True,
         editable=False,
         on_delete=models.SET_NULL,
+        verbose_name=_('created by'),
     )
-    last_modified_time = models.DateTimeField(auto_now=True, help_text=_('The time at which the resource was updated'))
+    last_modified_time = models.DateTimeField(
+        auto_now=True,
+        verbose_name=_('updated at'),
+        help_text=_('The time at which the object for this organization was last updated'),
+    )
     last_modified_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='modified_organizations',
@@ -136,6 +164,7 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
         blank=True,
         editable=False,
         on_delete=models.SET_NULL,
+        verbose_name=_('updated by'),
     )
 
     # Intentionally overrides ModelWithPrimaryLanguage.primary_language
@@ -143,7 +172,7 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
     primary_language = models.CharField(
         max_length=8, choices=get_supported_languages, verbose_name=_('primary language'),
     )
-    location = gis_models.PointField(verbose_name=_('Location'), srid=4326, null=True, blank=True)
+    location = gis_models.PointField(verbose_name=_('location'), srid=4326, null=True, blank=True)
 
     i18n = TranslationField(fields=('name', 'abbreviation'), default_language_field='primary_language_lowercase')
 

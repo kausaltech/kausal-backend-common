@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from django.contrib.admin.utils import quote
 from django.forms.models import modelform_factory
-from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from wagtail.snippets.views.chooser import SnippetChooserViewSet
 
 from dal import autocomplete
@@ -37,7 +35,7 @@ class PersonChooserMixin(ModelChooserMixin):
 
 
 class PersonModelChooserCreateTabMixin(ModelChooserCreateTabMixin):
-    create_tab_label = _("Create new")
+    create_tab_label = pgettext_lazy("person chooser", "Create new")
 
     def get_form_class(self):
         if self.form_class:

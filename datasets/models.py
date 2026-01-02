@@ -9,7 +9,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from modeltrans.fields import TranslationField
@@ -307,7 +307,10 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         MultiFieldPanel([
             InlinePanel(
                 'person_permissions',
-                heading=_("Person permissions"),
+                heading=pgettext_lazy(
+                    "list of persons and their respective permissions on a dataset schema",
+                    "Person permissions"
+                ),
                 help_text=_("Grants permissions on datasets of this schema to certain persons"),
                 panels=[
                     FieldPanel('person'),
@@ -316,7 +319,10 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
             ),
             InlinePanel(
                 'group_permissions',
-                heading=_("Group permissions"),
+                heading=pgettext_lazy(
+                    "list of person groups and their respective permissions on a dataset schema",
+                    "Group permissions"
+                ),
                 help_text=_("Grants permissions on datasets of this schema to certain person groups"),
                 panels=[
                     FieldPanel('group'),
@@ -720,8 +726,8 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
     """
 
     class ReviewState(models.TextChoices):
-        RESOLVED = 'resolved', _('Resolved')
-        UNRESOLVED = 'unresolved', _('Unresolved')
+        RESOLVED = 'resolved', pgettext_lazy('review state of data point comment', 'Resolved')
+        UNRESOLVED = 'unresolved', pgettext_lazy('review state of data point comment', 'Unresolved')
 
     data_point = models.ForeignKey(DataPoint, null=True, blank=True, on_delete=models.CASCADE, related_name='comments')
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -732,7 +738,7 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
     )
     is_review = models.BooleanField(
         default=False,
-        verbose_name=_('Review comment'),
+        verbose_name=pgettext_lazy('Boolean to indicate if this comment is a review', 'Review comment'),
     )
 
     review_state = models.CharField(
@@ -741,7 +747,9 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
         choices=ReviewState.choices,
     )
     resolved_at = models.DateTimeField(
-        verbose_name=_('resolved at'), editable=False, null=True,
+        verbose_name=pgettext_lazy('date and time when a data point comment was resolved', 'resolved at'),
+        editable=False,
+        null=True,
     )
     resolved_by: FK[User | None] = models.ForeignKey(
         'users.User', null=True, on_delete=models.SET_NULL, related_name='resolved_comments',
@@ -814,10 +822,15 @@ class DataSource(UserModifiableModel, PermissionedModel):
     scope = GenericForeignKey('scope_content_type', 'scope_id')
 
     name = models.CharField(max_length=200, null=False, blank=False, verbose_name=_('name'))
-    edition = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('edition'))
+    edition = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name=pgettext_lazy('data source', 'edition'),
+    )
     authority = models.CharField(
         max_length=200,
-        verbose_name=_('authority'),
+        verbose_name=pgettext_lazy('authority (responsible organization) for data source', 'authority'),
         help_text=_('The organization responsible for the data source'),
         null=True,
         blank=True,

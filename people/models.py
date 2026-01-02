@@ -59,6 +59,7 @@ class BasePerson(index.Indexed, ClusterableModel):
     title = models.CharField(
         max_length=100, null=True, blank=True,
         verbose_name=pgettext_lazy("person's role", 'title'),
+        help_text=_("Job title or role of this person"),
     )
     postal_address = models.TextField(max_length=100, verbose_name=_('postal address'), null=True, blank=True)
     organization: FK[Organization] = models.ForeignKey(

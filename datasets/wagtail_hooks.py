@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, cast
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from wagtail.admin.admin_url_finder import AdminURLFinder
 from wagtail.admin.forms.models import WagtailAdminModelForm
 from wagtail.admin.panels import FieldPanel
@@ -98,14 +98,20 @@ class DataSourceUsageView(UsageView):
                 # Default behavior for other objects
                 row["edit_url"] = url_finder.get_edit_url(object)
                 if row["edit_url"] is None:
-                    row["label"] = _("(Private %(object)s)") % {
-                        "object": object._meta.verbose_name
+                    row["label"] = pgettext_lazy(
+                        "label to show for a private instance of the given model",
+                        "(Private %(model)s)"
+                    ) % {
+                        "model": object._meta.verbose_name
                     }
                     row["edit_link_title"] = None
                 else:
                     row["label"] = str(object)
-                    row["edit_link_title"] = _("Edit this %(object)s") % {
-                        "object": object._meta.verbose_name
+                    row["edit_link_title"] = pgettext_lazy(
+                        "title of a link to edit an instance of the given model",
+                        "Edit this %(model)s"
+                    ) % {
+                        "model": object._meta.verbose_name
                     }
 
             results.append(row)

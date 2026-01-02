@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Self
 
 from django.core import checks
 from django.db import models
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext_lazy
 
 if TYPE_CHECKING:
     from django.core.checks import CheckMessage
@@ -14,7 +14,11 @@ if TYPE_CHECKING:
 class OrderedModel(models.Model):  # noqa: DJ008
     """Like wagtailorderable.models.Orderable, but with additional functionality in filter_siblings()."""
 
-    order = models.PositiveIntegerField(default=0, editable=True, verbose_name=_('order'))
+    order = models.PositiveIntegerField(
+        default=0,
+        editable=True,
+        verbose_name=pgettext_lazy('integer to specify the sorting order of model instances', 'order'),
+    )
     sort_order_field = 'order'
     order_on_create: int | None
 
