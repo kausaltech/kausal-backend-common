@@ -1,0 +1,629 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-02 11:42+0100\n"
+"PO-Revision-Date: 2025-04-02 07:20+0000\n"
+"Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
+"Language-Team: Spanish <https://weblate.kausal.tech/projects/watch/django/es/>\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.4.2\n"
+
+#: kausal_common/admin_site/tables.py
+#: kausal_common/models/modification_tracking.py
+msgid "Last modified at"
+msgstr "Última modificación en"
+
+#: kausal_common/api/exceptions.py
+msgid "Cannot delete instance because other objects reference it."
+msgstr "No se puede eliminar la instancia porque otros objetos hacen referencia a ella."
+
+#: kausal_common/api/exceptions.py
+#, fuzzy, python-format
+#| msgid "Cannot delete \"%s\" because it is connected to other objects such as plans, persons or actions."
+msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
+msgstr "No se puede eliminar \"%s\" porque está conectado a otros objetos como planes, personas o acciones."
+
+#: kausal_common/blocks/base.py
+msgid "Label"
+msgstr "Etiqueta"
+
+#: kausal_common/blocks/base.py
+msgid "Label for the column to be used instead of the default"
+msgstr "Etiqueta de la columna que se utilizará en lugar de la predeterminada"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+msgid "Help text"
+msgstr "Texto de ayuda"
+
+#: kausal_common/blocks/base.py
+#, fuzzy
+#| msgid "Help text for the field to be shown in the UI"
+msgid "Help text for the column to be shown in the UI"
+msgstr "Texto de ayuda para el campo que se mostrará en la interfaz de usuario"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+msgid "Heading to show instead of the default"
+msgstr "Encabezado a mostrar en lugar del predeterminado"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+msgid "Field label"
+msgstr "Etiqueta de campo"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+msgid "Help text for the field to be shown in the UI"
+msgstr "Texto de ayuda para el campo que se mostrará en la interfaz de usuario"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+#, python-format
+msgid "Content block: %(label)s"
+msgstr "Bloque de contenido: %(label)s"
+
+#: kausal_common/blocks/base.py
+msgid "Label for 'show all'"
+msgstr "Etiqueta para \"mostrar todo"
+
+#: kausal_common/blocks/base.py
+#, python-format
+msgid "Filter: %(filter_label)s"
+msgstr "Filtrar: %(filter_label)s"
+
+#: kausal_common/datasets/chooser.py
+#, fuzzy
+#| msgid "Choose a dataset schema"
+msgid "Choose a dataset"
+msgstr "Elegir un esquema de conjunto de datos"
+
+#: kausal_common/datasets/chooser.py
+#, fuzzy
+#| msgid "Choose another dataset schema"
+msgid "Choose another dataset"
+msgstr "Elija otro esquema de conjunto de datos"
+
+#: kausal_common/datasets/models.py kausal_common/organizations/models.py
+msgid "name"
+msgstr "nombre"
+
+#: kausal_common/datasets/models.py
+msgid "dimension"
+msgstr "dimensión"
+
+#: kausal_common/datasets/models.py
+msgid "dimensions"
+msgstr "dimensiones"
+
+#: kausal_common/datasets/models.py
+msgid "Optional identifier that, if set, must be unique within the dimension"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "label"
+msgstr "etiqueta"
+
+#: kausal_common/datasets/models.py
+msgid "dimension category"
+msgstr "categoría de dimensión"
+
+#: kausal_common/datasets/models.py
+msgid "dimension categories"
+msgstr "categorías de dimensión"
+
+#: kausal_common/datasets/models.py kausal_common/models/fields.py
+msgid "identifier"
+msgstr "identificador"
+
+#: kausal_common/datasets/models.py
+msgid "Optional identifier that, if set, must be unique in the scope"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimensions"
+msgid "dimension scope"
+msgstr "dimensiones"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimension categories"
+msgid "dimension scopes"
+msgstr "categorías de dimensión"
+
+#: kausal_common/datasets/models.py
+msgid "Yearly"
+msgstr "Anualmente"
+
+#: kausal_common/datasets/models.py
+msgid "Time resolution of the time stamps of data points in this dataset"
+msgstr "Resolución temporal de las marcas de tiempo de los puntos de datos en este conjunto de datos"
+
+#: kausal_common/datasets/models.py
+msgid "start date"
+msgstr "fecha de inicio"
+
+#: kausal_common/datasets/models.py
+msgid "For a newly created dataset, start entering values from this year"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#: kausal_common/templates/kausal_common/people/chooser_results.html
+msgid "Name"
+msgstr "Nombre"
+
+#: kausal_common/datasets/models.py
+msgid "Descriptive name of the dataset schema"
+msgstr "Nombre descriptivo del esquema del conjunto de datos"
+
+#: kausal_common/datasets/models.py
+msgid "Description"
+msgstr "Descripción"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Description to show after the field content"
+msgid "Description of the content and use of the dataset"
+msgstr "Descripción a mostrar tras el contenido del campo"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "time resolution"
+msgid "Time resolution"
+msgstr "resolución temporal"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "start date"
+msgid "Initial date"
+msgstr "fecha de inicio"
+
+#: kausal_common/datasets/models.py
+msgid "Metrics"
+msgstr "Métricas"
+
+#: kausal_common/datasets/models.py
+msgid "Defines the interpretation and units for the values of the dataset"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Dimensions"
+msgstr "Dimensiones"
+
+#: kausal_common/datasets/models.py
+msgid "Used when metrics are tracked for multiple categories"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Permissions"
+msgid "Person permissions"
+msgstr "Permisos"
+
+#: kausal_common/datasets/models.py
+msgid "Grants permissions on datasets of this schema to certain persons"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Permissions"
+msgid "Group permissions"
+msgstr "Permisos"
+
+#: kausal_common/datasets/models.py
+msgid "Grants permissions on datasets of this schema to certain person groups"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Permissions"
+msgstr "Permisos"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Dataset Schema"
+msgid "dataset schema"
+msgstr "Esquema del conjunto de datos"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Dataset Schema"
+msgid "dataset schemas"
+msgstr "Esquema del conjunto de datos"
+
+#: kausal_common/datasets/models.py
+msgid "unit"
+msgstr "unidad"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset metric"
+msgstr "licencia del conjunto de datos"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset metrics"
+msgstr "licencia del conjunto de datos"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Budget dimensions"
+msgid "dataset schema dimension"
+msgstr "Dimensiones del presupuesto"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Budget dimensions"
+msgid "dataset schema dimensions"
+msgstr "Dimensiones del presupuesto"
+
+#: kausal_common/datasets/models.py
+msgid "schema"
+msgstr "esquema"
+
+#: kausal_common/datasets/models.py
+msgid "Optional identifier that, if set, must be unique in the dataset's scope"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "dataset"
+msgstr "conjunto de datos"
+
+#: kausal_common/datasets/models.py
+msgid "datasets"
+msgstr "conjuntos de datos"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Dataset Schema"
+msgid "dataset schema scope"
+msgstr "Esquema del conjunto de datos"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset licenses"
+msgid "dataset schema scopes"
+msgstr "licencias de conjuntos de datos"
+
+#: kausal_common/datasets/models.py
+msgid "date"
+msgstr "fecha"
+
+#: kausal_common/datasets/models.py
+msgid "Date of this data point in context of the dataset's time resolution"
+msgstr "Fecha de este punto de datos en el contexto de la resolución temporal del conjunto de datos"
+
+#: kausal_common/datasets/models.py
+msgid "metric"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "value"
+msgstr "valor"
+
+#: kausal_common/datasets/models.py
+msgid "data point"
+msgstr "punto de datos"
+
+#: kausal_common/datasets/models.py
+msgid "data points"
+msgstr "puntos de datos"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimension category"
+msgid "data point dimension category"
+msgstr "categoría de dimensión"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimension categories"
+msgid "data point dimension categories"
+msgstr "categorías de dimensión"
+
+#: kausal_common/datasets/models.py
+msgid "Resolved"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Unresolved"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "comment"
+msgid "Sticky comment"
+msgstr "comentario"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "comment"
+msgid "Review comment"
+msgstr "comentario"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "created at"
+msgid "resolved at"
+msgstr "creado en"
+
+#: kausal_common/datasets/models.py
+msgid "comment"
+msgstr "comentario"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "comment"
+msgid "comments"
+msgstr "comentario"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Section"
+msgid "edition"
+msgstr "Sección"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "author"
+msgid "authority"
+msgstr "autor"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "main organization for the plan"
+msgid "The organization responsible for the data source"
+msgstr "organización principal del plan"
+
+#: kausal_common/datasets/models.py kausal_common/organizations/models.py
+msgid "description"
+msgstr "descripción"
+
+#: kausal_common/datasets/models.py kausal_common/organizations/models.py
+msgid "URL"
+msgstr "URL"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Datasets"
+msgid "Data source"
+msgstr "Conjuntos de datos"
+
+#: kausal_common/datasets/models.py kausal_common/datasets/wagtail_hooks.py
+#, fuzzy
+#| msgid "Datasets"
+msgid "Data sources"
+msgstr "Conjuntos de datos"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Unknown"
+msgid "Unknown schema"
+msgstr "Desconocido"
+
+#: kausal_common/datasets/models.py
+#, fuzzy, python-format
+#| msgid "Notification preferences"
+msgid "Data source reference in: %(schema)s"
+msgstr "Preferencias de notificación"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "reference"
+msgid "Data source reference"
+msgstr "referencia"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "reference"
+msgid "data source reference"
+msgstr "referencia"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Notification preferences"
+msgid "data source references"
+msgstr "Preferencias de notificación"
+
+#: kausal_common/datasets/wagtail_hooks.py
+#, fuzzy
+#| msgid "Edit data"
+msgid "Edit dataset"
+msgstr "Editar datos"
+
+#: kausal_common/datasets/wagtail_hooks.py
+#, python-format
+msgid "(Private %(object)s)"
+msgstr ""
+
+#: kausal_common/datasets/wagtail_hooks.py
+#, fuzzy, python-format
+#| msgid "Edit this person"
+msgid "Edit this %(object)s"
+msgstr "Editar esta persona"
+
+#: kausal_common/models/modification_tracking.py
+msgid "Created at"
+msgstr "Creado en"
+
+#: kausal_common/models/modification_tracking.py
+msgid "Last modified by"
+msgstr "Última modificación"
+
+#: kausal_common/models/ordered.py
+msgid "order"
+msgstr "pedir"
+
+#: kausal_common/models/uuid.py
+msgid "UUID"
+msgstr "UUID"
+
+#: kausal_common/organizations/forms.py
+msgid "A node cannot be moved under itself in the hierarchy."
+msgstr "Un nodo no puede moverse por debajo de sí mismo en la jerarquía."
+
+#: kausal_common/organizations/models.py
+msgctxt "node"
+msgid "Parent"
+msgstr "Padres"
+
+#: kausal_common/organizations/models.py
+msgid "The time at which the resource was created"
+msgstr "Hora de creación del recurso"
+
+#: kausal_common/organizations/models.py
+msgid "The time at which the resource was updated"
+msgstr "Hora de actualización del recurso"
+
+#: kausal_common/organizations/models.py
+msgid "Classification"
+msgstr "Clasificación"
+
+#: kausal_common/organizations/models.py
+msgid "An organization category, e.g. committee"
+msgstr "Una categoría de organización, por ejemplo, comité"
+
+#: kausal_common/organizations/models.py
+msgid "A primary name, e.g. a legally recognized name"
+msgstr "Un nombre principal, por ejemplo, un nombre legalmente reconocido"
+
+#: kausal_common/organizations/models.py
+msgid "Short name"
+msgstr "Nombre corto"
+
+#: kausal_common/organizations/models.py
+msgid "A simplified short version of name for the general public"
+msgstr "Versión abreviada simplificada del nombre para el público en general"
+
+#: kausal_common/organizations/models.py
+msgid "A distinct name for this organization (generated automatically)"
+msgstr "Un nombre distinto para esta organización (generado automáticamente)"
+
+#: kausal_common/organizations/models.py kausal_common/people/models.py
+#: kausal_common/users/models.py
+msgid "email address"
+msgstr "dirección de correo electrónico"
+
+#: kausal_common/organizations/models.py
+msgid "A date of founding"
+msgstr "Una fecha de fundación"
+
+#: kausal_common/organizations/models.py
+msgid "A date of dissolution"
+msgstr "Una fecha de disolución"
+
+#: kausal_common/organizations/models.py
+msgid "primary language"
+msgstr "idioma principal"
+
+#: kausal_common/organizations/models.py
+msgid "Location"
+msgstr "Ubicación"
+
+#: kausal_common/organizations/models.py kausal_common/people/models.py
+msgid "organization"
+msgstr "Organización"
+
+#: kausal_common/organizations/models.py
+msgid "organizations"
+msgstr "Organizaciones"
+
+#: kausal_common/organizations/views.py
+#, python-format
+msgid "New child %(model)s for %(parent)s"
+msgstr ""
+
+#: kausal_common/organizations/views.py
+msgid "This will delete the following objects:"
+msgstr "Esto eliminará los siguientes objetos:"
+
+#: kausal_common/people/api.py kausal_common/people/models.py
+msgid "Person with this email already exists"
+msgstr "La persona con este email ya existe"
+
+#: kausal_common/people/api.py
+msgid "Not all objects have an email address"
+msgstr "No todos los objetos tienen una dirección de correo electrónico"
+
+#: kausal_common/people/api.py
+#, python-format
+msgid "Duplicate email addresses: %s"
+msgstr "Direcciones de correo electrónico duplicadas: %s"
+
+#: kausal_common/people/chooser.py
+msgid "Create new"
+msgstr "Crear nuevo"
+
+#: kausal_common/people/chooser.py
+msgid "Choose person"
+msgstr "Elegir persona"
+
+#: kausal_common/people/chooser.py
+msgid "Choose a person"
+msgstr "Elija a una persona"
+
+#: kausal_common/people/chooser.py
+msgid "Choose another person"
+msgstr "Elegir a otra persona"
+
+#: kausal_common/people/chooser.py
+msgid "Edit this person"
+msgstr "Editar esta persona"
+
+#: kausal_common/people/models.py
+msgid "first name"
+msgstr "Nombre de pila"
+
+#: kausal_common/people/models.py
+msgid "last name"
+msgstr "apellido"
+
+#: kausal_common/people/models.py
+msgctxt "person's role"
+msgid "title"
+msgstr "título"
+
+#: kausal_common/people/models.py
+msgid "postal address"
+msgstr "dirección postal"
+
+#: kausal_common/people/models.py
+msgid "user"
+msgstr "usuario"
+
+#: kausal_common/people/models.py
+msgid "Set if the person has an user account"
+msgstr "Establecer si la persona tiene una cuenta de usuario"
+
+#: kausal_common/people/models.py
+msgid "image"
+msgstr "imagen"
+
+#: kausal_common/people/models.py
+msgid "image cropping"
+msgstr "recorte de imágenes"
+
+#: kausal_common/people/models.py
+msgid "created by"
+msgstr "creado por"
+
+#: kausal_common/people/models.py
+msgid "person"
+msgstr "persona"
+
+#: kausal_common/people/models.py
+msgid "people"
+msgstr "gente"
+
+#: kausal_common/templates/kausal_common/people/chooser_results.html
+#, fuzzy
+#| msgid "organization"
+msgid "Organization"
+msgstr "Organización"

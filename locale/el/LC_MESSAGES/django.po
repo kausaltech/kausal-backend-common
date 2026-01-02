@@ -1,0 +1,635 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-02 11:42+0100\n"
+"PO-Revision-Date: 2025-04-02 07:20+0000\n"
+"Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
+"Language-Team: Greek <https://weblate.kausal.tech/projects/watch/django/el/>\n"
+"Language: el\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.4.2\n"
+
+#: kausal_common/admin_site/tables.py
+#: kausal_common/models/modification_tracking.py
+#, fuzzy
+#| msgid "Last modified"
+msgid "Last modified at"
+msgstr "Τελευταία τροποποίηση στις"
+
+#: kausal_common/api/exceptions.py
+msgid "Cannot delete instance because other objects reference it."
+msgstr "Δεν είναι δυνατή η διαγραφή της περίπτωσης επειδή άλλα αντικείμενα αναφέρονται σε αυτήν."
+
+#: kausal_common/api/exceptions.py
+#, fuzzy, python-format
+#| msgid "Cannot delete \"%s\" because it is connected to other objects such as plans, persons or actions."
+msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
+msgstr "Δεν μπορεί να διαγραφεί το \"%s\" επειδή συνδέεται με άλλα αντικείμενα, όπως σχέδια, πρόσωπα ή δράσεις."
+
+#: kausal_common/blocks/base.py
+msgid "Label"
+msgstr "Ετικέτα"
+
+#: kausal_common/blocks/base.py
+msgid "Label for the column to be used instead of the default"
+msgstr "Ετικέτα για τη στήλη που θα χρησιμοποιείται αντί της προεπιλεγμένης"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+msgid "Help text"
+msgstr "Κείμενο βοήθειας"
+
+#: kausal_common/blocks/base.py
+#, fuzzy
+#| msgid "Help text for the field to be shown in the UI"
+msgid "Help text for the column to be shown in the UI"
+msgstr "Κείμενο βοήθειας για το πεδίο που θα εμφανίζεται στο UI"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+msgid "Heading to show instead of the default"
+msgstr "Επικεφαλίδα που θα εμφανίζεται αντί της προεπιλεγμένης"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+msgid "Field label"
+msgstr "Ετικέτα πεδίου"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+msgid "Help text for the field to be shown in the UI"
+msgstr "Κείμενο βοήθειας για το πεδίο που θα εμφανίζεται στο UI"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+#, python-format
+msgid "Content block: %(label)s"
+msgstr "Μπλοκ περιεχομένου: %(label)s"
+
+#: kausal_common/blocks/base.py
+msgid "Label for 'show all'"
+msgstr "Ετικέτα για το 'show all'"
+
+#: kausal_common/blocks/base.py
+#, python-format
+msgid "Filter: %(filter_label)s"
+msgstr "Φίλτρο: %(filter_label)s"
+
+#: kausal_common/datasets/chooser.py
+#, fuzzy
+#| msgid "Choose a category type"
+msgid "Choose a dataset"
+msgstr "Επιλέξτε ένα σχήμα συνόλου δεδομένων"
+
+#: kausal_common/datasets/chooser.py
+#, fuzzy
+#| msgid "Choose another category type"
+msgid "Choose another dataset"
+msgstr "Επιλέξτε ένα άλλο σχήμα συνόλου δεδομένων"
+
+#: kausal_common/datasets/models.py kausal_common/organizations/models.py
+msgid "name"
+msgstr "όνομα"
+
+#: kausal_common/datasets/models.py
+msgid "dimension"
+msgstr "διάσταση"
+
+#: kausal_common/datasets/models.py
+msgid "dimensions"
+msgstr "Διαστάσεις"
+
+#: kausal_common/datasets/models.py
+msgid "Optional identifier that, if set, must be unique within the dimension"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "label"
+msgstr "ετικέτα"
+
+#: kausal_common/datasets/models.py
+msgid "dimension category"
+msgstr "κατηγορία διάστασης"
+
+#: kausal_common/datasets/models.py
+msgid "dimension categories"
+msgstr "κατηγορίες διαστάσεων"
+
+#: kausal_common/datasets/models.py kausal_common/models/fields.py
+msgid "identifier"
+msgstr "αναγνωριστικό"
+
+#: kausal_common/datasets/models.py
+msgid "Optional identifier that, if set, must be unique in the scope"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimensions"
+msgid "dimension scope"
+msgstr "Διαστάσεις"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimension categories"
+msgid "dimension scopes"
+msgstr "κατηγορίες διαστάσεων"
+
+#: kausal_common/datasets/models.py
+msgid "Yearly"
+msgstr "Ετήσια"
+
+#: kausal_common/datasets/models.py
+msgid "Time resolution of the time stamps of data points in this dataset"
+msgstr "Χρονική ανάλυση των χρονικών σφραγίδων των σημείων δεδομένων σε αυτό το σύνολο δεδομένων"
+
+#: kausal_common/datasets/models.py
+msgid "start date"
+msgstr "ημερομηνία έναρξης"
+
+#: kausal_common/datasets/models.py
+msgid "For a newly created dataset, start entering values from this year"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#: kausal_common/templates/kausal_common/people/chooser_results.html
+msgid "Name"
+msgstr "Όνομα"
+
+#: kausal_common/datasets/models.py
+msgid "Descriptive name of the dataset schema"
+msgstr "Περιγραφικό όνομα του σχήματος του συνόλου δεδομένων"
+
+#: kausal_common/datasets/models.py
+msgid "Description"
+msgstr "Περιγραφή"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Description to show after the field content"
+msgid "Description of the content and use of the dataset"
+msgstr "Περιγραφή που θα εμφανίζεται μετά το περιεχόμενο του πεδίου"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "time resolution"
+msgid "Time resolution"
+msgstr "χρονική ανάλυση"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "start date"
+msgid "Initial date"
+msgstr "ημερομηνία έναρξης"
+
+#: kausal_common/datasets/models.py
+msgid "Metrics"
+msgstr "Μετρικές"
+
+#: kausal_common/datasets/models.py
+msgid "Defines the interpretation and units for the values of the dataset"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Dimensions"
+msgstr "Διαστάσεις"
+
+#: kausal_common/datasets/models.py
+msgid "Used when metrics are tracked for multiple categories"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Permissions"
+msgid "Person permissions"
+msgstr "Δικαιώματα"
+
+#: kausal_common/datasets/models.py
+msgid "Grants permissions on datasets of this schema to certain persons"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Permissions"
+msgid "Group permissions"
+msgstr "Δικαιώματα"
+
+#: kausal_common/datasets/models.py
+msgid "Grants permissions on datasets of this schema to certain person groups"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Permissions"
+msgstr "Δικαιώματα"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset schema"
+msgstr "Σχήμα συνόλου δεδομένων"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset schemas"
+msgstr "Σχήμα συνόλου δεδομένων"
+
+#: kausal_common/datasets/models.py
+msgid "unit"
+msgstr "μονάδα"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset metric"
+msgstr "άδεια χρήσης συνόλου δεδομένων"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset metrics"
+msgstr "άδεια χρήσης συνόλου δεδομένων"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Budget dimensions"
+msgid "dataset schema dimension"
+msgstr "Διαστάσεις του προϋπολογισμού"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Budget dimensions"
+msgid "dataset schema dimensions"
+msgstr "Διαστάσεις του προϋπολογισμού"
+
+#: kausal_common/datasets/models.py
+msgid "schema"
+msgstr "σχήμα"
+
+#: kausal_common/datasets/models.py
+msgid "Optional identifier that, if set, must be unique in the dataset's scope"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "dataset"
+msgstr "σύνολο δεδομένων"
+
+#: kausal_common/datasets/models.py
+msgid "datasets"
+msgstr "σύνολα δεδομένων"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset schema scope"
+msgstr "Σχήμα συνόλου δεδομένων"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset licenses"
+msgid "dataset schema scopes"
+msgstr "άδειες χρήσης συνόλου δεδομένων"
+
+#: kausal_common/datasets/models.py
+msgid "date"
+msgstr "ημερομηνία"
+
+#: kausal_common/datasets/models.py
+msgid "Date of this data point in context of the dataset's time resolution"
+msgstr "Ημερομηνία αυτού του σημείου δεδομένων στο πλαίσιο της χρονικής ανάλυσης του συνόλου δεδομένων"
+
+#: kausal_common/datasets/models.py
+msgid "metric"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "value"
+msgstr "αξία"
+
+#: kausal_common/datasets/models.py
+msgid "data point"
+msgstr "σημείο δεδομένων"
+
+#: kausal_common/datasets/models.py
+msgid "data points"
+msgstr "σημεία δεδομένων"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimension category"
+msgid "data point dimension category"
+msgstr "κατηγορία διάστασης"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimension categories"
+msgid "data point dimension categories"
+msgstr "κατηγορίες διαστάσεων"
+
+#: kausal_common/datasets/models.py
+msgid "Resolved"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Unresolved"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "comment"
+msgid "Sticky comment"
+msgstr "σχόλιο"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "comment"
+msgid "Review comment"
+msgstr "σχόλιο"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "created at"
+msgid "resolved at"
+msgstr "δημιουργήθηκε στο"
+
+#: kausal_common/datasets/models.py
+msgid "comment"
+msgstr "σχόλιο"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "comment"
+msgid "comments"
+msgstr "σχόλιο"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Section"
+msgid "edition"
+msgstr "Τμήμα"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "author"
+msgid "authority"
+msgstr "συγγραφέας"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "main organization for the plan"
+msgid "The organization responsible for the data source"
+msgstr "κύρια οργάνωση του σχεδίου"
+
+#: kausal_common/datasets/models.py kausal_common/organizations/models.py
+msgid "description"
+msgstr "περιγραφή"
+
+#: kausal_common/datasets/models.py kausal_common/organizations/models.py
+msgid "URL"
+msgstr "URL"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "datasets"
+msgid "Data source"
+msgstr "Σύνολα δεδομένων"
+
+#: kausal_common/datasets/models.py kausal_common/datasets/wagtail_hooks.py
+#, fuzzy
+#| msgid "datasets"
+msgid "Data sources"
+msgstr "Σύνολα δεδομένων"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Unknown"
+msgid "Unknown schema"
+msgstr "Άγνωστος"
+
+#: kausal_common/datasets/models.py
+#, fuzzy, python-format
+#| msgid "Notification preferences"
+msgid "Data source reference in: %(schema)s"
+msgstr "Προτιμήσεις ειδοποιήσεων"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "reference"
+msgid "Data source reference"
+msgstr "αναφορά"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "reference"
+msgid "data source reference"
+msgstr "αναφορά"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Notification preferences"
+msgid "data source references"
+msgstr "Προτιμήσεις ειδοποιήσεων"
+
+#: kausal_common/datasets/wagtail_hooks.py
+#, fuzzy
+#| msgid "Edit data"
+msgid "Edit dataset"
+msgstr "Επεξεργασία δεδομένων"
+
+#: kausal_common/datasets/wagtail_hooks.py
+#, python-format
+msgid "(Private %(object)s)"
+msgstr ""
+
+#: kausal_common/datasets/wagtail_hooks.py
+#, fuzzy, python-format
+#| msgid "Edit this person"
+msgid "Edit this %(object)s"
+msgstr "Επεξεργαστείτε αυτό το άτομο"
+
+#: kausal_common/models/modification_tracking.py
+#, fuzzy
+#| msgid "created at"
+msgid "Created at"
+msgstr "Δημιουργήθηκε στο"
+
+#: kausal_common/models/modification_tracking.py
+#, fuzzy
+#| msgid "Last modified"
+msgid "Last modified by"
+msgstr "Τελευταία τροποποίηση από"
+
+#: kausal_common/models/ordered.py
+msgid "order"
+msgstr "παραγγελία"
+
+#: kausal_common/models/uuid.py
+msgid "UUID"
+msgstr "UUID"
+
+#: kausal_common/organizations/forms.py
+msgid "A node cannot be moved under itself in the hierarchy."
+msgstr "Ένας κόμβος δεν μπορεί να μετακινηθεί κάτω από τον εαυτό του στην ιεραρχία."
+
+#: kausal_common/organizations/models.py
+msgctxt "node"
+msgid "Parent"
+msgstr "Γονέας"
+
+#: kausal_common/organizations/models.py
+msgid "The time at which the resource was created"
+msgstr "Η ώρα κατά την οποία δημιουργήθηκε ο πόρος"
+
+#: kausal_common/organizations/models.py
+msgid "The time at which the resource was updated"
+msgstr "Η ώρα κατά την οποία ενημερώθηκε ο πόρος"
+
+#: kausal_common/organizations/models.py
+msgid "Classification"
+msgstr "Ταξινόμηση"
+
+#: kausal_common/organizations/models.py
+msgid "An organization category, e.g. committee"
+msgstr "Μια κατηγορία οργάνωσης, π.χ. επιτροπή"
+
+#: kausal_common/organizations/models.py
+msgid "A primary name, e.g. a legally recognized name"
+msgstr "Ένα κύριο όνομα, π.χ. ένα νομικά αναγνωρισμένο όνομα"
+
+#: kausal_common/organizations/models.py
+msgid "Short name"
+msgstr "Σύντομο όνομα"
+
+#: kausal_common/organizations/models.py
+msgid "A simplified short version of name for the general public"
+msgstr "Μια απλουστευμένη σύντομη εκδοχή του ονόματος για το ευρύ κοινό"
+
+#: kausal_common/organizations/models.py
+msgid "A distinct name for this organization (generated automatically)"
+msgstr "Ένα ξεχωριστό όνομα για αυτόν τον οργανισμό (δημιουργείται αυτόματα)"
+
+#: kausal_common/organizations/models.py kausal_common/people/models.py
+#: kausal_common/users/models.py
+msgid "email address"
+msgstr "διεύθυνση ηλεκτρονικού ταχυδρομείου"
+
+#: kausal_common/organizations/models.py
+msgid "A date of founding"
+msgstr "Ημερομηνία ίδρυσης"
+
+#: kausal_common/organizations/models.py
+msgid "A date of dissolution"
+msgstr "Ημερομηνία διάλυσης"
+
+#: kausal_common/organizations/models.py
+msgid "primary language"
+msgstr "κύρια γλώσσα"
+
+#: kausal_common/organizations/models.py
+msgid "Location"
+msgstr "Τοποθεσία"
+
+#: kausal_common/organizations/models.py kausal_common/people/models.py
+msgid "organization"
+msgstr "οργάνωση"
+
+#: kausal_common/organizations/models.py
+msgid "organizations"
+msgstr "οργανισμοί"
+
+#: kausal_common/organizations/views.py
+#, python-format
+msgid "New child %(model)s for %(parent)s"
+msgstr ""
+
+#: kausal_common/organizations/views.py
+msgid "This will delete the following objects:"
+msgstr "Αυτό θα διαγράψει τα ακόλουθα αντικείμενα:"
+
+#: kausal_common/people/api.py kausal_common/people/models.py
+msgid "Person with this email already exists"
+msgstr "Άτομο με αυτό το email υπάρχει ήδη"
+
+#: kausal_common/people/api.py
+msgid "Not all objects have an email address"
+msgstr "Δεν έχουν όλα τα αντικείμενα διεύθυνση ηλεκτρονικού ταχυδρομείου"
+
+#: kausal_common/people/api.py
+#, python-format
+msgid "Duplicate email addresses: %s"
+msgstr "Διπλές διευθύνσεις ηλεκτρονικού ταχυδρομείου: %s"
+
+#: kausal_common/people/chooser.py
+msgid "Create new"
+msgstr "Δημιουργία νέου"
+
+#: kausal_common/people/chooser.py
+msgid "Choose person"
+msgstr "Επιλέξτε άτομο"
+
+#: kausal_common/people/chooser.py
+msgid "Choose a person"
+msgstr "Επιλέξτε ένα άτομο"
+
+#: kausal_common/people/chooser.py
+msgid "Choose another person"
+msgstr "Επιλέξτε ένα άλλο άτομο"
+
+#: kausal_common/people/chooser.py
+msgid "Edit this person"
+msgstr "Επεξεργαστείτε αυτό το άτομο"
+
+#: kausal_common/people/models.py
+msgid "first name"
+msgstr "όνομα"
+
+#: kausal_common/people/models.py
+msgid "last name"
+msgstr "επώνυμο"
+
+#: kausal_common/people/models.py
+msgctxt "person's role"
+msgid "title"
+msgstr "τίτλος"
+
+#: kausal_common/people/models.py
+msgid "postal address"
+msgstr "ταχυδρομική διεύθυνση"
+
+#: kausal_common/people/models.py
+msgid "user"
+msgstr "χρήστης"
+
+#: kausal_common/people/models.py
+msgid "Set if the person has an user account"
+msgstr "Ορίζεται εάν το άτομο έχει λογαριασμό χρήστη"
+
+#: kausal_common/people/models.py
+msgid "image"
+msgstr "εικόνα"
+
+#: kausal_common/people/models.py
+msgid "image cropping"
+msgstr "περικοπή εικόνας"
+
+#: kausal_common/people/models.py
+msgid "created by"
+msgstr "δημιουργήθηκε από"
+
+#: kausal_common/people/models.py
+msgid "person"
+msgstr "πρόσωπο"
+
+#: kausal_common/people/models.py
+msgid "people"
+msgstr "άνθρωποι"
+
+#: kausal_common/templates/kausal_common/people/chooser_results.html
+#, fuzzy
+#| msgid "organization"
+msgid "Organization"
+msgstr "οργάνωση"

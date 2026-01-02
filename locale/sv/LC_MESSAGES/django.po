@@ -1,0 +1,651 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+# Translators:
+# Juha Yrjölä <juha.yrjola@kausal.tech>, 2021
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-02 11:42+0100\n"
+"PO-Revision-Date: 2025-04-02 12:20+0000\n"
+"Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
+"Language-Team: Swedish <https://weblate.kausal.tech/projects/watch/django/sv/>\n"
+"Language: sv\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.4.2\n"
+
+#: kausal_common/admin_site/tables.py
+#: kausal_common/models/modification_tracking.py
+#, fuzzy
+#| msgid "Last modified"
+msgid "Last modified at"
+msgstr "Senast ändrad"
+
+#: kausal_common/api/exceptions.py
+msgid "Cannot delete instance because other objects reference it."
+msgstr "Kan inte ta bort instans eftersom andra objekt refererar till den."
+
+#: kausal_common/api/exceptions.py
+#, fuzzy, python-format
+msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
+msgstr "Kan inte ta bort \"%s\" eftersom det är kopplat till andra objekt som planer, personer eller åtgärder. "
+
+#: kausal_common/blocks/base.py
+msgid "Label"
+msgstr "Etikett"
+
+#: kausal_common/blocks/base.py
+msgid "Label for the column to be used instead of the default"
+msgstr "Etikett för kolumnen som ska användas istället för standardkolumnen"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+msgid "Help text"
+msgstr "Hjälptext"
+
+#: kausal_common/blocks/base.py
+#, fuzzy
+msgid "Help text for the column to be shown in the UI"
+msgstr "Hjälptext för fältet som ska visas i användargränssnittet"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+msgid "Heading to show instead of the default"
+msgstr "Rubrik som ska visas istället för standardrubriken"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+msgid "Field label"
+msgstr "Fältetikett"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+#, fuzzy
+msgid "Help text for the field to be shown in the UI"
+msgstr "Hjälptext för fältet som ska visas i användargränssnittet"
+
+#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+#, python-format
+msgid "Content block: %(label)s"
+msgstr "Innehållsblock:%(label)s"
+
+#: kausal_common/blocks/base.py
+msgid "Label for 'show all'"
+msgstr "Etikett för 'visa alla'"
+
+#: kausal_common/blocks/base.py
+#, python-format
+msgid "Filter: %(filter_label)s"
+msgstr "Filter: %(filter_label)s"
+
+#: kausal_common/datasets/chooser.py
+#, fuzzy
+#| msgid "Choose a category type"
+msgid "Choose a dataset"
+msgstr "Välj en typ av kategori"
+
+#: kausal_common/datasets/chooser.py
+#, fuzzy
+#| msgid "Choose another category type"
+msgid "Choose another dataset"
+msgstr "Välj en annan typ av kategori"
+
+#: kausal_common/datasets/models.py kausal_common/organizations/models.py
+msgid "name"
+msgstr "namn"
+
+#: kausal_common/datasets/models.py
+msgid "dimension"
+msgstr "dimensionera"
+
+#: kausal_common/datasets/models.py
+msgid "dimensions"
+msgstr "mått"
+
+#: kausal_common/datasets/models.py
+msgid "Optional identifier that, if set, must be unique within the dimension"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+msgid "label"
+msgstr "Fält"
+
+#: kausal_common/datasets/models.py
+msgid "dimension category"
+msgstr "dimensionskategori"
+
+#: kausal_common/datasets/models.py
+msgid "dimension categories"
+msgstr "dimensionskategorier"
+
+#: kausal_common/datasets/models.py kausal_common/models/fields.py
+msgid "identifier"
+msgstr "identifierare"
+
+#: kausal_common/datasets/models.py
+msgid "Optional identifier that, if set, must be unique in the scope"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimensions"
+msgid "dimension scope"
+msgstr "mått"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimension categories"
+msgid "dimension scopes"
+msgstr "dimensionskategorier"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Year"
+msgid "Yearly"
+msgstr "År"
+
+#: kausal_common/datasets/models.py
+msgid "Time resolution of the time stamps of data points in this dataset"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "start date"
+msgstr "Startdatum för implementering"
+
+#: kausal_common/datasets/models.py
+msgid "For a newly created dataset, start entering values from this year"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#: kausal_common/templates/kausal_common/people/chooser_results.html
+msgid "Name"
+msgstr "Namn"
+
+#: kausal_common/datasets/models.py
+msgid "Descriptive name of the dataset schema"
+msgstr "Beskrivande namn på datasetets schema"
+
+#: kausal_common/datasets/models.py
+msgid "Description"
+msgstr "Beskrivning"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Description to show after the field content"
+msgid "Description of the content and use of the dataset"
+msgstr "Beskrivning som ska visas efter fältinnehållet"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "time resolution"
+msgid "Time resolution"
+msgstr "tidsupplösning"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "start date"
+msgid "Initial date"
+msgstr "Startdatum för implementering"
+
+#: kausal_common/datasets/models.py
+msgid "Metrics"
+msgstr "Mätvärden"
+
+#: kausal_common/datasets/models.py
+msgid "Defines the interpretation and units for the values of the dataset"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+msgid "Dimensions"
+msgstr "mått"
+
+#: kausal_common/datasets/models.py
+msgid "Used when metrics are tracked for multiple categories"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Permissions"
+msgid "Person permissions"
+msgstr "Behörigheter"
+
+#: kausal_common/datasets/models.py
+msgid "Grants permissions on datasets of this schema to certain persons"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Permissions"
+msgid "Group permissions"
+msgstr "Behörigheter"
+
+#: kausal_common/datasets/models.py
+msgid "Grants permissions on datasets of this schema to certain person groups"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Permissions"
+msgstr "Behörigheter"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset schema"
+msgstr "dataset-licens"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset schemas"
+msgstr "dataset-licens"
+
+#: kausal_common/datasets/models.py
+msgid "unit"
+msgstr "enhet"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset metric"
+msgstr "dataset-licens"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset metrics"
+msgstr "dataset-licens"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimensions"
+msgid "dataset schema dimension"
+msgstr "mått"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimensions"
+msgid "dataset schema dimensions"
+msgstr "mått"
+
+#: kausal_common/datasets/models.py
+msgid "schema"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Optional identifier that, if set, must be unique in the dataset's scope"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "dataset"
+msgstr "dataset"
+
+#: kausal_common/datasets/models.py
+msgid "datasets"
+msgstr "datauppsättningar"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset schema scope"
+msgstr "dataset-licens"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset licenses"
+msgid "dataset schema scopes"
+msgstr "datasetlicenser"
+
+#: kausal_common/datasets/models.py
+msgid "date"
+msgstr "datum"
+
+#: kausal_common/datasets/models.py
+msgid "Date of this data point in context of the dataset's time resolution"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "metric"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "value"
+msgstr "värde"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Last data point"
+msgid "data point"
+msgstr "Sista datapunkten"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Last data point"
+msgid "data points"
+msgstr "Sista datapunkten"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimension category"
+msgid "data point dimension category"
+msgstr "dimensionskategori"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimension categories"
+msgid "data point dimension categories"
+msgstr "dimensionskategorier"
+
+#: kausal_common/datasets/models.py
+msgid "Resolved"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Unresolved"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "comment"
+msgid "Sticky comment"
+msgstr "kommentar"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "comment"
+msgid "Review comment"
+msgstr "kommentar"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "created at"
+msgid "resolved at"
+msgstr "skapad vid"
+
+#: kausal_common/datasets/models.py
+msgid "comment"
+msgstr "kommentar"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "comment"
+msgid "comments"
+msgstr "kommentar"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Section"
+msgid "edition"
+msgstr "Sektion"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "author"
+msgid "authority"
+msgstr "författare"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "main organization for the plan"
+msgid "The organization responsible for the data source"
+msgstr "huvudorganisation för planen"
+
+#: kausal_common/datasets/models.py kausal_common/organizations/models.py
+msgid "description"
+msgstr "beskrivning"
+
+#: kausal_common/datasets/models.py kausal_common/organizations/models.py
+msgid "URL"
+msgstr "URL"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "datasets"
+msgid "Data source"
+msgstr "datauppsättningar"
+
+#: kausal_common/datasets/models.py kausal_common/datasets/wagtail_hooks.py
+#, fuzzy
+#| msgid "datasets"
+msgid "Data sources"
+msgstr "datauppsättningar"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Unknown"
+msgid "Unknown schema"
+msgstr "Okänd"
+
+#: kausal_common/datasets/models.py
+#, fuzzy, python-format
+msgid "Data source reference in: %(schema)s"
+msgstr "Meddelanden"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+msgid "Data source reference"
+msgstr "referens"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+msgid "data source reference"
+msgstr "referens"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+msgid "data source references"
+msgstr "Meddelanden"
+
+#: kausal_common/datasets/wagtail_hooks.py
+#, fuzzy
+#| msgid "Edit data"
+msgid "Edit dataset"
+msgstr "Redigera data"
+
+#: kausal_common/datasets/wagtail_hooks.py
+#, python-format
+msgid "(Private %(object)s)"
+msgstr ""
+
+#: kausal_common/datasets/wagtail_hooks.py
+#, fuzzy, python-format
+#| msgid "Edit this person"
+msgid "Edit this %(object)s"
+msgstr "Redigera den här personen"
+
+#: kausal_common/models/modification_tracking.py
+#, fuzzy
+#| msgid "created at"
+msgid "Created at"
+msgstr "skapad vid"
+
+#: kausal_common/models/modification_tracking.py
+#, fuzzy
+#| msgid "Last modified"
+msgid "Last modified by"
+msgstr "Senast ändrad"
+
+#: kausal_common/models/ordered.py
+msgid "order"
+msgstr "ordning"
+
+#: kausal_common/models/uuid.py
+msgid "UUID"
+msgstr ""
+
+#: kausal_common/organizations/forms.py
+msgid "A node cannot be moved under itself in the hierarchy."
+msgstr "En nod kan inte flyttas under sig själv i hierarkin."
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgctxt "node"
+msgid "Parent"
+msgstr "förälder"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "The time at which the resource was created"
+msgstr "Datumet då uppgiften slutfördes"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "The time at which the resource was updated"
+msgstr "Datumet då uppgiften slutfördes"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "Classification"
+msgstr "Actionklassificeringar"
+
+#: kausal_common/organizations/models.py
+msgid "An organization category, e.g. committee"
+msgstr "En organisationskategori, t.ex. kommitté"
+
+#: kausal_common/organizations/models.py
+msgid "A primary name, e.g. a legally recognized name"
+msgstr "Ett primärt namn, t.ex. ett juridiskt erkänt namn"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "Short name"
+msgstr "kort namn"
+
+#: kausal_common/organizations/models.py
+msgid "A simplified short version of name for the general public"
+msgstr "En förenklad kortversion av namnet för allmänheten"
+
+#: kausal_common/organizations/models.py
+msgid "A distinct name for this organization (generated automatically)"
+msgstr "Ett tydligt namn för denna organisation (genereras automatiskt)"
+
+#: kausal_common/organizations/models.py kausal_common/people/models.py
+#: kausal_common/users/models.py
+msgid "email address"
+msgstr "e-postadress"
+
+#: kausal_common/organizations/models.py
+msgid "A date of founding"
+msgstr "Datum för grundandet"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "A date of dissolution"
+msgstr "tidsupplösning"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "primary language"
+msgstr "Primärspråk får inte väljas"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "Location"
+msgstr "åtgärd"
+
+#: kausal_common/organizations/models.py kausal_common/people/models.py
+msgid "organization"
+msgstr "organisation"
+
+#: kausal_common/organizations/models.py
+msgid "organizations"
+msgstr "organisationer"
+
+#: kausal_common/organizations/views.py
+#, python-format
+msgid "New child %(model)s for %(parent)s"
+msgstr ""
+
+#: kausal_common/organizations/views.py
+#, fuzzy
+#| msgid "This will mark the following actions as complete:"
+msgid "This will delete the following objects:"
+msgstr "Detta kommer att markera följande åtgärder som slutförda:"
+
+#: kausal_common/people/api.py kausal_common/people/models.py
+msgid "Person with this email already exists"
+msgstr "Personen med det här e-postmeddelandet finns redan"
+
+#: kausal_common/people/api.py
+msgid "Not all objects have an email address"
+msgstr "Alla objekt har inte en e-postadress"
+
+#: kausal_common/people/api.py
+#, python-format
+msgid "Duplicate email addresses: %s"
+msgstr "Duplicera e-postadresser:%s"
+
+#: kausal_common/people/chooser.py
+msgid "Create new"
+msgstr "Skapa ny"
+
+#: kausal_common/people/chooser.py
+msgid "Choose person"
+msgstr "Välj person"
+
+#: kausal_common/people/chooser.py
+msgid "Choose a person"
+msgstr "Välj en person"
+
+#: kausal_common/people/chooser.py
+msgid "Choose another person"
+msgstr "Välj en annan person"
+
+#: kausal_common/people/chooser.py
+msgid "Edit this person"
+msgstr "Redigera den här personen"
+
+#: kausal_common/people/models.py
+msgid "first name"
+msgstr "förnamn"
+
+#: kausal_common/people/models.py
+msgid "last name"
+msgstr "efternamn"
+
+#: kausal_common/people/models.py
+msgctxt "person's role"
+msgid "title"
+msgstr "titel"
+
+#: kausal_common/people/models.py
+msgid "postal address"
+msgstr "postadress"
+
+#: kausal_common/people/models.py
+msgid "user"
+msgstr "användare"
+
+#: kausal_common/people/models.py
+msgid "Set if the person has an user account"
+msgstr "Ange om personen har ett användarkonto"
+
+#: kausal_common/people/models.py
+msgid "image"
+msgstr "bild"
+
+#: kausal_common/people/models.py
+msgid "image cropping"
+msgstr "bildbeskärning"
+
+#: kausal_common/people/models.py
+msgid "created by"
+msgstr "skapad av"
+
+#: kausal_common/people/models.py
+msgid "person"
+msgstr "person"
+
+#: kausal_common/people/models.py
+msgid "people"
+msgstr "personer"
+
+#: kausal_common/templates/kausal_common/people/chooser_results.html
+#, fuzzy
+#| msgid "organization"
+msgid "Organization"
+msgstr "organisation"
