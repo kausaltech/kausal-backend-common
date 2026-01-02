@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-02 11:42+0100\n"
+"POT-Creation-Date: 2026-01-02 15:29+0100\n"
 "PO-Revision-Date: 2025-04-02 07:20+0000\n"
 "Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
 "Language-Team: Portuguese (Brazil) <https://weblate.kausal.tech/projects/watch/django/pt_BR/>\n"
@@ -213,6 +213,7 @@ msgstr ""
 
 #: kausal_common/datasets/models.py
 #, fuzzy
+msgctxt "list of persons and their respective permissions on a dataset schema"
 msgid "Person permissions"
 msgstr "Permissões"
 
@@ -222,6 +223,7 @@ msgstr ""
 
 #: kausal_common/datasets/models.py
 #, fuzzy
+msgctxt "list of person groups and their respective permissions on a dataset schema"
 msgid "Group permissions"
 msgstr "Permissões"
 
@@ -336,12 +338,16 @@ msgid "data point dimension categories"
 msgstr "categorias de dimensão"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+msgctxt "review state of data point comment"
 msgid "Resolved"
-msgstr ""
+msgstr "criado em"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+msgctxt "review state of data point comment"
 msgid "Unresolved"
-msgstr ""
+msgstr "criado em"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
@@ -350,11 +356,13 @@ msgstr "comentário"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
+msgctxt "Boolean to indicate if this comment is a review"
 msgid "Review comment"
 msgstr "comentário"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
+msgctxt "date and time when a data point comment was resolved"
 msgid "resolved at"
 msgstr "criado em"
 
@@ -370,11 +378,13 @@ msgstr "comentário"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
+msgctxt "data source"
 msgid "edition"
 msgstr "Seção"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
+msgctxt "authority (responsible organization) for data source"
 msgid "authority"
 msgstr "autor"
 
@@ -434,12 +444,14 @@ msgstr "Editar dados"
 
 #: kausal_common/datasets/wagtail_hooks.py
 #, python-format
-msgid "(Private %(object)s)"
+msgctxt "label to show for a private instance of the given model"
+msgid "(Private %(model)s)"
 msgstr ""
 
 #: kausal_common/datasets/wagtail_hooks.py
 #, fuzzy, python-format
-msgid "Edit this %(object)s"
+msgctxt "title of a link to edit an instance of the given model"
+msgid "Edit this %(model)s"
 msgstr "Editar esta pessoa"
 
 #: kausal_common/models/modification_tracking.py
@@ -454,6 +466,7 @@ msgstr "Última modificação"
 
 #: kausal_common/models/ordered.py
 #, fuzzy
+msgctxt "integer to specify the sorting order of model instances"
 msgid "order"
 msgstr "ordem"
 
@@ -484,28 +497,34 @@ msgstr "A hora em que o recurso foi atualizado"
 
 #: kausal_common/organizations/models.py
 #, fuzzy
+msgctxt "organization"
 msgid "Classification"
 msgstr "Classificação"
 
 #: kausal_common/organizations/models.py
 #, fuzzy
-msgid "An organization category, e.g. committee"
+msgid "An organization category (e.g., committee)"
 msgstr "Uma categoria de organização, por exemplo, comitê"
 
 #: kausal_common/organizations/models.py
-#, fuzzy
-msgid "A primary name, e.g. a legally recognized name"
-msgstr "Um nome principal, por exemplo, um nome legalmente reconhecido"
+msgid "Full name of the organization"
+msgstr ""
 
 #: kausal_common/organizations/models.py
 #, fuzzy
-msgid "Short name"
+msgctxt "organization"
+msgid "short name"
 msgstr "Nome abreviado"
 
 #: kausal_common/organizations/models.py
+msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
+msgstr ""
+
+#: kausal_common/organizations/models.py
 #, fuzzy
-msgid "A simplified short version of name for the general public"
-msgstr "Uma versão curta e simplificada do nome para o público em geral"
+msgctxt "organization"
+msgid "distinct name"
+msgstr "primeiro nome"
 
 #: kausal_common/organizations/models.py
 #, fuzzy
@@ -519,14 +538,44 @@ msgid "email address"
 msgstr "endereço de e-mail"
 
 #: kausal_common/organizations/models.py
-#, fuzzy
-msgid "A date of founding"
-msgstr "Uma data de fundação"
+msgctxt "organization"
+msgid "founding date"
+msgstr ""
+
+#: kausal_common/organizations/models.py
+msgctxt "organization"
+msgid "dissolution date"
+msgstr ""
 
 #: kausal_common/organizations/models.py
 #, fuzzy
-msgid "A date of dissolution"
-msgstr "Uma data de dissolução"
+msgid "created at"
+msgstr "criado em"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "The time at which the object for this organization was created"
+msgstr "A hora em que o recurso foi criado"
+
+#: kausal_common/organizations/models.py kausal_common/people/models.py
+#, fuzzy
+msgid "created by"
+msgstr "criado por"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "updated at"
+msgstr "criado em"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "The time at which the object for this organization was last updated"
+msgstr "A hora em que o recurso foi atualizado"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "updated by"
+msgstr "criado por"
 
 #: kausal_common/organizations/models.py
 #, fuzzy
@@ -535,7 +584,7 @@ msgstr "idioma principal"
 
 #: kausal_common/organizations/models.py
 #, fuzzy
-msgid "Location"
+msgid "location"
 msgstr "Localização"
 
 #: kausal_common/organizations/models.py kausal_common/people/models.py
@@ -575,6 +624,7 @@ msgstr "Endereços de e-mail duplicados: %s"
 
 #: kausal_common/people/chooser.py
 #, fuzzy
+msgctxt "person chooser"
 msgid "Create new"
 msgstr "Criar novo"
 
@@ -615,6 +665,10 @@ msgid "title"
 msgstr "título"
 
 #: kausal_common/people/models.py
+msgid "Job title or role of this person"
+msgstr ""
+
+#: kausal_common/people/models.py
 #, fuzzy
 msgid "postal address"
 msgstr "endereço postal"
@@ -641,11 +695,6 @@ msgstr "corte de imagens"
 
 #: kausal_common/people/models.py
 #, fuzzy
-msgid "created by"
-msgstr "criado por"
-
-#: kausal_common/people/models.py
-#, fuzzy
 msgid "person"
 msgstr "pessoa"
 
@@ -658,3 +707,19 @@ msgstr "pessoas"
 #, fuzzy
 msgid "Organization"
 msgstr "organização"
+
+#, fuzzy
+#~ msgid "A primary name, e.g. a legally recognized name"
+#~ msgstr "Um nome principal, por exemplo, um nome legalmente reconhecido"
+
+#, fuzzy
+#~ msgid "A simplified short version of name for the general public"
+#~ msgstr "Uma versão curta e simplificada do nome para o público em geral"
+
+#, fuzzy
+#~ msgid "A date of founding"
+#~ msgstr "Uma data de fundação"
+
+#, fuzzy
+#~ msgid "A date of dissolution"
+#~ msgstr "Uma data de dissolução"

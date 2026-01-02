@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-02 11:42+0100\n"
+"POT-Creation-Date: 2026-01-02 15:29+0100\n"
 "PO-Revision-Date: 2025-04-02 07:20+0000\n"
 "Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
 "Language-Team: Finnish <https://weblate.kausal.tech/projects/watch/django/fi/>\n"
@@ -210,6 +210,7 @@ msgstr ""
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "Permissions"
+msgctxt "list of persons and their respective permissions on a dataset schema"
 msgid "Person permissions"
 msgstr "Käyttöoikeudet"
 
@@ -220,6 +221,7 @@ msgstr ""
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "Permissions"
+msgctxt "list of person groups and their respective permissions on a dataset schema"
 msgid "Group permissions"
 msgstr "Käyttöoikeudet"
 
@@ -333,12 +335,18 @@ msgid "data point dimension categories"
 msgstr "dimension luokat"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "created at"
+msgctxt "review state of data point comment"
 msgid "Resolved"
-msgstr ""
+msgstr "luomisaika"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "created at"
+msgctxt "review state of data point comment"
 msgid "Unresolved"
-msgstr ""
+msgstr "luomisaika"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
@@ -349,12 +357,14 @@ msgstr "kommentti"
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "comment"
+msgctxt "Boolean to indicate if this comment is a review"
 msgid "Review comment"
 msgstr "kommentti"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "created at"
+msgctxt "date and time when a data point comment was resolved"
 msgid "resolved at"
 msgstr "luomisaika"
 
@@ -371,12 +381,14 @@ msgstr "kommentti"
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "Section"
+msgctxt "data source"
 msgid "edition"
 msgstr "Osio"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "author"
+msgctxt "authority (responsible organization) for data source"
 msgid "authority"
 msgstr "tekijä"
 
@@ -439,13 +451,15 @@ msgstr "Muokkaa dataa"
 
 #: kausal_common/datasets/wagtail_hooks.py
 #, python-format
-msgid "(Private %(object)s)"
+msgctxt "label to show for a private instance of the given model"
+msgid "(Private %(model)s)"
 msgstr ""
 
 #: kausal_common/datasets/wagtail_hooks.py
 #, fuzzy, python-format
 #| msgid "Edit this person"
-msgid "Edit this %(object)s"
+msgctxt "title of a link to edit an instance of the given model"
+msgid "Edit this %(model)s"
 msgstr "Muokkaa tätä henkilöä"
 
 #: kausal_common/models/modification_tracking.py
@@ -459,6 +473,9 @@ msgid "Last modified by"
 msgstr "Viimeksi muokattu"
 
 #: kausal_common/models/ordered.py
+#, fuzzy
+#| msgid "order"
+msgctxt "integer to specify the sorting order of model instances"
 msgid "order"
 msgstr "järjestys"
 
@@ -485,24 +502,39 @@ msgid "The time at which the resource was updated"
 msgstr "Aika jolloin organisaatiota päivitettiin"
 
 #: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "Classification"
+msgctxt "organization"
 msgid "Classification"
 msgstr "Luokittelu"
 
 #: kausal_common/organizations/models.py
-msgid "An organization category, e.g. committee"
+#, fuzzy
+#| msgid "An organization category, e.g. committee"
+msgid "An organization category (e.g., committee)"
 msgstr "Organisaation luokka, esimerkiksi komitea"
 
 #: kausal_common/organizations/models.py
-msgid "A primary name, e.g. a legally recognized name"
-msgstr "Virallinen nimi"
+msgid "Full name of the organization"
+msgstr ""
 
 #: kausal_common/organizations/models.py
-msgid "Short name"
+#, fuzzy
+#| msgid "Short name"
+msgctxt "organization"
+msgid "short name"
 msgstr "Lyhyt nimi"
 
 #: kausal_common/organizations/models.py
-msgid "A simplified short version of name for the general public"
-msgstr "Lyhyt ja tunnistettava versio nimestä suurta yleisöä varten"
+msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
+msgstr ""
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "first name"
+msgctxt "organization"
+msgid "distinct name"
+msgstr "etunimi"
 
 #: kausal_common/organizations/models.py
 msgid "A distinct name for this organization (generated automatically)"
@@ -514,12 +546,46 @@ msgid "email address"
 msgstr "sähköpostiosoite"
 
 #: kausal_common/organizations/models.py
-msgid "A date of founding"
-msgstr "Perustamispäivämäärä"
+msgctxt "organization"
+msgid "founding date"
+msgstr ""
 
 #: kausal_common/organizations/models.py
-msgid "A date of dissolution"
-msgstr "Lakkauttamispäivämäärä"
+msgctxt "organization"
+msgid "dissolution date"
+msgstr ""
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "created at"
+msgstr "luomisaika"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "The time at which the resource was created"
+msgid "The time at which the object for this organization was created"
+msgstr "Aika jolloin organisaatio luotiin"
+
+#: kausal_common/organizations/models.py kausal_common/people/models.py
+msgid "created by"
+msgstr "luoja"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "updated at"
+msgstr "luomisaika"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "The time at which the resource was updated"
+msgid "The time at which the object for this organization was last updated"
+msgstr "Aika jolloin organisaatiota päivitettiin"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "created by"
+msgid "updated by"
+msgstr "luoja"
 
 #: kausal_common/organizations/models.py
 #, fuzzy
@@ -527,7 +593,9 @@ msgid "primary language"
 msgstr "Ensisijainen kieli"
 
 #: kausal_common/organizations/models.py
-msgid "Location"
+#, fuzzy
+#| msgid "Location"
+msgid "location"
 msgstr "Sijainti"
 
 #: kausal_common/organizations/models.py kausal_common/people/models.py
@@ -562,6 +630,9 @@ msgid "Duplicate email addresses: %s"
 msgstr "Sama sähköpostiosoite toistuu: %s"
 
 #: kausal_common/people/chooser.py
+#, fuzzy
+#| msgid "Create new"
+msgctxt "person chooser"
 msgid "Create new"
 msgstr "Luo uusi"
 
@@ -595,6 +666,10 @@ msgid "title"
 msgstr "titteli"
 
 #: kausal_common/people/models.py
+msgid "Job title or role of this person"
+msgstr ""
+
+#: kausal_common/people/models.py
 msgid "postal address"
 msgstr "postiosoite"
 
@@ -615,10 +690,6 @@ msgid "image cropping"
 msgstr "kuvan rajaus"
 
 #: kausal_common/people/models.py
-msgid "created by"
-msgstr "luoja"
-
-#: kausal_common/people/models.py
 msgid "person"
 msgstr "henkilö"
 
@@ -631,3 +702,15 @@ msgstr "henkilöt"
 #| msgid "organization"
 msgid "Organization"
 msgstr "organisaatio"
+
+#~ msgid "A primary name, e.g. a legally recognized name"
+#~ msgstr "Virallinen nimi"
+
+#~ msgid "A simplified short version of name for the general public"
+#~ msgstr "Lyhyt ja tunnistettava versio nimestä suurta yleisöä varten"
+
+#~ msgid "A date of founding"
+#~ msgstr "Perustamispäivämäärä"
+
+#~ msgid "A date of dissolution"
+#~ msgstr "Lakkauttamispäivämäärä"

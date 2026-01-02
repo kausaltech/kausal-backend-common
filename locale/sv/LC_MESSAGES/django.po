@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-02 11:42+0100\n"
+"POT-Creation-Date: 2026-01-02 15:29+0100\n"
 "PO-Revision-Date: 2025-04-02 12:20+0000\n"
 "Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
 "Language-Team: Swedish <https://weblate.kausal.tech/projects/watch/django/sv/>\n"
@@ -211,6 +211,7 @@ msgstr ""
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "Permissions"
+msgctxt "list of persons and their respective permissions on a dataset schema"
 msgid "Person permissions"
 msgstr "Behörigheter"
 
@@ -221,6 +222,7 @@ msgstr ""
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "Permissions"
+msgctxt "list of person groups and their respective permissions on a dataset schema"
 msgid "Group permissions"
 msgstr "Behörigheter"
 
@@ -341,12 +343,18 @@ msgid "data point dimension categories"
 msgstr "dimensionskategorier"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "created at"
+msgctxt "review state of data point comment"
 msgid "Resolved"
-msgstr ""
+msgstr "skapad vid"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "created at"
+msgctxt "review state of data point comment"
 msgid "Unresolved"
-msgstr ""
+msgstr "skapad vid"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
@@ -357,12 +365,14 @@ msgstr "kommentar"
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "comment"
+msgctxt "Boolean to indicate if this comment is a review"
 msgid "Review comment"
 msgstr "kommentar"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "created at"
+msgctxt "date and time when a data point comment was resolved"
 msgid "resolved at"
 msgstr "skapad vid"
 
@@ -379,12 +389,14 @@ msgstr "kommentar"
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "Section"
+msgctxt "data source"
 msgid "edition"
 msgstr "Sektion"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "author"
+msgctxt "authority (responsible organization) for data source"
 msgid "authority"
 msgstr "författare"
 
@@ -448,13 +460,15 @@ msgstr "Redigera data"
 
 #: kausal_common/datasets/wagtail_hooks.py
 #, python-format
-msgid "(Private %(object)s)"
+msgctxt "label to show for a private instance of the given model"
+msgid "(Private %(model)s)"
 msgstr ""
 
 #: kausal_common/datasets/wagtail_hooks.py
 #, fuzzy, python-format
 #| msgid "Edit this person"
-msgid "Edit this %(object)s"
+msgctxt "title of a link to edit an instance of the given model"
+msgid "Edit this %(model)s"
 msgstr "Redigera den här personen"
 
 #: kausal_common/models/modification_tracking.py
@@ -470,6 +484,9 @@ msgid "Last modified by"
 msgstr "Senast ändrad"
 
 #: kausal_common/models/ordered.py
+#, fuzzy
+#| msgid "order"
+msgctxt "integer to specify the sorting order of model instances"
 msgid "order"
 msgstr "ordning"
 
@@ -499,25 +516,36 @@ msgstr "Datumet då uppgiften slutfördes"
 
 #: kausal_common/organizations/models.py
 #, fuzzy
+msgctxt "organization"
 msgid "Classification"
 msgstr "Actionklassificeringar"
 
 #: kausal_common/organizations/models.py
-msgid "An organization category, e.g. committee"
+#, fuzzy
+#| msgid "An organization category, e.g. committee"
+msgid "An organization category (e.g., committee)"
 msgstr "En organisationskategori, t.ex. kommitté"
 
 #: kausal_common/organizations/models.py
-msgid "A primary name, e.g. a legally recognized name"
-msgstr "Ett primärt namn, t.ex. ett juridiskt erkänt namn"
+msgid "Full name of the organization"
+msgstr ""
 
 #: kausal_common/organizations/models.py
 #, fuzzy
-msgid "Short name"
+msgctxt "organization"
+msgid "short name"
 msgstr "kort namn"
 
 #: kausal_common/organizations/models.py
-msgid "A simplified short version of name for the general public"
-msgstr "En förenklad kortversion av namnet för allmänheten"
+msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
+msgstr ""
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "first name"
+msgctxt "organization"
+msgid "distinct name"
+msgstr "förnamn"
 
 #: kausal_common/organizations/models.py
 msgid "A distinct name for this organization (generated automatically)"
@@ -529,13 +557,46 @@ msgid "email address"
 msgstr "e-postadress"
 
 #: kausal_common/organizations/models.py
-msgid "A date of founding"
-msgstr "Datum för grundandet"
+msgctxt "organization"
+msgid "founding date"
+msgstr ""
+
+#: kausal_common/organizations/models.py
+msgctxt "organization"
+msgid "dissolution date"
+msgstr ""
 
 #: kausal_common/organizations/models.py
 #, fuzzy
-msgid "A date of dissolution"
-msgstr "tidsupplösning"
+#| msgid "created at"
+msgid "created at"
+msgstr "skapad vid"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "The time at which the object for this organization was created"
+msgstr "Datumet då uppgiften slutfördes"
+
+#: kausal_common/organizations/models.py kausal_common/people/models.py
+msgid "created by"
+msgstr "skapad av"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "created at"
+msgid "updated at"
+msgstr "skapad vid"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+msgid "The time at which the object for this organization was last updated"
+msgstr "Datumet då uppgiften slutfördes"
+
+#: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "created by"
+msgid "updated by"
+msgstr "skapad av"
 
 #: kausal_common/organizations/models.py
 #, fuzzy
@@ -544,7 +605,7 @@ msgstr "Primärspråk får inte väljas"
 
 #: kausal_common/organizations/models.py
 #, fuzzy
-msgid "Location"
+msgid "location"
 msgstr "åtgärd"
 
 #: kausal_common/organizations/models.py kausal_common/people/models.py
@@ -580,6 +641,9 @@ msgid "Duplicate email addresses: %s"
 msgstr "Duplicera e-postadresser:%s"
 
 #: kausal_common/people/chooser.py
+#, fuzzy
+#| msgid "Create new"
+msgctxt "person chooser"
 msgid "Create new"
 msgstr "Skapa ny"
 
@@ -613,6 +677,10 @@ msgid "title"
 msgstr "titel"
 
 #: kausal_common/people/models.py
+msgid "Job title or role of this person"
+msgstr ""
+
+#: kausal_common/people/models.py
 msgid "postal address"
 msgstr "postadress"
 
@@ -633,10 +701,6 @@ msgid "image cropping"
 msgstr "bildbeskärning"
 
 #: kausal_common/people/models.py
-msgid "created by"
-msgstr "skapad av"
-
-#: kausal_common/people/models.py
 msgid "person"
 msgstr "person"
 
@@ -649,3 +713,16 @@ msgstr "personer"
 #| msgid "organization"
 msgid "Organization"
 msgstr "organisation"
+
+#~ msgid "A primary name, e.g. a legally recognized name"
+#~ msgstr "Ett primärt namn, t.ex. ett juridiskt erkänt namn"
+
+#~ msgid "A simplified short version of name for the general public"
+#~ msgstr "En förenklad kortversion av namnet för allmänheten"
+
+#~ msgid "A date of founding"
+#~ msgstr "Datum för grundandet"
+
+#, fuzzy
+#~ msgid "A date of dissolution"
+#~ msgstr "tidsupplösning"

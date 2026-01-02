@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-02 11:42+0100\n"
+"POT-Creation-Date: 2026-01-02 15:29+0100\n"
 "PO-Revision-Date: 2024-12-11 10:47+0000\n"
 "Last-Translator: Timo Tuominen <timo.tuominen@kausal.tech>\n"
 "Language-Team: Swedish <https://weblate.kausal.tech/projects/watch/django/sv_FI/>\n"
@@ -184,6 +184,7 @@ msgid "Used when metrics are tracked for multiple categories"
 msgstr ""
 
 #: kausal_common/datasets/models.py
+msgctxt "list of persons and their respective permissions on a dataset schema"
 msgid "Person permissions"
 msgstr ""
 
@@ -192,6 +193,7 @@ msgid "Grants permissions on datasets of this schema to certain persons"
 msgstr ""
 
 #: kausal_common/datasets/models.py
+msgctxt "list of person groups and their respective permissions on a dataset schema"
 msgid "Group permissions"
 msgstr ""
 
@@ -288,10 +290,12 @@ msgid "data point dimension categories"
 msgstr ""
 
 #: kausal_common/datasets/models.py
+msgctxt "review state of data point comment"
 msgid "Resolved"
 msgstr ""
 
 #: kausal_common/datasets/models.py
+msgctxt "review state of data point comment"
 msgid "Unresolved"
 msgstr ""
 
@@ -300,10 +304,12 @@ msgid "Sticky comment"
 msgstr ""
 
 #: kausal_common/datasets/models.py
+msgctxt "Boolean to indicate if this comment is a review"
 msgid "Review comment"
 msgstr ""
 
 #: kausal_common/datasets/models.py
+msgctxt "date and time when a data point comment was resolved"
 msgid "resolved at"
 msgstr ""
 
@@ -316,10 +322,12 @@ msgid "comments"
 msgstr ""
 
 #: kausal_common/datasets/models.py
+msgctxt "data source"
 msgid "edition"
 msgstr ""
 
 #: kausal_common/datasets/models.py
+msgctxt "authority (responsible organization) for data source"
 msgid "authority"
 msgstr ""
 
@@ -370,12 +378,14 @@ msgstr ""
 
 #: kausal_common/datasets/wagtail_hooks.py
 #, python-format
-msgid "(Private %(object)s)"
+msgctxt "label to show for a private instance of the given model"
+msgid "(Private %(model)s)"
 msgstr ""
 
 #: kausal_common/datasets/wagtail_hooks.py
 #, python-format
-msgid "Edit this %(object)s"
+msgctxt "title of a link to edit an instance of the given model"
+msgid "Edit this %(model)s"
 msgstr ""
 
 #: kausal_common/models/modification_tracking.py
@@ -387,6 +397,7 @@ msgid "Last modified by"
 msgstr ""
 
 #: kausal_common/models/ordered.py
+msgctxt "integer to specify the sorting order of model instances"
 msgid "order"
 msgstr ""
 
@@ -412,23 +423,30 @@ msgid "The time at which the resource was updated"
 msgstr ""
 
 #: kausal_common/organizations/models.py
+msgctxt "organization"
 msgid "Classification"
 msgstr ""
 
 #: kausal_common/organizations/models.py
-msgid "An organization category, e.g. committee"
+msgid "An organization category (e.g., committee)"
 msgstr ""
 
 #: kausal_common/organizations/models.py
-msgid "A primary name, e.g. a legally recognized name"
+msgid "Full name of the organization"
 msgstr ""
 
 #: kausal_common/organizations/models.py
-msgid "Short name"
+msgctxt "organization"
+msgid "short name"
 msgstr ""
 
 #: kausal_common/organizations/models.py
-msgid "A simplified short version of name for the general public"
+msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
+msgstr ""
+
+#: kausal_common/organizations/models.py
+msgctxt "organization"
+msgid "distinct name"
 msgstr ""
 
 #: kausal_common/organizations/models.py
@@ -441,11 +459,37 @@ msgid "email address"
 msgstr ""
 
 #: kausal_common/organizations/models.py
-msgid "A date of founding"
+msgctxt "organization"
+msgid "founding date"
 msgstr ""
 
 #: kausal_common/organizations/models.py
-msgid "A date of dissolution"
+msgctxt "organization"
+msgid "dissolution date"
+msgstr ""
+
+#: kausal_common/organizations/models.py
+msgid "created at"
+msgstr ""
+
+#: kausal_common/organizations/models.py
+msgid "The time at which the object for this organization was created"
+msgstr ""
+
+#: kausal_common/organizations/models.py kausal_common/people/models.py
+msgid "created by"
+msgstr ""
+
+#: kausal_common/organizations/models.py
+msgid "updated at"
+msgstr ""
+
+#: kausal_common/organizations/models.py
+msgid "The time at which the object for this organization was last updated"
+msgstr ""
+
+#: kausal_common/organizations/models.py
+msgid "updated by"
 msgstr ""
 
 #: kausal_common/organizations/models.py
@@ -453,7 +497,7 @@ msgid "primary language"
 msgstr ""
 
 #: kausal_common/organizations/models.py
-msgid "Location"
+msgid "location"
 msgstr ""
 
 #: kausal_common/organizations/models.py kausal_common/people/models.py
@@ -487,6 +531,7 @@ msgid "Duplicate email addresses: %s"
 msgstr ""
 
 #: kausal_common/people/chooser.py
+msgctxt "person chooser"
 msgid "Create new"
 msgstr ""
 
@@ -520,6 +565,10 @@ msgid "title"
 msgstr ""
 
 #: kausal_common/people/models.py
+msgid "Job title or role of this person"
+msgstr ""
+
+#: kausal_common/people/models.py
 msgid "postal address"
 msgstr ""
 
@@ -537,10 +586,6 @@ msgstr ""
 
 #: kausal_common/people/models.py
 msgid "image cropping"
-msgstr ""
-
-#: kausal_common/people/models.py
-msgid "created by"
 msgstr ""
 
 #: kausal_common/people/models.py
