@@ -209,7 +209,7 @@ class DraftStateMixin(models.Model):
     has_unpublished_changes: models.BooleanField
     first_published_at: _NullableDTF
     last_published_at: _NullableDTF
-    live_revision: models.ForeignKey[Revision[Self] | None]
+    live_revision: models.ForeignKey[Revision[Self] | None, Revision[Self] | None]
     go_live_at: _NullableDTF
     expire_at: _NullableDTF
     expired: models.BooleanField
