@@ -69,13 +69,7 @@ class SchemaExtension[Ctx: GraphQLContext](StrawberrySchemaExtension):
         request = ctx.request
         if isinstance(request, HttpRequest):
             return user_or_none(request.user)
-        scope: ASGICommonScope
-        if isinstance(request, ChannelsRequest):
-            scope = request.consumer.scope
-        elif isinstance(request, GraphQLWSConsumer):
-            scope = request.scope
-        else:
-            raise TypeError(f'Unknown request type: {type(request)}')
+        scope = ctx.get_scope()
         return user_or_none(scope.get('user'))
 
     def get_session(self) -> SessionBase | None:
@@ -85,20 +79,15 @@ class SchemaExtension[Ctx: GraphQLContext](StrawberrySchemaExtension):
             return request.session
 
         scope: ASGICommonScope
-        if isinstance(request, ChannelsRequest):
-            scope = request.consumer.scope
-        elif isinstance(request, GraphQLWSConsumer):
-            scope = request.scope
-        else:
-            raise TypeError(f'Unknown request type: {type(request)}')
+        scope = ctx.get_scope()
         return scope.get('session')
 
     def get_request_headers(self) -> Mapping[str, str]:
         ctx = self.get_context()
         if isinstance(ctx.request, (HttpRequest, ChannelsRequest)):
             return ctx.request.headers
-        request = ctx.get_ws_consumer()
-        headers_list = request.scope.get('headers', [])
+        scope = ctx.get_scope()
+        headers_list = scope.get('headers', [])
         headers = {key.decode('utf8'): value.decode('utf8') for key, value in headers_list}
         return headers
 

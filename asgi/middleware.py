@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from channels.auth import AuthMiddlewareStack
-from channels.db import sync_to_async
+from channels.db import sync_to_async  # pyright: ignore[reportAttributeAccessIssue]
 from channels.middleware import BaseMiddleware
 from channels.security.websocket import AllowedHostsOriginValidator
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
@@ -12,10 +12,17 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from kausal_common.auth.tokens import authenticate_from_authorization_header
 
 if TYPE_CHECKING:
-    from uvicorn._types import ASGIApplication
+    from collections.abc import Awaitable, Callable
+
+    from asgiref.typing import ASGIReceiveCallable, ASGISendCallable, Scope as ASGIScope
+    from channels.consumer import _ASGIApplicationProtocol
+    from starlette.types import ASGIApp as StarletteASGIApp
+    from uvicorn._types import ASGIApplication as UvicornASGIApplication
 
     from kausal_common.asgi.types import ASGICommonScope
 
+    type ASGIAppCallable = Callable[[ASGIScope, ASGIReceiveCallable, ASGISendCallable], Awaitable[None]]
+    type ASGIApplication = UvicornASGIApplication | _ASGIApplicationProtocol | StarletteASGIApp | ASGIAppCallable
 
 class GeneralRequestMiddleware(BaseMiddleware):
     """General request middleware that performs token auth and log context setup."""
@@ -36,7 +43,7 @@ class GeneralRequestMiddleware(BaseMiddleware):
         with rc_meta.start_request(scope=scope) as sentry_scope:
             _rich_traceback_omit = True
             scope['sentry_scope'] = sentry_scope
-            return await super().__call__(scope, receive, send)
+            return await super().__call__(scope, receive, send)  # pyright: ignore[reportArgumentType]
 
 
 def HTTPMiddleware(inner: ASGIApplication) -> ASGIApplication:  # noqa: N802
@@ -46,7 +53,7 @@ def HTTPMiddleware(inner: ASGIApplication) -> ASGIApplication:  # noqa: N802
 
     return SentryAsgiMiddleware(
         ProxyHeadersMiddleware(
-            AuthMiddlewareStack(
+            AuthMiddlewareStack(  # pyright: ignore[reportArgumentType]
                 GeneralRequestMiddleware(
                     asgi_cors(inner, allow_all=True, headers=settings.CORS_ALLOW_HEADERS))
             ),
@@ -58,7 +65,7 @@ def HTTPMiddleware(inner: ASGIApplication) -> ASGIApplication:  # noqa: N802
 def WebSocketMiddleware(inner: ASGIApplication) -> ASGIApplication:  # noqa: N802
     return SentryAsgiMiddleware(
         ProxyHeadersMiddleware(
-            AllowedHostsOriginValidator(
+            AllowedHostsOriginValidator(  # pyright: ignore[reportArgumentType]
                 AuthMiddlewareStack(GeneralRequestMiddleware(inner))
             ),
             trusted_hosts='*'

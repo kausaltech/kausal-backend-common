@@ -171,8 +171,8 @@ class UnifiedGraphQLConverter(GraphQLCoreConverter):
                 return cast('GraphQLNullableType', self.add_graphene_type(type_))
         try:
             ret = super().from_type(type_)
-        except Exception as e:
-            raise e
+        except Exception:  # noqa: TRY203
+            raise
         return ret
 
     def _merge_graphene_object_fields(self, gql_type: GraphQLObjectType, graphene_type: type[graphene.ObjectType]) -> None:

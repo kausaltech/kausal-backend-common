@@ -141,6 +141,8 @@ def get_logging_conf(
             'asyncio': level('INFO'),
             'daphne': level('INFO'),
             'daphne.server': level('WARNING'),
+            'docket.worker': level('INFO'),
+            'sse_starlette': level('INFO'),
             '': level('DEBUG'),
         },
     }

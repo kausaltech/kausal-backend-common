@@ -15,6 +15,7 @@ from strawberry.django.views import GraphQLView as StrawberryGraphQLView
 from strawberry.http.temporal_response import TemporalResponse
 
 import orjson
+from starlette.requests import Request as StarletteRequest
 
 from kausal_common.const import WILDCARD_DOMAINS_HEADER
 from kausal_common.strawberry.context import GraphQLContext
@@ -31,10 +32,10 @@ class BaseContext(TypedDict):
     wildcard_domains: list[str]
 
 
-type RequestType = HttpRequest | StrawberryGraphQLWSConsumer[Any] | ChannelsRequest
-type ResponseType = HttpResponse | StrawberryGraphQLWSConsumer[Any] | TemporalResponse
+type RequestType = HttpRequest | StrawberryGraphQLWSConsumer[Any] | ChannelsRequest | StarletteRequest
+type ResponseType = HttpResponse | StrawberryGraphQLWSConsumer[Any] | TemporalResponse | None
 
-def _get_base_context(
+def get_base_context(
     request: RequestType,
     response: ResponseType,
 ) -> BaseContext:
@@ -42,7 +43,7 @@ def _get_base_context(
         wildcard_domains_str = request.headers.get(WILDCARD_DOMAINS_HEADER)
         referer = request.headers.get('referer')
     else:
-        assert isinstance(request, StrawberryGraphQLWSConsumer)
+        assert isinstance(request, (StrawberryGraphQLWSConsumer, StarletteRequest))
         headers_list = request.scope.get('headers', [])
         headers = {key.decode('utf8'): value.decode('utf8') for key, value in headers_list}
         wildcard_domains_str = headers.get(WILDCARD_DOMAINS_HEADER)
@@ -61,7 +62,7 @@ class GraphQLView[Context: GraphQLContext = GraphQLContext](StrawberryGraphQLVie
     context_class: type[Context]
 
     def get_base_context(self, request: HttpRequest, response: HttpResponse) -> BaseContext:
-        return _get_base_context(request, response)
+        return get_base_context(request, response)
     def decode_json(self, data: str | bytes) -> object:
         return orjson.loads(data)
 
@@ -98,7 +99,7 @@ class GraphQLWSConsumer[Context: GraphQLContext = GraphQLContext](StrawberryGrap
     context_class: type[Context]
 
     async def get_base_context(self, request: GraphQLWSConsumer, response: GraphQLWSConsumer) -> BaseContext:
-        base_ctx = _get_base_context(request, response)
+        base_ctx = get_base_context(request, response)
         return base_ctx
 
 
@@ -119,5 +120,5 @@ class SyncGraphQLHTTPConsumer[Context: GraphQLContext = GraphQLContext](Strawber
         return await super().run(request, context=context, root_value=root_value)
 
     def get_base_context(self, request: ChannelsRequest, response: TemporalResponse) -> BaseContext:
-        base_ctx = _get_base_context(request, response)
+        base_ctx = get_base_context(request, response)
         return base_ctx

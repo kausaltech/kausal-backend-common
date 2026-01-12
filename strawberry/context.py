@@ -11,15 +11,15 @@ from django.http.request import HttpRequest
 from django.utils.encoding import iri_to_uri
 from strawberry.channels import ChannelsRequest, GraphQLWSConsumer
 
+from starlette.requests import Request as StarletteRequest
+
 from kausal_common.perf.perf_context import PerfContext
 
 if TYPE_CHECKING:
-    from django.http.response import HttpResponse
-    from strawberry.http.temporal_response import TemporalResponse
-
     from kausal_common.asgi.types import ASGICommonScope
     from kausal_common.auth.tokens import TokenAuthResult
     from kausal_common.deployment.types import LoggedHttpRequest
+    from kausal_common.strawberry.views import RequestType, ResponseType
     from kausal_common.users import UserOrAnon
 
     from .extensions import GraphQLPerfNode
@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 
 @dataclass
 class GraphQLContext:
-    request: HttpRequest | GraphQLWSConsumer | ChannelsRequest
-    response: HttpResponse | GraphQLWSConsumer | TemporalResponse
+    request: RequestType
+    response: ResponseType
     operation_name: str | None = None
     referer: str | None = None
     wildcard_domains: list[str] = field(default_factory=list)
@@ -47,10 +47,10 @@ class GraphQLContext:
         return self.request
 
     def get_scope(self) -> ASGICommonScope:
-        if isinstance(self.request, GraphQLWSConsumer):
-            return self.request.scope
+        if isinstance(self.request, (GraphQLWSConsumer, StarletteRequest)):
+            return cast('ASGICommonScope', self.request.scope)  # pyright: ignore[reportInvalidCast]
         if isinstance(self.request, ChannelsRequest):
-            return self.request.consumer.scope
+            return cast('ASGICommonScope', self.request.consumer.scope)  # pyright: ignore[reportInvalidCast]
         raise ValueError('Unknown request type')
 
     def get_token_auth(self) -> TokenAuthResult | None:
@@ -75,7 +75,7 @@ class GraphQLContext:
         req = self.request
         if isinstance(req, HttpRequest):
             return cast('UserOrAnon', req.user)
-        if isinstance(req, GraphQLWSConsumer):
+        if isinstance(req, (GraphQLWSConsumer, StarletteRequest)):
             user = req.scope.get('user')
         elif isinstance(req, ChannelsRequest):
             user = req.consumer.scope.get('user')
