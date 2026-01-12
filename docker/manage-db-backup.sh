@@ -29,8 +29,16 @@ export RESTIC_PASSWORD_FILE=${secret_path}/RESTIC_PASSWORD
 export RESTIC_REPOSITORY="s3:https://$(get_secret S3_ENDPOINT)/$(get_secret S3_BUCKET)"
 
 if [ -z "$1" ] ; then
-    echo "Usage: $0 {init|backup|restore|snapshots}"
+    echo "Usage: $0 {init|backup|restore|save|snapshots|export-config}"
     exit 2
+fi
+
+if [ "$1" == "export-config" ] ; then
+    echo "  export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
+    echo "  export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
+    echo "  export RESTIC_PASSWORD_FILE=${RESTIC_PASSWORD_FILE}"
+    echo "  export RESTIC_REPOSITORY=${RESTIC_REPOSITORY}"
+    exit 0
 fi
 
 if [ "$1" == "init" ] ; then
@@ -39,7 +47,7 @@ if [ "$1" == "init" ] ; then
 fi
 
 if [ "$1" == "snapshots" ] ; then
-    restic snapshots
+    restic snapshots --no-lock
     exit 0
 fi
 
@@ -77,5 +85,11 @@ fi
 if [ "$1" == "restore" ] ; then
     echo "Restoring from backup..."
     restic dump --no-lock latest database.sql | python manage.py dbshell
+    exit 0
+fi
+
+if [ "$1" == "save" ] ; then
+    echo "Saving latest SQL dump to database.sql.bz2..."
+    restic dump --no-lock latest database.sql | bzip2 > database.sql.bz2
     exit 0
 fi
