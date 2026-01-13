@@ -10,7 +10,7 @@ FROM caddy:2 AS caddy
 FROM ${base_image} AS base
 
 ARG POSTGRESQL_MAJOR_VERSION=18
-ARG UV_VERSION=0.9.5
+ARG UV_VERSION=0.9.24
 ARG NVM_VERSION=0.40.3
 ARG ubuntu_codename="noble"
 
