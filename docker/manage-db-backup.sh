@@ -70,7 +70,7 @@ if [ "$1" == "backup" ] ; then
     datatmp=$(mktemp)
 
     echo "Generating dump..."
-    pg_dump -O "$database" > $datatmp
+    pg_dump -c -O "$database" > $datatmp
     echo "Uploading to restic..."
     cat $datatmp | restic backup --no-cache --stdin-filename database.sql --stdin
     echo "Pruning old backups..."
