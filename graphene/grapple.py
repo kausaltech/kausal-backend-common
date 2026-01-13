@@ -41,7 +41,7 @@ type GrappleWrapperField = tuple[GraphQLField, Callable[[Any], Any]]
 type GrappleFieldDef = GraphQLField | GrappleWrapperField
 
 def grapple_field[T: BaseType](
-    field_name: str, field_type: type[T] | Callable[[], type[T]] | str, resolver: Callable[..., Any] | None = None,
+    field_name: str, field_type: type[T] | Callable[[], type[T]], resolver: Callable[..., Any] | None = None,
     is_list: bool = False, required: bool = True,
 ) -> Callable[[], GrappleFieldDef]:
     def get_wrapper(field) -> graphene.Field:
