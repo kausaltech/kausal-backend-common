@@ -65,10 +65,11 @@ class PermissionPolicyDRFPermissionBase[_M: PermissionedModel, CreateContext](me
         self.permission_policy = self.Meta.model.permission_policy()
         self.allowed_actions = getattr(self.Meta, 'allowed_actions', {'view', 'add', 'change', 'delete'})
 
-    def http_method_to_django_action(self, method: str | None) -> BaseObjectAction:
+    @classmethod
+    def http_method_to_django_action(cls, method: str | None) -> BaseObjectAction:
         if method is None:
             raise ValueError('Invalid method')
-        return self.HTTP_METHOD_TO_DJANGO_ACTION[method]
+        return cls.HTTP_METHOD_TO_DJANGO_ACTION[method]
 
     def has_object_permission(self, request: Request, view, obj):
         if request.method is None:
