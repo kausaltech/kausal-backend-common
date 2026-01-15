@@ -148,6 +148,11 @@ class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
         self._handle_set_related(grouped_by_operation_and_model.get('create_and_set_related', {}))
         self._handle_set_related(grouped_by_operation_and_model.get('set_related', {}))
 
+    def check_object_permissions(self, request, view):
+        for obj_id in self.obj_ids:
+            obj = self.objs_by_id[obj_id]
+            view.check_object_permissions(request, obj)
+
     def update(self, queryset, all_validated_data):
         updated_data = []
         try:
@@ -217,6 +222,8 @@ class BulkModelViewSet[M: Model](viewsets.ModelViewSet[M]):
             partial=partial,
         )
         serializer.is_valid(raise_exception=True)
+        if isinstance(serializer, BulkListSerializer):
+            serializer.check_object_permissions(request, self)
         self.perform_update(serializer)
         return response.Response(serializer.data)
 
