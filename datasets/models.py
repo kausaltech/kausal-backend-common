@@ -41,11 +41,12 @@ if TYPE_CHECKING:
 
     from ..models.types import FK, RevMany
     if IS_PATHS:
-        from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
+        from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase
 
         from paths.dataset_permission_policy import DatasetSchemaPermissionPolicy
 
-        from people.models import DatasetSchemaGroupPermission, DatasetSchemaPersonPermission
+        from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
+
         type DatasetScopeType = InstanceConfig
         type DimensionScopeType = InstanceConfig
         type DatasetSchemaScopeType = InstanceConfig
@@ -262,8 +263,8 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     scopes: RevMany[DatasetSchemaScope]
     if IS_PATHS:
         # FIXME: Remove the condition when PersonPermission and GroupPermission are implemented in KW
-        person_permissions: RevMany[DatasetSchemaPersonPermission]
-        group_permissions: RevMany[DatasetSchemaGroupPermission]
+        person_permissions: RevMany[ObjectPersonPermissionBase]
+        group_permissions: RevMany[ObjectGroupPermissionBase]
 
     objects: ClassVar[DatasetSchemaManager] = DatasetSchemaManager()
     _default_manager: ClassVar[DatasetSchemaQuerySet]
@@ -471,11 +472,11 @@ class DatasetQuerySet(PermissionedQuerySet['Dataset']):
             viewable_schemas_for_user = DatasetSchemaPersonPermission.objects.filter(
                 role__in=[ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
                 person=user.person,
-            ).values_list('object')
+            ).values_list('object')  # type: ignore[misc]
             viewable_schemas_for_group = DatasetSchemaGroupPermission.objects.filter(
                 role__in=[ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
                 group__persons=user.person,
-            ).values_list('object')
+            ).values_list('object')  # type: ignore[misc]
             return self.filter(models.Q(schema__in=viewable_schemas_for_user)
                                | models.Q(schema__in=viewable_schemas_for_group))
 
