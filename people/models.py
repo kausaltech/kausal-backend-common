@@ -6,7 +6,7 @@ import uuid
 from abc import abstractmethod
 from datetime import timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, ClassVar, cast
 
 from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile
@@ -277,7 +277,7 @@ if TYPE_CHECKING:
         group = models.ForeignKey('people.PersonGroup', on_delete=models.CASCADE)
 
         object: FK[M]
-        objects: models.Manager[ObjectGroupPermissionBase[M]]
+        objects: ClassVar[models.Manager[ObjectGroupPermissionBase[models.Model]]]
 
         class Meta:
             abstract = True
@@ -294,7 +294,7 @@ if TYPE_CHECKING:
         person: FK[Person] = models.ForeignKey('people.Person', on_delete=models.CASCADE)
 
         object: FK[M]
-        objects: models.Manager[ObjectPersonPermissionBase[M]]
+        objects: ClassVar[models.Manager[ObjectPersonPermissionBase[models.Model]]]
 
         class Meta:
             abstract = True
