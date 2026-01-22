@@ -336,11 +336,20 @@ class DatasetScopeContentTypeField(serializers.StringRelatedField):
 class DatasetSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
     data_points: Field = UuidSlugRelatedField(read_only=True, many=True)
     schema = UuidSlugRelatedField[DatasetSchema](queryset=DatasetSchema.objects.all())
-    scope_content_type = DatasetScopeContentTypeField()
+    scope_content_type = DatasetScopeContentTypeField(read_only=True)
+
+    scope_content_type_id = serializers.PrimaryKeyRelatedField(
+        queryset=ContentType.objects.all(),
+        source='scope_content_type',
+        write_only=True,
+        required=False,
+    )
+
+    scope_id = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model = Dataset
-        fields = ['uuid', 'schema', 'data_points', 'scope_id', 'scope_content_type']
+        fields = ['uuid', 'schema', 'data_points', 'scope_id', 'scope_content_type', 'scope_content_type_id']
 
 
 class DatasetViewSet(viewsets.ModelViewSet):
