@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import csv
+from collections import defaultdict
+from datetime import date
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypedDict
 from uuid import UUID, uuid4
 
 from django.contrib.postgres.expressions import ArraySubquery
 from django.db import models, transaction
-from django.db.models.expressions import F, OuterRef
+from django.db.models import Value
+from django.db.models.expressions import Case, F, OuterRef, When
 from django.db.utils import IntegrityError
 from pydantic import Field
 
@@ -13,6 +18,7 @@ from kausal_common.models.django_pydantic import DjangoAdapter, DjangoDiffModel,
 
 from .models import (
     DataPoint,
+    DataPointComment,
     DataPointDimensionCategory,
     Dataset,
     DatasetMetric,
@@ -20,6 +26,8 @@ from .models import (
     DatasetSchemaDimension,
     DatasetSchemaQuerySet,
     DatasetSchemaScope,
+    DatasetSourceReference,
+    DataSource,
     Dimension,
     DimensionCategory,
     DimensionQuerySet,
@@ -262,6 +270,9 @@ class DataPointModel(DjangoDiffModel[DataPoint]):
     _attributes = ('date', 'value', 'metric_uuid', 'dataset', 'dimension_categories')
     _parent_key = 'dataset'
     _parent_type = 'dataset'
+    _children = {
+        'data_point_comment': 'comments',
+    }
 
     class DimensionCategoryData(TypedDict):
         uuid: str
@@ -269,6 +280,7 @@ class DataPointModel(DjangoDiffModel[DataPoint]):
     dataset: UUID
     metric_uuid: UUID  # We'll reference metric by UUID
     dimension_categories: list[UUID] = Field(default_factory=list)
+    comments: list[UUID] = Field(default_factory=list)
 
     @classmethod
     def get_queryset(cls, dataset: Dataset) -> QuerySet[DataPoint, dict[str, Any]]:
@@ -324,6 +336,158 @@ class DataPointModel(DjangoDiffModel[DataPoint]):
         DataPointDimensionCategory.objects.bulk_create(cat_objs)
 
 
+class DataPointCommentModel(DjangoDiffModel[DataPointComment]):
+    _model = DataPointComment
+    _modelname = 'data_point_comment'
+    _identifiers = ('uuid',)
+    _attributes = (
+        'text', 'is_sticky', 'is_review', 'review_state', 'resolved_at', 'data_point',
+        'created_at', 'created_by', 'last_modified_by', 'resolved_by',
+        'is_soft_deleted', 'soft_deleted_at', 'soft_deleted_by'
+    )
+    _parent_key = 'data_point'
+    _parent_type = 'data_point'
+
+    data_point: UUID
+
+    @classmethod
+    def get_queryset(cls, scope: DatasetSchemaScopeType) -> QuerySet[DataPointComment, dict[str, Any]]:
+        schemas = DatasetSchema.objects.get_queryset().for_scope(scope)
+        datasets = Dataset.objects.filter(schema__in=schemas)
+        data_points = DataPoint.objects.filter(dataset__in=datasets)
+        comment_fields = cls._django_fields.field_names - {'data_point', 'created_by', 'last_modified_by', 'resolved_by', 'soft_deleted_by'}
+        comments = (
+            DataPointComment.objects.filter(data_point__in=data_points)
+            .values(*comment_fields)
+            .annotate(_instance_pk=F('pk'))
+            .annotate(data_point=F('data_point__uuid'))
+            .annotate(created_by=F('created_by_id'))
+            .annotate(last_modified_by=F('last_modified_by_id'))
+            .annotate(resolved_by=F('resolved_by_id'))
+            .annotate(soft_deleted_by=F('soft_deleted_by_id'))
+            .order_by('data_point', '-created_at')
+        )
+        return comments
+
+    @classmethod
+    def get_create_kwargs(cls, adapter: DjangoAdapter, ids: dict, attrs: dict) -> dict:
+        kwargs = super().get_create_kwargs(adapter, ids, attrs)
+        data_point = adapter.get(DataPointModel, str(kwargs.pop('data_point')))
+        assert data_point._instance_pk is not None
+        kwargs['data_point_id'] = data_point._instance_pk
+        
+        # Handle user references - they are stored as IDs, convert None strings to None
+        for user_field in ['created_by', 'last_modified_by', 'resolved_by', 'soft_deleted_by']:
+            if user_field in kwargs:
+                val = kwargs[user_field]
+                if val is None or val == '':
+                    kwargs[user_field] = None
+                else:
+                    # Keep as ID (integer)
+                    kwargs[user_field + '_id'] = val
+                    kwargs.pop(user_field, None)
+        
+        return kwargs
+
+
+class DataSourceModel(ScopeAwareDjangoDiffModel[DataSource]):
+    _model = DataSource
+    _modelname = 'data_source'
+    _identifiers = ('uuid',)
+    _attributes = ('name', 'edition', 'authority', 'description', 'url')
+
+    @classmethod
+    def get_queryset(cls, scope: DatasetSchemaScopeType) -> QuerySet[DataSource, dict[str, Any]]:
+        from django.contrib.contenttypes.models import ContentType
+        from nodes.models import InstanceConfig
+        
+        # Get ContentType for InstanceConfig
+        ct = ContentType.objects.get_for_model(InstanceConfig)
+        
+        # Get the instance config ID from scope
+        if isinstance(scope, InstanceConfig):
+            scope_id = scope.pk
+        else:
+            # Try to get scope_id from the scope object
+            scope_id = getattr(scope, 'pk', None)
+            if scope_id is None:
+                return DataSource.objects.none().values()
+        
+        source_fields = cls._django_fields.field_names
+        sources = (
+            DataSource.objects.filter(scope_content_type=ct, scope_id=scope_id)
+            .values(*source_fields)
+            .annotate(_instance_pk=F('pk'))
+        )
+        return sources
+
+
+class DatasetSourceReferenceModel(DjangoDiffModel[DatasetSourceReference]):
+    _model = DatasetSourceReference
+    _modelname = 'dataset_source_reference'
+    _identifiers = ('uuid',)
+    _attributes = ('data_point', 'dataset', 'data_source')
+
+    data_point: UUID | None = None
+    dataset: UUID | None = None
+    data_source: UUID
+
+    @classmethod
+    def get_queryset(cls, scope: DatasetSchemaScopeType) -> QuerySet[DatasetSourceReference, dict[str, Any]]:
+        schemas = DatasetSchema.objects.get_queryset().for_scope(scope)
+        datasets = Dataset.objects.filter(schema__in=schemas)
+        data_points = DataPoint.objects.filter(dataset__in=datasets)
+        
+        ref_fields = cls._django_fields.field_names - {'data_point', 'dataset', 'data_source'}
+        references = (
+            DatasetSourceReference.objects.filter(
+                models.Q(dataset__in=datasets) | models.Q(data_point__in=data_points)
+            )
+            .values(*ref_fields)
+            .annotate(_instance_pk=F('pk'))
+            .annotate(
+                data_point=Case(
+                    When(data_point__isnull=False, then=F('data_point__uuid')),
+                    default=Value(None),
+                    output_field=models.UUIDField()
+                )
+            )
+            .annotate(
+                dataset=Case(
+                    When(dataset__isnull=False, then=F('dataset__uuid')),
+                    default=Value(None),
+                    output_field=models.UUIDField()
+                )
+            )
+            .annotate(data_source=F('data_source__uuid'))
+            .order_by('pk')  # Override model's default ordering that uses relationships
+        )
+        return references
+
+    @classmethod
+    def get_create_kwargs(cls, adapter: DjangoAdapter, ids: dict, attrs: dict) -> dict:
+        kwargs = super().get_create_kwargs(adapter, ids, attrs)
+        
+        data_source_uuid = kwargs.pop('data_source')
+        data_source = adapter.get(DataSourceModel, str(data_source_uuid))
+        assert data_source._instance_pk is not None
+        kwargs['data_source_id'] = data_source._instance_pk
+        
+        data_point_uuid = kwargs.pop('data_point', None)
+        if data_point_uuid:
+            data_point = adapter.get(DataPointModel, str(data_point_uuid))
+            assert data_point._instance_pk is not None
+            kwargs['data_point_id'] = data_point._instance_pk
+        
+        dataset_uuid = kwargs.pop('dataset', None)
+        if dataset_uuid:
+            dataset = adapter.get(DatasetModel, str(dataset_uuid))
+            assert dataset._instance_pk is not None
+            kwargs['dataset_id'] = dataset._instance_pk
+        
+        return kwargs
+
+
 class DatasetModel(DjangoDiffModel[Dataset]):
     _model = Dataset
     _modelname = 'dataset'
@@ -331,12 +495,14 @@ class DatasetModel(DjangoDiffModel[Dataset]):
     _attributes = ('identifier', 'ds_schema')
     _children = {
         'data_point': 'data_points',
+        'dataset_source_reference': 'source_references',
     }
     _parent_key = 'ds_schema'
     _parent_type = 'dataset_schema'
 
     ds_schema: UUID
     data_points: list[UUID] = Field(default_factory=list)
+    source_references: list[UUID] = Field(default_factory=list)
     uuid: UUID = Field(default_factory=uuid4)
 
     @classmethod
@@ -354,7 +520,6 @@ class DatasetModel(DjangoDiffModel[Dataset]):
     @classmethod
     def create_related(cls, adapter: DjangoAdapter, _ids: dict, _attrs: dict, _instance: Dataset, /) -> None:
         assert isinstance(adapter, DatasetDjangoAdapter)
-        scope = adapter.scope
         pass
 
     @classmethod
@@ -379,7 +544,10 @@ class DatasetAdapter(TypedAdapter):
     dataset_metric = DatasetMetricModel
     dataset = DatasetModel
     data_point = DataPointModel
-    top_level = ['dimension', 'dataset_schema']
+    data_point_comment = DataPointCommentModel
+    data_source = DataSourceModel
+    dataset_source_reference = DatasetSourceReferenceModel
+    top_level = ['dimension', 'dataset_schema', 'data_source']
 
 
 class DatasetDjangoAdapter(DjangoAdapter, DatasetAdapter):
@@ -407,6 +575,31 @@ class DatasetDjangoAdapter(DjangoAdapter, DatasetAdapter):
         for dp in data_points:
             dp_model = self.data_point.from_django(dp)
             self.add_child(dataset_model, dp_model)
+
+    def load_data_point_comments(self, scope: DatasetSchemaScopeType):
+        comments = self.data_point_comment.get_queryset(scope)
+        for comment_data in comments:
+            comment_model = self.data_point_comment.from_django(comment_data)
+            data_point_model = self.get(DataPointModel, str(comment_model.data_point))
+            self.add_child(data_point_model, comment_model)
+
+    def load_data_sources(self, scope: DatasetSchemaScopeType):
+        sources = self.data_source.get_queryset(scope)
+        for source_data in sources:
+            source_model = self.data_source.from_django(source_data)
+            self.add(source_model)
+
+    def load_dataset_source_references(self, scope: DatasetSchemaScopeType):
+        references = self.dataset_source_reference.get_queryset(scope)
+        for ref_data in references:
+            ref_model = self.dataset_source_reference.from_django(ref_data)
+            # Source references can be linked to either dataset or data_point
+            if ref_model.dataset:
+                dataset_model = self.get(DatasetModel, str(ref_model.dataset))
+                self.add_child(dataset_model, ref_model)
+            elif ref_model.data_point:
+                data_point_model = self.get(DataPointModel, str(ref_model.data_point))
+                self.add_child(data_point_model, ref_model)
 
     def load(self) -> None:
         # Load dimensions
@@ -437,6 +630,144 @@ class DatasetDjangoAdapter(DjangoAdapter, DatasetAdapter):
             # Load data points
             dataset_obj = Dataset.objects.get(pk=dataset_data['_instance_pk'])
             self.load_data_points(dataset_obj, dataset_model)
+
+        # Load data sources
+        self.load_data_sources(self.scope)
+
+        # Load data point comments
+        self.load_data_point_comments(self.scope)
+
+        # Load dataset source references
+        self.load_dataset_source_references(self.scope)
+
+    def export_csv(self, output_dir: Path) -> None:  # noqa: C901
+        """Export each dataset as a CSV file."""
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Get all datasets
+        datasets = self.get_all(DatasetModel)
+
+        for dataset_model in datasets:
+            dataset_identifier = getattr(dataset_model, 'identifier', None)
+            if not dataset_identifier:
+                # Skip datasets without identifiers
+                continue
+
+            # Get schema
+            schema_model = self.get(DatasetSchemaModel, str(dataset_model.ds_schema))
+
+            # Get dimensions for this schema
+            schema_dimensions = []
+            for dim_uuid in schema_model.dimensions:
+                dim_model = self.get(DimensionModel, str(dim_uuid))
+                schema_dimensions.append(dim_model)
+
+            # Get all data points for this dataset
+            data_points = dataset_model.get_children(DataPointModel)
+
+            if not data_points:
+                # Skip empty datasets
+                continue
+
+            # Build a mapping: (metric_uuid, tuple of category_uuids) -> {year: value}
+            # We need to map dimension categories to their dimensions
+            category_to_dimension: dict[str, DimensionModel] = {}
+            for dim_model in schema_dimensions:
+                dim_categories = dim_model.get_children(DimensionCategoryModel)
+                for cat_model in dim_categories:
+                    category_to_dimension[str(cat_model.uuid)] = dim_model
+
+            # Group data points by metric and dimension categories
+            # Use tuple with optional UUIDs for categories
+            grouped_data: dict[tuple[UUID, tuple[UUID | None, ...]], dict[int, str]] = defaultdict(dict)
+
+            for dp_model in data_points:
+                metric_uuid = dp_model.metric_uuid
+
+                # Create a mapping of dimension -> category for this data point
+                dim_cat_map: dict[UUID, UUID] = {}
+                for cat_uuid in dp_model.dimension_categories:
+                    cat_uuid_str = str(cat_uuid)
+                    if cat_uuid_str in category_to_dimension:
+                        dim_model = category_to_dimension[cat_uuid_str]
+                        dim_cat_map[dim_model.uuid] = cat_uuid
+
+                # Create a tuple of category UUIDs in the order of schema dimensions
+                category_tuple = tuple(
+                    dim_cat_map.get(dim_model.uuid) for dim_model in schema_dimensions
+                )
+
+                # Extract year from date
+                dp_date = getattr(dp_model, 'date', None)
+                if dp_date is None:
+                    continue
+                if isinstance(dp_date, str):
+                    # Parse date string
+                    year = int(dp_date.split('-')[0])
+                elif isinstance(dp_date, date):
+                    year = dp_date.year
+                else:
+                    continue
+
+                # Store value
+                key = (metric_uuid, category_tuple)
+                dp_value = getattr(dp_model, 'value', None)
+                grouped_data[key][year] = str(dp_value) if dp_value is not None else ''
+
+            # Get all unique years
+            all_years = sorted(set().union(*(year_dict.keys() for year_dict in grouped_data.values())))
+
+            # Build CSV rows
+            rows = []
+            for (metric_uuid, category_tuple), year_values in grouped_data.items():
+                metric_model = self.get(DatasetMetricModel, str(metric_uuid))
+                metric_name = getattr(metric_model, 'name', '') or ''
+                metric_unit = getattr(metric_model, 'unit', '') or ''
+
+                row: dict[str, str] = {}
+
+                # Add dimension columns
+                for i, dim_model in enumerate(schema_dimensions):
+                    cat_uuid = category_tuple[i] if i < len(category_tuple) else None
+                    dim_identifier = getattr(dim_model, 'identifier', None) or getattr(dim_model, 'name', '') or ''
+                    if cat_uuid:
+                        cat_model = self.get(DimensionCategoryModel, str(cat_uuid))
+                        cat_identifier = getattr(cat_model, 'identifier', '') or ''
+                        row[dim_identifier] = cat_identifier
+                    else:
+                        row[dim_identifier] = ''
+
+                # Add metric and unit columns
+                row['Metric'] = metric_name
+                row['Unit'] = metric_unit
+
+                # Add year columns
+                for year in all_years:
+                    row[str(year)] = year_values.get(year, '')
+
+                rows.append(row)
+
+            # Write CSV file
+            if rows:
+                # Create filename from dataset identifier
+                safe_filename = str(dataset_identifier).replace('/', '_').replace('\\', '_')
+                csv_path = output_dir / f"{safe_filename}.csv"
+
+                # Get all column names in order
+                fieldnames: list[str] = []
+                # Dimension columns
+                for dim_model in schema_dimensions:
+                    dim_identifier = getattr(dim_model, 'identifier', None) or getattr(dim_model, 'name', '') or ''
+                    fieldnames.append(dim_identifier)
+                # Metric and Unit columns
+                fieldnames.extend(['Metric', 'Unit'])
+                # Year columns
+                fieldnames.extend(str(year) for year in all_years)
+
+                with csv_path.open('w', newline='', encoding='utf-8') as f:
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(rows)
 
 
 class DatasetJSONAdapter(JSONAdapter, DatasetAdapter):
@@ -480,3 +811,24 @@ class DatasetJSONAdapter(JSONAdapter, DatasetAdapter):
             dp_model = self.data_point.model_validate(dp_data)
             dataset_model = self.get(self.dataset, str(dp_model.dataset))
             self.add_child(dataset_model, dp_model)
+
+        # Load data sources
+        for source_data in data.get('data_source', []):
+            source_model = self.data_source.model_validate(source_data)
+            self.add(source_model)
+
+        # Load data point comments
+        for comment_data in data.get('data_point_comment', []):
+            comment_model = self.data_point_comment.model_validate(comment_data)
+            data_point_model = self.get(self.data_point, str(comment_model.data_point))
+            self.add_child(data_point_model, comment_model)
+
+        # Load dataset source references
+        for ref_data in data.get('dataset_source_reference', []):
+            ref_model = self.dataset_source_reference.model_validate(ref_data)
+            if ref_model.dataset:
+                dataset_model = self.get(self.dataset, str(ref_model.dataset))
+                self.add_child(dataset_model, ref_model)
+            elif ref_model.data_point:
+                data_point_model = self.get(self.data_point, str(ref_model.data_point))
+                self.add_child(data_point_model, ref_model)
