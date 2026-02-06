@@ -4,7 +4,7 @@ import graphene
 
 import graphene_django_optimizer as gql_optimizer
 
-from kausal_common.graphene import DjangoNode, DjangoObjectType
+from kausal_common.graphene import DjangoNode
 from kausal_common.graphene.graphql_helpers import (
     CreateModelInstanceMutation,
     DeleteModelInstanceMutation,
@@ -31,6 +31,7 @@ class OrganizationNode(DjangoNode):
     ancestors = graphene.List('orgs.schema.OrganizationNode')
     descendants = graphene.List('orgs.schema.OrganizationNode')
     parent = graphene.Field('orgs.schema.OrganizationNode', required=False)
+    path = graphene.String(required=True)
 
     class Meta:
         abstract = True
