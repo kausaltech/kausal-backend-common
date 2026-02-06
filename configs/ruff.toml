@@ -63,6 +63,7 @@ ignore = [
   "UP046",
 ]
 flake8-pytest-style.fixture-parentheses = false
+flake8-quotes.inline-quotes = "single"
 
 [lint.per-file-ignores]
 "../typings/**" = ["D", "A002", "ANN401", "PLC0105"]
@@ -105,6 +106,7 @@ django = [
   "graphene_django",
   "graphene",
   "strawberry",
+  "strawberry_django",
   "graphql",
   "modelcluster",
   "modeltrans",
