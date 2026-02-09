@@ -12,19 +12,19 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-01-02 15:29+0100\n"
-"PO-Revision-Date: 2025-04-02 07:20+0000\n"
-"Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
-"Language-Team: Finnish <https://weblate.kausal.tech/projects/watch/django/fi/>\n"
+"PO-Revision-Date: 2026-02-10 14:21+0000\n"
+"Last-Translator: Timo Tuominen <timo.tuominen@kausal.tech>\n"
+"Language-Team: Finnish <https://weblate.kausal.tech/projects/kausal-backend-"
+"common/django/fi/>\n"
 "Language: fi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.4.2\n"
+"X-Generator: Weblate 5.15.1\n"
 
 #: kausal_common/admin_site/tables.py
 #: kausal_common/models/modification_tracking.py
-#, fuzzy
 msgid "Last modified at"
 msgstr "Viimeksi muokattu"
 
@@ -33,10 +33,11 @@ msgid "Cannot delete instance because other objects reference it."
 msgstr "Kohdetta ei voida poistaa koska muut oliot viittaavat siihen."
 
 #: kausal_common/api/exceptions.py
-#, fuzzy, python-format
-#| msgid "Cannot delete \"%s\" because it is connected to other objects such as plans, persons or actions."
+#, python-format
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
-msgstr "Ei voi poistaa \"%s\", koska se liittyy muihin kohteisiin, kuten suunnitelmiin, henkilöihin tai toimiin."
+msgstr ""
+"Kohdetta \"%s\" ei voida poistaa, koska se liittyy muihin kohteisiin, kuten "
+"instansseihin, henkilöihin tai toimenpiteisiin."
 
 #: kausal_common/blocks/base.py
 msgid "Label"
@@ -51,9 +52,8 @@ msgid "Help text"
 msgstr "Ohjeteksti"
 
 #: kausal_common/blocks/base.py
-#, fuzzy
 msgid "Help text for the column to be shown in the UI"
-msgstr "Käyttöliittymässä näytettävän kentän ohjeteksti"
+msgstr "Käyttöliittymässä näytettävän sarakkeen ohjeteksti"
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
 msgid "Heading to show instead of the default"
@@ -64,7 +64,6 @@ msgid "Field label"
 msgstr "Kentän nimi"
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
-#, fuzzy
 msgid "Help text for the field to be shown in the UI"
 msgstr "Käyttöliittymässä näytettävän kentän ohjeteksti"
 
@@ -83,14 +82,12 @@ msgid "Filter: %(filter_label)s"
 msgstr "Suodatin: %(filter_label)s"
 
 #: kausal_common/datasets/chooser.py
-#, fuzzy
 msgid "Choose a dataset"
-msgstr "Valitse luokan tyyppi"
+msgstr "Valitse tietoaineisto"
 
 #: kausal_common/datasets/chooser.py
-#, fuzzy
 msgid "Choose another dataset"
-msgstr "Valitse toinen ominaisuus"
+msgstr "Valitse toinen tietoaineisto"
 
 #: kausal_common/datasets/models.py kausal_common/organizations/models.py
 msgid "name"
@@ -106,12 +103,11 @@ msgstr "mittarin dimensiot"
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique within the dimension"
-msgstr ""
+msgstr "Valinnainen tunniste, jonka on oltava uniikki dimension sisällä"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
 msgid "label"
-msgstr "kentät"
+msgstr "nimeke"
 
 #: kausal_common/datasets/models.py
 msgid "dimension category"
@@ -127,28 +123,23 @@ msgstr "tunniste"
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the scope"
-msgstr ""
+msgstr "Valinnainen tunniste, jonka on oltava uniikki vaikutusalueen sisällä"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
-#| msgid "dimensions"
 msgid "dimension scope"
-msgstr "mittarin dimensiot"
+msgstr "dimension vaikutusalue"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
-#| msgid "dimension categories"
 msgid "dimension scopes"
-msgstr "dimension luokat"
+msgstr "dimensioiden vaikutusalueet"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
 msgid "Yearly"
-msgstr "Vuosi"
+msgstr "Vuosittainen"
 
 #: kausal_common/datasets/models.py
 msgid "Time resolution of the time stamps of data points in this dataset"
-msgstr ""
+msgstr "Tietoaineiston aikaleimojen resoluutio"
 
 #: kausal_common/datasets/models.py
 msgid "start date"
@@ -156,7 +147,7 @@ msgstr "alkupäivämäärä"
 
 #: kausal_common/datasets/models.py
 msgid "For a newly created dataset, start entering values from this year"
-msgstr ""
+msgstr "Vuosi, josta alkaen uuden tietoaineiston arvojen syöttö alkaa"
 
 #: kausal_common/datasets/models.py
 #: kausal_common/templates/kausal_common/people/chooser_results.html
@@ -168,27 +159,20 @@ msgid "Descriptive name of the dataset schema"
 msgstr "Kuvaava nimi tietoaineistomallille"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
 msgid "Description"
-msgstr "kuvaus"
+msgstr "Kuvaus"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
-#| msgid "Description to show after the field content"
 msgid "Description of the content and use of the dataset"
-msgstr "Kuvaus joka näytetään kentän sisällön jälkeen"
+msgstr "Tietoaineiston sisällön ja käyttötarkoituksen kuvaus"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
-#| msgid "time resolution"
 msgid "Time resolution"
-msgstr "aikaresoluutio"
+msgstr "Aikaresoluutio"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
-#| msgid "start date"
 msgid "Initial date"
-msgstr "alkupäivämäärä"
+msgstr "Alkupäivämäärä"
 
 #: kausal_common/datasets/models.py
 msgid "Metrics"
@@ -196,16 +180,15 @@ msgstr "Metriikat"
 
 #: kausal_common/datasets/models.py
 msgid "Defines the interpretation and units for the values of the dataset"
-msgstr ""
+msgstr "Määrittelee tietoaineiston arvojen tulkinnan ja mittayksiköt"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
 msgid "Dimensions"
-msgstr "mittarin dimensiot"
+msgstr "Dimensiot"
 
 #: kausal_common/datasets/models.py
 msgid "Used when metrics are tracked for multiple categories"
-msgstr ""
+msgstr "Käyteään kun metriikat kattavat useampia kategorioita"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
@@ -216,7 +199,7 @@ msgstr "Käyttöoikeudet"
 
 #: kausal_common/datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain persons"
-msgstr ""
+msgstr "Antaa tietyille henkilöille oikeudet tämän skeeman tietoaineistoihin"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
@@ -228,54 +211,48 @@ msgstr "Käyttöoikeudet"
 #: kausal_common/datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain person groups"
 msgstr ""
+"Antaa tietyille henkilöryhmille oikeudet tämän skeeman tietoaineistoihin"
 
 #: kausal_common/datasets/models.py
 msgid "Permissions"
 msgstr "Käyttöoikeudet"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
 msgid "dataset schema"
-msgstr "tietoaineiston lisenssi"
+msgstr "tietoaineiston skeema"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
 msgid "dataset schemas"
-msgstr "tietoaineiston lisenssi"
+msgstr "tietoaineistojen skeemat"
 
 #: kausal_common/datasets/models.py
 msgid "unit"
 msgstr "yksikkö"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
-#| msgid "dataset license"
 msgid "dataset metric"
-msgstr "tietoaineiston lisenssi"
+msgstr "tietoaineiston metriikka"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
-#| msgid "dataset license"
 msgid "dataset metrics"
-msgstr "tietoaineiston lisenssi"
+msgstr "tietoaineistojen metriikat"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
 msgid "dataset schema dimension"
-msgstr "mittarin dimensiot"
+msgstr "tietoaineiston skeeman dimensio"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
 msgid "dataset schema dimensions"
-msgstr "mittarin dimensiot"
+msgstr "tietoaineiston skeeman dimensiot"
 
 #: kausal_common/datasets/models.py
 msgid "schema"
-msgstr ""
+msgstr "skeema"
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the dataset's scope"
 msgstr ""
+"Valinnainen tunniste, jonka on oltava uniikki tietoaineiston vaikutusalueella"
 
 #: kausal_common/datasets/models.py
 msgid "dataset"
@@ -286,15 +263,12 @@ msgid "datasets"
 msgstr "tietoaineistot"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
 msgid "dataset schema scope"
-msgstr "tietoaineiston lisenssi"
+msgstr "tietoaineiston skeeman vaikutusalue"
 
 #: kausal_common/datasets/models.py
-#, fuzzy
-#| msgid "dataset licenses"
 msgid "dataset schema scopes"
-msgstr "tietoaineistojen lisenssit"
+msgstr "tietoaineiston skeemojen vaikutusalueet"
 
 #: kausal_common/datasets/models.py
 msgid "date"
@@ -556,13 +530,10 @@ msgid "dissolution date"
 msgstr ""
 
 #: kausal_common/organizations/models.py
-#, fuzzy
 msgid "created at"
 msgstr "luomisaika"
 
 #: kausal_common/organizations/models.py
-#, fuzzy
-#| msgid "The time at which the resource was created"
 msgid "The time at which the object for this organization was created"
 msgstr "Aika jolloin organisaatio luotiin"
 
@@ -571,21 +542,16 @@ msgid "created by"
 msgstr "luoja"
 
 #: kausal_common/organizations/models.py
-#, fuzzy
 msgid "updated at"
-msgstr "luomisaika"
+msgstr "päivitysaika"
 
 #: kausal_common/organizations/models.py
-#, fuzzy
-#| msgid "The time at which the resource was updated"
 msgid "The time at which the object for this organization was last updated"
 msgstr "Aika jolloin organisaatiota päivitettiin"
 
 #: kausal_common/organizations/models.py
-#, fuzzy
-#| msgid "created by"
 msgid "updated by"
-msgstr "luoja"
+msgstr "päivittänyt"
 
 #: kausal_common/organizations/models.py
 #, fuzzy
@@ -593,10 +559,8 @@ msgid "primary language"
 msgstr "Ensisijainen kieli"
 
 #: kausal_common/organizations/models.py
-#, fuzzy
-#| msgid "Location"
 msgid "location"
-msgstr "Sijainti"
+msgstr "sijainti"
 
 #: kausal_common/organizations/models.py kausal_common/people/models.py
 msgid "organization"
@@ -630,8 +594,6 @@ msgid "Duplicate email addresses: %s"
 msgstr "Sama sähköpostiosoite toistuu: %s"
 
 #: kausal_common/people/chooser.py
-#, fuzzy
-#| msgid "Create new"
 msgctxt "person chooser"
 msgid "Create new"
 msgstr "Luo uusi"
@@ -667,7 +629,7 @@ msgstr "titteli"
 
 #: kausal_common/people/models.py
 msgid "Job title or role of this person"
-msgstr ""
+msgstr "Henkilön tehtävä tai rooli"
 
 #: kausal_common/people/models.py
 msgid "postal address"
