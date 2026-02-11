@@ -21,10 +21,10 @@ def storage_settings_from_s3_url(url: ParseResult, deployment_type: str | None =
     for key, val in parse_qs(url.query).items():
         assert len(val) == 1
         opts[key] = val[0]
-    if deployment_type == 'production':
-        backend = 'kausal_common.storage.storage_classes.MediaFilesS3Storage'
-    else:
+    if deployment_type == 'development':
         backend = 'kausal_common.storage.storage_classes.LocalMediaStorageWithS3Fallback'
+    else:
+        backend = 'kausal_common.storage.storage_classes.MediaFilesS3Storage'
     return {
         'BACKEND': backend,
         'OPTIONS': opts,
