@@ -13,7 +13,7 @@ from django_stubs_ext import StrOrPromise
 from wagtail.admin.views.generic.base import WagtailAdminTemplateMixin
 from wagtail.admin.views.mixins import SpreadsheetExportMixin
 
-from wagtail_modeladmin.helpers import AdminURLHelper
+from wagtail_modeladmin.helpers import AdminURLHelper, PermissionHelper
 from wagtail_modeladmin.options import ModelAdmin
 
 QUERY_TERMS = ...
@@ -30,7 +30,9 @@ class WMABaseView[M: Model](TemplateView):
     meta_title: StrOrPromise | None
     page_title: ClassVar[StrOrPromise]
     page_subtitle: ClassVar[StrOrPromise]
-    def __init__(self, model_admin) -> None:
+    permission_helper: PermissionHelper[M]
+
+    def __init__(self, model_admin: ModelAdmin[M]) -> None:
         ...
 
     def check_action_permitted(self, user): # -> Literal[True]:

@@ -516,7 +516,7 @@ class ModelAdminGroup(WagtailRegisterable):
 
 
 
-def modeladmin_register[AdminT: ModelAdmin[Any]](modeladmin_class: type[AdminT]) -> type[AdminT]:
+def modeladmin_register[AdminT: ModelAdmin[Any] | ModelAdminGroup](modeladmin_class: type[AdminT]) -> type[AdminT]:
     """
     Method for registering ModelAdmin or ModelAdminGroup classes with Wagtail.
     """

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, cast
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Model
 from django.forms import BaseModelForm
+from wagtail.admin.forms import WagtailAdminModelForm
 from wagtail.snippets.views.snippets import (
     CreateView,
     DeleteView,
@@ -39,49 +40,37 @@ def user_has_permission(
     if permission == 'add':
         return permission_policy.user_can_create(user, context=context)
     assert obj is not None
-    return permission_policy.user_has_permission_for_instance(
-        user, permission, obj
-    )
+    return permission_policy.user_has_permission_for_instance(user, permission, obj)
 
 
-class PermissionedEditView[M: Model, FormT: BaseModelForm[Any]](HideSnippetsFromBreadcrumbsMixin, EditView[M, FormT]):
+class PermissionedEditView[M: Model, FormT: BaseModelForm[Any] = WagtailAdminModelForm[Model]](
+    HideSnippetsFromBreadcrumbsMixin, EditView[M, FormT]
+):
     def user_has_permission(self, permission):
-        return user_has_permission(
-            self.permission_policy,
-            cast('UserOrAnon', self.request.user),
-            permission,
-            self.object
-        )
+        return user_has_permission(self.permission_policy, cast('UserOrAnon', self.request.user), permission, self.object)
 
     def get_editing_sessions(self):
         return None
 
 
-class PermissionedDeleteView[M: Model, FormT: BaseModelForm[Any]](DeleteView[M, FormT]):
+class PermissionedDeleteView[M: Model, FormT: BaseModelForm[Any] = WagtailAdminModelForm[Model]](DeleteView[M, FormT]):
     def user_has_permission(self, permission):
-        return user_has_permission(
-            self.permission_policy,
-            cast('UserOrAnon', self.request.user),
-            permission,
-            self.object
-        )
+        return user_has_permission(self.permission_policy, cast('UserOrAnon', self.request.user), permission, self.object)
 
 
-class PermissionedCreateView[M: Model, FormT: BaseModelForm[Any]](HideSnippetsFromBreadcrumbsMixin, CreateView[M, FormT]):
+class PermissionedCreateView[M: Model, FormT: BaseModelForm[Any] = WagtailAdminModelForm[Model]](
+    HideSnippetsFromBreadcrumbsMixin, CreateView[M, FormT]
+):
     def user_has_permission(self, permission):
         return user_has_permission(
-            self.permission_policy,
-            cast('UserOrAnon', self.request.user),
-            permission,
-            None,
-            context=self.get_create_context()
+            self.permission_policy, cast('UserOrAnon', self.request.user), permission, None, context=self.get_create_context()
         )
 
     def get_create_context(self) -> Any:
         return self.request
 
 
-class PermissionedViewSet[M: Model, FormT: BaseModelForm[Any]](SnippetViewSet[M, FormT]):
+class PermissionedViewSet[M: Model, FormT: BaseModelForm[Any] = WagtailAdminModelForm[Model]](SnippetViewSet[M, FormT]):
     add_view_class: ClassVar = PermissionedCreateView
     edit_view_class: ClassVar = PermissionedEditView
     delete_view_class: ClassVar = PermissionedDeleteView
@@ -92,11 +81,11 @@ class PermissionedViewSet[M: Model, FormT: BaseModelForm[Any]](SnippetViewSet[M,
 
     @cached_property
     def url_prefix(self) -> str:  # type: ignore[override]
-        return f"{self.app_label}/{self.model_name}"
+        return f'{self.app_label}/{self.model_name}'
 
     @cached_property
     def url_namespace(self) -> str:  # type: ignore[override]
-        return f"{self.app_label}_{self.model_name}"
+        return f'{self.app_label}_{self.model_name}'
 
     @property
     def permission_policy(self):
