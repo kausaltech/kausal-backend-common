@@ -50,5 +50,5 @@ class AdminURLFinder:
     def __init__(self, user=...) -> None:
         ...
 
-    def get_edit_url(self, instance) -> None:
+    def get_edit_url(self, instance: Model) -> str | None:
         ...

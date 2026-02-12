@@ -22,6 +22,7 @@ def _monkeypatch_second() -> None:
     from django.views import View
     from graphene import Interface, ObjectType
     from modelcluster.fields import ParentalKey, ParentalManyToManyField
+    from wagtail.admin.menu import MenuItem
     from wagtail.admin.panels import Panel
     from wagtail.admin.views.generic.base import BaseObjectMixin
     from wagtail.admin.viewsets.model import ModelViewSet
@@ -36,7 +37,7 @@ def _monkeypatch_second() -> None:
         JSONField, ManyToManyField, Node,
         Panel, Panel.BoundPanel, BaseObjectMixin,
         BasePermissionPolicy, ObjectType, Interface,
-        Block, Revision, View
+        Block, Revision, View, MenuItem
     ]
 
     try:

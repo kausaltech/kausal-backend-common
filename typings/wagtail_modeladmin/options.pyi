@@ -96,7 +96,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
     form_view_extra_css = ...
     form_view_extra_js = ...
     form_fields_exclude = ...
-    base_url_path = ...
+    base_url_path: str | None = None
     url_helper: AdminURLHelper
     permission_helper: PermissionHelper[M]
 
@@ -146,7 +146,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         sequence.
         """
 
-    def get_list_display(self, request: HttpRequest): # -> tuple[Literal['__str__']]:
+    def get_list_display(self, request: HttpRequest) -> _ListDisplayT[M]:
         """
         Return a sequence containing the fields/method output to be displayed
         in the list view.

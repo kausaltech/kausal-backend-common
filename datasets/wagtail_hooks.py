@@ -59,7 +59,7 @@ class DataSourceCreateView(CreateView[DataSource, DataSourceForm]):
         return instance
 
 
-class DataSourceUsageView(UsageView):
+class DataSourceUsageView(UsageView[DataSource]):
     """Custom usage view that links DatasetSourceReference to their parent Datasets."""
 
     def get_table(self, object_list, **kwargs):
@@ -119,14 +119,14 @@ class DataSourceUsageView(UsageView):
         return super(UsageView, self).get_table(results, **kwargs)
 
 
-class DataSourceIndexView(IndexView):
+class DataSourceIndexView(IndexView[DataSource]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Hide the bulk delete to avoid ProtectedError when deleting referenced datasources.
         # Remove this if usage checks are implemented for bulk actions.
         self.columns = [c for c in super().columns if not isinstance(c, BulkActionsCheckboxColumn)]
 
-class DataSourceViewSet(PermissionedViewSet):
+class DataSourceViewSet(PermissionedViewSet[DataSource, DataSourceForm]):
     model = DataSource
     menu_label = _('Data sources')
     icon = 'doc-full'
@@ -136,7 +136,7 @@ class DataSourceViewSet(PermissionedViewSet):
     copy_view_enabled = False
     add_view_class = DataSourceCreateView  # type: ignore[assignment]
     add_to_reference_index = True
-    usage_view_class = DataSourceUsageView  # type: ignore[assignment]
+    usage_view_class = DataSourceUsageView  # type: ignore[assignment]  # pyright: ignore[reportAssignmentType]
     index_view_class = DataSourceIndexView # type: ignore[assignment]
     panels = [
         FieldPanel('name'),
