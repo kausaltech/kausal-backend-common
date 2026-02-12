@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from strawberry import auto
 
 
-@strawberry_django.type(User, name='User', description='A user of the system.')
+@strawberry_django.type(User, name='User', description="A user of the system")
 class UserNode:
     id: auto
     email: auto
