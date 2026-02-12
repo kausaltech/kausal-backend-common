@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.core.exceptions import ValidationError
 from django.forms import ModelChoiceField
 from django.utils.translation import gettext_lazy as _
 
-
 from kausal_common.const import IS_PATHS, IS_WATCH
 
 if TYPE_CHECKING:
-    from .models import Node
+    from treebeard.mp_tree import MP_Node
+
 
 if IS_PATHS:
     from admin_site.forms import PathsAdminModelForm as ModelForm
@@ -19,15 +19,15 @@ elif IS_WATCH:
 else:
     raise RuntimeError('No admin form found')
 
-class NodeChoiceField(ModelChoiceField):
+class NodeChoiceField[M: MP_Node[Any]](ModelChoiceField[M]):
     def label_from_instance(self, obj):
         depth_line = '-' * (obj.get_depth() - 1)
         label = super().label_from_instance(obj)
         return f'{depth_line} {label}'
 
 
-class NodeForm[N: Node](ModelForm[N]):
-    parent = NodeChoiceField(required=False, queryset=None)
+class NodeForm[M: MP_Node[Any]](ModelForm[M]):
+    parent = NodeChoiceField[M](required=False, queryset=None)
 
     def __init__(self, *args, **kwargs):
         parent_required = kwargs.pop('parent_required', False)
@@ -44,12 +44,12 @@ class NodeForm[N: Node](ModelForm[N]):
 
     def clean_parent(self):
         parent = self.cleaned_data['parent']
-        if parent is not None and parent == self.instance or parent in self.instance.get_descendants():
+        if (parent is not None and parent == self.instance) or parent in self.instance.get_descendants():
             raise ValidationError(_("A node cannot be moved under itself in the hierarchy."), code='invalid_parent')
         return parent
 
-    def save(self, commit: bool = True) -> N:
-        instance: N = super().save(commit=False)
+    def save(self, commit: bool = True) -> M:
+        instance: M = super().save(commit=False)
 
         parent = self.cleaned_data['parent']
 
@@ -74,8 +74,8 @@ class NodeForm[N: Node](ModelForm[N]):
                 # Note that instance.refresh_from_db() won't cut it because get_parent() will then still return the old
                 # parent if we don't call it with `update=True`.
                 # From treebeard docs:
-                # django-treebeard uses Django raw SQL queries for some write operations, and raw queries don’t update
-                # the objects in the ORM since it’s being bypassed. Because of this, if you have a node in memory and
+                # django-treebeard uses Django raw SQL queries for some write operations, and raw queries don't update
+                # the objects in the ORM since it's being bypassed. Because of this, if you have a node in memory and
                 # plan to use it after a tree modification (adding/removing/moving nodes), you need to reload it.
                 mgr = instance._meta.default_manager
                 assert mgr is not None

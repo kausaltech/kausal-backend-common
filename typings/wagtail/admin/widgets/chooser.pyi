@@ -1,4 +1,3 @@
-from _typeshed import Incomplete
 from django.forms import widgets
 from django.utils.functional import cached_property as cached_property
 from wagtail.admin.admin_url_finder import AdminURLFinder as AdminURLFinder
@@ -7,6 +6,8 @@ from wagtail.coreutils import resolve_model_string as resolve_model_string
 from wagtail.models import Page as Page
 from wagtail.telepath import register as register
 from wagtail.widget_adapters import WidgetAdapter as WidgetAdapter
+
+from _typeshed import Incomplete
 
 class BaseChooser(widgets.Input):
     choose_one_text: Incomplete
@@ -64,7 +65,13 @@ class AdminPageChooser(BaseChooser):
     target_models: Incomplete
     model: Incomplete
     can_choose_root: Incomplete
-    def __init__(self, target_models: Incomplete | None = None, can_choose_root: bool = False, user_perms: Incomplete | None = None, **kwargs) -> None: ...
+    def __init__(
+        self,
+        target_models: Incomplete | None = None,
+        can_choose_root: bool = False,
+        user_perms: Incomplete | None = None,
+        **kwargs,
+    ) -> None: ...
     @property
     def model_names(self): ...
     @property
@@ -83,6 +90,12 @@ class PageChooserAdapter(BaseChooserAdapter):
 
 class AdminPageMoveChooser(AdminPageChooser):
     pages_to_move: Incomplete
-    def __init__(self, target_models: Incomplete | None = None, can_choose_root: bool = False, user_perms: Incomplete | None = None, **kwargs) -> None: ...
+    def __init__(
+        self,
+        target_models: Incomplete | None = None,
+        can_choose_root: bool = False,
+        user_perms: Incomplete | None = None,
+        **kwargs,
+    ) -> None: ...
     @property
     def base_js_init_options(self): ...

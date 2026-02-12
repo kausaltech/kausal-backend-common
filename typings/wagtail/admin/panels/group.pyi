@@ -1,7 +1,8 @@
 from collections.abc import Sequence
 from typing import Any, Generic, TypedDict, TypeVar, Unpack, type_check_only
 
-from django.forms import Media
+from django.db.models import Model
+from django.forms import Media, ModelForm
 from django.utils.functional import cached_property as cached_property
 
 from .base import _FC, Panel as Panel, PanelInitArgs, _BPModel, _Model, _Panel_Form
@@ -12,13 +13,13 @@ class PanelGroupOwnInitArgs(TypedDict, total=False):
 
 
 @type_check_only
-class PanelGroupInitArgs(PanelInitArgs, PanelGroupOwnInitArgs): ...
+class PanelGroupInitArgs[FormT: ModelForm[Any]](PanelInitArgs[FormT], PanelGroupOwnInitArgs): ...
 
 
-_PPanel_co = TypeVar('_PPanel_co', bound=PanelGroup, covariant=True)
+_PPanel_co = TypeVar('_PPanel_co', bound=PanelGroup[Any], covariant=True)
 
 
-class PanelGroup(Panel[_Model, _Panel_Form]):
+class PanelGroup[M: Model = Any, FormT: ModelForm[Any] = ModelForm[Any]](Panel[M, FormT]):
     """
     Abstract class for panels that manage a set of sub-panels.
     Concrete subclasses must attach a 'children' property
@@ -26,7 +27,7 @@ class PanelGroup(Panel[_Model, _Panel_Form]):
     children: Sequence[Panel[Any]]
     permission: str | None
 
-    def __init__(self, children: Sequence[Panel[Any]] = (), *args, **kwargs: Unpack[PanelGroupInitArgs]) -> None: ...
+    def __init__(self, children: Sequence[Panel[Any]] = (), *args, **kwargs: Unpack[PanelGroupInitArgs[FormT]]) -> None: ...
     @cached_property
     def child_identifiers(self) -> list[str]:
         """
@@ -34,7 +35,7 @@ class PanelGroup(Panel[_Model, _Panel_Form]):
         but validated to be unique and non-empty.
         """
 
-    class BoundPanel(Generic[_PPanel_co, _FC, _BPModel], Panel.BoundPanel[_PPanel_co, _FC, _BPModel]):
+    class BoundPanel(Panel.BoundPanel[_PPanel_co, _FC, _BPModel], Generic[_PPanel_co, _FC, _BPModel]):
         template_name: str
 
         @cached_property
@@ -48,14 +49,14 @@ class PanelGroup(Panel[_Model, _Panel_Form]):
         def media(self) -> Media: ...
 
 
-class TabbedInterface(PanelGroup[_Model, _Panel_Form]):
-    class BoundPanel(Generic[_PPanel_co, _FC, _BPModel], Panel.BoundPanel[_PPanel_co, _FC, _BPModel]): ...
+class TabbedInterface[M: Model, FormT: ModelForm[Any]](PanelGroup[M, FormT]):
+    class BoundPanel(Panel.BoundPanel[_PPanel_co, _FC, _BPModel], Generic[_PPanel_co, _FC, _BPModel]): ...
 
 class ObjectList(PanelGroup[_Model, _Panel_Form]):
-    class BoundPanel(Generic[_PPanel_co, _FC, _BPModel], Panel.BoundPanel[_PPanel_co, _FC, _BPModel]): ...
+    class BoundPanel(Panel.BoundPanel[_PPanel_co, _FC, _BPModel], Generic[_PPanel_co, _FC, _BPModel]): ...
 
 class FieldRowPanel(PanelGroup[_Model, _Panel_Form]):
-    class BoundPanel(Generic[_PPanel_co, _FC, _BPModel], Panel.BoundPanel[_PPanel_co, _FC, _BPModel]): ...
+    class BoundPanel(Panel.BoundPanel[_PPanel_co, _FC, _BPModel], Generic[_PPanel_co, _FC, _BPModel]): ...
 
 class MultiFieldPanel(PanelGroup[_Model, _Panel_Form]):
-    class BoundPanel(Generic[_PPanel_co, _FC, _BPModel], Panel.BoundPanel[_PPanel_co, _FC, _BPModel]): ...
+    class BoundPanel(Panel.BoundPanel[_PPanel_co, _FC, _BPModel], Generic[_PPanel_co, _FC, _BPModel]): ...

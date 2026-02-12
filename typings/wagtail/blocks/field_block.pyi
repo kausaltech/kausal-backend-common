@@ -1,11 +1,9 @@
-# ruff: noqa: D400, D415, D205, D401
 from collections.abc import Generator, Sequence
 from typing import Any, Iterable, Mapping, type_check_only
 
 from django.core.files.base import File
 from django.core.validators import _ValidatorCallable
 from django.db.models.base import Model
-from django.db.models.fields.related import ForeignKey, ForeignObject
 from django.forms.fields import (
     BooleanField,
     CharField,
@@ -21,7 +19,6 @@ from django.forms.models import ModelChoiceField
 from django.forms.widgets import Media, Widget
 from django.utils.choices import _Choices
 from django.utils.functional import cached_property
-from django.utils.safestring import SafeText
 from django_stubs_ext import StrOrPromise
 from wagtail.models import Page
 from wagtail.rich_text import RichText
@@ -32,26 +29,26 @@ from _typeshed import Incomplete
 from .base import Block, BlockMeta
 
 __all__ = [
-    'FieldBlock',
-    'CharBlock',
-    'URLBlock',
-    'RichTextBlock',
-    'RawHTMLBlock',
-    'ChooserBlock',
-    'PageChooserBlock',
-    'TextBlock',
-    'BooleanBlock',
-    'DateBlock',
-    'TimeBlock',
-    'DateTimeBlock',
-    'ChoiceBlock',
-    'MultipleChoiceBlock',
-    'EmailBlock',
-    'IntegerBlock',
-    'FloatBlock',
-    'DecimalBlock',
-    'RegexBlock',
     'BlockQuoteBlock',
+    'BooleanBlock',
+    'CharBlock',
+    'ChoiceBlock',
+    'ChooserBlock',
+    'DateBlock',
+    'DateTimeBlock',
+    'DecimalBlock',
+    'EmailBlock',
+    'FieldBlock',
+    'FloatBlock',
+    'IntegerBlock',
+    'MultipleChoiceBlock',
+    'PageChooserBlock',
+    'RawHTMLBlock',
+    'RegexBlock',
+    'RichTextBlock',
+    'TextBlock',
+    'TimeBlock',
+    'URLBlock',
 ]
 
 @type_check_only
@@ -92,7 +89,7 @@ class FieldBlock[F: Field](Block[FieldBlockMeta]):
 
 class FieldBlockAdapter(Adapter):
     js_constructor: str
-    def js_args(self, block: FieldBlock) -> list: ...
+    def js_args(self, block: FieldBlock[Any]) -> list: ...
     @cached_property
     def media(self) -> Media: ...
 

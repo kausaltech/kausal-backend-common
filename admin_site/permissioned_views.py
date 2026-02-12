@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, cast
-from typing_extensions import TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from django.contrib.auth.models import AnonymousUser
-from django.db.models import Model, QuerySet
+from django.db.models import Model
 from django.forms import BaseModelForm
-from wagtail.admin.forms.models import WagtailAdminModelForm
 from wagtail.snippets.views.snippets import (
     CreateView,
     DeleteView,
@@ -16,10 +14,8 @@ from wagtail.snippets.views.snippets import (
 )
 
 from kausal_common.admin_site.mixins import HideSnippetsFromBreadcrumbsMixin
-from kausal_common.models.permission_policy import CreateContext, ModelPermissionPolicy
+from kausal_common.models.permission_policy import ModelPermissionPolicy
 from kausal_common.models.permissions import PermissionedModel
-
-from users.models import User
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -27,14 +23,7 @@ if TYPE_CHECKING:
 
     from kausal_common.users import UserOrAnon
 
-_ModelT = TypeVar('_ModelT', bound=Model, default=Model, covariant=True)  # noqa: PLC0105
-_QS = TypeVar('_QS', bound=QuerySet[Any, Any], default=QuerySet[_ModelT, _ModelT])
-
-
-class _ModelForm[M: Model](WagtailAdminModelForm[M, User]):
-    pass
-
-_FormT = TypeVar('_FormT', bound=BaseModelForm[Any], default=_ModelForm[_ModelT])
+    from users.models import User
 
 
 def user_has_permission(
@@ -55,7 +44,7 @@ def user_has_permission(
     )
 
 
-class PermissionedEditView(HideSnippetsFromBreadcrumbsMixin, EditView[_ModelT, _FormT]):
+class PermissionedEditView[M: Model, FormT: BaseModelForm[Any]](HideSnippetsFromBreadcrumbsMixin, EditView[M, FormT]):
     def user_has_permission(self, permission):
         return user_has_permission(
             self.permission_policy,
@@ -68,7 +57,7 @@ class PermissionedEditView(HideSnippetsFromBreadcrumbsMixin, EditView[_ModelT, _
         return None
 
 
-class PermissionedDeleteView(DeleteView[_ModelT, _FormT]):
+class PermissionedDeleteView[M: Model, FormT: BaseModelForm[Any]](DeleteView[M, FormT]):
     def user_has_permission(self, permission):
         return user_has_permission(
             self.permission_policy,
@@ -78,7 +67,7 @@ class PermissionedDeleteView(DeleteView[_ModelT, _FormT]):
         )
 
 
-class PermissionedCreateView(HideSnippetsFromBreadcrumbsMixin, CreateView[_ModelT, _FormT]):
+class PermissionedCreateView[M: Model, FormT: BaseModelForm[Any]](HideSnippetsFromBreadcrumbsMixin, CreateView[M, FormT]):
     def user_has_permission(self, permission):
         return user_has_permission(
             self.permission_policy,
@@ -92,7 +81,7 @@ class PermissionedCreateView(HideSnippetsFromBreadcrumbsMixin, CreateView[_Model
         return self.request
 
 
-class PermissionedViewSet(Generic[_ModelT, _QS, _FormT], SnippetViewSet[_ModelT, _FormT]):
+class PermissionedViewSet[M: Model, FormT: BaseModelForm[Any]](SnippetViewSet[M, FormT]):
     add_view_class: ClassVar = PermissionedCreateView
     edit_view_class: ClassVar = PermissionedEditView
     delete_view_class: ClassVar = PermissionedDeleteView

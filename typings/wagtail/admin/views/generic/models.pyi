@@ -1,6 +1,5 @@
 from datetime import datetime
-from typing import Any, ClassVar, Generic, Sequence, TypedDict
-from typing_extensions import TypeVar
+from typing import Any, ClassVar, Sequence, TypedDict
 
 from django.db.models import Model, QuerySet
 from django.forms import BaseModelForm
@@ -9,14 +8,13 @@ from django.utils.functional import cached_property
 from django.views.generic import TemplateView
 from django.views.generic.edit import BaseCreateView, BaseDeleteView, BaseUpdateView
 from wagtail.admin.filters import WagtailFilterSet
-from wagtail.admin.forms import WagtailAdminModelForm
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.panels import Panel
 from wagtail.admin.ui.components import Component
 from wagtail.admin.ui.tables import Column
 from wagtail.admin.views.mixins import SpreadsheetExportMixin
 from wagtail.admin.widgets.button import Button, HeaderButton, ListingButton
-from wagtail.models import DraftStateMixin, ReferenceIndex
+from wagtail.models import DraftStateMixin, Locale, ReferenceIndex
 from wagtail.models.audit_log import ModelLogEntry
 
 from laces.typing import Renderable
@@ -25,12 +23,10 @@ from .base import BaseListingView, WagtailAdminTemplateMixin
 from .mixins import BeforeAfterHookMixin, HookResponseMixin, LocaleMixin, PanelMixin
 from .permissions import PermissionCheckedMixin
 
-_ModelT = TypeVar('_ModelT', bound=Model, default=Model, covariant=True)
-_FormT = TypeVar('_FormT', bound=BaseModelForm, default=WagtailAdminModelForm[Any], covariant=True)
-
-
-class IndexView(SpreadsheetExportMixin, LocaleMixin, PermissionCheckedMixin, BaseListingView[_ModelT], Generic[_ModelT]):
-    model: type[_ModelT] | None
+class IndexView[M: Model, QS: QuerySet[Any] = QuerySet[Model]](
+    SpreadsheetExportMixin, LocaleMixin, PermissionCheckedMixin, BaseListingView[M, QS]
+):
+    model: type[M] | None
     add_url_name: ClassVar[str | None]
     edit_url_name: ClassVar[str | None]
     copy_url_name: ClassVar[str | None]
@@ -57,27 +53,27 @@ class IndexView(SpreadsheetExportMixin, LocaleMixin, PermissionCheckedMixin, Bas
     def get_search_url(self) -> str | None: ...
     def get_search_form(self) -> SearchForm | None: ...
     def get_filterset_class(self) -> type[WagtailFilterSet] | None: ...
-    def search_queryset[QS: QuerySet](self, queryset: QS) -> QS: ...
-    def get_edit_url(self, instance: _ModelT) -> str | None: ...  # type: ignore[misc]
-    def get_copy_url(self, instance: _ModelT) -> str | None: ...  # type: ignore[misc]
-    def get_inspect_url(self, instance: _ModelT) -> str | None: ...  # type: ignore[misc]
-    def get_delete_url(self, instance: _ModelT) -> str | None: ...  # type: ignore[misc]
+    def search_queryset(self, queryset: QS) -> QS: ...
+    def get_edit_url(self, instance: M) -> str | None: ...
+    def get_copy_url(self, instance: M) -> str | None: ...
+    def get_inspect_url(self, instance: M) -> str | None: ...
+    def get_delete_url(self, instance: M) -> str | None: ...
     def get_add_url(self) -> str | None: ...
-    def get_list_more_buttons(self, instance: _ModelT) -> list[ListingButton]: ...  # type: ignore[misc]
-    def get_list_buttons(self, instance: _ModelT) -> list[Button]: ...  # type: ignore[misc]
+    def get_list_more_buttons(self, instance: M) -> list[ListingButton]: ...
+    def get_list_buttons(self, instance: M) -> list[Button]: ...
     def get_context_data(self, *args: Any, **kwargs: Any) -> dict[str, Any]: ...
     def render_to_response(self, context: dict[str, Any], **response_kwargs: Any) -> HttpResponse: ...
 
 type SuccessButton = tuple[str, str, bool]
 
-class CreateView(  # type: ignore[type-var]
+class CreateView[M: Model, FormT: BaseModelForm[Any]](
     LocaleMixin,
-    PanelMixin[_FormT],
+    PanelMixin[FormT],
     PermissionCheckedMixin,
-    BeforeAfterHookMixin[_FormT],
+    BeforeAfterHookMixin[FormT],
     WagtailAdminTemplateMixin,
-    BaseCreateView[_ModelT, _FormT], Generic[_ModelT, _FormT],  # type: ignore[type-var]
-):  # pyright: ignore
+    BaseCreateView[M, FormT],
+):
     index_url_name: ClassVar[str | None]
     add_url_name: ClassVar[str | None]
     edit_url_name: ClassVar[str | None]
@@ -87,7 +83,7 @@ class CreateView(  # type: ignore[type-var]
     actions: ClassVar[list[str]]
 
     action: str
-    form: _FormT
+    form: FormT
 
     def get_action(self, request: HttpRequest) -> str: ...
     def get_available_actions(self) -> list[str]: ...
@@ -96,34 +92,40 @@ class CreateView(  # type: ignore[type-var]
     def add_url(self) -> str: ...
     def get_edit_url(self) -> str: ...
     def get_success_url(self) -> str: ...
-    def get_success_message(self, instance: _ModelT) -> str | None: ... # type: ignore
+    def get_success_message(self, instance: M) -> str | None: ...
     def get_success_buttons(self) -> list[SuccessButton]: ...
     def get_error_message(self) -> str | None: ...
     def get_side_panels(self) -> Sequence[Renderable]: ...
-    def get_translations(self) -> list[dict[str, Any]]: ...  # type: ignore[override]
-    def get_initial_form_instance(self) -> _ModelT | None: ...
+    def get_translations(self) -> list[dict[Locale, str]]: ...
+    def get_initial_form_instance(self) -> M | None: ...
     def get_form_kwargs(self) -> dict[str, Any]: ...
-    def save_instance(self) -> _ModelT: ...
+    def save_instance(self) -> M: ...
     def save_action(self) -> HttpResponse: ...
-    def form_valid(self, form: _FormT) -> HttpResponse: ...  # type: ignore[misc]
-    def form_invalid(self, form: _FormT) -> HttpResponse: ...  # type: ignore[misc]
+    def form_valid(self, form: FormT) -> HttpResponse: ...
+    def form_invalid(self, form: FormT) -> HttpResponse: ...
 
-class CopyViewMixin(Generic[_ModelT]):
-    def get_object(self, queryset: QuerySet | None = None) -> _ModelT: ...
-    def get_initial_form_instance(self) -> _ModelT: ...
+class CopyViewMixin[M: Model, QS: QuerySet[Any] = QuerySet[Model]]:
+    def get_object(self, queryset: QS | None = None) -> M: ...
+    def get_initial_form_instance(self) -> M: ...
 
-class CopyView(CopyViewMixin[_ModelT], CreateView[_ModelT, _FormT]): ...
+class CopyView[M: Model, FormT: BaseModelForm[Any], QS: QuerySet[Any] = QuerySet[Model]](
+    CopyViewMixin[M, QS], CreateView[M, FormT]
+):
+    def get_object(self, queryset: QS | None = None) -> M: ...  # type: ignore[override]
 
 class LastUpdatedDict(TypedDict):
     timestamp: datetime
     user_display_name: str
 
-
 type LastUpdatedInfo = LastUpdatedDict | ModelLogEntry | None
 
-class EditView(  # type: ignore[type-var]
-    Generic[_ModelT, _FormT], LocaleMixin, PanelMixin[_FormT], PermissionCheckedMixin, BeforeAfterHookMixin[_FormT],
-    WagtailAdminTemplateMixin, BaseUpdateView[_ModelT, _FormT],  # type: ignore[type-var]
+class EditView[M: Model, FormT: BaseModelForm[Any], QS: QuerySet[Any] = QuerySet[Model]](
+    LocaleMixin,
+    PanelMixin[FormT],
+    PermissionCheckedMixin,
+    BeforeAfterHookMixin[FormT],
+    WagtailAdminTemplateMixin,
+    BaseUpdateView[M, FormT],
 ):
     index_url_name: ClassVar[str | None]
     edit_url_name: ClassVar[str | None]
@@ -137,14 +139,14 @@ class EditView(  # type: ignore[type-var]
     actions: ClassVar[list[str]]
 
     action: str
-    form: _FormT
+    form: FormT
     has_content_changes: bool
 
     request: HttpRequest
 
     def get_action(self, request: HttpRequest) -> str: ...
     def get_available_actions(self) -> list[str]: ...
-    def get_object(self, queryset: QuerySet | None = None) -> _ModelT: ...
+    def get_object(self, queryset: QS | None = None) -> M: ...  # type: ignore[override]
     def get_page_subtitle(self) -> str: ...
     def get_side_panels(self) -> Component: ...
     def get_last_updated_info(self) -> LastUpdatedInfo | None: ...
@@ -155,22 +157,20 @@ class EditView(  # type: ignore[type-var]
     def get_success_url(self) -> str: ...
     def get_translations(self) -> list[dict[str, Any]]: ...  # type: ignore[override]
     def get_form_kwargs(self) -> dict[str, Any]: ...
-    def save_instance(self) -> _ModelT: ...
+    def save_instance(self) -> M: ...
     def save_action(self) -> HttpResponse: ...
     def get_success_message(self) -> str | None: ...
     def get_success_buttons(self) -> list[SuccessButton]: ...
     def get_error_message(self) -> str | None: ...
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
 
-
-class DeleteView(  # type: ignore[type-var]
-    Generic[_ModelT, _FormT],
+class DeleteView[M: Model, FormT: BaseModelForm[Any], QS: QuerySet[Any] = QuerySet[Model]](
     LocaleMixin,
-    PanelMixin[_FormT],
+    PanelMixin[FormT],
     PermissionCheckedMixin,
-    BeforeAfterHookMixin[_FormT],
+    BeforeAfterHookMixin[FormT],
     WagtailAdminTemplateMixin,
-    BaseDeleteView[_ModelT, _FormT],  # type: ignore[type-var]
+    BaseDeleteView[M, FormT],
 ):
     index_url_name: ClassVar[str | None]
     edit_url_name: ClassVar[str | None]
@@ -179,12 +179,12 @@ class DeleteView(  # type: ignore[type-var]
     page_title: ClassVar[str]
     success_message: ClassVar[str | None]
 
-    object: _ModelT
+    object: M
     usage_url: str | None
     usage: ReferenceIndex | None
 
     def setup(self, request: HttpRequest, *args: Any, **kwargs: Any) -> None: ...
-    def get_object(self, queryset: QuerySet | None = None) -> _ModelT: ...
+    def get_object(self, queryset: QS | None = None) -> M: ...  # type: ignore[override]
     def get_usage(self) -> ReferenceIndex | None: ...
     def get_success_url(self) -> str: ...
     def get_page_subtitle(self) -> str: ...
@@ -194,10 +194,10 @@ class DeleteView(  # type: ignore[type-var]
     def confirmation_message(self) -> str: ...
     def get_success_message(self) -> str | None: ...
     def delete_action(self) -> None: ...
-    def form_valid(self, form: _FormT) -> HttpResponse: ...  # type: ignore[misc]
+    def form_valid(self, form: FormT) -> HttpResponse: ...  # type: ignore[misc]
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
 
-class InspectView[M: Model](PermissionCheckedMixin, WagtailAdminTemplateMixin, TemplateView):
+class InspectView[M: Model, QS: QuerySet[Any] = QuerySet[Model]](PermissionCheckedMixin, WagtailAdminTemplateMixin, TemplateView):
     model: type[M] | None
     index_url_name: ClassVar[str | None]
     edit_url_name: ClassVar[str | None]
@@ -210,7 +210,7 @@ class InspectView[M: Model](PermissionCheckedMixin, WagtailAdminTemplateMixin, T
     object: M
 
     def setup(self, request: HttpRequest, *args: Any, **kwargs: Any) -> None: ...
-    def get_object(self, queryset: QuerySet | None = None) -> M: ...
+    def get_object(self, queryset: QS | None = None) -> M: ...  # type: ignore[override]
     def get_page_subtitle(self) -> str: ...
     def get_fields(self) -> list[str]: ...
     def get_field_label(self, field_name: str, field: Any) -> str: ...
@@ -221,30 +221,28 @@ class InspectView[M: Model](PermissionCheckedMixin, WagtailAdminTemplateMixin, T
     def get_delete_url(self) -> str | None: ...
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
 
-
-class RevisionsCompareView(Generic[_ModelT], WagtailAdminTemplateMixin, TemplateView):
+class RevisionsCompareView[M: Model, QS: QuerySet[Any] = QuerySet[Model]](WagtailAdminTemplateMixin, TemplateView):
     edit_handler: ClassVar[Panel | None]
     edit_url_name: ClassVar[str | None]
     history_url_name: ClassVar[str | None]
     edit_label: ClassVar[str]
     history_label: ClassVar[str]
-    model: type[_ModelT]
+    model: type[M]
 
     pk: Any
     revision_id_a: str
     revision_id_b: str
-    object: _ModelT
+    object: M
 
     def setup(self, request: HttpRequest, pk: Any, revision_id_a: str, revision_id_b: str, *args: Any, **kwargs: Any) -> None: ...
-    def get_object(self, queryset: QuerySet | None = None) -> _ModelT: ...
+    def get_object(self, queryset: QS | None = None) -> M: ...  # type: ignore[override]
     def get_edit_handler(self) -> Panel: ...
     def get_page_subtitle(self) -> str: ...
     def get_history_url(self) -> str | None: ...
     def get_edit_url(self) -> str | None: ...
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
 
-
-class UnpublishView[M: Model](HookResponseMixin, WagtailAdminTemplateMixin, TemplateView):
+class UnpublishView[M: Model, QS: QuerySet[Any] = QuerySet[Any]](HookResponseMixin, WagtailAdminTemplateMixin, TemplateView):
     model: type[M] | None
     index_url_name: ClassVar[str | None]
     edit_url_name: ClassVar[str | None]
@@ -258,7 +256,7 @@ class UnpublishView[M: Model](HookResponseMixin, WagtailAdminTemplateMixin, Temp
 
     def setup(self, request: HttpRequest, pk: Any, *args: Any, **kwargs: Any) -> None: ...
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse: ...
-    def get_object(self, queryset: QuerySet[M] | None = None) -> M: ...
+    def get_object(self, queryset: QS | None = None) -> M: ...  # type: ignore[override]
     def get_usage(self) -> ReferenceIndex: ...
     def get_objects_to_unpublish(self) -> list[M]: ...
     def get_object_display_title(self) -> str: ...
@@ -270,7 +268,6 @@ class UnpublishView[M: Model](HookResponseMixin, WagtailAdminTemplateMixin, Temp
     def unpublish(self) -> HttpResponse | None: ...
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse: ...
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
-
 
 class RevisionsUnscheduleView[M: DraftStateMixin](WagtailAdminTemplateMixin, TemplateView):
     model: type[M] | None

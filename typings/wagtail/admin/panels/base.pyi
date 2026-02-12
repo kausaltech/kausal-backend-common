@@ -28,13 +28,13 @@ class PanelComparison[Obj](Protocol):
     def has_changed(self) -> bool: ...
 
 
-_FC = TypeVar('_FC', bound=ModelForm, default=ModelForm)
+_FC = TypeVar('_FC', bound=ModelForm[Any], default=ModelForm[Any])
 
 @overload
 def get_form_for_model[M: Model](model: type[M], **kwargs) -> type[WagtailAdminModelForm[M]]: ...
 
 @overload
-def get_form_for_model[FormT: ModelForm](model: type[Model], form_class: type[FormT], **kwargs) -> type[FormT]:
+def get_form_for_model[FormT: ModelForm[Any]](model: type[Model], form_class: type[FormT], **kwargs) -> type[FormT]:
     """
     Construct a ModelForm subclass using the given model and base form class. Any additional
     keyword arguments are used to populate the form's Meta class.
@@ -44,10 +44,10 @@ def get_form_for_model[FormT: ModelForm](model: type[Model], form_class: type[Fo
 type PanelContext = RenderContext
 
 _Model = TypeVar('_Model', bound=Model, default=Model)
-_Panel_co = TypeVar('_Panel_co', bound=Panel, covariant=True)
+_Panel_co = TypeVar('_Panel_co', bound=Panel[Any, Any], covariant=True)
 _BPModel = TypeVar('_BPModel', bound=Model, default=Model)
-_Panel_Form = TypeVar('_Panel_Form', bound=ModelForm, default=WagtailAdminModelForm)
-_BPPanel_Form = TypeVar('_BPPanel_Form', bound=ModelForm, default=WagtailAdminModelForm)
+_Panel_Form = TypeVar('_Panel_Form', bound=ModelForm[Any], default=WagtailAdminModelForm)
+_BPPanel_Form = TypeVar('_BPPanel_Form', bound=ModelForm[Any], default=WagtailAdminModelForm)
 
 @type_check_only
 class PanelInitArgs[F: ModelForm[Any]](TypedDict, total=False):

@@ -217,9 +217,16 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
     if True:
         import warnings
 
-        from wagtail.utils.deprecation import RemovedInWagtail70Warning
-
-        warnings.filterwarnings(action='ignore', category=RemovedInWagtail70Warning)
+        try:
+            from wagtail.utils.deprecation import RemovedInWagtail70Warning  # pyright: ignore[reportAttributeAccessIssue]
+            warnings.filterwarnings(action='ignore', category=RemovedInWagtail70Warning)
+        except ImportError:
+            pass
+        try:
+            from wagtail.utils.deprecation import RemovedInWagtail80Warning  # pyright: ignore[reportAttributeAccessIssue]
+            warnings.filterwarnings(action='ignore', category=RemovedInWagtail80Warning)
+        except ImportError:
+            pass
 
     if log_format != 'logfmt' and warning_traceback_enabled():
         register_warning_handler()

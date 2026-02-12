@@ -35,7 +35,14 @@ class LocaleFilter(django_filters.ChoiceFilter):
     def filter(self, qs, language_code): ...
 
 class WagtailFilterSet(django_filters.FilterSet):
-    def __init__(self, data: Incomplete | None = None, queryset: Incomplete | None = None, *, request: Incomplete | None = None, prefix: Incomplete | None = None) -> None: ...
+    def __init__(
+        self,
+        data: Incomplete | None = None,
+        queryset: Incomplete | None = None,
+        *,
+        request: Incomplete | None = None,
+        prefix: Incomplete | None = None,
+    ) -> None: ...
     @classmethod
     def filter_for_lookup(cls, field, lookup_type): ...
 
@@ -75,4 +82,12 @@ class PopularTagsFilter(django_filters.MultipleChoiceFilter):
 
 class BaseMediaFilterSet(WagtailFilterSet):
     permission_policy: Incomplete
-    def __init__(self, data: Incomplete | None = None, queryset: Incomplete | None = None, *, request: Incomplete | None = None, prefix: Incomplete | None = None, is_searching: Incomplete | None = None) -> None: ...
+    def __init__(
+        self,
+        data: Incomplete | None = None,
+        queryset: Incomplete | None = None,
+        *,
+        request: Incomplete | None = None,
+        prefix: Incomplete | None = None,
+        is_searching: Incomplete | None = None,
+    ) -> None: ...
