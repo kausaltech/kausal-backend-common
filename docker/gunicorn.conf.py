@@ -12,10 +12,20 @@ bind = "0.0.0.0:8000"
 KUBE_MODE = env_bool('KUBERNETES_MODE', default=False)
 TEST_MODE = env_bool('TEST_MODE', default=False)
 # Use only one worker in test mode to avoid process isolation issues
-if TEST_MODE:
-    workers = 1
-else:
-    workers = 2
+
+workers_env = os.getenv('GUNICORN_WORKERS', None)
+if workers_env:
+    try:
+        workers = int(workers_env)
+    except ValueError:
+        workers_env = None
+
+if not workers_env:
+    if TEST_MODE:
+        workers = 1
+    else:
+        workers = 2
+
 threads = multiprocessing.cpu_count() * 2 + 1
 wsgi_app = '%s:application' % os.getenv('UWSGI_MODULE', f'{get_django_project_name()}.wsgi')
 
