@@ -55,6 +55,10 @@ class Node[QS: MP_NodeQuerySet[Any]](MP_Node[QS], ClusterableModel):
     def __str__(self) -> str:
         return self.name
 
+    @property
+    def tree_label(self) -> str:
+        return self.name
+
     def get_parent_path(self, update=False) -> str | None:
         depth = int(len(self.path) / self.steplen)
         if depth <= 1:
@@ -85,12 +89,17 @@ class BaseOrganizationClass(models.Model):
 
 
 class BaseOrganizationQuerySet[M: models.Model](MP_NodeQuerySet[M], MultilingualQuerySet[M]):  # type: ignore[override]
-    @abstractmethod
-    def editable_by_user(self, user: User):
+    def editable_by_user(self, user: User):  # pyright: ignore[reportUnusedParameter]
         raise NotImplementedError('This method should be implemented by subclasses')
 
 
-class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model):
+if TYPE_CHECKING:
+    class TreeModel(MP_Node[Any]): ...
+else:
+    class TreeModel: ...
+
+
+class BaseOrganization(index.Indexed, TreeModel, ModelWithPrimaryLanguage, gis_models.Model):
     # Different identifiers, depending on origin (namespace), are stored in OrganizationIdentifier
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -189,7 +198,7 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
     id: int
     classification_id: int | None
 
-    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
+    class Meta:
         verbose_name = _("organization")
         verbose_name_plural = _("organizations")
         abstract = True
@@ -205,6 +214,17 @@ class BaseOrganization(index.Indexed, ModelWithPrimaryLanguage, gis_models.Model
     @override
     def __str__(self):
         return self.name
+
+    def __rich_repr__(self):
+        yield 'id', self.pk
+        yield 'name', self.name
+        if self.abbreviation:
+            yield 'abbreviation', self.abbreviation
+        yield 'uuid', str(self.uuid)
+        if self.parent:
+            yield 'parent', self.parent.name
+        if self.classification:
+            yield 'classification', self.classification.name
 
 
 class BaseNamespace(models.Model):

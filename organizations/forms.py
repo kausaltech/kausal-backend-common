@@ -6,10 +6,15 @@ from django.core.exceptions import ValidationError
 from django.forms import ModelChoiceField
 from django.utils.translation import gettext_lazy as _
 
+from treebeard.mp_tree import MP_NodeQuerySet
+
 from kausal_common.const import IS_PATHS, IS_WATCH
+
+from .models import Node
 
 if TYPE_CHECKING:
     from treebeard.mp_tree import MP_Node
+
 
 
 if IS_PATHS:
@@ -19,15 +24,15 @@ elif IS_WATCH:
 else:
     raise RuntimeError('No admin form found')
 
-class NodeChoiceField[M: MP_Node[Any]](ModelChoiceField[M]):
+class NodeChoiceField[M: Node[MP_NodeQuerySet[Any]]](ModelChoiceField[M]):
     def label_from_instance(self, obj):
         depth_line = '-' * (obj.get_depth() - 1)
-        label = super().label_from_instance(obj)
+        label = obj.tree_label
         return f'{depth_line} {label}'
 
 
-class NodeForm[M: MP_Node[Any]](ModelForm[M]):
-    parent = NodeChoiceField[M](required=False, queryset=None)
+class NodeForm[M: Node[MP_NodeQuerySet[Any]]](ModelForm[M]):
+    parent: NodeChoiceField[M] = NodeChoiceField[M](required=False, queryset=None)
 
     def __init__(self, *args, **kwargs):
         parent_required = kwargs.pop('parent_required', False)
