@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 import types
 import warnings
-from typing import TextIO, cast
+from typing import TextIO
 
 import rich
 from rich.traceback import Traceback
@@ -17,20 +17,29 @@ _warning_traceback_enabled = False
 
 IGNORE_WARNINGS = [
     "Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.",
+    "Defining `exclude_fields` is deprecated in favour of `exclude`.",
+]
+
+IGNORE_WARNINGS_STARTSWITH = [
+    "Creating a DjangoObjectType without either the `fields` or the `exclude` option is deprecated. Add an explicit ",
+    "pkg_resources is deprecated as an API",
 ]
 
 
 def warn_with_traceback(
     message: Warning | str,
     category: type[Warning],
-    filename: str,
-    lineno: int,
-    file: TextIO | None = None,
-    line: str | None = None,
+    filename: str,  # pyright: ignore[reportUnusedParameter]
+    lineno: int,  # pyright: ignore[reportUnusedParameter]
+    file: TextIO | None = None,  # pyright: ignore[reportUnusedParameter]
+    line: str | None = None,  # pyright: ignore[reportUnusedParameter]
 ) -> None:
     tb = None
     depth = 2
-    if str(message) in IGNORE_WARNINGS:
+    msg_str = str(message)
+    if msg_str in IGNORE_WARNINGS:
+        return
+    if any(msg_str.startswith(prefix) for prefix in IGNORE_WARNINGS_STARTSWITH):
         return
     while True:
         try:
