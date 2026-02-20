@@ -126,3 +126,15 @@ quote-style = "single"
 
 [lint.flake8-builtins]
 builtins-ignorelist = ["id", "format", "print", "input", "next", "type"]
+
+[lint.flake8-type-checking]
+runtime-evaluated-decorators = [
+  "strawberry_django.field",
+  "strawberry_django.fields.field",
+  "strawberry.directive",
+  "strawberry.field",
+  "strawberry.types.field",
+  "strawberry.input",
+  "strawberry.mutation",
+  "strawberry.subscription",
+]
