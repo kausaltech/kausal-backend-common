@@ -17,7 +17,7 @@ from kausal_common.users.models import uuid_to_username
 from users.models import User
 
 if TYPE_CHECKING:
-    from social_django import BaseAuth
+    from social_core.backends.base import BaseAuth
     from social_django.models import UserSocialAuth
 
 logger = logger.bind(name='auth.pipeline')
