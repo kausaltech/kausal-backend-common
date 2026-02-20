@@ -11,6 +11,10 @@ ENV_SCHEMA = dict(
 
 
 def register_settings(settings: dict[str, Any]):
+    from .debugging import init_debugger
     from .mail.settings import register_settings as register_mail_settings
+
     register_mail_settings(settings)
     settings['FORMS_URLFIELD_ASSUME_HTTPS'] = True
+
+    init_debugger()
