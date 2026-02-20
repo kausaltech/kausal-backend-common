@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import TYPE_CHECKING, Any, TypeGuard, cast
+from typing import TYPE_CHECKING, Any, Generic, TypeGuard, cast
 
 import graphene
 from graphene.types.schema import TypeMap as GrapheneTypeMap
@@ -15,22 +15,25 @@ from graphql import (
 )
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.federation.schema import Schema as FederationSchema
-from strawberry.schema.compat import is_enum
 from strawberry.schema.schema_converter import GraphQLCoreConverter
 from strawberry.schema.types import ConcreteType
 from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.types import has_object_definition
-from strawberry.types.base import StrawberryObjectDefinition, StrawberryType
-from strawberry.types.enum import EnumDefinition
+from strawberry.types.base import (
+    StrawberryObjectDefinition,
+    StrawberryType,
+    WithStrawberryDefinition,
+    has_strawberry_definition,
+)
+from strawberry.types.enum import StrawberryEnumDefinition, WithStrawberryEnumDefinition, has_enum_definition
 from strawberry.types.scalar import ScalarDefinition
 from strawberry.types.union import StrawberryUnion
 
-type StrawberryObjectType = StrawberryObjectDefinition | EnumDefinition | ScalarDefinition
+type StrawberryObjectType = StrawberryObjectDefinition | StrawberryEnumDefinition | ScalarDefinition
 
 
 def get_sb_definition(type_: type) -> StrawberryObjectType | StrawberryUnion:
     from strawberry.types.base import StrawberryObjectDefinition
-    from strawberry.types.enum import EnumDefinition
     from strawberry.types.scalar import ScalarDefinition
 
     if TYPE_CHECKING:
@@ -99,7 +102,7 @@ def get_sb_definition(type_: type) -> StrawberryObjectType | StrawberryUnion:
 
     if issubclass(type_, graphene.Enum):
         meta = cast('EnumOptions', type_meta)
-        enum_def = EnumDefinition(
+        enum_def = StrawberryEnumDefinition(
             wrapped_cls=type(meta.enum),  # type: ignore  # pyright: ignore[reportArgumentType]
             name=meta.name,
             values=[],
@@ -136,15 +139,21 @@ def _is_graphene_named_type(
 ) -> TypeGuard[type[graphene.ObjectType[Any] | graphene.Interface[Any] | graphene.Union | graphene.Enum]]:
     if not inspect.isclass(type_):
         return False
-    if not issubclass(type_, (graphene.ObjectType, graphene.Interface, graphene.Union, graphene.Enum)):
+    if not issubclass(type_, (graphene.ObjectType, graphene.InputObjectType, graphene.Interface, graphene.Union, graphene.Enum)):
         return False
     return True
 
 
-def _is_strawberry_type(type_: Any) -> TypeGuard[type[StrawberryObjectType]]:
-    if is_enum(type_) or has_object_definition(type_):
-        return True
-    return False
+def _is_strawberry_type(type_: Any) -> TypeGuard[WithStrawberryDefinition[Any]]:
+    return has_strawberry_definition(type_)
+
+def is_strawberry_enum(type_: Any) -> TypeGuard[WithStrawberryEnumDefinition]:
+    return has_enum_definition(type_)
+
+def _get_strawberry_enum_def(type_: Any) -> StrawberryEnumDefinition | None:
+    if has_enum_definition(type_):
+        return type_.__strawberry_definition__
+    return None
 
 
 SB_SCALAR_TYPES = {val.name: key for key, val in DEFAULT_SCALAR_REGISTRY.items()}
@@ -155,6 +164,23 @@ class UnifiedGrapheneTypeMap(GrapheneTypeMap):
     def __init__(self, sb_converter: UnifiedGraphQLConverter) -> None:
         self.sb_converter = sb_converter
         super().__init__(types=())
+
+    def _add_strawberry_type(self, type_: type, gql_type: GraphQLNamedType, name: str) -> None:
+        sb_def: StrawberryObjectType | StrawberryUnion
+        if enum_def := _get_strawberry_enum_def(type_):
+            sb_def = enum_def
+        else:
+            sb_def = get_sb_definition(type_)
+        self.sb_converter.type_map[name] = ConcreteType(
+            definition=sb_def, implementation=gql_type
+        )
+        if not _is_strawberry_type(type_): # and enum_def is not None:
+            # We need to set the Strawberry definition so that Strawberry input type conversion works.
+            setattr(type_, '__strawberry_definition__', sb_def)  # noqa: B010
+            if issubclass(type_, Generic):
+                assert not hasattr(type_, '__parameters__')
+                setattr(type_, '__parameters__', ())  # noqa: B010
+            setattr(type_, '__graphene_primary__', True)  # noqa: B010
 
     def add_type(self, type_: type[graphene.ObjectType[Any]] | type) -> GraphQLNamedType:
         from graphene.types.base import SubclassWithMeta
@@ -171,11 +197,11 @@ class UnifiedGrapheneTypeMap(GrapheneTypeMap):
             self[gql_type.name] = gql_type
             return gql_type
 
-        if is_enum(type_) and not _is_graphene_named_type(type_):
-            enum_definition: EnumDefinition = type_._enum_definition  # type: ignore
+        if is_strawberry_enum(type_) and not _is_graphene_named_type(type_):
+            enum_definition: StrawberryEnumDefinition = type_.__strawberry_definition__
             assert enum_definition.name
             assert enum_definition.name not in self, "Enum %s already exists" % enum_definition.name
-            enum_type = assert_enum_type(self.sb_converter.from_type(type_))
+            enum_type = assert_enum_type(self.sb_converter.from_type(enum_definition))
             self[enum_type.name] = enum_type
             return enum_type
 
@@ -185,26 +211,18 @@ class UnifiedGrapheneTypeMap(GrapheneTypeMap):
         name: str = getattr(type_, '_meta').name  # noqa: B009
 
         sb_type = self.sb_converter.type_map.get(name)
-        if sb_type is not None:
+        if sb_type is not None and not getattr(type_, '__graphene_primary__', False):
             return assert_named_type(sb_type.implementation)
 
         sb_scalar_type = SB_SCALAR_TYPES.get(name)
         if sb_scalar_type is not None:
             return self.sb_converter.from_scalar(cast('type', sb_scalar_type))
 
-        gql_type = cast('GraphQLNamedType', super().add_type(type_))
+        gql_type = super().add_type(type_)
+
         assert gql_type.name == name
         if name not in self.sb_converter.type_map:
-            if enum_def := getattr(type_, '_enum_definition', None):
-                sb_def = enum_def
-            else:
-                sb_def = get_sb_definition(type_)
-            self.sb_converter.type_map[name] = ConcreteType(
-                definition=sb_def, implementation=gql_type
-            )
-            if isinstance(sb_def, EnumDefinition) and not hasattr(sb_def, '_enum_definition'):
-                # We need to set the enum definition so that Strawberry input type conversion works.
-                setattr(type_, '_enum_definition', sb_def)  # noqa: B010
+            self._add_strawberry_type(type_, gql_type, name)
 
         return gql_type
 
@@ -266,14 +284,10 @@ class GrapheneStrawberrySchema(FederationSchema):
 
     @schema_converter.setter
     def schema_converter(self, value: GraphQLCoreConverter) -> None:
-        opt_kwargs = {}
-        if not hasattr(value, '_get_scalar_registry'):
-            opt_kwargs['scalar_registry'] = value.scalar_registry
-        else:
-            opt_kwargs['scalar_overrides'] = {}
-        # scalar_overrides is missing
         self._schema_converter = UnifiedGraphQLConverter(
             config=value.config,
+            scalar_overrides={},
+            scalar_map={},
             get_fields=value.get_fields,
-            **opt_kwargs,
         )
+        self._schema_converter.scalar_registry = value.scalar_registry
