@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Generic, TypeAlias, overload
+from typing import TYPE_CHECKING, Any, Callable, Generic, Self, TypeAlias, overload
 from typing_extensions import TypeVar
 
 from django.db.models import (
@@ -45,22 +45,32 @@ type FK[To: Model | None] = ForeignKey[To, To]
 
 if TYPE_CHECKING:
     @type_check_only
-    class RelatedManagerQS[To: Model, QS: QuerySet](RelatedManager[To]):  # pyright: ignore
-        def get_queryset(self) -> QS: ...  # pyright: ignore
+    class RelatedManagerQS[To: Model, QS: QuerySet[Any]](RelatedManager[To]):  # pyright: ignore[reportGeneralTypeIssues]
+        def get_queryset(self) -> QS: ...
 
     @type_check_only
     class ReverseManyToOneDescriptorQS[To: Model, QS: QuerySet[Any]](ReverseManyToOneDescriptor[To]):
-        @overload    # type: ignore
-        def __get__(self, instance: Model, cls: Any = ...) -> RelatedManagerQS[To, QS]: ...  # type: ignore
+        @overload
+        def __get__(self, instance: None, cls: Any | None = None) -> Self: ...
+
+        @overload
+        def __get__(self, instance: Model, cls: Any = ...) -> RelatedManagerQS[To, QS]: ...
+
+        def __get__(self, instance: Model | None, cls: Any | None = None) -> RelatedManagerQS[To, QS] | Self: ...
 
     @type_check_only
     class ManyRelatedManagerQS[To: Model, Through: Model, QS: QuerySet[Any]](ManyRelatedManager[To, Through]):  # pyright: ignore
-        def get_queryset(self) -> QS: ...  # pyright: ignore
+        def get_queryset(self) -> QS: ...
 
     @type_check_only
     class ManyToManyDescriptorQS[To: Model, Through: Model, QS: QuerySet[Any]](ManyToManyDescriptor[To, Through]):
-        @overload    # type: ignore
-        def __get__(self, instance: Model, cls: Any = ...) -> ManyRelatedManagerQS[To, Through, QS]: ...  # type: ignore
+        @overload  # type: ignore[override]
+        def __get__(self, instance: None, cls: Any | None = None) -> Self: ...
+        @overload
+        def __get__(self, instance: Model, cls: Any = ...) -> ManyRelatedManagerQS[To, Through, QS]: ...
+        def __get__(self, instance: Model | None, cls: Any | None = None) -> ManyRelatedManagerQS[To, Through, QS] | Self: ...
+
+    type M2MQS[To: Model, Through: Model, QS: QuerySet[Any] = QuerySet[To]] = ManyToManyDescriptorQS[To, Through, QS]
 
 
 type RevMany[To: Model] = ReverseManyToOneDescriptor[To]
@@ -71,13 +81,15 @@ type RevManyToManyQS[To: Model, Through: Model, QS: QuerySet[Any]] = ManyToManyD
 type OneToOne[To: Model | None] = OneToOneField[To, To]
 type RevOne[From: Model, To: Model] = ReverseOneToOneDescriptor[From, To]
 
+
 M2M: TypeAlias = ManyToManyField[_To, _Through]  # pyright: ignore
+
 
 _M = TypeVar("_M", bound=Model, covariant=True)  # noqa: PLC0105
 _QS = TypeVar("_QS", bound=QuerySet[Model, Model], default=QuerySet[_M, _M], covariant=True)  # noqa: PLC0105
 
 
-class ModelManager(Generic[_M, _QS], Manager[_M]):
+class ModelManager(Manager[_M], Generic[_M, _QS]):
     """
     Subclassed Manager that enables easier type checking with custom querysets.
 
@@ -150,11 +162,11 @@ class PageModelManager(ModelManager[_PageT, _PageQS], PageManager[_PageT]):  # p
         def get_queryset(self) -> _PageQS: ...
 
 
-def manager_from_qs[_M: Model, _QS: QuerySet](qs: type[_QS]) -> ModelManager[_M, _QS]:  # pyright: ignore
-    return ModelManager[_M, _QS].from_queryset(qs)()
+def manager_from_qs[M: Model, QS: QuerySet[Any] = QuerySet[M, M]](qs: type[QS]) -> ModelManager[M, QS]:
+    return ModelManager[M, QS].from_queryset(qs)()
 
-def manager_from_mlqs[_M: Model, _MLQS: MultilingualQuerySet[Any]](qs: type[_MLQS]) -> MLModelManager[_M, _MLQS]:
-    return MLModelManager[_M, _MLQS].from_queryset(qs)()
+def manager_from_mlqs[M: Model, MLQS: MultilingualQuerySet[Any]](qs: type[MLQS]) -> MLModelManager[M, MLQS]:
+    return MLModelManager[M, MLQS].from_queryset(qs)()
 
 
 if TYPE_CHECKING:
@@ -163,7 +175,7 @@ if TYPE_CHECKING:
     _F = TypeVar('_F', bound=Callable[..., Any])
 
     class copy_signature(Generic[_F]):  # noqa: N801
-        def __init__(self, target: _F) -> None: ...  # pyright: ignore
+        def __init__(self, target: _F) -> None: ...
         def __call__(self, wrapped: Callable[..., Any]) -> _F: ...
 else:
     def copy_signature(_):
