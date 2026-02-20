@@ -35,6 +35,9 @@ class SingleValueContext[ValueT]:
     def get(self) -> ValueT:
         return self._context_var.get()
 
+    def is_set(self) -> bool:
+        return self._context_var.get(None) is not None
+
 
 @dataclass
 class SubclassableContext(SingleValueContext):

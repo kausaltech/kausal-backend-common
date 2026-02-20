@@ -7,6 +7,9 @@ if [ ! -f ./graphql.config.yaml ]; then
   exit 1
 fi
 
+PYTHONPATH="$(pwd):$PYTHONPATH"
+export PYTHONPATH
+
 echo "Exporting schema..."
 python manage.py export_schema aplans.schema > schema.graphql
 echo "Generating Turms code..."
