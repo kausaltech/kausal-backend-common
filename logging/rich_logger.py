@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import functools
 import logging
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Generator, Sequence
+from contextlib import contextmanager
 from datetime import datetime
 from logging import LogRecord
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import loguru
 from rich.console import Console, ConsoleRenderable, RenderableType
@@ -193,7 +195,7 @@ class RichLogHandler(RichHandler):
         add_scope('inspect.attr.dunder', 'instance_obj_id')
         add_scope('inspect.attr.dunder', 'context')
         add_scope('json.key', 'session')
-        other_extra = {key: value for key, value in extra.items() if key not in ('markup',)}
+        other_extra = {key: value for key, value in extra.items() if key not in ('markup',)}  # noqa: FURB171
         if scope_parts:
             out = Text()
             record.highlighter = None
@@ -403,3 +405,26 @@ def patch_daphne_runserver() -> None:
     from daphne.management.commands.runserver import Command  # type: ignore
 
     Command.log_action = _daphne_log_action
+
+
+@contextmanager
+def log_sql_queries() -> Generator[None]:
+    """Log all SQL queries during the context."""
+
+    from logging import getLogger
+
+    logger = getLogger('django.db')
+    current_level = logger.level
+    try:
+        logger.setLevel(logging.DEBUG)
+        yield
+    finally:
+        logger.setLevel(current_level)
+
+
+def enable_sql_query_logging[C: Callable[..., Any]](func: C) -> C:
+    @functools.wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        with log_sql_queries():
+            return func(*args, **kwargs)
+    return cast('C', wrapper)
