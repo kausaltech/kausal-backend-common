@@ -1,19 +1,17 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import graphene
 
 import graphene_django_optimizer as gql_optimizer
 
 from kausal_common.graphene import DjangoNode
-from kausal_common.graphene.graphql_helpers import (
-    CreateModelInstanceMutation,
-    DeleteModelInstanceMutation,
-    UpdateModelInstanceMutation,
-)
-
-from orgs.models import Organization, OrganizationQuerySet
 
 from .forms import NodeForm
+
+if TYPE_CHECKING:
+    from orgs.models import Organization, OrganizationQuerySet
 
 
 class OrganizationForm(NodeForm):
@@ -50,24 +48,3 @@ class OrganizationNode(DjangoNode):
     @staticmethod
     def resolve_parent(parent: Organization, info) -> Organization | None:
         return parent.get_parent()
-
-
-class CreateOrganizationMutation(CreateModelInstanceMutation):
-    class Meta:
-        abstract = True
-
-
-class UpdateOrganizationMutation(UpdateModelInstanceMutation):
-    class Meta:
-        abstract = True
-
-
-class DeleteOrganizationMutation(DeleteModelInstanceMutation):
-    class Meta:
-        abstract = True
-
-
-
-class Mutation(graphene.ObjectType):
-    class Meta:
-        abstract = True
