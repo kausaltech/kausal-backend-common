@@ -65,6 +65,9 @@ class PermissionedQuerySet(QuerySet[_Model, _Model]):
     def modifiable_by(self, user: UserOrAnon) -> Self:
         return self._pp.filter_by_perm(self, user, 'change')
 
+    def filter_by_perm(self, user: UserOrAnon, action: ObjectSpecificAction) -> Self:
+        return self._pp.filter_by_perm(self, user, action)
+
 
 _PM = TypeVar("_PM", bound=PermissionedModel, covariant=True)  # noqa: PLC0105
 _PQS = TypeVar(  # noqa: PLC0105
