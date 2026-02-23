@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from pdb import Pdb
+import time
+from bdb import BdbQuit
 from typing import TYPE_CHECKING, Any
 
 from rich import print
@@ -9,6 +10,9 @@ from rich.style import Style
 
 if TYPE_CHECKING:
 
+    from pdb import Pdb
+    from types import FrameType
+
     from IPython.core.debugger import Pdb as IPythonPdb
     class PdbMixinBase(IPythonPdb): ...
 else:
@@ -16,11 +20,26 @@ else:
 
 
 class PdbMixin(PdbMixinBase):
-
     def print_stack_trace(self, count: int | None = None):
-        if count is None:
-            count = self.context
-        Pdb.print_stack_trace(self)
+        return super().print_stack_trace(count)
+
+    def print_stack_entry(self, frame_lineno: tuple[FrameType, int], prompt_prefix: str = "\n-> "):
+        return super().print_stack_entry(frame_lineno, prompt_prefix)
+
+    @property  # type: ignore[override]
+    def curframe_locals(self) -> dict[str, Any] | None:
+        if self.curframe is None:
+            return None
+        return self.curframe.f_locals
+
+    @curframe_locals.setter
+    def curframe_locals(self, value: dict[str, Any] | None) -> None:
+        return
+
+    def precmd(self, line: str | None) -> str:
+        if line is None or line == "EOF":
+            raise BdbQuit
+        return super().precmd(line)
 
     if False:
         def __line_content(self, filename: str, lineno: int, line: str, arrow: bool = False):  # noqa: ANN202
@@ -58,3 +77,6 @@ if __name__ == '__main__':
     kls = get_debugger_cls()
     pdb = kls()
     pdb.set_trace()
+
+    while True:
+        time.sleep(1)
