@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from channels.auth import AuthMiddlewareStack
 from channels.db import sync_to_async  # pyright: ignore[reportAttributeAccessIssue]
@@ -51,7 +51,7 @@ def HTTPMiddleware(inner: ASGIApplication) -> ASGIApplication:  # noqa: N802
 
     from asgi_cors import asgi_cors  # type: ignore[import-untyped]
 
-    return SentryAsgiMiddleware(
+    return cast('ASGIApplication',SentryAsgiMiddleware(
         ProxyHeadersMiddleware(
             AuthMiddlewareStack(  # pyright: ignore[reportArgumentType]
                 GeneralRequestMiddleware(
@@ -59,15 +59,17 @@ def HTTPMiddleware(inner: ASGIApplication) -> ASGIApplication:  # noqa: N802
             ),
             trusted_hosts='*'
         ),
-    )
+        asgi_version=3,
+    ))
 
 
 def WebSocketMiddleware(inner: ASGIApplication) -> ASGIApplication:  # noqa: N802
-    return SentryAsgiMiddleware(
+    return cast('ASGIApplication',SentryAsgiMiddleware(
         ProxyHeadersMiddleware(
             AllowedHostsOriginValidator(  # pyright: ignore[reportArgumentType]
                 AuthMiddlewareStack(GeneralRequestMiddleware(inner))
             ),
             trusted_hosts='*'
         ),
-    )
+        asgi_version=3,
+    ))

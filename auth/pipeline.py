@@ -19,6 +19,7 @@ from users.models import User
 if TYPE_CHECKING:
     from social_core.backends.base import BaseAuth
     from social_django.models import UserSocialAuth
+    from social_django.storage import BaseDjangoStorage
 
 logger = logger.bind(name='auth.pipeline')
 
@@ -93,10 +94,11 @@ def get_username(details: dict[str, Any], backend, response, *args, **kwargs):
     }
 
 
-def associate_existing_social_user(backend: BaseAuth, uid: str, response: dict[str, Any], user: User | None = None, **kwargs):
+def associate_existing_social_user(backend: BaseAuth, uid: str, response: dict[str, Any], user: User | None = None, **_kwargs):
     provider = backend.name
     social: UserSocialAuth | None = None
-    social = backend.strategy.storage.user.get_social_auth(provider, uid)
+    storage = cast('BaseDjangoStorage', backend.strategy.storage)
+    social = storage.user.get_social_auth(provider, uid)
     save_new_uid = False
     username = response.get('preferred_username')
     if social is None and isinstance(backend, OktaOpenIdConnect) and username and username != uid:

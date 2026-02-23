@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
@@ -27,6 +28,8 @@ if TYPE_CHECKING:
 
 
 class DataSourceForm(WagtailAdminModelForm[DataSource]):
+    url = forms.URLField(required=False, assume_scheme='https')
+
     class Meta:
         model = DataSource
         exclude = ['scope_content_type', 'scope_id']

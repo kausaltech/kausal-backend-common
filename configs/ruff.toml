@@ -1,10 +1,9 @@
 line-length = 130
 exclude = ["node_modules", "*/migrations", "Attic", ".venv"]
-target-version = "py312"
 
 [lint]
 select = ["ALL"]
-extend-safe-fixes = ["TC002", "TC003", "TC004", "PYI059"]
+extend-safe-fixes = ["TC002", "TC003", "TC004", "PYI059", "UP"]
 ignore = [
   "ANN0",
   "ANN201",
@@ -60,11 +59,11 @@ ignore = [
   "TRY003",
   "TRY400",
   "UP031",
-  "UP035",
   "UP046",
 ]
 flake8-pytest-style.fixture-parentheses = false
 flake8-quotes.inline-quotes = "single"
+future-annotations = true
 
 [lint.per-file-ignores]
 "../typings/**" = ["D", "A002", "ANN401", "PLC0105"]
@@ -86,7 +85,6 @@ max-returns = 10
 [lint.isort]
 split-on-trailing-comma = true
 combine-as-imports = true
-required-imports = ["from __future__ import annotations"]
 extra-standard-library = ["typing_extensions"]
 section-order = [
   "future",

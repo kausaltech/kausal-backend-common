@@ -1,10 +1,11 @@
 from collections.abc import Callable, Sequence
-from typing import Any
+from typing import Any, override
 
 from django.utils.functional import cached_property as cached_property
 from django_stubs_ext import StrOrPromise
 from wagtail import hooks as hooks
 from wagtail.admin.ui.components import Component as Component
+from wagtail.admin.ui.menus import MenuItem
 from wagtail.coreutils import accepts_kwarg as accepts_kwarg
 from wagtail.utils.deprecation import RemovedInWagtail70Warning as RemovedInWagtail70Warning
 
@@ -13,48 +14,57 @@ from laces.typing import RenderContext
 
 type ReadOnlyProp[T] = T | Callable[[Any], T]
 
-class Button(Component):
-    template_name: str
-    show: ReadOnlyProp[bool]
-    label: StrOrPromise
-    icon_name: str
-    url: ReadOnlyProp[str] | None
+class BaseButton(Component):
+    template_name: str = ...
+    show: ReadOnlyProp[bool] = True
+    label: StrOrPromise = ...
+    icon_name: str | None = ...
+    url: ReadOnlyProp[str] | None = None
     attrs: dict[str, Any]
+    allow_in_dropdown: bool = False
     classname: str
     priority: int
 
     def __init__(
         self,
-        label: str = '',
+        label: StrOrPromise = '',
         url: str | None = None,
         classname: str = '',
-        icon_name: Incomplete | None = None,
-        attrs={},
+        icon_name: str | None = None,
+        attrs: dict[str, Any] | None = None,
         priority: int = 1000,
     ) -> None: ...
-    def get_context_data(self, parent_context: RenderContext | None = None) -> RenderContext | None: ...
+
+    def get_context_data(self, parent_context: dict[str, Any]) -> dict[str, Any]: ...  # type: ignore[override]
+
     @property
     def base_attrs_string(self): ...
     @property
     def aria_label(self): ...
-    def __lt__(self, other): ...
-    def __le__(self, other): ...
-    def __gt__(self, other): ...
-    def __ge__(self, other): ...
-    def __eq__(self, other): ...
+    def __lt__(self, other: BaseButton | MenuItem): ...
+    def __le__(self, other: BaseButton | MenuItem): ...
+    def __gt__(self, other: BaseButton | MenuItem): ...
+    def __ge__(self, other: BaseButton | MenuItem): ...
+    def __eq__(self, other: object): ...
 
-class HeaderButton(Button):
+
+class Button(BaseButton):
+    allow_in_dropdown: bool = True
+
+
+class HeaderButton(BaseButton):
     """An icon-only button to be displayed after the breadcrumbs in the header."""
     def __init__(
         self,
-        label: str = '',
-        url: Incomplete | None = None,
+        label: StrOrPromise = '',
+        url: str | None = None,
         classname: str = '',
-        icon_name: Incomplete | None = None,
-        attrs={},
+        icon_name: str | None = None,
+        attrs: dict[str, Any] | None = None,
         icon_only: bool = False,
         **kwargs,
     ) -> None: ...
+
 
 class ListingButton(Button):
     def __init__(self, label: StrOrPromise = '', url: str | None = None, classname: str = '', **kwargs) -> None: ...
@@ -82,7 +92,7 @@ class BaseDropdownMenuButton(Button):
     def __init__(self, *args, **kwargs) -> None: ...
     @property
     def dropdown_buttons(self) -> Sequence[Button]: ...
-    def get_context_data(self, parent_context: RenderContext | None = None) -> RenderContext | None: ...
+    def get_context_data(self, parent_context: dict[str, Any]) -> dict[str, Any]: ...
 
 class ButtonWithDropdown(BaseDropdownMenuButton):
     dropdown_buttons: Incomplete

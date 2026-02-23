@@ -5,9 +5,9 @@ from django.db import models
 from django.db.models import CharField, ForeignKey
 from django_stubs_ext import StrPromise
 from wagtail.query import TreeQuerySet as TreeQuerySet
-from wagtail.search import index as index
 
 from _typeshed import Incomplete
+from modelsearch import index
 from treebeard.mp_tree import MP_Node
 
 from .view_restrictions import BaseViewRestriction as BaseViewRestriction

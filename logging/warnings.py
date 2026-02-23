@@ -23,6 +23,7 @@ IGNORE_WARNINGS = [
 IGNORE_WARNINGS_STARTSWITH = [
     "Creating a DjangoObjectType without either the `fields` or the `exclude` option is deprecated. Add an explicit ",
     "pkg_resources is deprecated as an API",
+    "'asyncio.iscoroutinefunction' is deprecated",
 ]
 
 

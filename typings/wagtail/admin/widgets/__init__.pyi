@@ -1,6 +1,6 @@
 from .auto_height_text import AdminAutoHeightTextInput as AdminAutoHeightTextInput
 from .boolean_radio_select import BooleanRadioSelect as BooleanRadioSelect
-from .button import Button as Button, HeaderButton as HeaderButton
+from .button import Button as Button, ButtonWithDropdownFromHook as ButtonWithDropdownFromHook, HeaderButton as HeaderButton
 from .chooser import (
     AdminPageChooser as AdminPageChooser,
     AdminPageMoveChooser as AdminPageMoveChooser,

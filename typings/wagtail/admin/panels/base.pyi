@@ -1,6 +1,5 @@
 from collections.abc import Sequence
-from typing import Any, ClassVar, Generic, Protocol, Self, TypedDict, Unpack, overload, type_check_only
-from typing_extensions import TypeVar
+from typing import Any, ClassVar, Generic, Protocol, Self, TypedDict, TypeVar, Unpack, overload, type_check_only
 
 from django.db.models import Model
 from django.forms import ModelForm
@@ -41,7 +40,7 @@ def get_form_for_model[FormT: ModelForm[Any]](model: type[Model], form_class: ty
     """
 
 
-type PanelContext = RenderContext
+type PanelContext = dict[str, Any]
 
 _Model = TypeVar('_Model', bound=Model, default=Model)
 _Panel_co = TypeVar('_Panel_co', bound=Panel[Any, Any], covariant=True)
@@ -189,8 +188,8 @@ class Panel(Generic[_Model, _Panel_Form]):
             Whether this panel shows the panel furniture instead of being rendered outside of it.
             """
         def is_required(self) -> bool: ...
-        def get_context_data(self, parent_context: PanelContext | None = None) -> PanelContext: ...
-        def get_comparison(self) -> Sequence[PanelComparison]: ...
+        def get_context_data(self, parent_context: PanelContext = ...) -> PanelContext: ...
+        def get_comparison(self) -> Sequence[PanelComparison[Any]]: ...
         def render_missing_fields(self) -> str | SafeString:
             '''
             Helper function: render all of the fields that are defined on the form but not "claimed" by

@@ -1,7 +1,6 @@
 from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
-from typing import Any, ClassVar, Generic, Self, type_check_only
-from typing_extensions import TypeVar
+from typing import Any, ClassVar, Generic, Self, TypeVar, type_check_only
 
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import Group, Permission
@@ -47,7 +46,6 @@ from wagtail.locks import (
 from wagtail.log_actions import log as log
 from wagtail.permissions import PagePermissionPolicy
 from wagtail.query import PageQuerySet as PageQuerySet, SpecificQuerySetMixin as SpecificQuerySetMixin
-from wagtail.search import index as index
 from wagtail.signals import (
     page_published as page_published,
     page_slug_changed as page_slug_changed,
@@ -66,6 +64,7 @@ from wagtail.utils.deprecation import RemovedInWagtail70Warning as RemovedInWagt
 from wagtail.utils.timestamps import ensure_utc as ensure_utc
 
 from _typeshed import Incomplete
+from modelsearch import index
 from treebeard.mp_tree import MP_Node, MP_NodeManager
 
 from .audit_log import (
@@ -205,14 +204,14 @@ type _DTSet = datetime | str
 type _NullableDTF = models.DateTimeField[_DTSet | None, datetime | None]
 
 class DraftStateMixin(models.Model):
-    live: models.BooleanField
-    has_unpublished_changes: models.BooleanField
+    live: models.BooleanField[bool, bool]
+    has_unpublished_changes: models.BooleanField[bool, bool]
     first_published_at: _NullableDTF
     last_published_at: _NullableDTF
     live_revision: models.ForeignKey[Revision[Self] | None, Revision[Self] | None]
     go_live_at: _NullableDTF
     expire_at: _NullableDTF
-    expired: models.BooleanField
+    expired: models.BooleanField[bool, bool]
 
     @classmethod
     def check(cls, **kwargs) -> list[CheckMessage]: ...
@@ -258,7 +257,7 @@ class DraftStateMixin(models.Model):
         """
     def get_latest_revision_as_object(self) -> Any: ...
     @cached_property
-    def scheduled_revision(self) -> Revision | None: ...
+    def scheduled_revision(self) -> Revision[Self] | None: ...
     def get_scheduled_revision_as_object(self) -> Self: ...
     def get_lock(self) -> BaseLock | None: ...
 
@@ -334,8 +333,8 @@ class PreviewableMixin:
 
 _UserT = TypeVar('_UserT', bound=AbstractBaseUser, default=AbstractBaseUser)
 
-class LockableMixin(Generic[_UserT], models.Model):
-    locked: models.BooleanField
+class LockableMixin(models.Model, Generic[_UserT]):
+    locked: models.BooleanField[bool, bool]
     locked_at: _NullableDTF
     locked_by: models.ForeignKey[_UserT | None]
 
@@ -409,7 +408,7 @@ class WorkflowMixin:
 
 _PageModel = TypeVar('_PageModel', bound=Page, default=Page, covariant=True)
 
-class BasePageManager(Generic[_PageModel], models.Manager[_PageModel]):
+class BasePageManager(models.Manager[_PageModel], Generic[_PageModel]):
     def get_queryset(self) -> PageQuerySet[_PageModel]: ...
     def first_common_ancestor_of(self, pages: Sequence[Page], include_self: bool = False, strict: bool = False) -> Page:
         """
@@ -417,7 +416,7 @@ class BasePageManager(Generic[_PageModel], models.Manager[_PageModel]):
         for a list of pages instead of a queryset.
         """
 
-class PageManager(BasePageManager[_PageModel], MP_NodeManager): ...
+class PageManager(BasePageManager[_PageModel], MP_NodeManager[Any]): ...
 
 
 
@@ -430,14 +429,14 @@ class AbstractPage(models.Model):
     superclass to ensure that it is retained by subclasses of Page.
     """
 
-    objects: ClassVar[PageManager[Any]]  # pyright: ignore
+    objects: ClassVar[PageManager[Any]]
 
 PAGE_PERMISSION_TYPES: list[tuple[str, StrOrPromise, StrOrPromise]]
 PAGE_PERMISSION_TYPE_CHOICES: list[tuple[str, StrOrPromise]]
 PAGE_PERMISSION_CODENAMES: list[str]
 
 
-class Page(  # pyright: ignore[reportGeneralTypeIssues]
+class Page(
     AbstractPage,
     WorkflowMixin,
     PreviewableMixin,
@@ -448,16 +447,16 @@ class Page(  # pyright: ignore[reportGeneralTypeIssues]
     MP_Node[PageQuerySet[Page]],
     SpecificMixin[Page], index.Indexed, ClusterableModel, metaclass=PageBase,
 ):
-    title: models.CharField
-    draft_title: models.CharField
-    slug: models.SlugField
+    title: models.CharField[str, str]
+    draft_title: models.CharField[str, str]
+    slug: models.SlugField[str, str]
     content_type: models.ForeignKey[ContentType]
-    url_path: models.TextField
+    url_path: models.TextField[str, str]
     owner: models.ForeignKey[AbstractBaseUser | None]
-    seo_title: models.CharField
+    seo_title: models.CharField[str, str]
     show_in_menus_default: bool
-    show_in_menus: models.BooleanField
-    search_description: models.TextField
+    show_in_menus: models.BooleanField[bool, bool]
+    search_description: models.TextField[str, str]
     latest_revision_created_at: _NullableDTF
     alias_of: models.ForeignKey[Self | None, Self | None]
     search_fields: Sequence[index.BaseField]
@@ -472,8 +471,10 @@ class Page(  # pyright: ignore[reportGeneralTypeIssues]
     settings_panels: Sequence[Panel]
     private_page_options: Sequence[str]
 
+    id: int
+
     _default_manager: ClassVar[PageManager[Self]]
-    objects: ClassVar[PageManager[Self]]  # pyright: ignore
+    objects: ClassVar[PageManager[Self]]
 
     aliases: ReverseManyToOneDescriptor[Self]
     sites_rooted_here: ReverseManyToOneDescriptor[Site]
@@ -568,7 +569,7 @@ class Page(  # pyright: ignore[reportGeneralTypeIssues]
 
     def get_latest_revision_as_object(self) -> Self: ...
     def update_aliases(
-        self, *, revision: Revision | None = None, _content: SerializableData | None = None, _updated_ids: Sequence[int] | None = None
+        self, *, revision: Revision[Self] | None = None, _content: SerializableData | None = None, _updated_ids: Sequence[int] | None = None
     ) -> None:
         """
         Publishes all aliases that follow this page with the latest content from this page.
@@ -876,14 +877,14 @@ class Orderable(models.Model):
 _RevTargetT = TypeVar('_RevTargetT', bound=Model, default=Model)
 
 
-class RevisionQuerySet(Generic[_RevTargetT], models.QuerySet[Revision[_RevTargetT]]):
+class RevisionQuerySet(models.QuerySet[Revision[_RevTargetT]], Generic[_RevTargetT]):
     def page_revisions_q(self) -> Q: ...
     def page_revisions(self) -> RevisionQuerySet[Page]: ...
     def not_page_revisions(self) -> Self: ...
     def for_instance[M: Model](self, instance: M) -> RevisionQuerySet[M]: ...
 
 
-class RevisionsManager(Generic[_RevTargetT], models.Manager[Revision[_RevTargetT]]):
+class RevisionsManager(models.Manager[Revision[_RevTargetT]], Generic[_RevTargetT]):
     def get_queryset(self) -> RevisionQuerySet[_RevTargetT]: ...
     def previous_revision_id_subquery(self, revision_fk_name: str = 'revision'):
         """
@@ -901,13 +902,13 @@ class PageRevisionsManager(RevisionsManager[Page]):
 class Revision[M: Model](models.Model):
     content_type: models.ForeignKey[ContentType]
     base_content_type: models.ForeignKey[ContentType]
-    object_id: models.CharField
+    object_id: models.CharField[str, str]
     created_at: models.DateTimeField[_DTSet, datetime]
     user: models.ForeignKey[AbstractBaseUser | None]
-    object_str: models.TextField
+    object_str: models.TextField[str, str]
     content: models.JSONField[dict[str, Any], dict[str, Any]]
     approved_go_live_at: _NullableDTF
-    objects: ClassVar[RevisionsManager]  # pyright: ignore
+    objects: ClassVar[RevisionsManager]
     _default_manager: ClassVar[RevisionsManager]
     page_revisions: ClassVar[PageRevisionsManager]
     content_object: GenericForeignKey
@@ -928,15 +929,15 @@ class Revision[M: Model](models.Model):
     def get_next(self) -> Self: ...
 
 
-class GroupPagePermissionManager(models.Manager):
+class GroupPagePermissionManager(models.Manager[GroupPagePermission]):
     def create(self, **kwargs): ...
 
 
 class GroupPagePermission(models.Model):
-    group: models.ForeignKey[Group]
-    page: models.ForeignKey[Page]
-    permission: models.ForeignKey[Permission]
-    objects: ClassVar[GroupPagePermissionManager]  # pyright: ignore
+    group: models.ForeignKey[Group, Group]
+    page: models.ForeignKey[Page, Page]
+    permission: models.ForeignKey[Permission, Permission]
+    objects: ClassVar[GroupPagePermissionManager]
 
 
 class PagePermissionTester:
@@ -1030,12 +1031,12 @@ class TaskManager(models.Manager[Task]):
 _StateT = TypeVar('_StateT', bound=TaskState, default=TaskState)
 
 
-class Task(Generic[_StateT], SpecificMixin['Task'], models.Model):
-    name: models.CharField
+class Task(SpecificMixin['Task'], models.Model, Generic[_StateT]):
+    name: models.CharField[str, str]
     content_type: models.ForeignKey[ContentType]
-    active: models.BooleanField
+    active: models.BooleanField[bool, bool]
 
-    objects: ClassVar[TaskManager]  # type: ignore
+    objects: ClassVar[TaskManager]
     _default_manager: ClassVar[TaskManager]
 
     admin_form_fields: list[str]
@@ -1094,7 +1095,7 @@ class Task(Generic[_StateT], SpecificMixin['Task'], models.Model):
     def deactivate(self, user: AbstractBaseUser | None = None) -> None:
         """Set ``active`` to False and cancel all in progress task states linked to this task"""
 
-class WorkflowManager(models.Manager):
+class WorkflowManager(models.Manager[Workflow]):
     def active(self): ...
 
 class AbstractWorkflow(ClusterableModel):
@@ -1245,7 +1246,7 @@ class TaskState(SpecificMixin['TaskState'], models.Model):
     exclude_fields_in_copy: list[str]
     default_exclude_fields_in_copy: list[str]
 
-    objects: ClassVar[TaskStateManager]  # pyright: ignore
+    objects: ClassVar[TaskStateManager]
     _default_manager: ClassVar[TaskStateManager]
 
     def __init__(self, *args, **kwargs) -> None: ...

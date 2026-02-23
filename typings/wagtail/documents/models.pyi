@@ -1,5 +1,5 @@
-from collections.abc import Generator
-from typing import Any, ClassVar, Sequence
+from collections.abc import Generator, Sequence
+from typing import Any, ClassVar
 
 from django.contrib.auth.models import AbstractUser
 from django.core.files.base import File
@@ -9,10 +9,11 @@ from django.db.models.options import Options
 from django.dispatch import Signal
 from wagtail.models import CollectionMember
 from wagtail.models.reference_index import ReferenceGroups
-from wagtail.search import index
 from wagtail.search.queryset import SearchableQuerySetMixin
 
-class DocumentQuerySet(SearchableQuerySetMixin, models.QuerySet): ...
+from modelsearch import index
+
+class DocumentQuerySet[M: AbstractDocument = Document](SearchableQuerySetMixin, models.QuerySet[M]): ...
 
 class AbstractDocument(CollectionMember, index.Indexed, models.Model):
     title: models.CharField[str | int | Combinable, str]
@@ -27,7 +28,7 @@ class AbstractDocument(CollectionMember, index.Indexed, models.Model):
     class Meta(Options): ...
 
     def is_stored_locally(self) -> bool: ...
-    def open_file(self) -> Generator[File, None, None]: ...
+    def open_file(self) -> Generator[File]: ...
     def get_file_size(self) -> int | None: ...
     def get_file_hash(self) -> str: ...
     @property

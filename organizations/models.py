@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import typing
 import uuid
-from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar, Self, override
 
 from django.conf import settings
@@ -15,8 +14,8 @@ from modelcluster.models import ClusterableModel
 from modeltrans.fields import TranslationField
 from modeltrans.manager import MultilingualQuerySet
 from wagtail.fields import RichTextField
-from wagtail.search import index
 
+from modelsearch import index
 from treebeard.mp_tree import MP_Node, MP_NodeQuerySet
 
 from kausal_common.models.language import ModelWithPrimaryLanguage

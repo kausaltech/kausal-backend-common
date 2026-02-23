@@ -1,5 +1,6 @@
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Any, ClassVar, Sequence, TypedDict
+from typing import Any, ClassVar, TypedDict
 
 from django.db.models import Model, QuerySet
 from django.forms import BaseModelForm
@@ -11,9 +12,10 @@ from wagtail.admin.filters import WagtailFilterSet
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.panels import Panel
 from wagtail.admin.ui.components import Component
+from wagtail.admin.ui.menus import MenuItem
 from wagtail.admin.ui.tables import Column
 from wagtail.admin.views.mixins import SpreadsheetExportMixin
-from wagtail.admin.widgets.button import Button, HeaderButton, ListingButton
+from wagtail.admin.widgets.button import Button, HeaderButton
 from wagtail.models import DraftStateMixin, Locale, ReferenceIndex
 from wagtail.models.audit_log import ModelLogEntry
 
@@ -45,7 +47,7 @@ class IndexView[M: Model, QS: QuerySet[Any] = QuerySet[Model]](
     search_form: SearchForm | None
     is_searching: bool
     search_query: str | None
-    header_buttons: ClassVar[list[HeaderButton]]
+    header_buttons: ClassVar[list[HeaderButton]]  # type: ignore[assignment]
     add_item_label: ClassVar[str]
 
     def setup_search(self) -> None: ...
@@ -59,7 +61,7 @@ class IndexView[M: Model, QS: QuerySet[Any] = QuerySet[Model]](
     def get_inspect_url(self, instance: M) -> str | None: ...
     def get_delete_url(self, instance: M) -> str | None: ...
     def get_add_url(self) -> str | None: ...
-    def get_list_more_buttons(self, instance: M) -> list[ListingButton]: ...
+    def get_list_more_buttons(self, instance: M) -> list[Button | MenuItem]: ...
     def get_list_buttons(self, instance: M) -> list[Button]: ...
     def get_context_data(self, *args: Any, **kwargs: Any) -> dict[str, Any]: ...
     def render_to_response(self, context: dict[str, Any], **response_kwargs: Any) -> HttpResponse: ...

@@ -16,11 +16,11 @@ from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from modeltrans.fields import TranslationField
-from wagtail.search import index
 
 import willow  # type: ignore
 from image_cropping import ImageRatioField
 from loguru import logger
+from modelsearch import index
 from sentry_sdk import capture_exception
 
 from kausal_common.const import IS_WATCH

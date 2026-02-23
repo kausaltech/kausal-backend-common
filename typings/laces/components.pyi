@@ -1,4 +1,6 @@
+from typing import Any, overload
 from django.forms.widgets import Media, MediaDefiningClass
+from django.template import Context
 from django.utils.safestring import SafeString
 
 from .typing import HasMediaProperty, RenderContext
@@ -29,7 +31,7 @@ class Component(metaclass=MediaDefiningClass):
         `django.utils.safestring.SafeString` instance.
         """
 
-    def get_context_data(self, parent_context: RenderContext | None = None) -> RenderContext | None:
+    def get_context_data(self, parent_context: dict[str, Any]) -> dict[str, Any]:
         """Return the context data to render this component with."""
 
     @property
@@ -64,6 +66,3 @@ class MediaContainer(list[HasMediaProperty]):
         definitions of two `Media` objects.
 
         """
-
-
-
