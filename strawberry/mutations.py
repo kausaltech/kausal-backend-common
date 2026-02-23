@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast
+from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast, overload
 
+from strawberry.types.fields.resolver import StrawberryResolver
 import strawberry_django
 from django.db import transaction
 from django.db.models import ForeignObjectRel, ManyToManyField, Model
@@ -62,8 +63,19 @@ fragment OpInfo on OperationInfo {
 }
 """
 
+type ResolverFunc = StrawberryResolver[Any] | Callable[..., Any] | staticmethod[Any, Any] | classmethod[Any, Any, Any]
+
+
+@overload
+def mutation(*, extensions: list[FieldExtension] | None = None, **kwargs: Unpack[MutationArgs]) -> DjangoMutationBase: ...
+
+@overload
+def mutation(resolver: ResolverFunc, **kwargs: Unpack[MutationArgs]) -> DjangoMutationBase: ...
+
 
 def mutation(
+    resolver: ResolverFunc | None = None,
+    *,
     extensions: list[FieldExtension] | None = None,
     **kwargs: Unpack[MutationArgs],
 ) -> DjangoMutationBase:
@@ -73,7 +85,10 @@ def mutation(
             break
     else:
         extensions.append(MutationExtension())
-    return strawberry_django.mutation(handle_django_errors=True, extensions=extensions, **kwargs)
+    ret = strawberry_django.mutation(handle_django_errors=True, extensions=extensions, **kwargs)
+    if resolver is not None:
+        return ret(resolver)
+    return ret
 
 
 def parse_input(info: Info, data: Any) -> dict[str, Any]:

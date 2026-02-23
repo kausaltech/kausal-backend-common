@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model, QuerySet
+from django.forms import ValidationError
 
 from loguru import logger
 
@@ -34,6 +35,7 @@ def get_or_error[M: Model](
     model_or_queryset: type[M] | QuerySet[M],
     id: str | int | None = None,
     for_action: ObjectSpecificAction = 'view',
+    field_name: str | None = None,
     **kwargs: Any,
 ) -> M:
     if isinstance(model_or_queryset, QuerySet):
@@ -55,6 +57,9 @@ def get_or_error[M: Model](
     try:
         obj = qs.get()
     except ObjectDoesNotExist as error:
-        raise NotFoundError(info, f"{id} not found", original_error=error) from error
+        msg = f"{qs.model._meta.verbose_name} not found"
+        if field_name:
+            raise ValidationError({field_name: msg}) from error
+        raise NotFoundError(info, msg, original_error=error) from error
 
     return cast('M', obj)

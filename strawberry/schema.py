@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Annotated, Any, override
 
 import strawberry
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from graphql import DirectiveLocation, GraphQLError
 
 import sentry_sdk
@@ -72,7 +73,7 @@ class Schema(ABC, GrapheneStrawberrySchema):
         errors_printed = 0
         for error in errors:
             path_str = '.'.join(str(part) for part in error.path) if error.path else 'unknown'
-            if not isinstance(error.original_error, GraphQLError):
+            if not isinstance(error.original_error, (GraphQLError, PermissionDenied)):
                 logger.opt(exception=error.original_error).bind(graphql_path=path_str).error(error)
                 errors_printed += 1
             if error.original_error and errors_sent < 5:
