@@ -20,7 +20,7 @@ export function getNextConfig(
   opts: { isPagesRouter?: boolean; cssInJsLibrary?: 'styled-components' | 'emotion' }
 ): NextConfig {
   opts = opts || {};
-  const { isPagesRouter = false, cssInJsLibrary = 'styled-components' } = opts;
+  const { cssInJsLibrary = 'styled-components' } = opts;
 
   const config: NextConfig = {
     assetPrefix: prodAssetPrefix,
@@ -94,11 +94,13 @@ export function getNextConfig(
           cfg.target = 'node22';
         }
       } else {
-        if (isPagesRouter) {
-          cfg.resolve.alias['next-i18next/serverSideTranslations'] = false;
-          cfg.resolve.alias['./next-i18next.config'] = false;
-          cfg.resolve.alias['v8'] = false;
-        }
+        // Stub out Node.js built-ins for client bundle; loadMessages.ts is
+        // imported dynamically from _app.tsx but only executed server-side.
+        cfg.resolve.fallback = {
+          ...cfg.resolve.fallback,
+          fs: false,
+          path: false,
+        };
         cfg.resolve.symlinks = true;
         cfg.optimization = {
           ...cfg.optimization,
