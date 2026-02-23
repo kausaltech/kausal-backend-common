@@ -309,5 +309,8 @@ class AuthenticationExtension[Ctx: GraphQLContext](SchemaExtension[Ctx], ABC):
         ctx = self.get_context()
         token_auth = ctx.get_token_auth()
         if token_auth is not None and token_auth.error:
-            raise StrawberryGraphQLError(str(token_auth.error))
+            raise StrawberryGraphQLError(
+                str(token_auth.error),
+                extensions={'code': 'UNAUTHENTICATED'},
+            )
         yield
