@@ -15,10 +15,7 @@ const prodAssetPrefix = isProd ? process.env.NEXTJS_ASSET_PREFIX : undefined;
 
 const isCoverageEnabled = process.env.CODE_COVERAGE === '1';
 
-export function getNextConfig(projectRoot: string, opts: { isPagesRouter?: boolean }): NextConfig {
-  opts = opts || {};
-  const { isPagesRouter = false } = opts;
-
+export function getNextConfig(projectRoot: string): NextConfig {
   const config: NextConfig = {
     assetPrefix: prodAssetPrefix,
     output: standaloneBuild ? 'standalone' : undefined,
