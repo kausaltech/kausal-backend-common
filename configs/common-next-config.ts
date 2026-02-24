@@ -15,12 +15,9 @@ const prodAssetPrefix = isProd ? process.env.NEXTJS_ASSET_PREFIX : undefined;
 
 const isCoverageEnabled = process.env.CODE_COVERAGE === '1';
 
-export function getNextConfig(
-  projectRoot: string,
-  opts: { isPagesRouter?: boolean; cssInJsLibrary?: 'styled-components' | 'emotion' }
-): NextConfig {
+export function getNextConfig(projectRoot: string, opts: { isPagesRouter?: boolean }): NextConfig {
   opts = opts || {};
-  const { isPagesRouter = false, cssInJsLibrary = 'styled-components' } = opts;
+  const { isPagesRouter = false } = opts;
 
   const config: NextConfig = {
     assetPrefix: prodAssetPrefix,
@@ -34,9 +31,7 @@ export function getNextConfig(
     distDir: isCoverageEnabled ? '.next-coverage' : undefined,
     productionBrowserSourceMaps: true,
     compiler: {
-      // Enables the styled-components SWC transform
-      styledComponents: cssInJsLibrary === 'styled-components',
-      emotion: cssInJsLibrary === 'emotion',
+      emotion: true,
       define: {
         ...getCommonDefines(projectRoot, false),
       },

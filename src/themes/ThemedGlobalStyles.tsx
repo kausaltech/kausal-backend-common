@@ -10,6 +10,12 @@ const getGlobalStyles = (theme: Theme) => css`
     scroll-behavior: auto !important;
   }
 
+  // Use themeable color on keyboard navigation focus
+  :focus-visible {
+    outline: 2px solid ${theme.inputBtnFocusColor};
+    outline-offset: 2px;
+  }
+
   body {
     font-family: ${theme.fontFamily !== ''
       ? `${theme.fontFamily}, ${theme.fontFamilyFallback}`
@@ -17,17 +23,17 @@ const getGlobalStyles = (theme: Theme) => css`
     font-size: ${theme.fontSizeBase};
     line-height: ${theme.lineHeightBase};
     text-rendering: optimizeLegibility;
-    background-color: ${theme.themeColors.light};
+    background-color: ${theme.themeColors.white};
     color: ${theme.themeColors.black};
   }
 
   a {
-    color: ${theme.brandDark};
+    color: ${theme.linkColor};
     text-decoration: none;
     background-color: transparent;
 
     &:hover {
-      color: ${theme.brandDark};
+      color: ${theme.linkColor};
       text-decoration: underline;
     }
   }
@@ -49,6 +55,7 @@ const getGlobalStyles = (theme: Theme) => css`
     font-weight: ${theme.headingsFontWeight};
     line-height: ${theme.lineHeightMd};
     color: ${theme.headingsColor};
+    text-transform: ${theme.headingsTextTransform} !important;
     hyphens: auto;
 
     // Allow hyphenation only on small screens
@@ -126,16 +133,19 @@ const getGlobalStyles = (theme: Theme) => css`
 
     h2 {
       margin-top: ${theme.spaces.s150};
+      margin-bottom: ${theme.spaces.s100};
       font-size: ${theme.fontSizeLg};
     }
 
     h3 {
       margin-top: ${theme.spaces.s150};
+      margin-bottom: ${theme.spaces.s100};
       font-size: ${theme.fontSizeMd};
     }
 
     h4 {
       margin-top: ${theme.spaces.s150};
+      margin-bottom: ${theme.spaces.s050};
       font-size: ${theme.fontSizeBase};
 
       &:first-child {
@@ -146,14 +156,31 @@ const getGlobalStyles = (theme: Theme) => css`
     h5 {
       font-size: ${theme.fontSizeBase};
     }
+
+    ul {
+      list-style: disc;
+    }
   }
 
   .richtext-image {
-    margin: ${theme.spaces.s150} 0;
+    margin: ${theme.spaces.s300} auto;
+    max-width: 100%;
 
     &.full-width {
       max-width: 100%;
       height: auto;
+    }
+
+    &.left {
+      margin: ${theme.spaces.s150};
+      margin-left: 0;
+      float: left;
+    }
+
+    &.right {
+      margin: ${theme.spaces.s150};
+      margin-right: 0;
+      float: right;
     }
   }
 
@@ -218,12 +245,20 @@ const getGlobalStyles = (theme: Theme) => css`
       break-inside: avoid-page;
     }
   }
+
+  .tooltip {
+    line-height: 1.25;
+  }
+
+  // TODO: Temporary front-end fix to increase font-size for simple language
+  .custom-leichte-sprache {
+    font-size: 125%;
+  }
 `;
 
 function ThemedGlobalStyles() {
   const theme = useTheme();
   const globalStyles = useMemo(() => getGlobalStyles(theme), [theme]);
-
   return <Global styles={globalStyles} />;
 }
 
