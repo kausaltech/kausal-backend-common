@@ -31,7 +31,7 @@ import { LabelLayout, UniversalTransition } from 'echarts/features';
 import { CanvasRenderer, SVGRenderer } from 'echarts/renderers';
 import throttle from 'lodash-es/throttle';
 
-import { useBaseTheme } from '@common/providers/CommonThemeProvider';
+import { useBaseTheme } from '@common/themes/mui-theme/use-base-theme';
 
 import { getChartTheme } from './chart-theme';
 
