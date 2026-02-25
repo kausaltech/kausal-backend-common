@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useReactiveVar } from '@apollo/client';
 import { useTheme } from '@emotion/react';
 import { Box } from '@mui/material';
+import chroma from 'chroma-js';
 
 import { activeGoalVar } from '@common/apollo/paths-cache';
 import type { TFunction } from '@common/i18n';
@@ -84,11 +85,13 @@ type DimensionalNodeVisualisationProps = {
   metric: MetricDim;
   startYear: number;
   endYear: number;
+  separateYears?: number[] | null;
   instance: InstanceContext;
   site?: SiteContext | null;
   withControls?: boolean;
   withTools?: boolean;
   color?: string | null;
+  colorAdjust?: number;
   onClickMeasuredEmissions?: (year: number) => void;
   forecastTitle?: string;
   chartType?: 'bar' | 'line' | 'area';
@@ -99,11 +102,13 @@ export default function DimensionalNodeVisualisation({
   title,
   metric,
   startYear,
+  endYear,
+  separateYears,
   withControls = true,
   withTools = true,
-  endYear,
   baselineForecast,
   color,
+  colorAdjust,
   onClickMeasuredEmissions,
   forecastTitle,
   chartType = 'bar',
@@ -177,12 +182,23 @@ export default function DimensionalNodeVisualisation({
     baselineForecast && site?.baselineName && instance.features?.baselineVisibleInGraphs;
 
   // Define current year setup
-  const { filteredYears, yearIndices, referenceYear, visibleForecastRange } = getFilteredYears(
+  let { filteredYears, yearIndices, referenceYear, visibleForecastRange } = getFilteredYears(
     slice,
     instance,
     startYear,
     endYear
   );
+
+  const allFilteredYears = filteredYears;
+
+  if (separateYears && separateYears.length > 0) {
+    const indices = filteredYears.reduce<number[]>((acc, year, i) => {
+      if (separateYears.includes(year)) acc.push(i);
+      return acc;
+    }, []);
+    filteredYears = indices.map((i) => filteredYears[i]);
+    yearIndices = indices.map((i) => yearIndices[i]);
+  }
 
   const filteredProgressValues: number[] = [];
   const filteredProgressYears: number[] = [];
@@ -280,14 +296,13 @@ export default function DimensionalNodeVisualisation({
     ...dataCategories.map((row) => [row.name, ...yearIndices.map((idx) => row.values[idx])]),
   ].filter((row) => row.length > 0);
 
+  const goalYears =
+    goals !== null ? allFilteredYears.filter((year) => goals.some((g) => g.year === year)) : [];
   const goalTable =
-    goals !== null
+    goals !== null && goalYears.length > 0
       ? [
-          headerRow,
-          [
-            'Goal',
-            ...filteredYears.map((year) => goals?.find((goal) => goal.year === year)?.value),
-          ],
+          ['Category', ...goalYears],
+          ['Goal', ...goalYears.map((year) => goals.find((g) => g.year === year)?.value)],
         ]
       : null;
 
@@ -353,6 +368,11 @@ export default function DimensionalNodeVisualisation({
   } else {
     categoryColors.push(defaultColor);
   }
+  if (colorAdjust) {
+    for (let i = 0; i < categoryColors.length; i++) {
+      categoryColors[i] = chroma(categoryColors[i]).brighten(colorAdjust).hex();
+    }
+  }
 
   const hasNegativeValues = slice.categoryValues.some(
     (cv) =>
@@ -360,7 +380,6 @@ export default function DimensionalNodeVisualisation({
       cv.forecastValues.some((value) => Number(value) < 0)
   );
 
-  console.log('METRIC ', metric);
   return (
     <>
       {withControls && (
@@ -380,7 +399,10 @@ export default function DimensionalNodeVisualisation({
           baselineTable={baselineTable}
           progressTable={progressTable}
           totalTable={totalTable}
-          unit={overrideUnit(parsedMetric, metric.unit, t)}
+          unit={{
+            htmlLong: overrideUnit(parsedMetric, metric.unit, t),
+            htmlShort: metric.unit.htmlShort,
+          }}
           referenceYear={referenceYear}
           forecastRange={visibleForecastRange}
           categoryColors={categoryColors}

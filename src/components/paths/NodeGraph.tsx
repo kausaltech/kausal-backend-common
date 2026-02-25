@@ -43,7 +43,11 @@ type NodeGraphProps = {
   baselineTable: DataTable | null;
   progressTable: DataTable | null;
   totalTable: DataTable | null;
-  unit: string;
+  unit: {
+    htmlLong: string;
+    htmlShort: string;
+    [key: string]: unknown;
+  };
   referenceYear: number | undefined | null;
   forecastRange: [number, number] | null;
   categoryColors: string[];
@@ -248,7 +252,7 @@ export default function NodeGraph(props: NodeGraphProps) {
         typeof year === 'string' || typeof year === 'number' ? year : undefined,
         isForecast,
         isReferenceYear,
-        unit,
+        unit.htmlShort,
         maximumFractionDigits,
         specialSeriesLabels,
         t,
@@ -270,7 +274,14 @@ export default function NodeGraph(props: NodeGraphProps) {
       forecastAreaStartIndex
     ) || []),
     hasGoalData && datasetIndices.goal >= 0
-      ? createGoalSeries(theme, datasetIndices.goal, specialSeriesLabels.Goal)
+      ? createGoalSeries(
+          theme,
+          datasetIndices.goal,
+          specialSeriesLabels.Goal,
+          goalTable && goalTable[0]?.length === 2
+            ? (goalTable[1]?.[1] as number | null | undefined)
+            : null
+        )
       : null,
     hasBaselineData && datasetIndices.baseline >= 0
       ? createBaselineSeries(theme, datasetIndices.baseline, specialSeriesLabels.Baseline)
@@ -339,7 +350,7 @@ export default function NodeGraph(props: NodeGraphProps) {
     },
     yAxis: {
       type: 'value',
-      name: sanitizeHtmlUnit(unit),
+      name: sanitizeHtmlUnit(unit.htmlLong),
       nameLocation: 'end',
       nameTextStyle: {
         align: 'left',
@@ -603,7 +614,12 @@ function createMainSeries(
     }));
 }
 
-function createGoalSeries(theme: Theme, datasetIndex: number, name: string) {
+function createGoalSeries(
+  theme: Theme,
+  datasetIndex: number,
+  name: string,
+  horizontalLineValue?: number | null
+) {
   return {
     type: 'line',
     seriesLayoutBy: 'row',
@@ -622,6 +638,19 @@ function createGoalSeries(theme: Theme, datasetIndex: number, name: string) {
       width: 2,
     },
     animation: false,
+    ...(horizontalLineValue != null && {
+      markLine: {
+        silent: true,
+        symbol: ['none', 'none'],
+        lineStyle: {
+          color: theme.graphColors.red090,
+          type: 'dashed',
+          width: 1,
+        },
+        label: { show: false },
+        data: [{ yAxis: horizontalLineValue }],
+      },
+    }),
   };
 }
 
