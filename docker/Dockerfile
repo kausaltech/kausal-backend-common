@@ -10,8 +10,8 @@ FROM caddy:2 AS caddy
 FROM ${base_image} AS base
 
 ARG POSTGRESQL_MAJOR_VERSION=18
-ARG UV_VERSION=0.9.24
-ARG NVM_VERSION=0.40.3
+ARG UV_VERSION=0.10.5
+ARG NVM_VERSION=0.40.4
 ARG ubuntu_codename="noble"
 
 ARG runtime_deps="libpq5 gettext \
@@ -153,8 +153,15 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
   if [ -f uv.lock ] ; then
     EXTRAS=""
     if [ -f /run/secrets/EXTRA_PYPI_INDEX ] ; then
+      UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX)
+    else
+      UV_EXTRA_INDEX_URL=""
+    fi
+    if [ ! -z "$UV_EXTRA_INDEX_URL" ] ; then
       export UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX)
       EXTRAS="--extra kausal"
+    else
+      EXTRAS="--no-extra kausal"
     fi
     ${UV_BIN} sync --no-dev --active --group prod $EXTRAS --locked
   else
