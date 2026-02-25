@@ -135,4 +135,8 @@ runtime-evaluated-decorators = [
   "strawberry.input",
   "strawberry.mutation",
   "strawberry.subscription",
+  "aplans.gql.mutation",
+  "paths.gql.mutation",
+  "mcp_server.tools.helpers.register_tool",
 ]
+runtime-evaluated-base-classes = ["pydantic.BaseModel", "mcp_server.generated_base.ObjectBaseModel"]
