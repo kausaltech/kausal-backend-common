@@ -15,10 +15,7 @@ const prodAssetPrefix = isProd ? process.env.NEXTJS_ASSET_PREFIX : undefined;
 
 const isCoverageEnabled = process.env.CODE_COVERAGE === '1';
 
-export function getNextConfig(projectRoot: string, opts: { isPagesRouter?: boolean }): NextConfig {
-  opts = opts || {};
-  const { isPagesRouter = false } = opts;
-
+export function getNextConfig(projectRoot: string): NextConfig {
   const config: NextConfig = {
     assetPrefix: prodAssetPrefix,
     output: standaloneBuild ? 'standalone' : undefined,
@@ -89,11 +86,13 @@ export function getNextConfig(projectRoot: string, opts: { isPagesRouter?: boole
           cfg.target = 'node22';
         }
       } else {
-        if (isPagesRouter) {
-          cfg.resolve.alias['next-i18next/serverSideTranslations'] = false;
-          cfg.resolve.alias['./next-i18next.config'] = false;
-          cfg.resolve.alias['v8'] = false;
-        }
+        // Stub out Node.js built-ins for client bundle; loadMessages.ts is
+        // imported dynamically from _app.tsx but only executed server-side.
+        cfg.resolve.fallback = {
+          ...cfg.resolve.fallback,
+          fs: false,
+          path: false,
+        };
         cfg.resolve.symlinks = true;
         cfg.optimization = {
           ...cfg.optimization,
