@@ -8,6 +8,8 @@ export type {
   MetricUnitInput,
   MetricNormalizedByInput,
   InstanceGoalInput,
+  NodeMetricValueInput,
+  NodeMetricInput,
 } from './types';
 
 // Types - Processed/internal types
@@ -42,6 +44,9 @@ export {
   getHistoricalYears,
   getForecastYears,
   isForecastYear,
+  getMetricValue,
+  getMetricChange,
+  getOutcomeTotal,
 } from './accessors';
 
 // Dimensions
@@ -61,3 +66,6 @@ export { downloadData } from './export';
 
 // Table utilities
 export { createTable, type MetricSlice } from './table';
+
+// Chart utilities
+export { getFilteredYears } from './chart';

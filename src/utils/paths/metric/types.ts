@@ -9,6 +9,23 @@
 // === INPUT TYPES (expected shape from GraphQL) ===
 
 /**
+ * A single year/value data point from a node metric.
+ */
+export type NodeMetricValueInput = {
+  readonly year: number;
+  readonly value: number;
+};
+
+/**
+ * Raw metric shape from a node's `metric` field (forecastValues / historicalValues).
+ * This is the shape produced by GraphQL fragments on outcome nodes.
+ */
+export type NodeMetricInput = {
+  readonly forecastValues: readonly NodeMetricValueInput[];
+  readonly historicalValues: readonly NodeMetricValueInput[];
+};
+
+/**
  * A category within a metric dimension.
  */
 export type MetricDimensionCategoryInput = {
