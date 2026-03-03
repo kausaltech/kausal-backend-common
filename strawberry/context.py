@@ -16,6 +16,8 @@ from starlette.requests import Request as StarletteRequest
 from kausal_common.perf.perf_context import PerfContext
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from kausal_common.asgi.types import ASGICommonScope
     from kausal_common.auth.tokens import TokenAuthResult
     from kausal_common.deployment.types import LoggedHttpRequest
@@ -45,6 +47,13 @@ class GraphQLContext:
     def get_http_request(self) -> HttpRequest:
         assert isinstance(self.request, HttpRequest)
         return self.request
+
+    def get_request_headers(self) -> Mapping[str, str]:
+        if isinstance(self.request, (HttpRequest, ChannelsRequest)):
+            return self.request.headers
+        scope = self.get_scope()
+        headers_list = scope.get('headers', [])
+        return {key.decode('utf8').lower(): value.decode('utf8') for key, value in headers_list}
 
     def get_scope(self) -> ASGICommonScope:
         if isinstance(self.request, (GraphQLWSConsumer, StarletteRequest)):

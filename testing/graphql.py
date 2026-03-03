@@ -7,13 +7,16 @@ from typing import TYPE_CHECKING, Any, Literal
 from typing_extensions import TypedDict
 
 from django.utils.text import slugify
-from graphene_django.views import GraphQLView
 from graphql import GraphQLError
+
+from loguru import logger
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from django.http import HttpRequest
+    from strawberry.http import GraphQLHTTPResponse, GraphQLRequestData
+
+    from kausal_common.strawberry.context import GraphQLContext
 
 counter = 0
 
@@ -23,22 +26,31 @@ def format_error(error: Exception):
     return {"message": str(error)}
 
 
-def capture_query(request: HttpRequest, headers: list[str], data: dict, response: str, status_code: int, exec_time: float):
+def capture_query(
+    context: GraphQLContext,
+    headers: list[str],
+    data: GraphQLRequestData,
+    response: GraphQLHTTPResponse,
+    exec_time: float | None = None,
+):
     global counter  # noqa: PLW0603
 
-    query, variables, operation_name, _id = GraphQLView.get_graphql_params(request, data)
-    if not operation_name:
+    if not data.operation_name:
         return
+    request_headers = context.get_request_headers()
     out = dict(
-        headers={hdr: request.headers.get(hdr) for hdr in headers},
-        operation_name=operation_name,
-        query=query,
-        variables=variables,
-        response=json.loads(response),
-        response_code=status_code,
+        headers={hdr: request_headers.get(hdr) for hdr in headers},
+        operation_name=data.operation_name,
+        query=data.query,
+        variables=data.variables,
+        response=response,
         execution_time=exec_time,
     )
-    with Path('query-store/%04d-%s.json'% (counter, slugify(operation_name))).open('w') as f:
+    store_dir = Path('query-store')
+    store_dir.mkdir(exist_ok=True)
+    path = store_dir / Path('%04d-%s.json'% (counter, slugify(data.operation_name)))
+    logger.info('Capturing GraphQL query and response to %s' % path)
+    with path.open('w') as f:
         f.write(json.dumps(out, ensure_ascii=False, indent=2, sort_keys=False))
     counter += 1
 
