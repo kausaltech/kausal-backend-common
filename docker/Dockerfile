@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.17-labs
+# syntax=docker/dockerfile:1.21-labs
 
 ARG base_image=ubuntu:24.04
 
@@ -44,7 +44,7 @@ RUN mkdir -p ${app_path}
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
 # Upgrade .deb packages, and install runtime deps.
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked <<EOF
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked <<EOT
   set -e
   echo Updating apt repositories
   apt-get update -qq
@@ -53,15 +53,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked <<EOF
   echo Installing runtime deps
   apt-get install -qq --no-install-recommends -y \
     ${runtime_deps}
-EOF
+EOT
 
-RUN <<EOF
+RUN <<EOT
   set -e
   echo "deb https://apt.postgresql.org/pub/repos/apt ${ubuntu_codename}-pgdg main" > /etc/apt/sources.list.d/pgdg.list
   curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
-EOF
+EOT
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked <<EOF
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked <<EOT
   set -e
   echo Updating apt repositories
   apt-get update -qq
@@ -69,7 +69,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked <<EOF
   apt-get install -qq --no-install-recommends -y \
     postgresql-client-17 postgresql-client-18
   rm -rf /var/lib/apt/lists/*
-EOF
+EOT
 
 #
 # Install node with nvm
@@ -82,13 +82,15 @@ RUN \
   cd ${app_path} && \
   . ${NVM_DIR}/nvm.sh ; \
   nvm install --default && nvm cache clear && chown -R root:root /opt/nvm/versions
-RUN \
-  for cmd in in /opt/nvm/versions/node/*/bin/* ; do \
-    ln -s $cmd /usr/local/bin ; \
+RUN <<EOT
+  for cmd in in /opt/nvm/versions/node/*/bin/* ; do
+    ln -s $cmd /usr/local/bin
   done
+  corepack enable npm pnpm
+EOT
 
 # Leave the uv install script in the image, because it's useful for debugging.
-RUN <<EOF
+RUN <<EOT
   set -e
   cat  > /usr/local/bin/install-uv.sh <<FOE
 #!/bin/bash
@@ -96,7 +98,7 @@ export UV_VERSION=${UV_VERSION}
 curl -LsSf https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-installer.sh | bash -s -- --quiet
 FOE
   chmod a+x /usr/local/bin/install-uv.sh
-EOF
+EOT
 
 #
 # Builder stage
@@ -192,12 +194,23 @@ RUN --mount=type=secret,id=EXTRA_PYPI_INDEX \
     fi
 
 # Install node
-COPY package.json package-lock.json ${app_path}/
+COPY package.json package-lock.json* pnpm-lock.yaml* ${app_path}/
 ENV NPM_CONFIG_CACHE=${XDG_CACHE_HOME}/npm
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOF
+  set -e
+  if [ -f package-lock.json ] ; then
+    npm ci
+  elif [ -f pnpm-lock.yaml ] ; then
+    pnpm config set store-dir ${XDG_CACHE_HOME}/pnpm-store
+    pnpm install --frozen-lockfile
+  else
+    echo "No package-lock.json or pnpm-lock.yaml found"
+    exit 1
+  fi
+EOF
+
 RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
-  npm ci
-RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
-  npx -y @cyclonedx/cyclonedx-npm --output-file /sbom/node-js.sbom.cdx.json
+  pnpx @cyclonedx/cyclonedx-npm --output-file /sbom/node-js.sbom.cdx.json
 
 
 ARG INSTALL_DEV_DEPS
@@ -271,13 +284,13 @@ RUN \
 # Compile bytecode for venv
 RUN cd ${VIRTUAL_ENV} && python -m compileall -q
 
-RUN <<EOF
+RUN <<EOT
   set -e
   if [ ! -d ${PG_HOME}/bin ] ; then
     echo "PostgreSQL ${POSTGRESQL_MAJOR_VERSION} is not installed."
     exit 1
   fi
-EOF
+EOT
 
 # Switch to the app user
 USER user
