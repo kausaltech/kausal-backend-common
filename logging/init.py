@@ -143,6 +143,7 @@ def get_logging_conf(
             'daphne.server': level('WARNING'),
             'docket.worker': level('INFO'),
             'sse_starlette': level('INFO'),
+            'uvicorn.access': level('WARNING'),
             '': level('DEBUG'),
         },
     }

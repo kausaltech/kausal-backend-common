@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     if IS_WATCH:
         from aplans.graphql_types import GQLInfo
     elif IS_PATHS:
-        from paths.graphql_types import PathsGQLInfo as GQLInfo
+        from paths.types import PathsGQLInfo as GQLInfo
 
 
 def get_field_label(model: type[models.Model], field_name: str) -> str | None:

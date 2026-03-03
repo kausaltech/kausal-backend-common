@@ -244,11 +244,11 @@ class ObjectRole(models.TextChoices):
     ADMIN = 'admin'
 
     @classmethod
-    def get_roles_for_action(cls, action: BaseObjectAction) -> list[ObjectRole]:
-        return OBJECT_ROLE_MAPPINGS.get(action, [])
+    def get_roles_for_action(cls, action: BaseObjectAction | str) -> list[ObjectRole]:
+        return OBJECT_ROLE_MAPPINGS.get(cast('BaseObjectAction', action), [])
 
 
-OBJECT_ROLE_MAPPINGS = {
+OBJECT_ROLE_MAPPINGS: dict[BaseObjectAction, list[ObjectRole]] = {
     'change': [ObjectRole.EDITOR, ObjectRole.ADMIN],
     'delete': [ObjectRole.ADMIN],
     'view': [ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
@@ -267,6 +267,7 @@ class _ObjectRoleBase(models.Model):
 if TYPE_CHECKING:
     class ObjectRoleBase[M: models.Model](_ObjectRoleBase):  # noqa: DJ008
         object: FK[M]
+        object_id: int
 else:
     ObjectRoleBase = _ObjectRoleBase
 
@@ -276,8 +277,7 @@ if TYPE_CHECKING:
         # FIXME: Add type annotation for PersonGroup when it appears in `main`
         group = models.ForeignKey('people.PersonGroup', on_delete=models.CASCADE)
 
-        object: FK[M]
-        objects: ClassVar[models.Manager[ObjectGroupPermissionBase[models.Model]]]
+        objects: ClassVar[models.Manager[ObjectGroupPermissionBase[models.Model]]]  # pyright: ignore[reportGeneralTypeIssues]
 
         class Meta:
             abstract = True
@@ -294,7 +294,7 @@ if TYPE_CHECKING:
         person: FK[Person] = models.ForeignKey('people.Person', on_delete=models.CASCADE)
 
         object: FK[M]
-        objects: ClassVar[models.Manager[ObjectPersonPermissionBase[models.Model]]]
+        objects: ClassVar[models.Manager[ObjectPersonPermissionBase[M]]]  # pyright: ignore[reportGeneralTypeIssues]
 
         class Meta:
             abstract = True

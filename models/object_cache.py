@@ -32,7 +32,7 @@ class CacheableModel[CacheT](Model):
 
 
 @dataclass
-class ModelObjectCache[ModelT: CacheableModel, QS: PermissionedQuerySet[Any], ParentM: CacheableModel | None](ABC):
+class ModelObjectCache[ModelT: CacheableModel[Any], QS: PermissionedQuerySet[Any], ParentM: CacheableModel[Any] | None](ABC):
     parent: ParentM
     user: UserOrAnon | None
     _by_id: dict[int, ModelT] = field(init=False, default_factory=dict)
@@ -65,7 +65,7 @@ class ModelObjectCache[ModelT: CacheableModel, QS: PermissionedQuerySet[Any], Pa
 
     def get_base_qs(self, qs: QS | None = None, action: ObjectSpecificAction = 'view'):
         if qs is None:
-            qs = cast(QS, self.model._default_manager.get_queryset())
+            qs = cast('QS', self.model._default_manager.get_queryset())
         if self.parent is not None:
             qs = self.filter_by_parent(qs)
         qs = self.filter_for_user(qs, action)
@@ -133,7 +133,7 @@ class ModelObjectCache[ModelT: CacheableModel, QS: PermissionedQuerySet[Any], Pa
 
 
 @dataclass
-class ObjectCacheGroup[CachedM: CacheableModel]:
+class ObjectCacheGroup[CachedM: CacheableModel[Any]]:
     cache: ModelObjectCache[Any, Any, Any]
     get_group: Callable[[CachedM], int]
     objs: dict[int, dict[int, CachedM]] = field(init=False, default_factory=dict)

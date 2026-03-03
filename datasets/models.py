@@ -21,7 +21,7 @@ from kausal_common.const import IS_PATHS, IS_WATCH
 from kausal_common.datasets.permission_policy import get_permission_policy
 from kausal_common.models.fields import IdentifierField
 from kausal_common.models.uuid import UUIDIdentifiedModel
-from kausal_common.people.models import ObjectRole
+from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase, ObjectRole
 
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
@@ -263,8 +263,8 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     scopes: RevMany[DatasetSchemaScope]
     if IS_PATHS:
         # FIXME: Remove the condition when PersonPermission and GroupPermission are implemented in KW
-        person_permissions: RevMany[ObjectPersonPermissionBase]
-        group_permissions: RevMany[ObjectGroupPermissionBase]
+        person_permissions: RevMany[ObjectPersonPermissionBase[DatasetSchema]]
+        group_permissions: RevMany[ObjectGroupPermissionBase[DatasetSchema]]
 
     objects: ClassVar[DatasetSchemaManager] = DatasetSchemaManager()
     _default_manager: ClassVar[DatasetSchemaQuerySet]
@@ -329,7 +329,7 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
                     FieldPanel('group'),
                     FieldPanel('role'),
                 ]
-            ),],
+            )],
             _("Permissions"),
             # Only super admins or superusers have access
             permission='people.change_person'

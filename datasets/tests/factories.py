@@ -47,36 +47,38 @@ class DatasetMetricFactory(DjangoModelFactory):
     label = Sequence(lambda n: f'Test Metric {n}')
 
 
-class DatasetSchemaDimensionFactory(DjangoModelFactory):
+class DatasetSchemaDimensionFactory(DjangoModelFactory[DatasetSchemaDimension]):
     class Meta:
         model = DatasetSchemaDimension
 
-    schema = SubFactory(DatasetSchemaFactory)
-    dimension = SubFactory(DimensionFactory)
+    schema = SubFactory[DatasetSchemaDimension, DatasetSchema](DatasetSchemaFactory)
+    dimension = SubFactory[DatasetSchemaDimension, DatasetSchema](DimensionFactory)
 
 
-class DatasetFactory(DjangoModelFactory):
+class DatasetFactory(DjangoModelFactory[Dataset]):
     class Meta:
         model = Dataset
 
-    schema = SubFactory(DatasetSchemaFactory)
+    schema = SubFactory[Dataset, DatasetSchema](DatasetSchemaFactory)
 
 
-class DataPointFactory(DjangoModelFactory):
+class DataPointFactory(DjangoModelFactory[DataPoint]):
     class Meta:
         model = DataPoint
         skip_postgeneration_save = True
 
-    dataset = SubFactory(DatasetFactory)
-    metric = SubFactory(DatasetMetricFactory)
+    dataset = SubFactory[DataPoint, Dataset](DatasetFactory)
+    metric = SubFactory[DataPoint, DatasetMetric](DatasetMetricFactory)
     date = datetime.date(2023, 1, 1)
-    value = Decimal('100')
+    value = Decimal(100)
 
     @post_generation
-    def dimension_categories(self, create, extracted, **kwargs):
+    @staticmethod
+    def dimension_categories(obj: DataPoint, create: bool, extracted: list[DimensionCategory]) -> None:
         if not create:
             return
 
         if extracted:
             for category in extracted:
-                self.dimension_categories.add(category)
+                obj.dimension_categories.add(category)
+            obj.save()

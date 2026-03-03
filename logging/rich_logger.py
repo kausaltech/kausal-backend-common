@@ -170,18 +170,19 @@ class RichLogHandler(RichHandler):
                 )
             )
 
-        trace_id = extra.pop('trace.id', None)
-        if trace_id:
-            sampled = extra.pop('trace.sampled', None)
-            scope_parts.append(
-                Text.assemble(
-                    '[Trace ',
-                    Text.styled(trace_id, Style(color=identifier_color(trace_id), underline=True)),
-                    ' (sampled: ',
-                    Text.styled(sampled, Style(color='green' if sampled else 'red')),
-                    ')]',
+        if env_bool('SENTRY_DEBUG', default=False):
+            trace_id = extra.pop('trace.id', None)
+            if trace_id:
+                sampled = extra.pop('trace.sampled', None)
+                scope_parts.append(
+                    Text.assemble(
+                        '[Trace ',
+                        Text.styled(trace_id, Style(color=identifier_color(trace_id), underline=True)),
+                        ' (sampled: ',
+                        Text.styled(sampled, Style(color='green' if sampled else 'red')),
+                        ')]',
+                    )
                 )
-            )
 
         def add_scope(style: str, key: str) -> None:
             if key not in extra:

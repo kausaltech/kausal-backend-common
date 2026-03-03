@@ -1,5 +1,5 @@
 from collections.abc import Callable, Sequence
-from typing import Any, override
+from typing import Any, Self, override
 
 from django.utils.functional import cached_property as cached_property
 from django_stubs_ext import StrOrPromise
@@ -46,6 +46,9 @@ class BaseButton(Component):
     def __gt__(self, other: BaseButton | MenuItem): ...
     def __ge__(self, other: BaseButton | MenuItem): ...
     def __eq__(self, other: object): ...
+
+    @classmethod
+    def from_menu_item(cls, menu_item: MenuItem) -> Self: ...
 
 
 class Button(BaseButton):

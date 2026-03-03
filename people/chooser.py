@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from django.forms.models import modelform_factory
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
-from wagtail.snippets.views.chooser import SnippetChooserViewSet
 
 from dal import autocomplete
-from generic_chooser.views import ModelChooserCreateTabMixin, ModelChooserMixin, ModelChooserViewSet
+from generic_chooser.views import ModelChooserCreateTabMixin, ModelChooserMixin
 from generic_chooser.widgets import AdminChooser
 
 from kausal_common.const import IS_PATHS
@@ -13,9 +12,9 @@ from kausal_common.const import IS_PATHS
 from people.models import Person
 
 
-class PersonChooserMixin(ModelChooserMixin):
+class PersonChooserMixin(ModelChooserMixin[Person]):
     def get_unfiltered_object_list(self):
-        objects = self.model.objects.all()  # type: ignore[attr-defined]
+        objects = self.model.objects.get_queryset()
         if self.order_by:
             objects = objects.order_by('last_name', 'first_name')
         return objects
@@ -34,7 +33,7 @@ class PersonChooserMixin(ModelChooserMixin):
         return 'kausal_common/people/chooser_results.html'
 
 
-class PersonModelChooserCreateTabMixin(ModelChooserCreateTabMixin):
+class PersonModelChooserCreateTabMixin(ModelChooserCreateTabMixin[Person]):
     create_tab_label = pgettext_lazy("person chooser", "Create new")
 
     def get_form_class(self):
@@ -52,11 +51,11 @@ class PersonModelChooserCreateTabMixin(ModelChooserCreateTabMixin):
 # TODO: below is a hotfix, we should remove it
 # and register the PersonSnippetViewSet in watch too.
 if IS_PATHS:
-    base_class = SnippetChooserViewSet
+    from wagtail.snippets.views.chooser import SnippetChooserViewSet as ChooserViewSetBase
 else:
-    base_class = ModelChooserViewSet
+    from generic_chooser.views import ModelChooserViewSet as ChooserViewSetBase
 
-class PersonChooserViewSet(base_class):
+class PersonChooserViewSet(ChooserViewSetBase):
     icon = 'user'
     model = Person
     page_title = _("Choose person")
