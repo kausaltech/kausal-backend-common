@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Any
 
 from django.conf import settings
 from django.db import models
@@ -6,6 +7,7 @@ from django.utils import timezone
 
 from users.models import User
 
+from .utils import parse_request_payload
 
 class BaseLoggedRequest(models.Model):
     method = models.CharField(max_length=8)
@@ -29,3 +31,7 @@ class BaseLoggedRequest(models.Model):
         if self.user:
             result += f' by {self.user}'
         return result
+
+    def deserialize_payload(self) -> dict[str, Any] | list[Any] | None:
+        """Return payload contents as Python data for debugging."""
+        return parse_request_payload(self)
