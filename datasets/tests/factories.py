@@ -51,15 +51,15 @@ class DatasetSchemaDimensionFactory(DjangoModelFactory[DatasetSchemaDimension]):
     class Meta:
         model = DatasetSchemaDimension
 
-    schema = SubFactory[DatasetSchemaDimension, DatasetSchema](DatasetSchemaFactory)
-    dimension = SubFactory[DatasetSchemaDimension, DatasetSchema](DimensionFactory)
+    schema = SubFactory(DatasetSchemaFactory)
+    dimension = SubFactory(DimensionFactory)
 
 
 class DatasetFactory(DjangoModelFactory[Dataset]):
     class Meta:
         model = Dataset
 
-    schema = SubFactory[Dataset, DatasetSchema](DatasetSchemaFactory)
+    schema = SubFactory(DatasetSchemaFactory)
 
 
 class DataPointFactory(DjangoModelFactory[DataPoint]):
@@ -67,8 +67,8 @@ class DataPointFactory(DjangoModelFactory[DataPoint]):
         model = DataPoint
         skip_postgeneration_save = True
 
-    dataset = SubFactory[DataPoint, Dataset](DatasetFactory)
-    metric = SubFactory[DataPoint, DatasetMetric](DatasetMetricFactory)
+    dataset = SubFactory(DatasetFactory)
+    metric = SubFactory(DatasetMetricFactory)
     date = datetime.date(2023, 1, 1)
     value = Decimal(100)
 
