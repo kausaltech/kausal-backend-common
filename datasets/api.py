@@ -161,13 +161,14 @@ class DataPointSerializer(serializers.ModelSerializer[DataPoint]):
         dataset_object = Dataset.objects.get(uuid=dataset)
         schema = dataset_object.schema
         assert schema is not None
-        if schema.time_resolution != schema.TimeResolution.YEARLY:
-            raise ValueError('Only yearly time resolution supported currently.')
-        existing_points = DataPoint.objects.filter(
-            dataset__uuid=dataset,
-            date__year=date.year,
-            metric=metric,
-        ).prefetch_related('dimension_categories')
+        filter_kwargs: dict[str, object] = {
+            'dataset__uuid': dataset,
+            'date__year': date.year,
+            'metric': metric,
+        }
+        if schema.time_resolution == schema.TimeResolution.MONTHLY:
+            filter_kwargs['date__month'] = date.month
+        existing_points = DataPoint.objects.filter(**filter_kwargs).prefetch_related('dimension_categories')
 
         if not existing_points.exists():
             return data
