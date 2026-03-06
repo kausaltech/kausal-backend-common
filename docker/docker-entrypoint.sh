@@ -68,17 +68,22 @@ esac
 if [ $needs_db -eq 1 ]; then
     wait_for_db
     if [ $needs_migrations -eq 1 ] && [ "$KUBERNETES_MODE" != "1" ]; then
+        # For Watch, restore the test DB dump before migrations so that
+        # new migrations can be applied on top of the dump.
+        if [ "$TEST_MODE" == "1" ] && [ -f '/code/aplans/settings.py' ]; then
+            populate_watch_test_data
+        fi
+
         echo "Running database migrations..."
         python manage.py migrate --no-input
+
         if [ "$TEST_MODE" == "1" ]; then
-          if [ -f '/code/paths/settings.py' ]; then
-            populate_paths_test_instances
-          elif [ -f '/code/aplans/settings.py' ]; then
-            populate_watch_test_data
-          else
-            echo "No Django settings file recognized for Kausal Paths or Watch." >& 2
-            exit 2
-          fi
+            if [ -f '/code/paths/settings.py' ]; then
+                populate_paths_test_instances
+            elif [ ! -f '/code/aplans/settings.py' ]; then
+                echo "No Django settings file recognized for Kausal Paths or Watch." >&2
+                exit 2
+            fi
         fi
     fi
     if [ -d '/docker-entrypoint.d' ]; then
