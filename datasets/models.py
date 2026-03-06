@@ -236,7 +236,7 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         # TBD: Could also be separate model. (Some customers might be very creative in their granularities.)
         YEARLY = 'yearly', _('Yearly')
         # QUARTERLY = 'quarterly', _('Quarterly')
-        # MONTHLY = 'monthly', _('Monthly')
+        MONTHLY = 'monthly', _('Monthly')
         # WEEKLY = 'weekly', _('Weekly')
         # DAILY = 'daily', _('Daily')
         # HOURLY = 'hourly', _('Hourly')
