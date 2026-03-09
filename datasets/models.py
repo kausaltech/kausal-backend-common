@@ -375,28 +375,6 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
             scopes__scope_id=scope_id, scopes__scope_content_type__id=scope_content_type_id,
         )
 
-    @staticmethod
-    def get_for_model(obj: DatasetScopeType) -> DatasetSchemaQuerySet:
-        """Get schemas for any model that can have datasets."""
-        content_type = ContentType.objects.get_for_model(obj)
-
-        # For Action objects, look up schemas via their Plan
-        if content_type.app_label == 'actions' and content_type.model == 'action':
-            plan = getattr(obj, 'plan', None)
-            if plan:
-                plan_type = ContentType.objects.get_for_model(plan)
-                return DatasetSchema.get_for_scope(plan.pk, plan_type.id)
-
-        # For Category objects, look up schemas via their CategoryType
-        elif content_type.app_label == 'actions' and content_type.model == 'category':
-            category_type = getattr(obj, 'type', None)
-            if category_type:
-                type_content_type = ContentType.objects.get_for_model(category_type)
-                return DatasetSchema.get_for_scope(category_type.pk, type_content_type.id)
-        elif content_type.app_label == 'nodes' and content_type.model == 'instanceconfig':
-            return DatasetSchema.get_for_scope(obj.pk, content_type.id)
-        return DatasetSchema.objects.get_queryset().none()
-
     def delete(self, *args, **kwargs):
         retval = super().delete(*args, **kwargs)
         return retval
