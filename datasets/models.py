@@ -53,7 +53,8 @@ if TYPE_CHECKING:
     elif IS_WATCH:
         from actions.models import Action, Category, CategoryType, Plan
         from datasets.permission_policy import DatasetSchemaPermissionPolicy
-        type DatasetScopeType = Action | Category
+        from indicators.models import Indicator
+        type DatasetScopeType = Action | Category | Indicator
         type DatasetSchemaScopeType = Plan | CategoryType
         type DimensionScopeType = Plan | CategoryType
 
