@@ -59,6 +59,15 @@ def _monkeypatch_second() -> None:
     except ImportError:
         pass
 
+    try:
+        from factory.declarations import LazyAttribute, RelatedFactory, SelfAttribute, SubFactory
+        extra_classes.append(SubFactory)
+        extra_classes.append(RelatedFactory)
+        extra_classes.append(LazyAttribute)
+        extra_classes.append(SelfAttribute)
+    except ImportError:
+        pass
+
     django_stubs_ext.monkeypatch(extra_classes=extra_classes)
 
 

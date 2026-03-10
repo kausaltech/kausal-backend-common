@@ -17,33 +17,33 @@ from kausal_common.datasets.models import (
 )
 
 
-class DatasetSchemaFactory(DjangoModelFactory):
+class DatasetSchemaFactory(DjangoModelFactory[DatasetSchema]):
     class Meta:
         model = DatasetSchema
 
     name = Sequence(lambda n: f'Test Schema {n}')
 
 
-class DimensionFactory(DjangoModelFactory):
+class DimensionFactory(DjangoModelFactory[Dimension]):
     class Meta:
         model = Dimension
 
     name = Sequence(lambda n: f'Test Dimension {n}')
 
 
-class DimensionCategoryFactory(DjangoModelFactory):
+class DimensionCategoryFactory(DjangoModelFactory[DimensionCategory]):
     class Meta:
         model = DimensionCategory
 
-    dimension = SubFactory(DimensionFactory)
+    dimension = SubFactory[DimensionCategory, Dimension](DimensionFactory)
     label = Sequence(lambda n: f'Category {n}')
 
 
-class DatasetMetricFactory(DjangoModelFactory):
+class DatasetMetricFactory(DjangoModelFactory[DatasetMetric]):
     class Meta:
         model = DatasetMetric
 
-    schema = SubFactory(DatasetSchemaFactory)
+    schema = SubFactory[DatasetMetric, DatasetSchema](DatasetSchemaFactory)
     label = Sequence(lambda n: f'Test Metric {n}')
 
 
@@ -51,15 +51,15 @@ class DatasetSchemaDimensionFactory(DjangoModelFactory[DatasetSchemaDimension]):
     class Meta:
         model = DatasetSchemaDimension
 
-    schema = SubFactory(DatasetSchemaFactory)
-    dimension = SubFactory(DimensionFactory)
+    schema = SubFactory[DatasetSchemaDimension, DatasetSchema](DatasetSchemaFactory)
+    dimension = SubFactory[DatasetSchemaDimension, Dimension](DimensionFactory)
 
 
 class DatasetFactory(DjangoModelFactory[Dataset]):
     class Meta:
         model = Dataset
 
-    schema = SubFactory(DatasetSchemaFactory)
+    schema = SubFactory[Dataset, DatasetSchema](DatasetSchemaFactory)
 
 
 class DataPointFactory(DjangoModelFactory[DataPoint]):
@@ -67,8 +67,8 @@ class DataPointFactory(DjangoModelFactory[DataPoint]):
         model = DataPoint
         skip_postgeneration_save = True
 
-    dataset = SubFactory(DatasetFactory)
-    metric = SubFactory(DatasetMetricFactory)
+    dataset = SubFactory[DataPoint, Dataset](DatasetFactory)
+    metric = SubFactory[DataPoint, DatasetMetric](DatasetMetricFactory)
     date = datetime.date(2023, 1, 1)
     value = Decimal(100)
 
