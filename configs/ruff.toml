@@ -3,7 +3,7 @@ exclude = ["node_modules", "*/migrations", "Attic", ".venv"]
 
 [lint]
 select = ["ALL"]
-extend-safe-fixes = ["TC002", "TC003", "TC004", "PYI059", "UP"]
+extend-safe-fixes = ["TC001", "TC002", "TC003", "TC004", "PYI059", "UP"]
 ignore = [
   "ANN0",
   "ANN201",
