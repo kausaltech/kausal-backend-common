@@ -40,15 +40,11 @@ function populate_watch_test_data() {
     --host "${TEST_DB_S3_ENDPOINT}" \
     --host-bucket "${TEST_DB_S3_ENDPOINT}"
 
-  echo "Deleting and recreating database..."
-  DB_HOST=${DB_ENDPOINT%:*}
-  DB_PORT=${DB_ENDPOINT##*:}
-  dropdb -h $DB_HOST -p $DB_PORT -U $DB_USER --if-exists $DB_NAME -f
-  createdb -h $DB_HOST -p $DB_PORT -U $DB_USER -T template0 -l fi_FI.UTF-8 $DB_NAME
-  psql -h $DB_HOST -p $DB_PORT -U $DB_USER -c "CREATE EXTENSION postgis" $DB_NAME
+  echo "CREATE EXTENSION IF NOT EXISTS postgis;" | python manage.py dbshell
   echo "Populating Kausal Watch database with test data..."
-  gunzip -c /tmp/test-db.sql.gz | psql -h $DB_HOST -p $DB_PORT -U $DB_USER -v ON_ERROR_STOP=1 $DB_NAME > /dev/null
+  gunzip -c /tmp/test-db.sql.gz | python manage.py dbshell
 }
+
 
 needs_app=0
 needs_migrations=0
@@ -70,14 +66,14 @@ if [ $needs_db -eq 1 ]; then
     if [ $needs_migrations -eq 1 ] && [ "$KUBERNETES_MODE" != "1" ]; then
         # For Watch, restore the test DB dump before migrations so that
         # new migrations can be applied on top of the dump.
-        if [ "$TEST_MODE" == "1" ] && [ -f '/code/aplans/settings.py' ]; then
+        if [ "$TEST_MODE" == "1" ] && [ "$DEPLOYMENT_TYPE" == "ci" ] && [ -f '/code/aplans/settings.py' ]; then
             populate_watch_test_data
         fi
 
         echo "Running database migrations..."
         python manage.py migrate --no-input
 
-        if [ "$TEST_MODE" == "1" ]; then
+        if [ "$TEST_MODE" == "1" ] && [ "$DEPLOYMENT_TYPE" == "ci" ]; then
             if [ -f '/code/paths/settings.py' ]; then
                 populate_paths_test_instances
             elif [ ! -f '/code/aplans/settings.py' ]; then
