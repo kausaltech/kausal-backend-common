@@ -132,6 +132,8 @@ runtime-evaluated-decorators = [
   "paths.gql.mutation",
   "strawberry_django.field",
   "strawberry_django.fields.field",
+  "strawberry_django.type.input",
+  "strawberry_django.input",
   "strawberry.directive",
   "strawberry.experimental.pydantic.type",
   "strawberry.types.object_type.type",
