@@ -2,15 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
 
-from kausal_common.auth.tokens import TokenAuthResult
-
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from django.contrib.sessions.backends.base import SessionBase
 
-    from oauth2_provider.models import AccessToken, IDToken
     from sentry_sdk import Scope as SentryScope
+
+    from kausal_common.auth.tokens import TokenAuthResult
 
     from users.models import User
 

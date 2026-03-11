@@ -3,15 +3,13 @@ from __future__ import annotations
 import abc
 from dataclasses import dataclass, field
 from functools import cache, cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Protocol, cast, overload
-from typing_extensions import TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Protocol, TypeVar, cast, overload
 
 from django.contrib.auth import get_permission_codename
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from django.core.checks import CheckMessage, Error
+from django.core.checks import Error
 from django.core.exceptions import FieldDoesNotExist
-from django.db import models
 from django.db.models import Model, Q, QuerySet
 from django.db.models.fields.related import ForeignKey
 from wagtail.models import PAGE_PERMISSION_CODENAMES
@@ -21,6 +19,7 @@ from loguru import logger
 if TYPE_CHECKING:
     from collections.abc import Generator, Sequence
 
+    from django.core.checks import CheckMessage
     from django_stubs_ext import StrPromise
     from wagtail.models.sites import Site
 

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Any, Generic, Literal, TypeGuard, cast, overload
-from typing_extensions import TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeGuard, TypeVar, cast, overload
 
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q

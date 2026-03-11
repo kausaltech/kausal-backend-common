@@ -7,11 +7,10 @@ from modeltrans.translator import get_i18n_field
 from modeltrans.utils import build_localized_fieldname
 from wagtail.admin.forms import WagtailAdminModelForm
 
-from .helpers import get_language_from_default_language_field, convert_language_code
+from .helpers import convert_language_code, get_language_from_default_language_field
 
 if TYPE_CHECKING:
     from django.db.models import Model
-
     from modeltrans.fields import TranslationField
 
 

@@ -1,5 +1,6 @@
 # ruff: noqa: ANN401
-from typing import Any, Self, Sequence, overload
+from collections.abc import Sequence
+from typing import Any, Self, overload
 
 from django.db.models.fields import SlugField
 

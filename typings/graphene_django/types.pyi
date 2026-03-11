@@ -1,4 +1,5 @@
 from typing import Any
+
 from django.db.models import Model
 from django.db.models.query import QuerySet
 from graphene.relay import Connection

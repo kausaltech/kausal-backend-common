@@ -1,7 +1,9 @@
+from django.db import models
+
+from _typeshed import Incomplete
+
 from .utils import get_backend as get_backend, max_cropping as max_cropping
 from .widgets import ImageCropWidget as ImageCropWidget
-from _typeshed import Incomplete
-from django.db import models
 
 class ImageCropField(models.ImageField):
     def formfield(self, **kwargs): ...  # type: ignore[override]

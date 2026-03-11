@@ -1,4 +1,5 @@
-from typing import Any, ClassVar, NamedTuple, NotRequired, Sequence, TypedDict
+from collections.abc import Sequence
+from typing import Any, ClassVar, NamedTuple, NotRequired, TypedDict
 
 from django.db.models import Model, QuerySet
 from django.db.models.options import Options

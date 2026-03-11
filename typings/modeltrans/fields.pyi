@@ -1,5 +1,5 @@
-from collections.abc import Generator
-from typing import Literal, Self, Sequence
+from collections.abc import Generator, Sequence
+from typing import Literal, Self
 
 from django.db.models import Field, JSONField
 

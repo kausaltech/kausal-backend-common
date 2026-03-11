@@ -1,4 +1,5 @@
-from typing import Any, Callable, Sequence, TypeVar
+from collections.abc import Callable, Sequence
+from typing import Any, TypeVar
 
 from django.db.models import Prefetch
 

@@ -4,9 +4,11 @@ from typing import TYPE_CHECKING, Any
 
 from django.db.models import Min
 from django.utils.html import format_html
-from django.utils.safestring import SafeString, mark_safe
+from django.utils.safestring import mark_safe
 
 if TYPE_CHECKING:
+    from django.utils.safestring import SafeString
+
     from treebeard.mp_tree import MP_Node, MP_NodeQuerySet
 
 

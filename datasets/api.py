@@ -12,7 +12,7 @@ from modeltrans.translator import get_i18n_field
 from modeltrans.utils import build_localized_fieldname
 from rest_framework import permissions, serializers, viewsets
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.routers import DefaultRouter, SimpleRouter
+from rest_framework.routers import DefaultRouter
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -37,6 +37,7 @@ from .models import (
 
 if typing.TYPE_CHECKING:
     from rest_framework.fields import Field
+    from rest_framework.routers import SimpleRouter
 
 router = DefaultRouter()
 all_routers: list[SimpleRouter]  = []

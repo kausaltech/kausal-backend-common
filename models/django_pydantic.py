@@ -32,7 +32,7 @@ from pydantic_core import PydanticUndefined
 BaseModel.model_config['protected_namespaces'] = ()
 
 from diffsync import Adapter, DiffSyncModel
-from diffsync.diff import Diff, DiffElement
+from diffsync.diff import Diff
 from diffsync.enum import DiffSyncActions, DiffSyncFlags, DiffSyncModelFlags
 from diffsync.exceptions import ObjectNotCreated, ObjectNotFound
 from diffsync.helpers import DiffSyncDiffer
@@ -50,6 +50,7 @@ if typing.TYPE_CHECKING:
     from collections.abc import Callable, Generator, Sequence
     from pathlib import Path
 
+    from diffsync.diff import DiffElement
     from diffsync.store import BaseStore
     from structlog import BoundLogger
 

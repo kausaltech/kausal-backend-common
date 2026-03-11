@@ -1,6 +1,6 @@
 import collections
-from collections.abc import Generator
-from typing import Any, Sequence
+from collections.abc import Generator, Sequence
+from typing import Any
 
 from django.core.exceptions import ValidationError
 from django.utils.functional import cached_property

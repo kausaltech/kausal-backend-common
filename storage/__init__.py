@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from urllib.parse import ParseResult, parse_qs
+from typing import TYPE_CHECKING
+from urllib.parse import parse_qs
+
+if TYPE_CHECKING:
+    from urllib.parse import ParseResult
 
 
 def storage_settings_from_s3_url(url: ParseResult, deployment_type: str | None = None):

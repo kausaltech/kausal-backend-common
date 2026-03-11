@@ -1,5 +1,5 @@
-from collections.abc import Generator, Mapping, MutableSequence
-from typing import OrderedDict, Sequence
+from collections import OrderedDict
+from collections.abc import Generator, Mapping, MutableSequence, Sequence
 
 from django.core.exceptions import ValidationError
 from django.utils.functional import cached_property

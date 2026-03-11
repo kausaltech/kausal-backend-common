@@ -4,12 +4,14 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, cast
 
-from django.db.models import Model, Q
+from django.db.models import Model
 
 from kausal_common.models.permissions import PermissionedQuerySet
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
+
+    from django.db.models import Q
 
     from kausal_common.models.permission_policy import ObjectSpecificAction
     from kausal_common.users import UserOrAnon

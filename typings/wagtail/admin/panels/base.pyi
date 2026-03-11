@@ -17,8 +17,6 @@ from wagtail.models import DraftStateMixin as DraftStateMixin
 from wagtail.rich_text import RichText as RichText
 from wagtail.utils.text import text_from_html as text_from_html
 
-from laces.typing import RenderContext
-
 class PanelComparison[Obj](Protocol):
     is_field: bool
     is_child_relation: bool

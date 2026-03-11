@@ -1,5 +1,6 @@
-from _typeshed import Incomplete
 from django.db import models
+
+from _typeshed import Incomplete
 from wagtail_color_panel.validators import hex_triplet_validator as hex_triplet_validator
 
 class ColorField(models.CharField):

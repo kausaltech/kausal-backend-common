@@ -4,7 +4,7 @@ import importlib
 import re
 import textwrap
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
@@ -33,7 +33,7 @@ from .base import (
 from .fields import FieldBlockMetaInterface, lazy_field_label
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterable, Iterator
     from types import ModuleType
 
     from django.utils.functional import _StrPromise

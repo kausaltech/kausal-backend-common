@@ -1,4 +1,5 @@
-from typing import Any, ClassVar, Sequence, TypedDict
+from collections.abc import Sequence
+from typing import Any, ClassVar, TypedDict
 
 from django.db.models import Model, QuerySet
 from django.forms import BaseModelForm

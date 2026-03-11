@@ -1,5 +1,6 @@
 # ruff: noqa: FBT001, FBT002
-from typing import Any, Self, Sequence
+from collections.abc import Sequence
+from typing import Any, Self
 
 from django.db import models
 

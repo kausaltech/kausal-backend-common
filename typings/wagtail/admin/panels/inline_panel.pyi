@@ -1,5 +1,5 @@
-from typing import Any, ClassVar, Generic, Sequence, TypedDict, Unpack, type_check_only
-from typing_extensions import TypeVar
+from collections.abc import Sequence
+from typing import Any, Generic, TypedDict, TypeVar, Unpack, type_check_only
 
 from django.db.models import ManyToOneRel, Model
 from django.forms import Media

@@ -1,5 +1,7 @@
+from collections.abc import Callable, Iterable
+from contextlib import AbstractContextManager
 from datetime import datetime
-from typing import Any, Callable, ContextManager, Iterable, TypeVar, overload
+from typing import Any, overload
 
 from django.contrib.auth.models import AbstractBaseUser
 from django.db import models
@@ -17,7 +19,7 @@ def add_to_revision(obj: models.Model, model_db: str | None = None) -> None: ...
 def create_revision(manage_manually: bool = False, using: str | None = None, atomic: bool = True) -> _ContextWrapper: ...
 
 class _ContextWrapper:
-    def __init__(self, func: Callable[..., ContextManager], args: tuple[Any, ...]) -> None: ...
+    def __init__(self, func: Callable[..., AbstractContextManager[Any]], args: tuple[Any, ...]) -> None: ...
     def __enter__(self) -> Any: ...
     def __exit__(
         self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: Any | None,
@@ -27,10 +29,8 @@ class _ContextWrapper:
 def is_registered(model: type[models.Model] | models.Model) -> bool: ...
 def get_registered_models() -> Iterable[type[models.Model]]: ...
 
-_M = TypeVar('_M', bound=type[models.Model])
-
 @overload
-def register(
+def register[M: type[models.Model]](
     model: None = None,
     fields: Iterable[str] | None = None,
     exclude: Iterable[str] = (),
@@ -39,11 +39,11 @@ def register(
     for_concrete_model: bool = True,
     ignore_duplicates: bool = False,
     use_natural_foreign_keys: bool = False,
-) -> Callable[[_M], _M]: ...
+) -> Callable[[M], M]: ...
 
 @overload
-def register(
-    model: _M,
+def register[M: type[models.Model]](
+    model: M,
     fields: Iterable[str] | None = None,
     exclude: Iterable[str] = (),
     follow: Iterable[str] = (),
@@ -51,7 +51,7 @@ def register(
     for_concrete_model: bool = True,
     ignore_duplicates: bool = False,
     use_natural_foreign_keys: bool = False,
-) -> _M: ...
+) -> M: ...
 
 
 def unregister(model: type[models.Model]) -> None: ...

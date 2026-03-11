@@ -1,5 +1,5 @@
 from collections.abc import Callable, Sequence
-from typing import Any, Self, override
+from typing import Any, Self
 
 from django.utils.functional import cached_property as cached_property
 from django_stubs_ext import StrOrPromise
@@ -10,7 +10,6 @@ from wagtail.coreutils import accepts_kwarg as accepts_kwarg
 from wagtail.utils.deprecation import RemovedInWagtail70Warning as RemovedInWagtail70Warning
 
 from _typeshed import Incomplete
-from laces.typing import RenderContext
 
 type ReadOnlyProp[T] = T | Callable[[Any], T]
 

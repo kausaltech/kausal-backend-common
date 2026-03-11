@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from django.db.models import Model
 from wagtail.admin.viewsets.chooser import ChooserViewSet as BaseChooserViewSet
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Callable, Iterable
 
     from wagtail.admin.views.generic.chooser import ChooseResultsView, ChooseView, ChosenView, View
 

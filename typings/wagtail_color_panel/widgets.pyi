@@ -1,6 +1,7 @@
-from _typeshed import Incomplete
 from django.forms import widgets
 from wagtail.widget_adapters import WidgetAdapter
+
+from _typeshed import Incomplete
 
 class PolyfillColorInputWidget(widgets.TextInput):
     class Media:

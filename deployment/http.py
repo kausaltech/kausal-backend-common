@@ -3,10 +3,12 @@ from __future__ import annotations
 import re
 import string
 from dataclasses import dataclass
-from re import Pattern
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from kausal_common.const import WILDCARD_DOMAINS_HEADER
+
+if TYPE_CHECKING:
+    from re import Pattern
 
 
 def get_allowed_cors_headers() -> list[str]:

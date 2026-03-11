@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Pattern
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from re import Pattern
 
 
 class BaseFilter(logging.Filter):

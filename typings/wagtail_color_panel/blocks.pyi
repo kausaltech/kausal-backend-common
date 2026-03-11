@@ -1,6 +1,7 @@
-from _typeshed import Incomplete
 from django.utils.functional import cached_property as cached_property
 from wagtail.blocks import FieldBlock
+
+from _typeshed import Incomplete
 from wagtail_color_panel.validators import hex_triplet_validator as hex_triplet_validator
 from wagtail_color_panel.widgets import ColorInputWidget as ColorInputWidget
 

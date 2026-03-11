@@ -10,7 +10,7 @@ from strawberry.channels import (
     GraphQLWSConsumer as StrawberryGraphQLWSConsumer,
     SyncGraphQLHTTPConsumer as StrawberrySyncGraphQLHTTPConsumer,
 )
-from strawberry.channels.handlers.http_handler import ChannelsResponse, MultipartChannelsResponse
+from strawberry.channels.handlers.http_handler import ChannelsResponse
 from strawberry.django.views import GraphQLView as StrawberryGraphQLView
 from strawberry.http.temporal_response import TemporalResponse
 
@@ -23,6 +23,7 @@ from kausal_common.strawberry.helpers import graphql_log
 
 if TYPE_CHECKING:
     from django.http.response import HttpResponse
+    from strawberry.channels.handlers.http_handler import MultipartChannelsResponse
 
 
 class BaseContext(TypedDict):

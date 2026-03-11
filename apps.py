@@ -5,7 +5,7 @@ from importlib.util import find_spec
 from typing import TYPE_CHECKING
 
 from django.apps import AppConfig
-from django.core.checks import CheckMessage, Critical, register as register_check
+from django.core.checks import Critical, register as register_check
 
 import rich
 from loguru import logger
@@ -15,6 +15,8 @@ from kausal_common.context import get_django_project_name
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from django.core.checks import CheckMessage
 
 
 @register_check

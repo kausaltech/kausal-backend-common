@@ -1,6 +1,8 @@
 import abc
-from .. import widgets as widgets
+
 from _typeshed import Incomplete
+
+from .. import widgets as widgets
 
 class ImageBackend(metaclass=abc.ABCMeta):
     exceptions_to_catch: Incomplete

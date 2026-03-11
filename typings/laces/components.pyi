@@ -1,6 +1,6 @@
-from typing import Any, overload
+from typing import Any
+
 from django.forms.widgets import Media, MediaDefiningClass
-from django.template import Context
 from django.utils.safestring import SafeString
 
 from .typing import HasMediaProperty, RenderContext

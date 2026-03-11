@@ -6,13 +6,9 @@ import graphene
 from graphene.types.schema import TypeMap as GrapheneTypeMap
 from graphql import (
     GraphQLAbstractType,
-    GraphQLDirective,
-    GraphQLField,
-    GraphQLNamedType,
     GraphQLObjectType,
     GraphQLScalarType,
     GraphQLSchema,
-    GraphQLType,
     introspection_types,
     is_abstract_type,
 )
@@ -22,6 +18,12 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     import strawberry
+    from graphql import (
+        GraphQLDirective,
+        GraphQLField,
+        GraphQLNamedType,
+        GraphQLType,
+    )
 
 
 class SchemaMerger:

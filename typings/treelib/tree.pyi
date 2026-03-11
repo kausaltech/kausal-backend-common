@@ -1,5 +1,5 @@
-from collections.abc import Generator
-from typing import Callable, Hashable, Literal
+from collections.abc import Callable, Generator, Hashable
+from typing import Literal
 
 from _typeshed import Incomplete, SupportsRichComparison
 

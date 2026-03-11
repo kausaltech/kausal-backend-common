@@ -9,7 +9,7 @@ from django.db.models.fields.related import RelatedField
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from modeltrans.fields import TranslatedVirtualField
 
-from rich.console import RenderableType, group
+from rich.console import group
 from rich.table import Table
 from rich.text import Text
 from rich.tree import Tree
@@ -18,6 +18,8 @@ if TYPE_CHECKING:
     from collections.abc import Generator, Iterable
 
     from django.db.models.fields import Field
+
+    from rich.console import RenderableType
 
 
 @dataclass

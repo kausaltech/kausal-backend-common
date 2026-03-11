@@ -13,7 +13,7 @@ from kausal_common.const import IS_PATHS, IS_WATCH
 from .models import Node
 
 if TYPE_CHECKING:
-    from treebeard.mp_tree import MP_Node
+    pass
 
 
 

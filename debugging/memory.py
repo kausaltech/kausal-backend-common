@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import tracemalloc
-from tracemalloc import Snapshot
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
@@ -9,6 +9,9 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from rich import print
+
+if TYPE_CHECKING:
+    from tracemalloc import Snapshot
 
 previous_snap: Snapshot | None = None
 

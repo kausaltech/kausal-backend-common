@@ -12,8 +12,7 @@ from kausal_common.models.permissions import PermissionedModel, PermissionedQuer
 from kausal_common.strawberry.errors import NotFoundError
 
 if TYPE_CHECKING:
-
-    import strawberry
+    import strawberry as sb
 
     from kausal_common.models.permission_policy import ObjectSpecificAction
 
@@ -31,7 +30,7 @@ def graphql_log(level: LogLevel, operation_name: str | None, msg, *args, depth: 
 
 
 def get_or_error[M: Model](
-    info: strawberry.Info,
+    info: sb.Info,
     model_or_queryset: type[M] | QuerySet[M],
     id: str | int | None = None,
     for_action: ObjectSpecificAction = 'view',

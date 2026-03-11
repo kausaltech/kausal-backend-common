@@ -1,5 +1,6 @@
-from .utils import import_attribute as import_attribute
 from _typeshed import Incomplete
+
+from .utils import import_attribute as import_attribute
 
 class AppConfOptions:
     prefix: Incomplete

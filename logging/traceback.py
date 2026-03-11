@@ -5,10 +5,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from rich.text import Text
-from rich.traceback import Stack, Traceback
+from rich.traceback import Traceback
 
 if TYPE_CHECKING:
     from rich.console import Group
+    from rich.traceback import Stack
 
 old_render_stack = Traceback._render_stack
 _is_patched = False

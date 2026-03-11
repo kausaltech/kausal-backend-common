@@ -1,6 +1,7 @@
 # ruff: noqa: D400, D415, D205, D401, D200, D204
-from collections.abc import Iterable
-from typing import Any, ClassVar, Generic, Mapping, OrderedDict, Protocol, Self, Sequence, TypeVar, type_check_only
+from collections import OrderedDict
+from collections.abc import Iterable, Mapping
+from typing import Any, ClassVar, Protocol, Self, TypeVar, type_check_only
 
 from django import forms
 from django.core.files.base import File

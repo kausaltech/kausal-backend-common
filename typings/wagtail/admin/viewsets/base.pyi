@@ -1,4 +1,5 @@
-from typing import Any, Callable, ClassVar
+from collections.abc import Callable
+from typing import Any, ClassVar
 
 from django.http.response import HttpResponseBase
 from django.urls import URLPattern

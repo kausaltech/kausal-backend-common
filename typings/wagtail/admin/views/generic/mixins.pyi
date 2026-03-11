@@ -1,6 +1,6 @@
+from collections.abc import Sequence
 from functools import cached_property
-from typing import Any, ClassVar, Generic, Sequence
-from typing_extensions import TypeVar
+from typing import Any, ClassVar, Generic, TypeVar
 
 from django.db.models import Model, QuerySet
 from django.forms import BaseModelForm

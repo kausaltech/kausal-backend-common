@@ -1,6 +1,6 @@
 import types
-from collections.abc import Mapping
-from typing import Iterable, Self
+from collections.abc import Iterable, Mapping
+from typing import Self
 from uuid import UUID
 
 from django.contrib.auth.base_user import AbstractBaseUser

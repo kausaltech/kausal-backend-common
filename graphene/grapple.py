@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 import graphene
 from django.db import models
 from graphene.types.base import BaseType
 from graphene.types.field import Field
-from wagtail.blocks.stream_block import StreamBlock, StreamValue
+from wagtail.blocks.stream_block import StreamBlock
 from wagtail.blocks.struct_block import StructBlock
 from wagtail.fields import StreamField
 
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
     from graphene.types.mountedtype import OrderedType
     from graphene.types.structures import Structure
     from wagtail import blocks
+    from wagtail.blocks.stream_block import StreamValue
 
     from kausal_common.graphene import GQLInfo
 

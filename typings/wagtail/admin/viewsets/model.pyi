@@ -1,5 +1,6 @@
 # pyright: basic, reportGeneralTypeIssues=false
-from typing import Any, Callable, ClassVar, Generic, Sequence, TypeVar
+from collections.abc import Callable, Sequence
+from typing import Any, ClassVar
 
 from django.db import models
 from django.db.models import Model, QuerySet

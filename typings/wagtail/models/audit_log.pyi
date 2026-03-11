@@ -1,9 +1,7 @@
 from collections.abc import Generator
-from typing import ClassVar
 
 from django.db import models
 from django.utils.functional import cached_property as cached_property
-from django_stubs_ext import StrPromise
 from wagtail.users.utils import get_deleted_user_display_name as get_deleted_user_display_name
 
 from _typeshed import Incomplete

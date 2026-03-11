@@ -1,17 +1,9 @@
 import os
-import re
-from mimetypes import guess_type
 
-from django.db import models
 from django.http import Http404
-from django.http.response import FileResponse, HttpResponseBadRequest
-from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import cache_control
 from rest_framework import serializers
 from rest_framework.decorators import action
-from rest_framework.generics import get_object_or_404
-
-from sentry_sdk import capture_exception
 
 
 def image_upload_path(instance, filename):

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import override, TYPE_CHECKING, Any, Unpack
+from typing import TYPE_CHECKING, Any, Unpack, override
 
 from django.conf import settings
 from django.db.models import Model
@@ -8,7 +8,6 @@ from modeltrans.utils import build_localized_fieldname
 from wagtail.admin.panels import FieldPanel, FieldRowPanel, MultiFieldPanel
 
 from kausal_common.i18n.helpers import convert_language_code, get_language_from_default_language_field
-
 
 if TYPE_CHECKING:
     from wagtail.admin.panels.field_panel import WidgetOverrideType

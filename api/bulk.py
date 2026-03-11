@@ -12,12 +12,6 @@ from rest_framework.exceptions import ValidationError
 if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from kausal_common.const import IS_PATHS, IS_WATCH
-    if IS_PATHS:
-        from paths.types import PathsAPIRequest as APIRequest
-    elif IS_WATCH:
-        from aplans.types import WatchAPIRequest as APIRequest
-
 
 class BulkSerializerValidationInstanceMixin:
     def run_validation(self, data: dict[str, Any]):

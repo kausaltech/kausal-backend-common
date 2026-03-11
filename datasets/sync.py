@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypedDict
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from django.contrib.postgres.expressions import ArraySubquery
 from django.db import models, transaction
@@ -18,18 +18,23 @@ from .models import (
     DatasetMetric,
     DatasetSchema,
     DatasetSchemaDimension,
-    DatasetSchemaQuerySet,
     DatasetSchemaScope,
     Dimension,
     DimensionCategory,
-    DimensionQuerySet,
     DimensionScope,
 )
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from django.db.models import QuerySet
 
-    from .models import DatasetSchemaScopeType, DimensionScopeType
+    from .models import (
+        DatasetSchemaQuerySet,
+        DatasetSchemaScopeType,
+        DimensionQuerySet,
+        DimensionScopeType,
+    )
 
 
 class ScopeAwareDjangoDiffModel[M: models.Model](DjangoDiffModel[M]):

@@ -1,9 +1,12 @@
-from .base import Block, BoundBlock
-from _typeshed import Incomplete
 from collections.abc import Generator, MutableSequence
+
 from django.core.exceptions import ValidationError
 from django.utils.functional import cached_property
 from wagtail.telepath import Adapter
+
+from _typeshed import Incomplete
+
+from .base import Block, BoundBlock
 
 __all__ = ['ListBlock', 'ListBlockValidationError']
 

@@ -1,5 +1,5 @@
 # ruff: noqa: N802
-from typing import Callable
+from collections.abc import Callable
 
 from django.db.models.base import Model
 from graphene.types.base import BaseType

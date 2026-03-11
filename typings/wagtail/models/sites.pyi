@@ -4,11 +4,9 @@ from typing import ClassVar, NamedTuple
 from django.db import models
 from django.db.models import BooleanField, CharField, ForeignKey, IntegerField, QuerySet
 from django.http import HttpRequest
-#from wagtail.models import Page
-
-from _typeshed import Incomplete
-
 from wagtail.models import Page
+
+#from wagtail.models import Page
 
 def get_site_for_hostname(hostname: str, port: int) -> Site:
     """Return the wagtailcore.Site object for the given hostname and port."""

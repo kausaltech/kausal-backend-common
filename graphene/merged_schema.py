@@ -6,10 +6,6 @@ from typing import TYPE_CHECKING, Any, Generic, TypeGuard, cast
 import graphene
 from graphene.types.schema import TypeMap as GrapheneTypeMap
 from graphql import (
-    GraphQLField,
-    GraphQLNamedType,
-    GraphQLNullableType,
-    GraphQLObjectType,
     assert_enum_type,
     assert_named_type,
 )
@@ -21,13 +17,24 @@ from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.types import has_object_definition
 from strawberry.types.base import (
     StrawberryObjectDefinition,
-    StrawberryType,
-    WithStrawberryDefinition,
     has_strawberry_definition,
 )
-from strawberry.types.enum import StrawberryEnumDefinition, WithStrawberryEnumDefinition, has_enum_definition
+from strawberry.types.enum import StrawberryEnumDefinition, has_enum_definition
 from strawberry.types.scalar import ScalarDefinition
 from strawberry.types.union import StrawberryUnion
+
+if TYPE_CHECKING:
+    from graphql import (
+        GraphQLField,
+        GraphQLNamedType,
+        GraphQLNullableType,
+        GraphQLObjectType,
+    )
+    from strawberry.types.base import (
+        StrawberryType,
+        WithStrawberryDefinition,
+    )
+    from strawberry.types.enum import WithStrawberryEnumDefinition
 
 type StrawberryObjectType = StrawberryObjectDefinition | StrawberryEnumDefinition | ScalarDefinition
 
@@ -103,7 +110,7 @@ def get_sb_definition(type_: type) -> StrawberryObjectType | StrawberryUnion:
     if issubclass(type_, graphene.Enum):
         meta = cast('EnumOptions', type_meta)
         enum_def = StrawberryEnumDefinition(
-            wrapped_cls=type(meta.enum),  # type: ignore  # pyright: ignore[reportArgumentType]
+            wrapped_cls=type(meta.enum),  # type: ignore[arg-type]
             name=meta.name,
             values=[],
             description=meta.description,
@@ -139,7 +146,9 @@ def _is_graphene_named_type(
 ) -> TypeGuard[type[graphene.ObjectType[Any] | graphene.Interface[Any] | graphene.Union | graphene.Enum]]:
     if not inspect.isclass(type_):
         return False
-    if not issubclass(type_, (graphene.ObjectType, graphene.InputObjectType, graphene.Interface, graphene.Union, graphene.Enum)):
+    if not issubclass(
+        type_, (graphene.ObjectType, graphene.InputObjectType, graphene.Interface, graphene.Union, graphene.Enum, graphene.Scalar)
+    ):
         return False
     return True
 
@@ -200,9 +209,9 @@ class UnifiedGrapheneTypeMap(GrapheneTypeMap):
         if is_strawberry_enum(type_) and not _is_graphene_named_type(type_):
             enum_definition: StrawberryEnumDefinition = type_.__strawberry_definition__
             assert enum_definition.name
-            assert enum_definition.name not in self, "Enum %s already exists" % enum_definition.name
             enum_type = assert_enum_type(self.sb_converter.from_type(enum_definition))
-            self[enum_type.name] = enum_type
+            if enum_type.name not in self:
+                self[enum_type.name] = enum_type
             return enum_type
 
         if not issubclass(type_, SubclassWithMeta):

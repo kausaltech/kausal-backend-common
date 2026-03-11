@@ -1,5 +1,5 @@
-from typing import Any, Callable, Generic, Mapping, type_check_only
-from typing_extensions import TypeVar
+from collections.abc import Callable, Mapping
+from typing import Any, Generic, TypeVar, type_check_only
 
 from django.db.models import Model
 from django.forms import inlineformset_factory

@@ -1,5 +1,6 @@
 from collections import Counter
 
+from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions, serializers
 
 from kausal_common.api.bulk import BulkListSerializer, BulkSerializerValidationInstanceMixin
@@ -7,8 +8,6 @@ from kausal_common.model_images import ModelWithImageSerializerMixin
 from kausal_common.models.general import public_fields
 
 from people.models import Person
-
-from django.utils.translation import gettext_lazy as _
 
 
 class PersonSerializer(

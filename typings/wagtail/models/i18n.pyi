@@ -1,6 +1,5 @@
 from collections.abc import Sequence
-from typing import Any, ClassVar, Generic, Self
-from typing_extensions import TypeVar
+from typing import Any, ClassVar, Generic, Self, TypeVar
 
 from django.core.checks import CheckMessage
 from django.db import migrations, models

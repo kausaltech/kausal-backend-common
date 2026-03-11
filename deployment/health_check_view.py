@@ -3,7 +3,8 @@ from __future__ import annotations
 import gc
 import os
 import time
-from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 from django.core.cache import caches
 from django.db import connections

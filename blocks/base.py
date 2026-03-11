@@ -10,7 +10,7 @@ from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 from wagtail import blocks
 
-from grapple.models import GraphQLField, GraphQLString
+from grapple.models import GraphQLString
 
 from kausal_common.blocks.fields import FieldBlockMetaInterface
 
@@ -21,6 +21,8 @@ if TYPE_CHECKING:
     from django_stubs_ext import StrOrPromise
     from wagtail.blocks.base import BlockMeta
     from wagtail.blocks.struct_block import StructValue
+
+    from grapple.models import GraphQLField
 
     class BlockMetaWithFieldName(Protocol, BlockMeta):  # pyright: ignore
         field_name: str

@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar, Self, cast
-from typing_extensions import TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeVar, cast
 
 from django.db import models
 from django.db.models import QuerySet

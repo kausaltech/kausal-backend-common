@@ -1,6 +1,5 @@
-from collections.abc import Generator
-from typing import Any, Generic, Literal, Self, Sequence
-from typing_extensions import TypeVar
+from collections.abc import Generator, Sequence
+from typing import Any, Generic, Literal, Self, TypeVar
 
 from django.db import models
 from django.db.models.expressions import Combinable

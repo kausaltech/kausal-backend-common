@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import functools
 import re
-from typing import TYPE_CHECKING, Any, Generic
-from typing_extensions import TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import graphene
 from django.db.models import Model

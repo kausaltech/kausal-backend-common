@@ -1,5 +1,4 @@
-from typing import Any
-from typing_extensions import TypeVar
+from typing import Any, TypeVar
 
 from django.db.models import Model
 from django.db.models.fields.related import ForeignKey, ManyToManyDescriptor, ManyToManyField

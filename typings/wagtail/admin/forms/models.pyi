@@ -1,4 +1,5 @@
-from typing import Any, Callable, Concatenate, Generic, Mapping, ParamSpec, TypeAlias, TypeVar, Unpack
+from collections.abc import Callable, Mapping
+from typing import Any, Concatenate, Generic, ParamSpec, TypeAlias, TypeVar, Unpack
 from typing_extensions import TypedDict
 
 from django.contrib.auth.base_user import AbstractBaseUser

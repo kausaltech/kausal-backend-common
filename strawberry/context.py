@@ -57,9 +57,9 @@ class GraphQLContext:
 
     def get_scope(self) -> ASGICommonScope:
         if isinstance(self.request, (GraphQLWSConsumer, StarletteRequest)):
-            return cast('ASGICommonScope', self.request.scope)  # pyright: ignore[reportInvalidCast]
+            return cast('ASGICommonScope', self.request.scope)
         if isinstance(self.request, ChannelsRequest):
-            return cast('ASGICommonScope', self.request.consumer.scope)  # pyright: ignore[reportInvalidCast]
+            return cast('ASGICommonScope', self.request.consumer.scope)
         raise ValueError('Unknown request type')
 
     def get_token_auth(self) -> TokenAuthResult | None:
@@ -131,7 +131,7 @@ class GraphQLContext:
     def __post_init__(self):
         from django.conf import settings
 
-        perf: PerfContext = PerfContext(
+        perf: PerfContext[GraphQLPerfNode] = PerfContext(
             supports_cache=False,
             min_ms=10,
             description=self.operation_name,

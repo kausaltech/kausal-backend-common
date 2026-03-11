@@ -1,4 +1,5 @@
-from typing import Any, ClassVar, Sequence
+from collections.abc import Sequence
+from typing import Any, ClassVar
 
 from django.contrib.admin.filters import ListFilter
 from django.contrib.admin.options import _ListDisplayT, _ListFilterT

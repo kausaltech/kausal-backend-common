@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import strawberry
-from django.conf import settings
 
 from kausal_common.deployment import test_mode_enabled
 from kausal_common.strawberry.registry import register_strawberry_type

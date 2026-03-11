@@ -2,22 +2,24 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast, overload
 
-from strawberry.types.fields.resolver import StrawberryResolver
 import strawberry_django
 from django.db import transaction
-from django.db.models import ForeignObjectRel, ManyToManyField, Model
+from django.db.models import Model
 from django.utils import translation
 from strawberry.extensions import FieldExtension
+from strawberry.types.fields.resolver import StrawberryResolver
 from strawberry_django.fields.types import OperationInfo
-from strawberry_django.mutations.fields import DjangoMutationBase, resolvers
+from strawberry_django.mutations.fields import resolvers
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
+    from django.db.models import ForeignObjectRel, ManyToManyField
     from strawberry import Info
     from strawberry.extensions.field_extension import SyncExtensionResolver
     from strawberry.permission import BasePermission
     from strawberry.types.field import StrawberryField
+    from strawberry_django.mutations.fields import DjangoMutationBase
 
 class MutationExtension(FieldExtension):
     def __init__(self):

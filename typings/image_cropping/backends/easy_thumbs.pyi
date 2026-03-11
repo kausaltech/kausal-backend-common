@@ -1,5 +1,6 @@
-from .base import ImageBackend as ImageBackend
 from _typeshed import Incomplete
+
+from .base import ImageBackend as ImageBackend
 
 class EasyThumbnailsBackend(ImageBackend):
     exceptions_to_catch: Incomplete

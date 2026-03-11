@@ -1,5 +1,5 @@
-from collections.abc import Generator, Sequence
-from typing import Any, Iterable, Mapping, type_check_only
+from collections.abc import Generator, Iterable, Mapping, Sequence
+from typing import Any, type_check_only
 
 from django.core.files.base import File
 from django.core.validators import _ValidatorCallable
