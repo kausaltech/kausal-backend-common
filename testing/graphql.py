@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
+from django.http import HttpRequest
 from typing_extensions import TypedDict
 
 from django.utils.text import slugify
@@ -32,12 +33,21 @@ def capture_query(
     data: GraphQLRequestData,
     response: GraphQLHTTPResponse,
     exec_time: float | None = None,
+    instance_id: str | None = None,
 ):
     global counter  # noqa: PLW0603
 
     if not data.operation_name:
         return
     request_headers = context.get_request_headers()
+    if isinstance(context.request, HttpRequest):
+        session = context.request.session
+    else:
+        session = context.get_scope().get('session')
+    has_session = False
+    if session and session.session_key:
+        has_session = True
+
     out = dict(
         headers={hdr: request_headers.get(hdr) for hdr in headers},
         operation_name=data.operation_name,
@@ -45,10 +55,15 @@ def capture_query(
         variables=data.variables,
         response=response,
         execution_time=exec_time,
+        has_session=has_session,
     )
     store_dir = Path('query-store')
     store_dir.mkdir(exist_ok=True)
-    path = store_dir / Path('%04d-%s.json'% (counter, slugify(data.operation_name)))
+    instance_id_part = ''
+    if instance_id:
+        instance_id_part = f'-{instance_id}'
+    op_name = slugify(data.operation_name) or 'unnamed'
+    path = store_dir / Path('%04d%s-%s.json'% (counter, instance_id_part, op_name))
     logger.info('Capturing GraphQL query and response to %s' % path)
     with path.open('w') as f:
         f.write(json.dumps(out, ensure_ascii=False, indent=2, sort_keys=False))
