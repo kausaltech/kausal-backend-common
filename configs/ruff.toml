@@ -134,10 +134,13 @@ runtime-evaluated-decorators = [
   "strawberry_django.fields.field",
   "strawberry.directive",
   "strawberry.experimental.pydantic.type",
+  "strawberry.types.object_type.type",
+  "strawberry.type",
   "strawberry.field",
   "strawberry.input",
   "strawberry.mutation",
   "strawberry.subscription",
   "strawberry.types.field",
+  "kausal_common.strawberry.grapple.grapple_field",
 ]
-runtime-evaluated-base-classes = ["pydantic.BaseModel", "mcp_server.generated_base.ObjectBaseModel"]
+runtime-evaluated-base-classes = ["pydantic.BaseModel", "mcp_server.generated_base.ObjectBaseModel", "kausal_common.i18n.pydantic.I18nBaseModel"]
