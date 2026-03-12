@@ -251,6 +251,14 @@ class UnifiedGraphQLConverter(GraphQLCoreConverter):
             return self.graphene_type_map[graphene_type_name]
         return self.graphene_type_map.add_type(type_)
 
+    def from_union(self, union: StrawberryUnion) -> Any:
+        # Pre-register any Graphene types in the union so they have __strawberry_definition__
+        # set before Strawberry's is_valid_union_type() validation runs.
+        for type_ in union.types:
+            if _is_graphene_named_type(type_):
+                self.add_graphene_type(type_)
+        return super().from_union(union)
+
     def from_type(self, type_: StrawberryType | type) -> GraphQLNullableType:
         if _is_graphene_named_type(type_):
             return cast('GraphQLNullableType', self.add_graphene_type(type_))
