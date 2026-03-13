@@ -583,11 +583,36 @@ class DatasetSchemaScope(PermissionedModel):
         return retval
 
 
+class DataPointBase(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
+    """
+    Abstract base for tabular data cells.
+
+    Concrete subclasses must define their own ``dataset`` FK, ``metric`` FK,
+    and ``dimension_categories`` M2M with appropriate related_names.
+    """
+
+    date = models.DateField(
+        verbose_name=_('date'),
+        help_text=_("Date of this data point in context of the dataset's time resolution"),
+    )
+    value = models.DecimalField(
+        max_digits=32,
+        decimal_places=16,
+        verbose_name=_('value'),
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        abstract = True
+        ordering = ('date', 'id')
+
+
 # Note that the P in DataPoint is upper case. Rationale: The word "datapoint" seems to be rarely used.
 # Source: https://english.stackexchange.com/questions/508238/word-choice-data-points-or-datapoints
 # This is in contract to "dataset", which seems to be more common than "data set".
 # Source: https://english.stackexchange.com/questions/2120/which-is-correct-dataset-or-data-set
-class DataPoint(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
+class DataPoint(DataPointBase):
     dataset = models.ForeignKey(
         Dataset, related_name='data_points', on_delete=models.CASCADE, verbose_name=_('dataset'),
     )
@@ -598,23 +623,8 @@ class DataPoint(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
         blank=True,
         verbose_name=_('dimension categories'),
     )
-    date = models.DateField(
-        verbose_name=_('date'),
-        help_text=_("Date of this data point in context of the dataset's time resolution"),
-    )
-
     metric = models.ForeignKey(
         DatasetMetric, related_name='data_points', on_delete=models.PROTECT, verbose_name=_('metric')
-    )
-    value = models.DecimalField(
-        max_digits=32,
-        decimal_places=16,
-        verbose_name=_('value'),
-        # null means that the data point is explicitly marked as not available or not applicable, for example
-        # - category combination not applicable or
-        # - data is known to be unavailable for date
-        null=True,
-        blank=True,
     )
 
     objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
