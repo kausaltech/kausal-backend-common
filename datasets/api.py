@@ -11,7 +11,9 @@ from modeltrans.conf import get_available_languages
 from modeltrans.translator import get_i18n_field
 from modeltrans.utils import build_localized_fieldname
 from rest_framework import permissions, serializers, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 from rest_framework.routers import DefaultRouter
 
 from drf_spectacular.types import OpenApiTypes
@@ -263,10 +265,14 @@ class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
     schema: UuidSlugRelatedField[DatasetSchema] = UuidSlugRelatedField(read_only=True)  # pyright: ignore
     label = serializers.CharField(source='label_i18n')  # type: ignore[assignment]
     unit = serializers.CharField(source='unit_i18n', required=False)
+    is_computed = serializers.SerializerMethodField()
 
     class Meta:
         model = DatasetMetric
-        fields = ['uuid', 'schema', 'label', 'unit', 'order']
+        fields = ['uuid', 'schema', 'label', 'unit', 'order', 'is_computed']
+
+    def get_is_computed(self, obj: DatasetMetric) -> bool:
+        return obj.computed_by.exists()  # type: ignore[attr-defined]
 
 
 class DatasetMetricViewSet(viewsets.ReadOnlyModelViewSet):
@@ -354,6 +360,13 @@ class DatasetSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
         fields = ['uuid', 'schema', 'data_points', 'scope_id', 'scope_content_type', 'scope_content_type_id']
 
 
+class ComputedDataPointSerializer(serializers.Serializer):
+    date = serializers.DateField()
+    value = serializers.FloatField(allow_null=True)
+    metric = UuidSlugRelatedField[DatasetMetric](read_only=True)
+    dimension_categories = UuidSlugRelatedField[DimensionCategory](read_only=True, many=True)
+
+
 class DatasetViewSet(viewsets.ModelViewSet):
     lookup_field = 'uuid'
     serializer_class = DatasetSerializer
@@ -366,6 +379,15 @@ class DatasetViewSet(viewsets.ModelViewSet):
         # TODO: check that we don't allow editing instances for which we only have view permissions
         user = user_or_anon(self.request.user)
         return Dataset.permission_policy().instances_user_has_permission_for(user, 'view')
+
+    @action(detail=True, methods=['get'], url_path='computed_data_points')
+    def computed_data_points(self, request, uuid=None):
+        from .computation import compute_dataset_values
+
+        dataset = self.get_object()
+        computed = compute_dataset_values(dataset)
+        data = ComputedDataPointSerializer(computed, many=True).data
+        return Response(data)
 
 
 class DimensionViewSet(viewsets.ModelViewSet):
