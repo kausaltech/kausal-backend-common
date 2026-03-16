@@ -414,6 +414,10 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
     def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
         return get_permission_policy('DATASET_METRIC_PERMISSION_POLICY')
 
+    @property
+    def is_computed(self) -> bool:
+        return hasattr(self, 'computed_by')
+
 
 class DatasetMetricComputation(OrderedModel):
     """
@@ -437,7 +441,7 @@ class DatasetMetricComputation(OrderedModel):
         related_name='computations',
         verbose_name=_('schema'),
     )
-    target_metric: FK[DatasetMetric] = models.ForeignKey(
+    target_metric: FK[DatasetMetric] = models.OneToOneField(
         DatasetMetric,
         on_delete=models.CASCADE,
         related_name='computed_by',

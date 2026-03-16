@@ -272,7 +272,7 @@ class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
         fields = ['uuid', 'schema', 'label', 'unit', 'order', 'is_computed']
 
     def get_is_computed(self, obj: DatasetMetric) -> bool:
-        return obj.computed_by.exists()  # type: ignore[attr-defined]
+        return obj.is_computed
 
 
 class DatasetMetricViewSet(viewsets.ReadOnlyModelViewSet):
