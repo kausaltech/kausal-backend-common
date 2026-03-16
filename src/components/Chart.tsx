@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   BarChart,
@@ -114,14 +114,18 @@ export function Chart({
   const chartRef = useRef<echarts.ECharts | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const theme = useBaseTheme();
+  const [isRendering, setIsRendering] = useState(true);
 
   // Initialize the chart
   useEffect(() => {
     const chart = echarts.init(wrapperRef.current, getChartTheme(theme).theme, {
       renderer: renderer,
     });
-
     chartRef.current = chart;
+
+    chart.on('finished', () => {
+      setIsRendering(false);
+    });
 
     const throttledResize = throttle(
       () => {
@@ -166,6 +170,7 @@ export function Chart({
         ...data,
         ...DEFAULT_STYLES,
       };
+      setIsRendering(true);
       chartRef.current.setOption(augmentedData, true);
 
       if (withResizeLegend) {
@@ -202,5 +207,5 @@ export function Chart({
     }
   }, [onZrClick]);
 
-  return <div ref={wrapperRef} className={className} style={{ height }} />;
+  return <div ref={wrapperRef} className={className} style={{ height }} aria-busy={(isLoading || isRendering) ? 'true' : undefined} />;
 }
