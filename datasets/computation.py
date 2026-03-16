@@ -63,8 +63,12 @@ def _compute_metric_values(
             if m in (comp.operand_a_id, comp.operand_b_id)
         }
         for d, dims in sorted(keys):
-            a = values.get((d, dims, comp.operand_a_id))
-            b = values.get((d, dims, comp.operand_b_id))
+            key_a = (d, dims, comp.operand_a_id)
+            key_b = (d, dims, comp.operand_b_id)
+            if key_a not in values or key_b not in values:
+                continue
+            a = values[key_a]
+            b = values[key_b]
             result = _apply_op(comp.operation, a, b)
             values[(d, dims, comp.target_metric_id)] = result
             results.append((d, dims, comp.target_metric_id, result))

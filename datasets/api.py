@@ -41,6 +41,8 @@ if typing.TYPE_CHECKING:
     from rest_framework.fields import Field
     from rest_framework.routers import SimpleRouter
 
+    from .models import DatasetMetricComputation
+
 router = DefaultRouter()
 all_routers: list[SimpleRouter]  = []
 
@@ -266,13 +268,23 @@ class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
     label = serializers.CharField(source='label_i18n')  # type: ignore[assignment]
     unit = serializers.CharField(source='unit_i18n', required=False)
     is_computed = serializers.SerializerMethodField()
+    computed_by = serializers.SerializerMethodField()
 
     class Meta:
         model = DatasetMetric
-        fields = ['uuid', 'schema', 'label', 'unit', 'order', 'is_computed']
+        fields = ['uuid', 'schema', 'label', 'unit', 'order', 'is_computed', 'computed_by']
 
     def get_is_computed(self, obj: DatasetMetric) -> bool:
         return obj.is_computed
+
+    def get_computed_by(self, obj: DatasetMetric) -> dict[str, list[str] | str] | None:
+        if not obj.is_computed:
+            return None
+        computation: DatasetMetricComputation = obj.computed_by  # type: ignore[attr-defined]
+        return {
+            'operand_uuids': [str(computation.operand_a.uuid), str(computation.operand_b.uuid)],
+            'operation': computation.operation,
+        }
 
 
 class DatasetMetricViewSet(viewsets.ReadOnlyModelViewSet):
@@ -323,7 +335,10 @@ class DatasetSchemaViewSet(viewsets.ModelViewSet[DatasetSchema]):
         # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
         # TODO: check that we don't allow editing instances for which we only have view permissions
         user = user_or_anon(self.request.user)
-        return DatasetSchema.permission_policy().instances_user_has_permission_for(user, 'view')
+        return DatasetSchema.permission_policy().instances_user_has_permission_for(user, 'view').prefetch_related(
+            'metrics__computed_by__operand_a',
+            'metrics__computed_by__operand_b',
+        )
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
