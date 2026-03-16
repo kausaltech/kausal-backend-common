@@ -74,6 +74,11 @@ class TranslatedString:
                 return self.i18n[lang]
         raise Exception("Default translation not available for: %s" % self.default_language)
 
+    def t(self, lang: str) -> str | None:
+        """Get the translation for a specific language code, or None if not available."""
+        lang = convert_language_code(lang, 'kausal')
+        return self.i18n.get(lang)
+
     def all(self) -> list[str]:
         unique_vals = set(self.i18n.values())
         return list(unique_vals)
@@ -128,22 +133,35 @@ class TranslatedString:
     def __get_pydantic_core_schema__(
         cls, source_type: Any, handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
-        def validate(v) -> TranslatedString:
+        def validate_value(v: Any) -> TranslatedString:
             return cls.validate(v)
-        from_str_schema = core_schema.chain_schema(
-            [
-                core_schema.str_schema(),
-                core_schema.no_info_plain_validator_function(validate),
-            ],
-        )
+
+        def serialize(ts: TranslatedString) -> str | dict[str, str]:
+            """Compact serialization: bare string if single language, dict if multiple."""
+            if len(ts.i18n) <= 1:
+                return ts.get_fallback()
+            return dict(ts.i18n)
+
+        from_str_schema = core_schema.chain_schema([
+            core_schema.str_schema(),
+            core_schema.no_info_plain_validator_function(validate_value),
+        ])
+        from_dict_schema = core_schema.chain_schema([
+            core_schema.dict_schema(core_schema.str_schema(), core_schema.str_schema()),
+            core_schema.no_info_plain_validator_function(validate_value),
+        ])
         return core_schema.json_or_python_schema(
-            json_schema=from_str_schema,
+            json_schema=core_schema.union_schema([
+                from_str_schema,
+                from_dict_schema,
+            ]),
             python_schema=core_schema.union_schema([
                 core_schema.is_instance_schema(cls),
                 from_str_schema,
+                from_dict_schema,
             ]),
             serialization=core_schema.plain_serializer_function_ser_schema(
-                str,
+                serialize,
             ),
         )
 
