@@ -14,3 +14,5 @@ import type { CreateStyledComponent, StyledOptions } from '@emotion/styled';
 export const transientOptions: StyledOptions = {
   shouldForwardProp: (prop: string) => !prop.startsWith('$'),
 };
+
+export type { CreateStyledComponent };

@@ -78,7 +78,7 @@ function renderOption(
 }
 
 export default function SelectDropdown(props: SelectDropdownProps) {
-  const { id, label, helpText, invert, className, placeholder, options, isClearable } = props;
+  const { id, label, helpText, className, placeholder, options, isClearable } = props;
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
