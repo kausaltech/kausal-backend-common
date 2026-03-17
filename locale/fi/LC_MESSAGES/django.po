@@ -11,11 +11,10 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-02 15:29+0100\n"
+"POT-Creation-Date: 2026-03-17 08:21+0200\n"
 "PO-Revision-Date: 2026-03-12 09:21+0000\n"
 "Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
-"Language-Team: Finnish <https://weblate.kausal.tech/projects/kausal-backend-"
-"common/django/fi/>\n"
+"Language-Team: Finnish <https://weblate.kausal.tech/projects/kausal-backend-common/django/fi/>\n"
 "Language: fi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -35,9 +34,7 @@ msgstr "Kohdetta ei voida poistaa koska muut oliot viittaavat siihen."
 #: kausal_common/api/exceptions.py
 #, python-format
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
-msgstr ""
-"Kohdetta \"%s\" ei voida poistaa, koska se liittyy muihin kohteisiin, kuten "
-"instansseihin, henkilöihin tai toimenpiteisiin."
+msgstr "Kohdetta \"%s\" ei voida poistaa, koska se liittyy muihin kohteisiin, kuten instansseihin, henkilöihin tai toimenpiteisiin."
 
 #: kausal_common/blocks/base.py
 msgid "Label"
@@ -138,6 +135,10 @@ msgid "Yearly"
 msgstr "Vuosittainen"
 
 #: kausal_common/datasets/models.py
+msgid "Monthly"
+msgstr ""
+
+#: kausal_common/datasets/models.py
 msgid "Time resolution of the time stamps of data points in this dataset"
 msgstr "Tietoaineiston aikaleimojen resoluutio"
 
@@ -210,8 +211,7 @@ msgstr "Käyttöoikeudet"
 
 #: kausal_common/datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain person groups"
-msgstr ""
-"Antaa tietyille henkilöryhmille oikeudet tämän skeeman tietoaineistoihin"
+msgstr "Antaa tietyille henkilöryhmille oikeudet tämän skeeman tietoaineistoihin"
 
 #: kausal_common/datasets/models.py
 msgid "Permissions"
@@ -238,6 +238,62 @@ msgid "dataset metrics"
 msgstr "tietoaineistojen metriikat"
 
 #: kausal_common/datasets/models.py
+msgid "Multiply"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Divide"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Add"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Subtract"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "schema"
+msgstr "skeema"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset metric"
+msgid "target metric"
+msgstr "tietoaineiston metriikka"
+
+#: kausal_common/datasets/models.py
+msgid "The metric whose values are computed by this operation"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "location"
+msgid "operation"
+msgstr "sijainti"
+
+#: kausal_common/datasets/models.py
+msgid "operand A"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "operand B"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset metric"
+msgid "dataset metric computation"
+msgstr "tietoaineiston metriikka"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset metrics"
+msgid "dataset metric computations"
+msgstr "tietoaineistojen metriikat"
+
+#: kausal_common/datasets/models.py
 msgid "dataset schema dimension"
 msgstr "tietoaineiston skeeman dimensio"
 
@@ -246,13 +302,8 @@ msgid "dataset schema dimensions"
 msgstr "tietoaineiston skeeman dimensiot"
 
 #: kausal_common/datasets/models.py
-msgid "schema"
-msgstr "skeema"
-
-#: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the dataset's scope"
-msgstr ""
-"Valinnainen tunniste, jonka on oltava uniikki tietoaineiston vaikutusalueella"
+msgstr "Valinnainen tunniste, jonka on oltava uniikki tietoaineiston vaikutusalueella"
 
 #: kausal_common/datasets/models.py
 msgid "dataset"
@@ -279,12 +330,12 @@ msgid "Date of this data point in context of the dataset's time resolution"
 msgstr "Tämän datapisteen päivämäärä suhteessa tietoaineiston aikaresoluutioon"
 
 #: kausal_common/datasets/models.py
-msgid "metric"
-msgstr "metriikka"
-
-#: kausal_common/datasets/models.py
 msgid "value"
 msgstr "arvo"
+
+#: kausal_common/datasets/models.py
+msgid "metric"
+msgstr "metriikka"
 
 #: kausal_common/datasets/models.py
 #, fuzzy
@@ -501,9 +552,7 @@ msgstr "Lyhyt nimi"
 
 #: kausal_common/organizations/models.py
 msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
-msgstr ""
-"Organisaation nimen lyhyt versio tai lyhenne, jota käytetään kun koko nimeä "
-"ei tarvitse näyttää"
+msgstr "Organisaation nimen lyhyt versio tai lyhenne, jota käytetään kun koko nimeä ei tarvitse näyttää"
 
 #: kausal_common/organizations/models.py
 #, fuzzy

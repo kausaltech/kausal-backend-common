@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-02 15:29+0100\n"
+"POT-Creation-Date: 2026-03-17 08:21+0200\n"
 "PO-Revision-Date: 2025-04-02 12:20+0000\n"
 "Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
 "Language-Team: Swedish <https://weblate.kausal.tech/projects/watch/django/sv/>\n"
@@ -149,6 +149,10 @@ msgid "Yearly"
 msgstr "År"
 
 #: kausal_common/datasets/models.py
+msgid "Monthly"
+msgstr ""
+
+#: kausal_common/datasets/models.py
 msgid "Time resolution of the time stamps of data points in this dataset"
 msgstr ""
 
@@ -263,6 +267,61 @@ msgid "dataset metrics"
 msgstr "dataset-licens"
 
 #: kausal_common/datasets/models.py
+msgid "Multiply"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Divide"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Add"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Subtract"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "schema"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "target metric"
+msgstr "dataset-licens"
+
+#: kausal_common/datasets/models.py
+msgid "The metric whose values are computed by this operation"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+msgid "operation"
+msgstr "åtgärd"
+
+#: kausal_common/datasets/models.py
+msgid "operand A"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "operand B"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset metric computation"
+msgstr "dataset-licens"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset metric computations"
+msgstr "dataset-licens"
+
+#: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "dimensions"
 msgid "dataset schema dimension"
@@ -273,10 +332,6 @@ msgstr "mått"
 #| msgid "dimensions"
 msgid "dataset schema dimensions"
 msgstr "mått"
-
-#: kausal_common/datasets/models.py
-msgid "schema"
-msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the dataset's scope"
@@ -311,12 +366,12 @@ msgid "Date of this data point in context of the dataset's time resolution"
 msgstr ""
 
 #: kausal_common/datasets/models.py
-msgid "metric"
-msgstr ""
-
-#: kausal_common/datasets/models.py
 msgid "value"
 msgstr "värde"
+
+#: kausal_common/datasets/models.py
+msgid "metric"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 #, fuzzy

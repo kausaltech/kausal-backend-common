@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-02 15:29+0100\n"
+"POT-Creation-Date: 2026-03-17 08:21+0200\n"
 "PO-Revision-Date: 2025-04-02 07:20+0000\n"
 "Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
 "Language-Team: Greek <https://weblate.kausal.tech/projects/watch/django/el/>\n"
@@ -144,6 +144,10 @@ msgid "Yearly"
 msgstr "Ετήσια"
 
 #: kausal_common/datasets/models.py
+msgid "Monthly"
+msgstr ""
+
+#: kausal_common/datasets/models.py
 msgid "Time resolution of the time stamps of data points in this dataset"
 msgstr "Χρονική ανάλυση των χρονικών σφραγίδων των σημείων δεδομένων σε αυτό το σύνολο δεδομένων"
 
@@ -257,6 +261,62 @@ msgid "dataset metrics"
 msgstr "άδεια χρήσης συνόλου δεδομένων"
 
 #: kausal_common/datasets/models.py
+msgid "Multiply"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Divide"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Add"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Subtract"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "schema"
+msgstr "σχήμα"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "target metric"
+msgstr "άδεια χρήσης συνόλου δεδομένων"
+
+#: kausal_common/datasets/models.py
+msgid "The metric whose values are computed by this operation"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Location"
+msgid "operation"
+msgstr "Τοποθεσία"
+
+#: kausal_common/datasets/models.py
+msgid "operand A"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "operand B"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset metric computation"
+msgstr "άδεια χρήσης συνόλου δεδομένων"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
+msgid "dataset metric computations"
+msgstr "άδεια χρήσης συνόλου δεδομένων"
+
+#: kausal_common/datasets/models.py
 #, fuzzy
 #| msgid "Budget dimensions"
 msgid "dataset schema dimension"
@@ -267,10 +327,6 @@ msgstr "Διαστάσεις του προϋπολογισμού"
 #| msgid "Budget dimensions"
 msgid "dataset schema dimensions"
 msgstr "Διαστάσεις του προϋπολογισμού"
-
-#: kausal_common/datasets/models.py
-msgid "schema"
-msgstr "σχήμα"
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the dataset's scope"
@@ -305,12 +361,12 @@ msgid "Date of this data point in context of the dataset's time resolution"
 msgstr "Ημερομηνία αυτού του σημείου δεδομένων στο πλαίσιο της χρονικής ανάλυσης του συνόλου δεδομένων"
 
 #: kausal_common/datasets/models.py
-msgid "metric"
-msgstr ""
-
-#: kausal_common/datasets/models.py
 msgid "value"
 msgstr "αξία"
+
+#: kausal_common/datasets/models.py
+msgid "metric"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "data point"

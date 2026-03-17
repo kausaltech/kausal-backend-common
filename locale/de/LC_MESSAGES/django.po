@@ -10,11 +10,10 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-02 15:29+0100\n"
+"POT-Creation-Date: 2026-03-17 08:21+0200\n"
 "PO-Revision-Date: 2026-01-02 14:40+0000\n"
 "Last-Translator: Bernhard Bliem <bernhard.bliem@kausal.tech>\n"
-"Language-Team: German <https://weblate.kausal.tech/projects/kausal-backend-"
-"common/django/de/>\n"
+"Language-Team: German <https://weblate.kausal.tech/projects/kausal-backend-common/django/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -135,6 +134,10 @@ msgid "Yearly"
 msgstr "Jährlich"
 
 #: kausal_common/datasets/models.py
+msgid "Monthly"
+msgstr ""
+
+#: kausal_common/datasets/models.py
 msgid "Time resolution of the time stamps of data points in this dataset"
 msgstr "Zeitliche Auflösung der Zeitstempel der Datenpunkte in diesem Datensatz"
 
@@ -230,16 +233,68 @@ msgid "dataset metrics"
 msgstr "Datensatzmessgrößen"
 
 #: kausal_common/datasets/models.py
+msgid "Multiply"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Divide"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Add"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "Subtract"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "schema"
+msgstr "Schema"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset metric"
+msgid "target metric"
+msgstr "Datensatzmessgröße"
+
+#: kausal_common/datasets/models.py
+msgid "The metric whose values are computed by this operation"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "location"
+msgid "operation"
+msgstr "Standort"
+
+#: kausal_common/datasets/models.py
+msgid "operand A"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+msgid "operand B"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset metric"
+msgid "dataset metric computation"
+msgstr "Datensatzmessgröße"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset metrics"
+msgid "dataset metric computations"
+msgstr "Datensatzmessgrößen"
+
+#: kausal_common/datasets/models.py
 msgid "dataset schema dimension"
 msgstr "Datensatzschema-Dimension"
 
 #: kausal_common/datasets/models.py
 msgid "dataset schema dimensions"
 msgstr "Datensatzschema-Dimensionen"
-
-#: kausal_common/datasets/models.py
-msgid "schema"
-msgstr "Schema"
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the dataset's scope"
@@ -270,12 +325,12 @@ msgid "Date of this data point in context of the dataset's time resolution"
 msgstr "Datum dieses Datenpunkts im Zusammenhang mit der zeitlichen Auflösung des Datensatzes"
 
 #: kausal_common/datasets/models.py
-msgid "metric"
-msgstr "Messgröße"
-
-#: kausal_common/datasets/models.py
 msgid "value"
 msgstr "Wert"
+
+#: kausal_common/datasets/models.py
+msgid "metric"
+msgstr "Messgröße"
 
 #: kausal_common/datasets/models.py
 msgid "data point"
@@ -446,9 +501,7 @@ msgstr "Kurzname"
 
 #: kausal_common/organizations/models.py
 msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
-msgstr ""
-"Kurzform oder Abkürzung des Organisationsnamens, die angezeigt wird, wenn es "
-"nicht erforderlich ist, den vollständigen Namen anzuzeigen"
+msgstr "Kurzform oder Abkürzung des Organisationsnamens, die angezeigt wird, wenn es nicht erforderlich ist, den vollständigen Namen anzuzeigen"
 
 #: kausal_common/organizations/models.py
 msgctxt "organization"
