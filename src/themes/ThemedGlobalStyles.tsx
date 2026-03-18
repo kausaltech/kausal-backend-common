@@ -228,7 +228,27 @@ const getGlobalStyles = (theme: Theme) => css`
     background-color: rgba(${theme.graphColors.red070}, 0.15);
   }
 
+  @page {
+    margin: 1.5cm;
+  }
+
   @media print {
+    html {
+      font-size: 10pt;
+    }
+
+    .container,
+    .container-fluid,
+    .container-sm,
+    .container-md,
+    .container-lg,
+    .container-xl,
+    .container-xxl {
+      max-width: 100% !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+
     p,
     h1,
     h2,
