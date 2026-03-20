@@ -473,11 +473,14 @@ class DatasetMetricComputation(OrderedModel):
         choices=Operation.choices,
         verbose_name=_('operation'),
     )
-    operand_a: FK[DatasetMetric] = models.ForeignKey(
+    operand_a: FK[DatasetMetric | None] = models.ForeignKey(
         DatasetMetric,
         on_delete=models.CASCADE,
         related_name='+',
         verbose_name=_('operand A'),
+        null=True,
+        blank=True,
+        help_text=_("If empty, uses the indicator's own values as input"),
     )
     operand_b: FK[DatasetMetric] = models.ForeignKey(
         DatasetMetric,
@@ -494,7 +497,8 @@ class DatasetMetricComputation(OrderedModel):
         ordering = ['schema', 'order']
 
     def __str__(self):
-        return f'{self.target_metric} = {self.operand_a} {self.operation} {self.operand_b}'
+        a_label = self.operand_a if self.operand_a_id else _('indicator values')
+        return f'{self.target_metric} = {a_label} {self.operation} {self.operand_b}'
 
     def filter_siblings(self, qs: QS[Self]) -> QS[Self]:
         return qs.filter(schema=self.schema)
