@@ -6,7 +6,7 @@ import uuid
 from abc import abstractmethod
 from datetime import timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, cast
+from typing import TYPE_CHECKING, cast
 
 from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile
@@ -276,8 +276,8 @@ if TYPE_CHECKING:
     class ObjectGroupPermissionBase[M: models.Model](ObjectRoleBase[M]):
         # FIXME: Add type annotation for PersonGroup when it appears in `main`
         group = models.ForeignKey('people.PersonGroup', on_delete=models.CASCADE)
-
-        objects: ClassVar[models.Manager[ObjectGroupPermissionBase[models.Model]]]  # pyright: ignore[reportGeneralTypeIssues]
+        object: FK[M]
+        # objects: ClassVar[models.Manager[ObjectGroupPermissionBase[models.Model]]]
 
         class Meta:
             abstract = True
@@ -294,7 +294,6 @@ if TYPE_CHECKING:
         person: FK[Person] = models.ForeignKey('people.Person', on_delete=models.CASCADE)
 
         object: FK[M]
-        objects: ClassVar[models.Manager[ObjectPersonPermissionBase[M]]]  # pyright: ignore[reportGeneralTypeIssues]
 
         class Meta:
             abstract = True
@@ -311,6 +310,7 @@ def create_permission_membership_models[M: models.Model](
 ) -> tuple[type[ObjectGroupPermissionBase[M]], type[ObjectPersonPermissionBase[M]]]:
     GroupPermissionMeta = type('Meta', (),{
         'unique_together': (('group', 'object'),),
+        'ordering': ['object', 'group'],
     })
     GroupPermission = type(
         '%sGroupPermission' % model.__name__,
@@ -323,6 +323,7 @@ def create_permission_membership_models[M: models.Model](
     )
     PersonPermissionMeta = type('Meta', (),{
         'unique_together': (('person', 'object'),),
+        'ordering': ['object', 'person'],
     })
     PersonPermission = type(
         '%sPersonPermission' % model.__name__,

@@ -1,5 +1,5 @@
 # ruff: noqa: N801
-from typing import Any, Self
+from typing import Any, ClassVar, Self
 
 from django.db import models
 from django.db.models import Manager, Model, QuerySet
@@ -21,6 +21,8 @@ class MP_Node[QS: QuerySet[Any] = QuerySet[Any]](Node[QS]):
     depth: int
     numchild: models.PositiveBigIntegerField[int, int]
     gap: int
+
+    _default_manager: ClassVar[MP_NodeManager[Any]]
 
     @classmethod
     def _get_basepath(cls, path: str, depth: int) -> str: ...

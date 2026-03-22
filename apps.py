@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import importlib
+import sysconfig
 from importlib.util import find_spec
 from typing import TYPE_CHECKING
 
 from django.apps import AppConfig
-from django.core.checks import Critical, register as register_check
+from django.core.checks import Critical, Warning as CheckWarning, register as register_check
 
 import rich
 from loguru import logger
@@ -19,8 +20,11 @@ if TYPE_CHECKING:
     from django.core.checks import CheckMessage
 
 
+site_packages_path = sysconfig.get_path('purelib')
+
+
 @register_check
-def check_graphql_schema(app_configs, **kwargs) -> list[CheckMessage]:
+def check_graphql_schema(app_configs, **_kwargs) -> list[CheckMessage]:  # pyright: ignore[reportUnusedParameter]
     project_name = get_django_project_name()
     mod_path = f'{project_name}.schema'
     try:
@@ -38,7 +42,7 @@ def check_graphql_schema(app_configs, **kwargs) -> list[CheckMessage]:
 
 
 @register_check
-def check_roles(app_configs: Sequence[AppConfig] | None, **kwargs) -> list[CheckMessage]:
+def check_roles(app_configs: Sequence[AppConfig] | None, **_kwargs) -> list[CheckMessage]:
     from django.apps import apps
 
     from kausal_common.models.roles import Role
@@ -58,6 +62,31 @@ def check_roles(app_configs: Sequence[AppConfig] | None, **kwargs) -> list[Check
                 continue
             errors.extend(obj.check())
 
+    return errors
+
+
+@register_check
+def check_model_ordering(app_configs: Sequence[AppConfig] | None, **_kwargs) -> list[CheckMessage]:  # pyright: ignore[reportUnusedParameter]
+    from django.apps import apps
+    from wagtail.models import Page
+
+    errors: list[CheckMessage] = []
+    for model in apps.get_models():
+        if model._meta.ordering:
+            continue
+        if issubclass(model, Page):
+            # Wagtail pages are ordered by path through the Manager
+            continue
+        if model._meta.app_config.path.startswith(site_packages_path):
+            continue
+        errors.append(
+            CheckWarning(
+                'Model has no default ordering',
+                #hint='Add ordering to the model Meta, e.g., ordering = ("id",)',
+                id='kausal_common.M001',
+                obj=model,
+            )
+        )
     return errors
 
 

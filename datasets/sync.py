@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 
 class ScopeAwareDjangoDiffModel[M: models.Model](DjangoDiffModel[M]):
     @classmethod
-    def create_django_instance(cls, adapter: DjangoAdapter, create_kwargs: dict) -> M:
+    def create_django_instance(cls, adapter: DjangoAdapter, create_kwargs: dict[str, Any]) -> M:
         try:
             with transaction.atomic():
                 obj = super().create_django_instance(adapter, create_kwargs)
@@ -76,7 +76,7 @@ class DimensionCategoryModel(ScopeAwareDjangoDiffModel[DimensionCategory]):
         return categories
 
     @classmethod
-    def get_create_kwargs(cls, adapter: DjangoAdapter, ids: dict, attrs: dict) -> dict:
+    def get_create_kwargs(cls, adapter: DjangoAdapter, ids: dict[str, Any], attrs: dict[str, Any]) -> dict[str, Any]:
         kwargs = super().get_create_kwargs(adapter, ids, attrs)
         dim = adapter.get(DimensionModel, str(kwargs.pop('dimension')))
         assert dim._instance_pk is not None
@@ -153,7 +153,7 @@ class DimensionModel(ScopeAwareDjangoDiffModel[Dimension]):
         return dimensions
 
     @classmethod
-    def get_create_kwargs(cls, adapter: DjangoAdapter, ids: dict, attrs: dict) -> dict:
+    def get_create_kwargs(cls, adapter: DjangoAdapter, ids: dict[str, Any], attrs: dict[str, Any]) -> dict[str, Any]:
         kwargs = super().get_create_kwargs(adapter, ids, attrs)
         kwargs.pop('identifier')
         return kwargs
@@ -192,7 +192,7 @@ class DatasetMetricModel(ScopeAwareDjangoDiffModel[DatasetMetric]):
         return metrics
 
     @classmethod
-    def get_create_kwargs(cls, adapter: DjangoAdapter, ids: dict, attrs: dict) -> dict:
+    def get_create_kwargs(cls, adapter: DjangoAdapter, ids: dict[str, Any], attrs: dict[str, Any]) -> dict[str, Any]:
         kwargs = super().get_create_kwargs(adapter, ids, attrs)
         schema = adapter.get(DatasetSchemaModel, str(kwargs.pop('ds_schema')))
         assert schema._instance_pk is not None

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from .mail.env import ENV_SCHEMA as MAIL_ENV_SCHEMA
 
@@ -16,3 +16,6 @@ def register_settings(settings: dict[str, Any]):
 
     register_mail_settings(settings)
     init_debugger()
+
+
+IS_MYPY: Literal[False] = False

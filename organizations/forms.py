@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from django.core.exceptions import ValidationError
 from django.forms import ModelChoiceField
@@ -11,11 +11,6 @@ from treebeard.mp_tree import MP_NodeQuerySet
 from kausal_common.const import IS_PATHS, IS_WATCH
 
 from .models import Node
-
-if TYPE_CHECKING:
-    pass
-
-
 
 if IS_PATHS:
     from admin_site.forms import PathsAdminModelForm as ModelForm

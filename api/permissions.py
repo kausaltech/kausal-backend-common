@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABCMeta, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from typing import TYPE_CHECKING
 
 from django.db.models import ObjectDoesNotExist
@@ -21,12 +21,12 @@ class _MetaClass(permissions.BasePermissionMetaclass, ABCMeta):  # type: ignore[
     pass
 
 
-class PermissionModelMeta[_M: PermissionedModel]:
-    model: type[_M]
+class PermissionModelMeta[M: PermissionedModel]:
+    model: type[M]
     allowed_actions: set[BaseObjectAction]
 
 
-class PermissionPolicyDRFPermissionBase[_M: PermissionedModel, CreateContext](metaclass=_MetaClass):
+class PermissionPolicyDRFPermissionBase[M: PermissionedModel, CreateContext](ABC, metaclass=_MetaClass):
     """
     A Django REST Framework Permission Class delegating to a Wagtail-style Permission Policy.
 
@@ -37,8 +37,8 @@ class PermissionPolicyDRFPermissionBase[_M: PermissionedModel, CreateContext](me
 
     """
 
-    Meta: PermissionModelMeta[_M]
-    permission_policy: ModelPermissionPolicy[_M, CreateContext]
+    Meta: PermissionModelMeta[M]
+    permission_policy: ModelPermissionPolicy[M, CreateContext]
     allowed_actions: set[BaseObjectAction]
 
     HTTP_METHOD_TO_DJANGO_ACTION: dict[str, BaseObjectAction] = {
@@ -89,8 +89,8 @@ class PermissionPolicyDRFPermissionBase[_M: PermissionedModel, CreateContext](me
     def get_create_context_from_api_view(self, view: APIView) -> CreateContext: ...
 
 
-class PermissionPolicyDRFPermission[_M: PermissionedModel, CreateContext](  # pyright: ignore[reportImplicitAbstractClass]
-    PermissionPolicyDRFPermissionBase[_M, CreateContext], permissions.DjangoModelPermissions,
+class PermissionPolicyDRFPermission[M: PermissionedModel, CreateContext](
+    PermissionPolicyDRFPermissionBase[M, CreateContext], permissions.DjangoModelPermissions, ABC
 ):
     def has_permission(self, request: Request, view: APIView):
         if request.method is None:
@@ -120,10 +120,10 @@ class NestedPermissionModelMeta[M: PermissionedModel, NestedParent: Permissioned
     nested_parent_model: type[NestedParent]
 
 
-class NestedResourcePermissionPolicyDRFPermission[  # pyright: ignore[reportImplicitAbstractClass]
+class NestedResourcePermissionPolicyDRFPermission[
     M: PermissionedModel, CreateContext, NestedParent: PermissionedModel
 ](
-    PermissionPolicyDRFPermissionBase[M, CreateContext], permissions.DjangoModelPermissions, metaclass=_MetaClass
+    PermissionPolicyDRFPermissionBase[M, CreateContext], permissions.DjangoModelPermissions, ABC, metaclass=_MetaClass
 ):
     Meta: NestedPermissionModelMeta[M, NestedParent]
 
@@ -132,10 +132,10 @@ class NestedResourcePermissionPolicyDRFPermission[  # pyright: ignore[reportImpl
     def get_nested_parent_from_api_view(self, view: APIView) -> NestedParent:
         lookup_value = view.kwargs[self.Meta.view_kwargs_parent_key]
         try:
-            object = self.Meta.nested_parent_model._default_manager.get(**{self.Meta.nested_parent_key_field: lookup_value})
+            obj = self.Meta.nested_parent_model._default_manager.get(**{self.Meta.nested_parent_key_field: lookup_value})
         except ObjectDoesNotExist as e:
             raise NotFound() from e
-        return object
+        return obj
 
     def has_permission(self, request: Request, view: APIView):
         parent_obj = self.get_nested_parent_from_api_view(view)

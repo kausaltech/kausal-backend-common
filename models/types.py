@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABCMeta
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Generic, Self, TypeAlias, TypeVar, overload
 
@@ -12,6 +13,7 @@ from django.db.models import (
     OneToOneField,
     QuerySet,
 )
+from django.db.models.base import ModelBase
 from modeltrans.manager import MultilingualManager, MultilingualQuerySet
 from wagtail.models import Page, PageManager
 from wagtail.query import PageQuerySet
@@ -184,6 +186,9 @@ else:
 
 type GetDisplayMethod = Callable[[], str]
 type QS[M: Model] = QuerySet[M, M]
+
+class AbstractModelMeta(ABCMeta, ModelBase):
+    pass
 
 
 if not TYPE_CHECKING:

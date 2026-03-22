@@ -287,7 +287,7 @@ class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
         }
 
 
-class DatasetMetricViewSet(viewsets.ReadOnlyModelViewSet):
+class DatasetMetricViewSet(viewsets.ReadOnlyModelViewSet[DatasetMetric]):
     queryset = DatasetMetric.objects.all()
     lookup_field = 'uuid'
     serializer_class = DatasetMetricSerializer
@@ -296,7 +296,7 @@ class DatasetMetricViewSet(viewsets.ReadOnlyModelViewSet):
     )
 
 
-class DimensionSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
+class DimensionSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer[Dimension]):
     categories = DimensionCategorySerializer(many=True, required=False)
     name = serializers.CharField(source='name_i18n')
 
@@ -305,7 +305,7 @@ class DimensionSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer)
         fields = ['uuid', 'name', 'categories']
 
 
-class DatasetSchemaDimensionSerializer(serializers.ModelSerializer):
+class DatasetSchemaDimensionSerializer(serializers.ModelSerializer[DatasetSchemaDimension]):
     dimension = DimensionSerializer(many=False, required=False)
 
     class Meta:
@@ -313,7 +313,7 @@ class DatasetSchemaDimensionSerializer(serializers.ModelSerializer):
         fields = ['order', 'dimension']
 
 
-class DatasetSchemaSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
+class DatasetSchemaSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer[DatasetSchema]):
     dimensions = DatasetSchemaDimensionSerializer(
         many=True, required=False,
     )
@@ -382,7 +382,7 @@ class ComputedDataPointSerializer(serializers.Serializer):
     dimension_categories = UuidSlugRelatedField[DimensionCategory](read_only=True, many=True)
 
 
-class DatasetViewSet(viewsets.ModelViewSet):
+class DatasetViewSet(viewsets.ModelViewSet[Dataset]):
     lookup_field = 'uuid'
     serializer_class = DatasetSerializer
     permission_classes = (
