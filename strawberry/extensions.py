@@ -16,7 +16,7 @@ from strawberry.types.graphql import OperationType
 import orjson
 import sentry_sdk
 from loguru import logger
-from sentry_sdk.tracing import TransactionSource
+from sentry_sdk.tracing import Span, TransactionSource
 
 from kausal_common.deployment import env_bool, get_deployment_build_id
 from kausal_common.strawberry.context import GraphQLContext
@@ -174,7 +174,12 @@ class LoggingTracingExtension(SchemaExtension[GraphQLContext]):
             span_name = f'{op_type} <unnamed>'
 
         start_span = sentry_sdk.start_span
-        if (current_span := sentry_sdk.get_current_span()) and (transaction := current_span.containing_transaction):
+        current_span = sentry_sdk.get_current_span()
+        if current_span is not None and isinstance(current_span, Span):
+            transaction = current_span.containing_transaction
+        else:
+            transaction = None
+        if transaction is not None:
             start_span = transaction.start_child
 
         query = self.execution_context.query
@@ -283,7 +288,7 @@ class ExecutionCacheExtension[Ctx: GraphQLContext](SchemaExtension[Ctx], ABC):
             cache_res = 'hit'
             color = 'green'
 
-        if span is not None:
+        if span is not None and isinstance(span, Span):
             span.set_tag('cache', cache_res)
 
         self.log('INFO', 'cache [%s]%s[/]%s' % (color, cache_res, cache_reason))

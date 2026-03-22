@@ -9,10 +9,14 @@ from django.db.models.query import QuerySet
 from rest_framework import response, serializers, status, viewsets
 from rest_framework.exceptions import ValidationError
 
+from kausal_common.const import IS_WATCH
+
 if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from actions.deferred_ops import DeferredDatabaseOperationsMixin
+
+    if IS_WATCH:
+        from actions.deferred_ops import DeferredDatabaseOperationsMixin
 
     class ModelSerializerMixinBase[M: Model](serializers.ModelSerializer[M]):
         pass
@@ -36,7 +40,10 @@ class BulkSerializerValidationInstanceMixin[M: Model](ModelSerializerMixinBase[M
 
 
 class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
-    child: DeferredDatabaseOperationsMixin[M]
+    if IS_WATCH:
+        child: DeferredDatabaseOperationsMixin[M]
+    else:
+        child: Any
     # instance: models.QuerySet[M] | None
     update_lookup_field = 'id'
     _refresh_cache: bool
