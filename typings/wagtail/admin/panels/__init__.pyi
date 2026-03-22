@@ -18,7 +18,7 @@ from wagtail.admin.panels.model_utils import get_edit_handler as get_edit_handle
 from wagtail.admin.panels.multiple_chooser_panel import MultipleChooserPanel as MultipleChooserPanel
 from wagtail.admin.panels.page_chooser_panel import PageChooserPanel as PageChooserPanel
 
-#from wagtail.admin.panels.page_utils import *
-#from wagtail.admin.panels.publishing_panel import *
-#from wagtail.admin.panels.signal_handlers import *
+# from wagtail.admin.panels.page_utils import *
+# from wagtail.admin.panels.publishing_panel import *
+# from wagtail.admin.panels.signal_handlers import *
 from wagtail.admin.panels.title_field_panel import TitleFieldPanel as TitleFieldPanel

@@ -48,6 +48,7 @@ def get_id_token_authenticator() -> type[TokenAuthentication] | None:
 
 
 if TYPE_CHECKING:
+
     @type_check_only
     class AccessTokenAuthentication(OAuth2Authentication):
         def __init__(self, realm: str) -> None: ...
@@ -75,6 +76,7 @@ def get_access_token_authenticator() -> type[AccessTokenAuthentication] | None:
             return cast('type[AccessTokenAuthentication]', WatchAccessTokenAuth)
     return None
 
+
 @dataclass
 class TokenAuthError:
     id: str
@@ -84,6 +86,7 @@ class TokenAuthError:
         if self.description:
             return f'{self.id}: {self.description}'
         return self.id
+
 
 @dataclass
 class TokenAuthResult:
@@ -99,9 +102,8 @@ class TokenAuthResult:
             return 'id_token'
         return 'access_token'
 
-def authenticate_from_authorization_header(
-    authorization: str, api_type: Literal['graphql', 'rest-api']
-) -> TokenAuthResult:
+
+def authenticate_from_authorization_header(authorization: str, api_type: Literal['graphql', 'rest-api']) -> TokenAuthResult:
     from oauth2_provider.oauth2_backends import get_oauthlib_core
 
     if TYPE_CHECKING:
@@ -110,9 +112,15 @@ def authenticate_from_authorization_header(
 
     oauthlib_core: OAuthLibCore = get_oauthlib_core()
     server = cast('Server', oauthlib_core.server)
-    valid, r = server.verify_request('', 'GET', body=None, headers=dict(
-        Authorization=authorization,
-    ), scopes=[])
+    valid, r = server.verify_request(
+        '',
+        'GET',
+        body=None,
+        headers=dict(
+            Authorization=authorization,
+        ),
+        scopes=[],
+    )
     error_dict: dict[str, str] | None = getattr(r, 'oauth2_error', None) or None
     error: TokenAuthError | None = None
     if not valid:

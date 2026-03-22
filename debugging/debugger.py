@@ -9,13 +9,15 @@ from rich.pretty import Pretty
 from rich.style import Style
 
 if TYPE_CHECKING:
-
     from pdb import Pdb
     from types import FrameType
 
     from IPython.core.debugger import Pdb as IPythonPdb
+
     class PdbMixinBase(IPythonPdb): ...
+
 else:
+
     class PdbMixinBase: ...
 
 
@@ -23,7 +25,7 @@ class PdbMixin(PdbMixinBase):
     def print_stack_trace(self, count: int | None = None):
         return super().print_stack_trace(count)
 
-    def print_stack_entry(self, frame_lineno: tuple[FrameType, int], prompt_prefix: str = "\n-> "):
+    def print_stack_entry(self, frame_lineno: tuple[FrameType, int], prompt_prefix: str = '\n-> '):
         return super().print_stack_entry(frame_lineno, prompt_prefix)
 
     @property  # type: ignore[override]
@@ -37,11 +39,12 @@ class PdbMixin(PdbMixinBase):
         return
 
     def precmd(self, line: str | None) -> str:
-        if line is None or line == "EOF":
+        if line is None or line == 'EOF':
             raise BdbQuit
         return super().precmd(line)
 
     if False:
+
         def __line_content(self, filename: str, lineno: int, line: str, arrow: bool = False):  # noqa: ANN202
             bp, num, colored_line = super().__line_content(filename, lineno, line, arrow)
             print(colored_line)
@@ -68,6 +71,7 @@ class PdbMixin(PdbMixinBase):
 def get_debugger_cls() -> type[Pdb]:
     from ipdb.__main__ import _get_debugger_cls  # pyright: ignore[reportMissingTypeStubs]
     from pdbr.utils import debugger_cls  # pyright: ignore[reportMissingTypeStubs]
+
     base_class = _get_debugger_cls()
     pdbr_class = debugger_cls(base_class, show_layouts=False)
     return type('Pdb', (PdbMixin, pdbr_class), {})

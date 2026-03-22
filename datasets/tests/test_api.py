@@ -44,20 +44,14 @@ def dimension_categories(dimension_category_factory, dimension):
 @pytest.fixture
 def serializer_context(dataset, api_factory):
     request = api_factory.post(f'/datasets/{dataset.uuid}/data_points/')
-    return {
-        'view': type('obj', (object,), {
-            'kwargs': {'dataset_uuid': str(dataset.uuid)}
-        }),
-        'request': request
-    }
+    return {'view': type('obj', (object,), {'kwargs': {'dataset_uuid': str(dataset.uuid)}}), 'request': request}
 
 
 def test_data_point_bulk_serializer_save_without_changes_keeps_data(serializer_context):
     ds = DatasetFactory.create()
     data_points = [DataPointFactory.create(dataset=ds) for _ in range(2)]
     serialized_data_points = [
-        DataPointSerializer(instance=data_point, context=serializer_context).data
-        for data_point in data_points
+        DataPointSerializer(instance=data_point, context=serializer_context).data for data_point in data_points
     ]
     bulk_serializer = DataPointSerializer(
         many=True, data=serialized_data_points, instance=ds.data_points.all(), context=serializer_context
@@ -65,8 +59,7 @@ def test_data_point_bulk_serializer_save_without_changes_keeps_data(serializer_c
     assert bulk_serializer.is_valid()
     bulk_serializer.save()
     serialized_data_points_after_save = [
-        DataPointSerializer(instance=data_point, context=serializer_context).data
-        for data_point in ds.data_points.all()
+        DataPointSerializer(instance=data_point, context=serializer_context).data for data_point in ds.data_points.all()
     ]
     assert serialized_data_points_after_save == serialized_data_points
 
@@ -75,22 +68,17 @@ def test_data_point_bulk_serializer_save_with_changes_updates_data(serializer_co
     ds = DatasetFactory.create()
     data_points = [DataPointFactory.create(dataset=ds) for _ in range(2)]
     serialized_data_points = [
-        DataPointSerializer(instance=data_point, context=serializer_context).data
-        for data_point in data_points
+        DataPointSerializer(instance=data_point, context=serializer_context).data for data_point in data_points
     ]
     # Change the `value` field of each data point
-    changed_serialized_data_points = [
-        {**data, 'value': data['value'] + 1}
-        for data in serialized_data_points
-    ]
+    changed_serialized_data_points = [{**data, 'value': data['value'] + 1} for data in serialized_data_points]
     bulk_serializer = DataPointSerializer(
         many=True, data=changed_serialized_data_points, instance=ds.data_points.all(), context=serializer_context
     )
     assert bulk_serializer.is_valid()
     bulk_serializer.save()
     serialized_data_points_after_save = [
-        DataPointSerializer(instance=data_point, context=serializer_context).data
-        for data_point in ds.data_points.all()
+        DataPointSerializer(instance=data_point, context=serializer_context).data for data_point in ds.data_points.all()
     ]
     assert serialized_data_points_after_save == changed_serialized_data_points
 
@@ -114,14 +102,13 @@ def test_data_point_bulk_serializer_create(
             'dimension_categories': [str(category2.uuid)],
             'metric': str(dataset_metric.uuid),
             'value': Decimal('2.0'),
-        }
+        },
     ]
     bulk_serializer = DataPointSerializer(many=True, data=initial_data, context=serializer_context)
     assert bulk_serializer.is_valid()
     bulk_serializer.save(dataset=dataset)
     serialized_data_points_after_save = [
-        DataPointSerializer(instance=data_point, context=serializer_context).data
-        for data_point in dataset.data_points.all()
+        DataPointSerializer(instance=data_point, context=serializer_context).data for data_point in dataset.data_points.all()
     ]
     # `serialized_data_points_after_save` should differ from `initial_data` only by new UUID values and the dataset that
     # we passed to `bulk_serializer.save()`.

@@ -16,7 +16,9 @@ def inject_view(viewset_method: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(viewset_method)
     def wrapped(self: Any, *args, **kwargs) -> Any:
         return viewset_method(self, *args, **kwargs)
+
     return wrapped
+
 
 class ChooserViewSet[M: Model](BaseChooserViewSet):
     get_object_list: Callable[[ChooseView | ChooseResultsView], Iterable[M]]
@@ -40,5 +42,5 @@ class ChooserViewSet[M: Model](BaseChooserViewSet):
 
     @property
     def chosen_view(self):
-        view_class = self.inject_view_methods(self.chosen_view_class, ["get_chosen_response_data"])
+        view_class = self.inject_view_methods(self.chosen_view_class, ['get_chosen_response_data'])
         return self.construct_view(view_class)

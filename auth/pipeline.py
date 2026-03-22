@@ -117,10 +117,10 @@ def associate_existing_social_user(backend: BaseAuth, uid: str, response: dict[s
             social.save()
 
     return {
-        "social": social,
-        "user": user,
-        "is_new": user is None,
-        "new_association": social is None,
+        'social': social,
+        'user': user,
+        'is_new': user is None,
+        'new_association': social is None,
     }
 
 
@@ -236,6 +236,7 @@ def store_end_session_url(details, backend, response, user=None, *args, **kwargs
     request.session['social_auth_end_session_url'] = end_session_url
     if 'id_token' in response:
         request.session['social_auth_id_token'] = response['id_token']
+
 
 def validate_user_password(strategy, backend, user, *args, **kwargs):
     if backend.name != 'password':

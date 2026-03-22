@@ -12,7 +12,7 @@ def print_queryset_sql(qs: QuerySet):
     import sqlparse  # type: ignore[import-untyped]
     from rich.syntax import Syntax
 
-    print("QuerySet for %s" % qs.model)
+    print('QuerySet for %s' % qs.model)
     sql = sqlparse.format(str(qs.query), reindent=True)
     highlighted = Syntax(sql, 'sql')
     print(highlighted)

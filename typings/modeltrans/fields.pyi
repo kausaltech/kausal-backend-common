@@ -15,7 +15,6 @@ class TranslatedVirtualField(Field):
     @property
     def original_name(self) -> str: ...
 
-
 class TranslationField(JSONField):
     description: str
     fields: Sequence[str]
@@ -29,9 +28,9 @@ class TranslationField(JSONField):
         required_languages: list[str] | dict | None = ...,
         virtual_fields: bool = ...,
         fallback_language_field: str | None = ...,
-        *args, **kwargs,
+        *args,
+        **kwargs,
     ) -> Self: ...
-
     def __init__(
         self,
         fields: Sequence[str] | None = ...,
@@ -39,6 +38,7 @@ class TranslationField(JSONField):
         required_languages: list[str] | dict | None = ...,
         virtual_fields: bool = ...,
         fallback_language_field: str | None = ...,
-        *args, **kwargs,
+        *args,
+        **kwargs,
     ) -> None: ...
     def get_translated_fields(self) -> Generator[TranslatedVirtualField]: ...

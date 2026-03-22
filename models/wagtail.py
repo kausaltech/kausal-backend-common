@@ -14,9 +14,11 @@ def ignore_wagtail_reference_index[M: 'Model'](field_names: list[str]) -> Callab
 
     Use for ForeignKeys and other fields that should be excluded from Wagtail's reference index.
     """
+
     def decorator(cls: type[M]) -> type[M]:
         for name in field_names:
             field = cls._meta.get_field(name)
-            setattr(field, "wagtail_reference_index_ignore", True)  # noqa: B010
+            setattr(field, 'wagtail_reference_index_ignore', True)  # noqa: B010
         return cls
+
     return decorator

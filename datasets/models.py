@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from users.models import User
 
     from ..models.types import FK, M2M, RevMany, RevManyToManyQS
+
     if IS_PATHS:
         from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
 
@@ -56,6 +57,7 @@ if TYPE_CHECKING:
         from actions.models import Action, Category, CategoryType, Plan
         from datasets.permission_policy import DatasetSchemaPermissionPolicy
         from indicators.models import Indicator
+
         type DatasetScopeType = Action | Category | Indicator
         type DatasetSchemaScopeType = Plan | CategoryType
         type DimensionScopeType = Plan | CategoryType
@@ -70,8 +72,12 @@ class DimensionQuerySet(models.QuerySet['Dimension']):
 
 
 _DimensionManager = models.Manager.from_queryset(DimensionQuerySet)
+
+
 class DimensionManager(ModelManager['Dimension', DimensionQuerySet], _DimensionManager):  # pyright: ignore
     """Model manager for Dimension."""
+
+
 del _DimensionManager
 
 
@@ -116,7 +122,7 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel):
     identifier = IdentifierField[str | None, str | None](
         null=True,
         blank=True,
-        help_text=_("Optional identifier that, if set, must be unique within the dimension"),
+        help_text=_('Optional identifier that, if set, must be unique within the dimension'),
         max_length=200,
     )
     dimension = ParentalKey(Dimension, blank=False, on_delete=models.CASCADE, related_name='categories')
@@ -157,6 +163,7 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel):
 
 class DimensionScopeQuerySet(QuerySet['DimensionScope']):
     if IS_PATHS:
+
         def for_instance_config(self, instance_config: InstanceConfig) -> Self:
             return self.filter(scope_content_type=ContentType.objects.get_for_model(instance_config), scope_id=instance_config.pk)
 
@@ -169,8 +176,12 @@ class DimensionScopeQuerySet(QuerySet['DimensionScope']):
 
 
 _DimensionScopeManager = cast('models.Manager[DimensionScope]', models.Manager.from_queryset(DimensionScopeQuerySet))
+
+
 class DimensionScopeManager(ModelManager['DimensionScope', DimensionScopeQuerySet], _DimensionScopeManager):  # type: ignore[valid-type, misc]
     """Model manager for DimensionScope."""
+
+
 del _DimensionScopeManager
 
 
@@ -181,14 +192,15 @@ class DimensionScope(OrderedModel):
     scope_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='+')
     scope_id = models.PositiveIntegerField()
     scope = GenericForeignKey(
-        'scope_content_type', 'scope_id',
+        'scope_content_type',
+        'scope_id',
     )
     identifier = models.CharField(
         blank=True,
         null=True,
         max_length=100,
         verbose_name=_('identifier'),
-        help_text=_("Optional identifier that, if set, must be unique in the scope"),
+        help_text=_('Optional identifier that, if set, must be unique in the scope'),
     )
 
     objects: ClassVar[DimensionScopeManager] = DimensionScopeManager()
@@ -219,16 +231,17 @@ class DatasetSchemaQuerySet(PermissionedQuerySet['DatasetSchema']):
 
     def for_scope(self, scope: DatasetSchemaScopeType) -> Self:
         ct = ContentType.objects.get_for_model(type(scope))
-        return self.filter(
-            scopes__scope_id=scope.pk, scopes__scope_content_type=ct
-        )
+        return self.filter(scopes__scope_id=scope.pk, scopes__scope_content_type=ct)
 
 
 _DatasetSchemaManager = models.Manager.from_queryset(DatasetSchemaQuerySet)
+
+
 class DatasetSchemaManager(PermissionedManager['DatasetSchema', DatasetSchemaQuerySet], _DatasetSchemaManager):  # pyright: ignore
     """Model manager for DatasetSchema."""
-del _DatasetSchemaManager
 
+
+del _DatasetSchemaManager
 
 
 class DatasetSchema(ClusterableModel, PermissionedModel):
@@ -251,7 +264,8 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     time_resolution = models.CharField(
-        max_length=16, choices=TimeResolution.choices,
+        max_length=16,
+        choices=TimeResolution.choices,
         default=TimeResolution.YEARLY,
         help_text=_('Time resolution of the time stamps of data points in this dataset'),
     )
@@ -280,67 +294,64 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     panels = [
         FieldPanel(
             'name',
-            heading=_("Name"),
-            help_text=_("Descriptive name of the dataset schema"),
+            heading=_('Name'),
+            help_text=_('Descriptive name of the dataset schema'),
         ),
         FieldPanel(
             'description',
-            heading=_("Description"),
-            help_text=_("Description of the content and use of the dataset"),
+            heading=_('Description'),
+            help_text=_('Description of the content and use of the dataset'),
         ),
         FieldPanel(
             'time_resolution',
-            heading=_("Time resolution"),
+            heading=_('Time resolution'),
         ),
         FieldPanel(
             'start_date',
-            heading=_("Initial date"),
+            heading=_('Initial date'),
         ),
         InlinePanel(
             'metrics',
-            heading=_("Metrics"),
-            help_text=_("Defines the interpretation and units for the values of the dataset"),
-            panels=[
-                FieldPanel('label'),
-                FieldPanel('unit')
-            ]
+            heading=_('Metrics'),
+            help_text=_('Defines the interpretation and units for the values of the dataset'),
+            panels=[FieldPanel('label'), FieldPanel('unit')],
         ),
         InlinePanel(
             'dimensions',
-            heading=_("Dimensions"),
-            help_text=_("Used when metrics are tracked for multiple categories"),
+            heading=_('Dimensions'),
+            help_text=_('Used when metrics are tracked for multiple categories'),
             panels=[
                 FieldPanel('dimension'),
-            ]
+            ],
         ),
-        MultiFieldPanel([
-            InlinePanel(
-                'person_permissions',
-                heading=pgettext_lazy(
-                    "list of persons and their respective permissions on a dataset schema",
-                    "Person permissions"
+        MultiFieldPanel(
+            [
+                InlinePanel(
+                    'person_permissions',
+                    heading=pgettext_lazy(
+                        'list of persons and their respective permissions on a dataset schema', 'Person permissions'
+                    ),
+                    help_text=_('Grants permissions on datasets of this schema to certain persons'),
+                    panels=[
+                        FieldPanel('person'),
+                        FieldPanel('role'),
+                    ],
                 ),
-                help_text=_("Grants permissions on datasets of this schema to certain persons"),
-                panels=[
-                    FieldPanel('person'),
-                    FieldPanel('role'),
-                ]
-            ),
-            InlinePanel(
-                'group_permissions',
-                heading=pgettext_lazy(
-                    "list of person groups and their respective permissions on a dataset schema",
-                    "Group permissions"
+                InlinePanel(
+                    'group_permissions',
+                    heading=pgettext_lazy(
+                        'list of person groups and their respective permissions on a dataset schema', 'Group permissions'
+                    ),
+                    help_text=_('Grants permissions on datasets of this schema to certain person groups'),
+                    panels=[
+                        FieldPanel('group'),
+                        FieldPanel('role'),
+                    ],
                 ),
-                help_text=_("Grants permissions on datasets of this schema to certain person groups"),
-                panels=[
-                    FieldPanel('group'),
-                    FieldPanel('role'),
-                ]
-            )],
-            _("Permissions"),
+            ],
+            _('Permissions'),
             # Only super admins or superusers have access
-            permission='people.change_person'
+            permission='people.change_person',
         ),
     ]
 
@@ -380,7 +391,8 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     @deprecated('Use DatasetSchema.objects.get_queryset().for_scope() instead')
     def get_for_scope(scope_id: int, scope_content_type_id: int) -> DatasetSchemaQuerySet:
         return DatasetSchema.objects.get_queryset().filter(
-            scopes__scope_id=scope_id, scopes__scope_content_type__id=scope_content_type_id,
+            scopes__scope_id=scope_id,
+            scopes__scope_content_type__id=scope_content_type_id,
         )
 
     def delete(self, *args, **kwargs):
@@ -510,6 +522,7 @@ class DatasetSchemaDimension(OrderedModel):
 
 class DatasetQuerySet(PermissionedQuerySet['Dataset']):
     if IS_PATHS:
+
         def for_instance_config(self, instance_config: InstanceConfig) -> Self:
             return self.filter(
                 scope_content_type=ContentType.objects.get_for_model(instance_config),
@@ -534,10 +547,10 @@ class DatasetQuerySet(PermissionedQuerySet['Dataset']):
                 role__in=[ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
                 group__persons=user.person,
             ).values_list('object')
-            return self.filter(models.Q(schema__in=viewable_schemas_for_user)
-                               | models.Q(schema__in=viewable_schemas_for_group))
+            return self.filter(models.Q(schema__in=viewable_schemas_for_user) | models.Q(schema__in=viewable_schemas_for_group))
 
     if IS_WATCH:
+
         def for_plan(self, plan: Plan) -> Self:
             from actions.models import Plan
 
@@ -552,15 +565,23 @@ class DatasetQuerySet(PermissionedQuerySet['Dataset']):
 
 
 _DatasetManager = models.Manager.from_queryset(DatasetQuerySet)
+
+
 class DatasetManager(ModelManager['Dataset', DatasetQuerySet], _DatasetManager):  # pyright: ignore
     """Model manager for Dataset."""
+
+
 del _DatasetManager
 
 
 class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     schema: FK[DatasetSchema | None] = models.ForeignKey(
-        DatasetSchema, null=True, blank=True, related_name='datasets',
-        verbose_name=_('schema'), on_delete=models.PROTECT,
+        DatasetSchema,
+        null=True,
+        blank=True,
+        related_name='datasets',
+        verbose_name=_('schema'),
+        on_delete=models.PROTECT,
     )
     identifier = models.CharField(
         blank=True,
@@ -573,12 +594,16 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     # The "scope" generic foreign key links this dataset to an action or category
     # or instance
     scope_content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE, related_name='+',
-        null=True, blank=True,
+        ContentType,
+        on_delete=models.CASCADE,
+        related_name='+',
+        null=True,
+        blank=True,
     )
     scope_id = models.PositiveIntegerField(null=True, blank=True)
     scope = GenericForeignKey(
-        'scope_content_type', 'scope_id',
+        'scope_content_type',
+        'scope_id',
     )
 
     if IS_PATHS:
@@ -625,8 +650,7 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     def clear_scope_instance_cache(self):
         if self.scope_content_type is None:
             return
-        if (self.scope_content_type.app_label == 'nodes' and
-                self.scope_content_type.model == 'instanceconfig'):
+        if self.scope_content_type.app_label == 'nodes' and self.scope_content_type.model == 'instanceconfig':
             if self.scope is None:
                 return
             ic = self.scope
@@ -640,7 +664,8 @@ class DatasetSchemaScope(models.Model):
     scope_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='+')
     scope_id = models.PositiveIntegerField()
     scope = GenericForeignKey(
-        'scope_content_type', 'scope_id',
+        'scope_content_type',
+        'scope_id',
     )
 
     objects: ClassVar[ModelManager[DatasetSchemaScope]] = ModelManager()
@@ -700,7 +725,10 @@ class DataPointManager(PermissionedManager['DataPoint', DataPointQuerySet]):
 # Source: https://english.stackexchange.com/questions/2120/which-is-correct-dataset-or-data-set
 class DataPoint(DataPointBase):
     dataset = models.ForeignKey(
-        Dataset, related_name='data_points', on_delete=models.CASCADE, verbose_name=_('dataset'),
+        Dataset,
+        related_name='data_points',
+        on_delete=models.CASCADE,
+        verbose_name=_('dataset'),
     )
     dimension_categories: M2M[DimensionCategory, DataPointDimensionCategory] = models.ManyToManyField(
         DimensionCategory,
@@ -709,9 +737,7 @@ class DataPoint(DataPointBase):
         blank=True,
         verbose_name=_('dimension categories'),
     )
-    metric = models.ForeignKey(
-        DatasetMetric, related_name='data_points', on_delete=models.PROTECT, verbose_name=_('metric')
-    )
+    metric = models.ForeignKey(DatasetMetric, related_name='data_points', on_delete=models.PROTECT, verbose_name=_('metric'))
 
     objects: ClassVar[DataPointManager] = DataPointManager()
     _default_manager: ClassVar[DataPointManager]
@@ -828,7 +854,10 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
         null=True,
     )
     resolved_by: FK[User | None] = models.ForeignKey(
-        'users.User', null=True, on_delete=models.SET_NULL, related_name='resolved_comments',
+        'users.User',
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='resolved_comments',
     )
 
     is_soft_deleted = models.BooleanField(
@@ -842,9 +871,7 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
         editable=False,
         on_delete=models.SET_NULL,
     )
-    soft_deleted_at = models.DateTimeField(
-        null=True, editable=False
-    )
+    soft_deleted_at = models.DateTimeField(null=True, editable=False)
 
     objects: ClassVar[PermissionedSoftDeleteManager] = PermissionedSoftDeleteManager()
     objects_including_soft_deleted: ClassVar[PermissionedManager[Self]] = PermissionedManager()
@@ -960,10 +987,10 @@ class DatasetSourceReference(UserModifiableModel, PermissionedModel):
     def __str__(self):
         dp = self.data_point
         if dp:
-            return f"Source reference for data point {dp.uuid} in dataset {dp.dataset.uuid}: {self.data_source}"
+            return f'Source reference for data point {dp.uuid} in dataset {dp.dataset.uuid}: {self.data_source}'
         ds = self.dataset
         if ds:
-            return f"Source reference for dataset {ds.uuid}: {self.data_source}"
+            return f'Source reference for dataset {ds.uuid}: {self.data_source}'
         return 'Source reference without data point or dataset'
 
     def __rich_repr__(self) -> RichReprResult:
@@ -979,16 +1006,15 @@ class DatasetSourceReference(UserModifiableModel, PermissionedModel):
             yield 'data_point', None
             yield 'dataset', None
 
-
     def get_admin_display_title(self):
         """Provide a clear title for admin display."""
         dp = self.data_point
         if dp and dp.dataset:
-            schema_name = dp.dataset.schema.name if dp.dataset.schema else _("Unknown schema")
-            return _("Data source reference in: %(schema)s") % {'schema': schema_name}
+            schema_name = dp.dataset.schema.name if dp.dataset.schema else _('Unknown schema')
+            return _('Data source reference in: %(schema)s') % {'schema': schema_name}
         ds = self.dataset
         if ds and ds.schema:
-            return _("Data source reference in: %(schema)s") % {'schema': ds.schema.name}
+            return _('Data source reference in: %(schema)s') % {'schema': ds.schema.name}
         return _('Data source reference')
 
     @classmethod

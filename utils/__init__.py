@@ -9,11 +9,10 @@ def camelcase_to_underscore(name: str) -> str:
 
 
 def underscore_to_camelcase(value: str) -> str:
-    output = ""
-    for word in value.split("_"):
+    output = ''
+    for word in value.split('_'):
         if not word:
-            output += "_"
+            output += '_'
             continue
         output += word.capitalize()
     return output
-

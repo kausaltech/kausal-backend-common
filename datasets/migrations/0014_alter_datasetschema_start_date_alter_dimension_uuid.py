@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('datasets', '0013_remove_datasetschema_unit_alter_datasetschema_i18n'),
     ]
@@ -14,7 +13,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='datasetschema',
             name='start_date',
-            field=models.DateField(blank=True, help_text='For a newly created dataset, start entering values from this year', null=True, verbose_name='start date'),
+            field=models.DateField(
+                blank=True,
+                help_text='For a newly created dataset, start entering values from this year',
+                null=True,
+                verbose_name='start date',
+            ),
         ),
         migrations.AlterField(
             model_name='dimension',

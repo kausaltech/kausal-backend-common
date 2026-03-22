@@ -18,6 +18,7 @@ class InstanceIdentifierValidator(RegexValidator):
 _ST = TypeVar('_ST', bound=Any | None, default=str)
 _GT = TypeVar('_GT', bound=Any | None, default=str)
 
+
 class IdentifierField(models.CharField[_ST, _GT]):
     def __init__(self, *args, **kwargs):
         validator_kwargs = {}

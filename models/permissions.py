@@ -39,6 +39,7 @@ class PermissionedModel(models.Model, ABC, metaclass=AbstractModelMeta):
     if TYPE_CHECKING:
         Meta: Any
     else:
+
         class Meta:
             abstract = True
 
@@ -46,6 +47,7 @@ class PermissionedModel(models.Model, ABC, metaclass=AbstractModelMeta):
     def __str__(self) -> str: ...
 
     if TYPE_CHECKING:
+
         def __rich_repr__(self) -> RichReprResult: ...
 
     @classmethod
@@ -62,21 +64,26 @@ class PermissionedModel(models.Model, ABC, metaclass=AbstractModelMeta):
 
 class PermissionedQuerySet[M: PermissionedModel](QuerySet[M, M]):
     if TYPE_CHECKING:
+
         @classmethod
         def as_manager(cls) -> Manager[M]: ...
+
     @property
     def _pp(self) -> ModelPermissionPolicy[M, Self, Any]:
         return self.model.permission_policy()
 
     def viewable_by(self, user: UserOrAnon) -> Self:
         return self._pp.filter_by_perm(self, user, 'view')
+
     def deletable_by(self, user: UserOrAnon) -> Self:
         return self._pp.filter_by_perm(self, user, 'delete')
+
     def modifiable_by(self, user: UserOrAnon) -> Self:
         return self._pp.filter_by_perm(self, user, 'change')
 
     def filter_by_perm(self, user: UserOrAnon, action: ObjectSpecificAction) -> Self:
         return self._pp.filter_by_perm(self, user, action)
+
 
 class PermissionedManager[M: PermissionedModel, QS: PermissionedQuerySet[Any] = PermissionedQuerySet[M]](
     MultilingualManager[M], ModelManager[M, QS]
@@ -96,6 +103,7 @@ class PermissionedManager[M: PermissionedModel, QS: PermissionedQuerySet[Any] = 
             self._queryset_class = PermissionedQuerySet
 
     if TYPE_CHECKING:
+
         def _patch_queryset[Q: QuerySet[Any]](self, qs: Q) -> Q: ...
 
     def get_queryset(self) -> QS:
@@ -154,6 +162,7 @@ def check_permissioned_model(app_configs: Sequence[AppConfig] | None, **_kwargs)
         if IS_WATCH:
             # FIXME: KW is lacking permission policies for these models.
             from kausal_common.datasets.models import DataPointComment, DatasetMetric, DatasetSourceReference
+
             if model in (DatasetMetric, DataPointComment, DatasetSourceReference):
                 continue
         try:

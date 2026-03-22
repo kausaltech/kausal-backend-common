@@ -16,7 +16,7 @@ class LastModifiedAtColumn(DateColumn):
     def __init__(self, **kwargs):
         super().__init__(
             'last_modified_at',
-            label=_("Last modified at"),
-            sort_key="last_modified_at",
+            label=_('Last modified at'),
+            sort_key='last_modified_at',
             **kwargs,
         )

@@ -28,16 +28,13 @@ class BasePermissionPolicy(Generic[_Model, _UserT, _PermT]):
     want to override additional methods, either for efficiency or to implement more
     fine-grained permission logic).
     """
+
     permission_cache_name: str = ...
 
-    def __init__(self, model: str | type[_Model]) -> None:
-        ...
-
+    def __init__(self, model: str | type[_Model]) -> None: ...
     @cached_property
     def model(self) -> type[_Model]: ...
-
     def check_model(self, model: str | type[_Model]) -> None: ...
-
     def get_all_permissions_for_user(self, user: AnonymousUser | _UserT) -> set[_PermT]:
         """
         Return a set of all permissions that the given user has on this model.
@@ -110,10 +107,7 @@ class BasePermissionPolicy(Generic[_Model, _UserT, _PermT]):
         actions on the given model instance
         """
 
-    def users_with_permission_for_instance(self, action, instance: _Model) -> QuerySet[_UserT, _UserT]:
-        ...
-
-
+    def users_with_permission_for_instance(self, action, instance: _Model) -> QuerySet[_UserT, _UserT]: ...
 
 class BlanketPermissionPolicy(BasePermissionPolicy[_Model, _UserT, _PermT]):
     """
@@ -123,30 +117,21 @@ class BlanketPermissionPolicy(BasePermissionPolicy[_Model, _UserT, _PermT]):
     def user_has_permission(self, user: _AnyUser, action: str) -> bool: ...
     def user_has_any_permission(self, user: _AnyUser, actions: Sequence[str]) -> bool: ...
 
-    #def users_with_any_permission(self, actions): # -> QuerySet[AbstractBaseUser, AbstractBaseUser]: ...
+    # def users_with_any_permission(self, actions): # -> QuerySet[AbstractBaseUser, AbstractBaseUser]: ...
 
-    #def users_with_permission(self, action): # -> QuerySet[AbstractBaseUser, AbstractBaseUser]: ...
-
-
+    # def users_with_permission(self, action): # -> QuerySet[AbstractBaseUser, AbstractBaseUser]: ...
 
 class AuthenticationOnlyPermissionPolicy(BasePermissionPolicy):
     """
     A permission policy that gives all active authenticated users
     full permission over the given model
     """
-    def user_has_permission(self, user, action):
+    def user_has_permission(self, user, action): ...
+    def user_has_any_permission(self, user, actions): ...
+    def users_with_any_permission(self, actions):  # -> QuerySet[AbstractBaseUser, AbstractBaseUser]:
         ...
-
-    def user_has_any_permission(self, user, actions):
+    def users_with_permission(self, action):  # -> QuerySet[AbstractBaseUser, AbstractBaseUser]:
         ...
-
-    def users_with_any_permission(self, actions): # -> QuerySet[AbstractBaseUser, AbstractBaseUser]:
-        ...
-
-    def users_with_permission(self, action): # -> QuerySet[AbstractBaseUser, AbstractBaseUser]:
-        ...
-
-
 
 class BaseDjangoAuthPermissionPolicy(BasePermissionPolicy[_Model, _UserT, _PermT]):
     """
@@ -154,16 +139,12 @@ class BaseDjangoAuthPermissionPolicy(BasePermissionPolicy[_Model, _UserT, _PermT
     perform lookups against the django.contrib.auth permission model
     """
     def __init__(self, model: str | type[_Model], auth_model: str | type[_Model] | None = None) -> None: ...
-
     @cached_property
     def auth_model(self) -> type[_Model]: ...
-
     @cached_property
     def app_label(self) -> str: ...
-
     @cached_property
     def model_name(self) -> str: ...
-
 
 class ModelPermissionPolicy(BaseDjangoAuthPermissionPolicy[_Model, _UserT, _PermT]):
     """
@@ -171,9 +152,7 @@ class ModelPermissionPolicy(BaseDjangoAuthPermissionPolicy[_Model, _UserT, _Perm
     the standard django.contrib.auth permission model directly
     """
     def user_has_permission(self, user: AnonymousUser | _UserT, action: str) -> bool: ...
-
     def users_with_any_permission(self, actions: Sequence[str]) -> QuerySet[_UserT, _UserT]: ...
-
 
 class OwnershipPermissionPolicy(BaseDjangoAuthPermissionPolicy[_Model, _UserT, _PermT]):
     """
@@ -191,26 +170,17 @@ class OwnershipPermissionPolicy(BaseDjangoAuthPermissionPolicy[_Model, _UserT, _
     Besides 'add', 'change' and 'delete', no other actions are recognised or permitted
     (unless the user is an active superuser, in which case they can do everything).
     """
-    def __init__(self, model, auth_model=..., owner_field_name=...) -> None:
+    def __init__(self, model, auth_model=..., owner_field_name=...) -> None: ...
+    def check_model(self, model):  # -> None:
         ...
-
-    def check_model(self, model): # -> None:
+    def user_has_permission(self, user, action): ...
+    def users_with_any_permission(self, actions):  # -> QuerySet[AbstractBaseUser, AbstractBaseUser]:
         ...
-
-    def user_has_permission(self, user, action):
+    def user_has_permission_for_instance(self, user, action, instance):  # -> bool:
         ...
-
-    def users_with_any_permission(self, actions): # -> QuerySet[AbstractBaseUser, AbstractBaseUser]:
+    def user_has_any_permission_for_instance(self, user, actions, instance):  # -> bool:
         ...
-
-    def user_has_permission_for_instance(self, user, action, instance): # -> bool:
+    def instances_user_has_any_permission_for(self, user, actions):  # -> Any:
         ...
-
-    def user_has_any_permission_for_instance(self, user, actions, instance): # -> bool:
-        ...
-
-    def instances_user_has_any_permission_for(self, user, actions): # -> Any:
-        ...
-
-    def users_with_any_permission_for_instance(self, actions, instance): # -> QuerySet[AbstractBaseUser, AbstractBaseUser]:
+    def users_with_any_permission_for_instance(self, actions, instance):  # -> QuerySet[AbstractBaseUser, AbstractBaseUser]:
         ...

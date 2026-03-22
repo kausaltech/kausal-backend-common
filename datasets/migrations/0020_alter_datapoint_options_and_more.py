@@ -4,26 +4,25 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ("datasets", "0019_migrate_and_remove_comment_type"),
+        ('datasets', '0019_migrate_and_remove_comment_type'),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="datapoint",
+            name='datapoint',
             options={
-                "ordering": ("date", "id"),
-                "verbose_name": "data point",
-                "verbose_name_plural": "data points",
+                'ordering': ('date', 'id'),
+                'verbose_name': 'data point',
+                'verbose_name_plural': 'data points',
             },
         ),
         migrations.AlterModelOptions(
-            name="dimensioncategory",
+            name='dimensioncategory',
             options={
-                "ordering": ("dimension", "order"),
-                "verbose_name": "dimension category",
-                "verbose_name_plural": "dimension categories",
+                'ordering': ('dimension', 'order'),
+                'verbose_name': 'dimension category',
+                'verbose_name_plural': 'dimension categories',
             },
         ),
     ]

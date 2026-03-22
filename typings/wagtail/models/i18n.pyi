@@ -45,27 +45,27 @@ class Locale(models.Model):
     def language_info(self) -> dict[str, Any]: ...
     @property
     def language_name(self) -> str:
-        '''
+        """
         Uses data from ``django.conf.locale`` to return the language name in
         English. For example, if the object\'s ``language_code`` were ``"fr"``,
         the return value would be ``"French"``.
 
         Raises ``KeyError`` if ``django.conf.locale`` has no information
         for the object\'s ``language_code`` value.
-        '''
+        """
     @property
     def language_name_local(self) -> str:
-        '''
+        """
         Uses data from ``django.conf.locale`` to return the language name in
         the language itself. For example, if the ``language_code`` were
         ``"fr"`` (French), the return value would be ``"français"``.
 
         Raises ``KeyError`` if ``django.conf.locale`` has no information
         for the object\'s ``language_code`` value.
-        '''
+        """
     @property
     def language_name_localized(self) -> str:
-        '''
+        """
         Uses data from ``django.conf.locale`` to return the language name in
         the currently active language. For example, if ``language_code`` were
         ``"fr"`` (French), and the active language were ``"da"`` (Danish), the
@@ -74,7 +74,7 @@ class Locale(models.Model):
         Raises ``KeyError`` if ``django.conf.locale`` has no information
         for the object\'s ``language_code`` value.
 
-        '''
+        """
     @property
     def is_bidi(self) -> bool:
         """
@@ -92,7 +92,6 @@ class Locale(models.Model):
         """
 
 _QS = TypeVar('_QS', bound=models.QuerySet[Any], default=models.QuerySet[Model], covariant=True)
-
 
 class TranslatableMixin(models.Model, Generic[_QS]):
     translation_key: models.UUIDField
@@ -154,7 +153,7 @@ class TranslatableMixin(models.Model, Generic[_QS]):
         """
     @classmethod
     def get_translation_model(cls) -> type[Model]:
-        '''
+        """
         Returns this model\'s "Translation model".
 
         The "Translation model" is the model that has the ``locale`` and
@@ -162,16 +161,16 @@ class TranslatableMixin(models.Model, Generic[_QS]):
         Typically this would be the current model, but it may be a
         super-class if multi-table inheritance is in use (as is the case
         for ``wagtailcore.Page``).
-        '''
+        """
 
 def bootstrap_translatable_model(model, locale) -> None:
-    '''
+    """
     This function populates the "translation_key", and "locale" fields on model instances that were created
     before wagtail-localize was added to the site.
 
     This can be called from a data migration, or instead you could use the "bootstrap_translatable_models"
     management command.
-    '''
+    """
 
 class BootstrapTranslatableModel(migrations.RunPython):
     def __init__(self, model_string, language_code: Incomplete | None = None) -> None: ...
@@ -191,11 +190,11 @@ class BootstrapTranslatableMixin(TranslatableMixin):
      - Run makemigrations again
      - Migrate!
     """
+
     translation_key: Incomplete
     locale: Incomplete
     @classmethod
     def check(cls, **kwargs) -> list[CheckMessage]: ...
-
 
 def get_translatable_models(include_subclasses: bool = False) -> list[type[Model]]:
     """
@@ -203,4 +202,5 @@ def get_translatable_models(include_subclasses: bool = False) -> list[type[Model
     By default, this only includes models that are direct children of TranslatableMixin,
     to get all models, set the include_subclasses attribute to True.
     """
+
 def set_locale_on_new_instance(sender, instance, **kwargs) -> None: ...

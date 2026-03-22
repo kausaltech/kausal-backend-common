@@ -26,7 +26,9 @@ if TYPE_CHECKING:
 
     class BlockMetaWithFieldName(Protocol, BlockMeta):  # pyright: ignore
         field_name: str
+
 else:
+
     class BlockMetaWithFieldName:
         pass
 
@@ -42,10 +44,14 @@ class DashboardColumnInterface(graphene.Interface[Any]):
 
 class ColumnBlockBase(blocks.StructBlock):
     column_label = blocks.CharBlock(
-        required=False, label=_("Label"), help_text=_("Label for the column to be used instead of the default"),
+        required=False,
+        label=_('Label'),
+        help_text=_('Label for the column to be used instead of the default'),
     )
     column_help_text = blocks.CharBlock(
-        required=False, label=_("Help text"), help_text=_("Help text for the column to be shown in the UI"),
+        required=False,
+        label=_('Help text'),
+        help_text=_('Help text for the column to be shown in the UI'),
     )
     source_field: graphene.Field
 
@@ -109,7 +115,7 @@ class GeneralFieldBlockInterface(graphene.Interface[Any]):
     field_label = graphene.String()
     field_help_text = graphene.String()
 
-    graphql_interfaces = (FieldBlockMetaInterface, )
+    graphql_interfaces = (FieldBlockMetaInterface,)
 
     @staticmethod
     def resolve_source_field(root: StructValue[GeneralFieldBlockBase[Any]], _info) -> str | None:
@@ -171,4 +177,4 @@ class FilterBlockBase(GeneralFieldBlockBase):
     ]
 
     def get_admin_text(self) -> StrOrPromise:
-        return _("Filter: %(filter_label)s") % dict(filter_label=self.meta.label)
+        return _('Filter: %(filter_label)s') % dict(filter_label=self.meta.label)

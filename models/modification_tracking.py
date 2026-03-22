@@ -26,19 +26,19 @@ class UserModifiableModel(models.Model):
         last_modified_by (ForeignKey): The user who last modified the object.
     """
 
-    created_at = models.DateTimeField(verbose_name=_("Created at"), auto_now_add=True, editable=False)
+    created_at = models.DateTimeField(verbose_name=_('Created at'), auto_now_add=True, editable=False)
     created_by: FK[User | None] = models.ForeignKey(
         'users.User',
-        verbose_name=_("Last modified by"),
+        verbose_name=_('Last modified by'),
         on_delete=models.SET_NULL,
         null=True,
         editable=False,
         related_name='+',
     )
-    last_modified_at = models.DateTimeField(verbose_name=_("Last modified at"), auto_now=True, editable=False)
+    last_modified_at = models.DateTimeField(verbose_name=_('Last modified at'), auto_now=True, editable=False)
     last_modified_by: FK[User | None] = models.ForeignKey(
         'users.User',
-        verbose_name=_("Last modified by"),
+        verbose_name=_('Last modified by'),
         on_delete=models.SET_NULL,
         null=True,
         editable=False,

@@ -56,39 +56,39 @@ if typing.TYPE_CHECKING:
 
 
 INT_TYPES = [
-    "AutoField",
-    "BigAutoField",
-    "IntegerField",
-    "SmallIntegerField",
-    "BigIntegerField",
-    "PositiveIntegerField",
-    "PositiveSmallIntegerField",
+    'AutoField',
+    'BigAutoField',
+    'IntegerField',
+    'SmallIntegerField',
+    'BigIntegerField',
+    'PositiveIntegerField',
+    'PositiveSmallIntegerField',
 ]
 
 STR_TYPES = [
-    "CharField",
-    "EmailField",
-    "URLField",
-    "SlugField",
-    "TextField",
-    "FilePathField",
-    "FileField",
+    'CharField',
+    'EmailField',
+    'URLField',
+    'SlugField',
+    'TextField',
+    'FilePathField',
+    'FileField',
 ]
 
 
 FIELD_TYPES: dict[str, type | UnionType] = {
-    "GenericIPAddressField": IPvAnyAddress,
-    "BooleanField": bool,
-    "BinaryField": bytes,
-    "DateField": date,
-    "DateTimeField": datetime,
-    "DurationField": timedelta,
-    "TimeField": time,
-    "DecimalField": Decimal,
-    "FloatField": float,
-    "UUIDField": UUID,
-    "JSONField": Json | dict | list,  # TODO: Configure this using default
-    "ArrayField": list,
+    'GenericIPAddressField': IPvAnyAddress,
+    'BooleanField': bool,
+    'BinaryField': bytes,
+    'DateField': date,
+    'DateTimeField': datetime,
+    'DurationField': timedelta,
+    'TimeField': time,
+    'DecimalField': Decimal,
+    'FloatField': float,
+    'UUIDField': UUID,
+    'JSONField': Json | dict | list,  # TODO: Configure this using default
+    'ArrayField': list,
     # "IntegerRangeField",
     # "BigIntegerRangeField",
     # "CICharField",
@@ -116,7 +116,7 @@ def get_internal_type(field: Field) -> type | UnionType | None:
         return FIELD_TYPES[internal_type]
 
     for field_class in type(field).__mro__:
-        get_internal_type = getattr(field_class, "get_internal_type", None)
+        get_internal_type = getattr(field_class, 'get_internal_type', None)
         if not get_internal_type:
             continue
         _internal_type = get_internal_type(field_class())
@@ -129,6 +129,7 @@ def get_internal_type(field: Field) -> type | UnionType | None:
 type PythonType = type | UnionType
 type DBFieldType = Field | ForeignObjectRel | GenericForeignKey
 
+
 def _get_choice_type(field: Field, schema_name: str) -> tuple[Enum, Any]:
     assert field.choices is not None
     enum_choices = {}
@@ -140,12 +141,10 @@ def _get_choice_type(field: Field, schema_name: str) -> tuple[Enum, Any]:
             val = v
         enum_choices[val] = k
     if field.blank:
-        enum_choices["_blank"] = ""
+        enum_choices['_blank'] = ''
 
-    enum_prefix = (
-        f"{schema_name.replace('_', '')}{field.name.title().replace('_', '')}"
-    )
-    enum_name = f"{enum_prefix}Enum"
+    enum_prefix = f'{schema_name.replace("_", "")}{field.name.title().replace("_", "")}'
+    enum_name = f'{enum_prefix}Enum'
     python_type = Enum(  # type: ignore
         enum_name,
         enum_choices,
@@ -157,11 +156,12 @@ def _get_choice_type(field: Field, schema_name: str) -> tuple[Enum, Any]:
         default = None
     return python_type, default  # type: ignore
 
+
 def _convert_field(field: Field, schema_name: str) -> tuple[PythonType, FieldInfo]:  # noqa: C901, PLR0912, PLR0915
     deconstructed = field.deconstruct()
     field_options = deconstructed[3] or {}
-    blank = field_options.pop("blank", False)
-    null = field_options.pop("null", False)
+    blank = field_options.pop('blank', False)
+    null = field_options.pop('null', False)
     description = field.help_text
     title = field.verbose_name.title()
     default = Required
@@ -198,7 +198,8 @@ def _convert_field(field: Field, schema_name: str) -> tuple[PythonType, FieldInf
             mapped_type = get_internal_type(field)
             if mapped_type is None:
                 log.warning(
-                    "%s is currently unhandled, defaulting to str.", field.__class__,
+                    '%s is currently unhandled, defaulting to str.',
+                    field.__class__,
                 )
                 python_type = str
             else:
@@ -223,7 +224,7 @@ def _convert_field(field: Field, schema_name: str) -> tuple[PythonType, FieldInf
         max_length = None
 
     field_is_optional = all([
-        getattr(field, "null", None),
+        getattr(field, 'null', None),
         field.is_relation,
         # A list that is null, is the empty list. So there is no need
         # to make it nullable.
@@ -243,8 +244,10 @@ def _convert_field(field: Field, schema_name: str) -> tuple[PythonType, FieldInf
 
     return python_type, field_info
 
+
 def _convert_foreign_object_rel(field: ForeignObjectRel) -> tuple[PythonType, FieldInfo]:
     raise NotImplementedError
+
 
 @dataclass(frozen=True)
 class DjangoModelFields:
@@ -257,8 +260,11 @@ class DjangoModelFields:
     def field_names(self) -> set[str]:
         return set(self.plain_fields.keys()) | set(self.enum_fields.keys())
 
+
 def convert_django_field(
-    field: DBFieldType, schema_name: str, django_fields: DjangoModelFields,
+    field: DBFieldType,
+    schema_name: str,
+    django_fields: DjangoModelFields,
 ) -> tuple[PythonType, FieldInfo] | None:
     if isinstance(field, Field):
         python_type, field_info = _convert_field(field, schema_name)
@@ -267,7 +273,7 @@ def convert_django_field(
         else:
             django_fields.plain_fields[field.name] = field
     elif isinstance(field, ForeignObjectRel):
-        #python_type, field_info = _convert_foreign_object_rel(field)
+        # python_type, field_info = _convert_foreign_object_rel(field)
         django_fields.related_fields[field.name] = field
         return None
     else:
@@ -278,8 +284,11 @@ def convert_django_field(
         field_info,
     )
 
+
 def pydantic_from_django_model[BaseM: BaseModel](
-    cls: type[BaseM], model: type[Model], include_fields: Sequence[str],
+    cls: type[BaseM],
+    model: type[Model],
+    include_fields: Sequence[str],
 ):
     django_fields = DjangoModelFields()
     new_pydantic_fields: dict[str, tuple[PythonType, FieldInfo]] = {}
@@ -299,7 +308,7 @@ def pydantic_from_django_model[BaseM: BaseModel](
             continue
 
         if field_def is None:
-            raise Exception("Unable to convert field: %s.%s" % (model._meta.label, field_name))
+            raise Exception('Unable to convert field: %s.%s' % (model._meta.label, field_name))
 
         new_pydantic_fields[field_name] = field_def
         python_type, field_info = field_def
@@ -316,7 +325,9 @@ class SiblingIds(NamedTuple):
     prev: str | None
     next: str | None
 
+
 SIBLING_ORDER_ATTRIBUTE = 'sibling_order'
+
 
 class DjangoDiffModel[ModelT: Model](DiffSyncModel):
     _model: ClassVar[type[ModelT]]  # type: ignore[misc]
@@ -350,7 +361,7 @@ class DjangoDiffModel[ModelT: Model](DiffSyncModel):
         mp_model = cls._mpnode_or_none()
         if mp_model:
             if not cls._parent_key:
-                msg = f"{cls._model!r} is an MP_Node, but _parent_key is not set"
+                msg = f'{cls._model!r} is an MP_Node, but _parent_key is not set'
                 raise AttributeError(msg)
             if cls._parent_key not in cls._attributes:
                 msg = f"{cls._model!r} is an MP_Node, but '{cls._parent_key}' is not in _attributes"
@@ -449,7 +460,11 @@ class DjangoDiffModel[ModelT: Model](DiffSyncModel):
 
     @classmethod
     def _create_mpnode(
-        cls, adapter: DjangoAdapter, instance: ModelT, parent_id: str | None, sibling_order: int | None,
+        cls,
+        adapter: DjangoAdapter,
+        instance: ModelT,
+        parent_id: str | None,
+        sibling_order: int | None,
     ) -> ModelT:
         parent = adapter.get(cls, str(parent_id)) if parent_id else None
         root_obj = cls.get_mpnode_root_instance(instance)
@@ -535,7 +550,7 @@ class DjangoDiffModel[ModelT: Model](DiffSyncModel):
             obj_pk = obj.pk
             cls.create_related(adapter, ids, attrs, obj)
         except Exception as e:
-            msg = f"Unable to create a new {cls._model._meta.label} instance with ids {ids}"
+            msg = f'Unable to create a new {cls._model._meta.label} instance with ids {ids}'
             raise ObjectNotCreated(msg) from e
 
         self._instance = obj
@@ -572,7 +587,7 @@ class DjangoDiffModel[ModelT: Model](DiffSyncModel):
         parent_obj = new_parent.get_django_instance()
         assert type(parent_obj) is type(child_obj)
         assert isinstance(parent_obj, MP_Node)
-        #siblings = new_parent.get_children(type(self), ordered=True)
+        # siblings = new_parent.get_children(type(self), ordered=True)
         child_obj.move(parent_obj, 'last-child')  # type: ignore[arg-type]
 
     def update(self, attrs: dict) -> Self | None:
@@ -582,7 +597,7 @@ class DjangoDiffModel[ModelT: Model](DiffSyncModel):
         update_kwargs = self.get_update_kwargs(attrs)
         obj = self.get_django_instance()
 
-        #_sibling_ids = update_kwargs.pop(SIBLINGS_ATTRIBUTE, None)
+        # _sibling_ids = update_kwargs.pop(SIBLINGS_ATTRIBUTE, None)
         # if PARENT_ID_ATTRIBUTE in update_kwargs:
         #     parent_id = update_kwargs.pop(PARENT_ID_ATTRIBUTE)
         #     parent_changed = True
@@ -615,9 +630,15 @@ class DjangoDiffModel[ModelT: Model](DiffSyncModel):
                 assert self._parent_id is not None
                 parent = self.adapter.get(self._parent_model, self._parent_id)
                 parent._children_changed.add(self.get_type())
-                log.debug("Sort order changed for %s:%s (parent %s:%s)" % (
-                    self.get_type(), self.get_unique_id(), parent.get_type(), parent.get_unique_id(),
-                ))
+                log.debug(
+                    'Sort order changed for %s:%s (parent %s:%s)'
+                    % (
+                        self.get_type(),
+                        self.get_unique_id(),
+                        parent.get_type(),
+                        parent.get_unique_id(),
+                    )
+                )
                 # FIXME: Should we reorder the "children" attribute?
 
         if update_kwargs:
@@ -663,7 +684,7 @@ class DjangoDiffModel[ModelT: Model](DiffSyncModel):
             related_str = 'with related objects: %s' % related_objs_str
         else:
             related_str = 'with no related objects'
-        log.info("Deleted %s:%s %s" % (self.get_type(), self.get_unique_id(), related_str))
+        log.info('Deleted %s:%s %s' % (self.get_type(), self.get_unique_id(), related_str))
         return super().delete()
 
     def get_children[ChildT: DjangoDiffModel](self, child_type: type[ChildT], ordered: bool = False) -> list[ChildT]:
@@ -842,7 +863,9 @@ class MergingSyncDiffer(DiffSyncDiffer):
                 assert dst_obj._parent_key in attr_diffs
         return el
 
+
 type ParentChildGroup = tuple[type[DjangoDiffModel], str, str]
+
 
 class DjangoAdapter(TypedAdapter):
     transaction_started: bool = False
@@ -851,7 +874,10 @@ class DjangoAdapter(TypedAdapter):
     counters: dict[str, int]
 
     def __init__(
-        self, interactive: bool = False, allow_related_deletion: bool | None = None, **kwargs,
+        self,
+        interactive: bool = False,
+        allow_related_deletion: bool | None = None,
+        **kwargs,
     ) -> None:
         self.allow_related_deletion = allow_related_deletion
         self.interactive = interactive
@@ -883,6 +909,7 @@ class DjangoAdapter(TypedAdapter):
         # Create a tree of related objects
         tree = Tree(Pretty(obj))
         edges = collector.edges
+
         def add_related(parent: Tree, related: Sequence[Model]) -> None:
             for child in related:
                 branch = parent.add(Pretty(child, max_depth=2))
@@ -893,8 +920,8 @@ class DjangoAdapter(TypedAdapter):
         add_related(tree, root_related)  # pyright: ignore
         # Print the tree
         console.print(Padding(tree, (1, 4)))
-        console.print(":warning: The above objects would be deleted", style="logging.level.warning")
-        return Confirm.ask("Do you want to proceed with deletion?", default=True)
+        console.print(':warning: The above objects would be deleted', style='logging.level.warning')
+        return Confirm.ask('Do you want to proceed with deletion?', default=True)
 
     @contextmanager
     def start(self):
@@ -956,7 +983,12 @@ class DjangoAdapter(TypedAdapter):
         return cls
 
     def _process_diff_element(
-        self, el: DiffElement, parent: DjangoDiffModel | None, group: str, parents: set[ParentChildGroup], indent: int,
+        self,
+        el: DiffElement,
+        parent: DjangoDiffModel | None,
+        group: str,
+        parents: set[ParentChildGroup],
+        indent: int,
     ) -> None:
         model = getattr(self, el.type)
         assert issubclass(model, DjangoDiffModel)
@@ -1017,9 +1049,9 @@ class DjangoAdapter(TypedAdapter):
             db_pks.insert(order, new_pk)
 
         if nr_changes:
-            log.debug("%d children reordered" % nr_changes)
+            log.debug('%d children reordered' % nr_changes)
         else:
-            log.debug("No re-ordering needed")
+            log.debug('No re-ordering needed')
 
     def _reorder_sorted(self, model: type[Model], ordered_pks: list[int]) -> None:
         obj_by_pk: dict[int, Model] = {obj.pk: obj for obj in model._default_manager.filter(pk__in=ordered_pks)}
@@ -1047,7 +1079,11 @@ class DjangoAdapter(TypedAdapter):
             self._reorder_sorted(child_model, [cast('int', child._instance_pk) for child in children])
 
     def sync_complete(
-        self, source: Adapter, diff: Diff, flags: DiffSyncFlags = DiffSyncFlags.NONE, logger: BoundLogger | None = None,
+        self,
+        source: Adapter,
+        diff: Diff,
+        flags: DiffSyncFlags = DiffSyncFlags.NONE,
+        logger: BoundLogger | None = None,
     ) -> None:
         parents: set[ParentChildGroup] = set()
         self._process_diff(diff, None, parents, 0)
@@ -1058,7 +1094,7 @@ class DjangoAdapter(TypedAdapter):
             if not child_type._is_orderable:
                 continue
 
-            log.debug("Re-ordering children under %s:%s (group %s)" % (parent_type._modelname, parent_id, group))
+            log.debug('Re-ordering children under %s:%s (group %s)' % (parent_type._modelname, parent_id, group))
             self.reorder_children(parent, group)
             assert issubclass(child_type, DjangoDiffModel)
             mp_model = child_type._mpnode_or_none()
@@ -1067,7 +1103,7 @@ class DjangoAdapter(TypedAdapter):
         for mp_model in trees_to_check:
             probs = mp_model.find_problems()
             if any(probs):
-                raise Exception("Problems found in %s: %s" % (mp_model, probs))
+                raise Exception('Problems found in %s: %s' % (mp_model, probs))
         return super().sync_complete(source, diff, flags, logger)
 
 

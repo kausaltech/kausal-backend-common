@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('datasets', '0004_remove_datapointcomment_updated_at_and_more'),
     ]
@@ -17,8 +16,18 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('order', models.PositiveIntegerField(default=0, verbose_name='order')),
-                ('dimension', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='schemas', to='datasets.dimension')),
-                ('schema', modelcluster.fields.ParentalKey(on_delete=django.db.models.deletion.CASCADE, related_name='dimensions', to='datasets.datasetschema')),
+                (
+                    'dimension',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name='schemas', to='datasets.dimension'
+                    ),
+                ),
+                (
+                    'schema',
+                    modelcluster.fields.ParentalKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name='dimensions', to='datasets.datasetschema'
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'dataset schema dimension',

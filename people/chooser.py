@@ -34,7 +34,7 @@ class PersonChooserMixin(ModelChooserMixin[Person]):
 
 
 class PersonModelChooserCreateTabMixin(ModelChooserCreateTabMixin[Person]):
-    create_tab_label = pgettext_lazy("person chooser", "Create new")
+    create_tab_label = pgettext_lazy('person chooser', 'Create new')
 
     def get_form_class(self):
         if self.form_class:
@@ -42,9 +42,13 @@ class PersonModelChooserCreateTabMixin(ModelChooserCreateTabMixin[Person]):
 
         organization_widget = autocomplete.ModelSelect2(url='organization-autocomplete')
 
-        self.form_class = modelform_factory(self.model, fields=self.fields, widgets=dict(
-            organization=organization_widget,
-        ))
+        self.form_class = modelform_factory(
+            self.model,
+            fields=self.fields,
+            widgets=dict(
+                organization=organization_widget,
+            ),
+        )
         return self.form_class
 
 
@@ -55,10 +59,11 @@ if IS_PATHS:
 else:
     from generic_chooser.views import ModelChooserViewSet as ChooserViewSetBase
 
+
 class PersonChooserViewSet(ChooserViewSetBase):
     icon = 'user'
     model = Person
-    page_title = _("Choose person")
+    page_title = _('Choose person')
     per_page = 10
     order_by = ('last_name', 'first_name')
     fields = ['first_name', 'last_name', 'email', 'title', 'organization']

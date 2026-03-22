@@ -141,13 +141,16 @@ class ModelFieldProperties:
         return all(not self.get_config(b).has_block for b in FieldBlockContext)
 
     if IS_WATCH:
+
         def get_report_formatter_class(self) -> type[ReportFieldFormatter] | None:
             if not self.has_report_block:
                 return None
             if self.report_formatter_class:
                 return _import(self.report_formatter_class)
             return None
+
     else:
+
         def get_report_formatter_class(self) -> type | None:
             return None
 

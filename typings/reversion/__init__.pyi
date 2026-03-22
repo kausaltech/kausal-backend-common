@@ -23,4 +23,3 @@ from reversion.revisions import (
 
 __version__: tuple[int, int, int]
 VERSION: tuple[int, int, int]
-

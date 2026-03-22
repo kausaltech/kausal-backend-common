@@ -7,7 +7,6 @@ from django.utils.functional import cached_property as cached_property
 
 _SpecificM_co = TypeVar('_SpecificM_co', bound=Model, covariant=True)
 
-
 class SpecificMixin(Generic[_SpecificM_co]):
     """
     Mixin for models that support multi-table inheritance and provide a
@@ -15,7 +14,9 @@ class SpecificMixin(Generic[_SpecificM_co]):
     methods and properties for retrieving the specific instance of the model.
     """
     def get_specific(
-        self, deferred: bool = False, copy_attrs: Sequence[str] | None = None,
+        self,
+        deferred: bool = False,
+        copy_attrs: Sequence[str] | None = None,
         copy_attrs_exclude: Sequence[str] | None = None,
     ) -> _SpecificM_co:
         """

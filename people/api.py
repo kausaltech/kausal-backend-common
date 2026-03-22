@@ -32,12 +32,12 @@ class PersonSerializer(
     def validate(self, data):
         for d in self.initial_data:
             if 'email' not in d:
-                raise exceptions.ValidationError(_("Not all objects have an email address"))
+                raise exceptions.ValidationError(_('Not all objects have an email address'))
         emails = Counter(data['email'] for data in self.initial_data)
         duplicates = [email for email, n in emails.most_common() if n > 1]
         if duplicates:
             # TODO: This should better be in validate_email to highlight the faulty table cells
-            raise exceptions.ValidationError(_("Duplicate email addresses: %s") % ', '.join(duplicates))
+            raise exceptions.ValidationError(_('Duplicate email addresses: %s') % ', '.join(duplicates))
         return data
 
     class Meta:

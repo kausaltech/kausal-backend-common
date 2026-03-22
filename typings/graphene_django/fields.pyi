@@ -6,69 +6,46 @@ from graphene.relay import ConnectionField
 from graphene.types import Field
 
 class DjangoListField(Field):
-    def __init__(self, _type, *args, **kwargs) -> None:
-        ...
-
+    def __init__(self, _type, *args, **kwargs) -> None: ...
     @property
-    def type(self): # -> Any:
+    def type(self):  # -> Any:
         ...
-
     @property
-    def model(self):
-        ...
-
-    def get_manager(self):
-        ...
-
+    def model(self): ...
+    def get_manager(self): ...
     @staticmethod
-    def list_resolver(django_object_type, resolver, default_manager, root, info, **args): # -> QuerySet[Any, Any]:
+    def list_resolver(django_object_type, resolver, default_manager, root, info, **args):  # -> QuerySet[Any, Any]:
         ...
-
-    def wrap_resolve(self, parent_resolver): # -> partial[QuerySet[Any, Any] | Any]:
+    def wrap_resolve(self, parent_resolver):  # -> partial[QuerySet[Any, Any] | Any]:
         ...
-
-
 
 class DjangoConnectionField(ConnectionField):
-    def __init__(self, *args, **kwargs) -> None:
-        ...
-
+    def __init__(self, *args, **kwargs) -> None: ...
     @property
-    def type(self): # -> NonNull:
+    def type(self):  # -> NonNull:
         ...
-
     @property
-    def connection_type(self): # -> Any:
+    def connection_type(self):  # -> Any:
         ...
-
     @property
-    def node_type(self): # -> Any:
+    def node_type(self):  # -> Any:
         ...
-
     @property
-    def model(self): # -> Any:
+    def model(self):  # -> Any:
         ...
-
-    def get_manager(self): # -> Any:
+    def get_manager(self):  # -> Any:
         ...
-
     @classmethod
-    def resolve_queryset(cls, connection, queryset, info, args):
-        ...
-
+    def resolve_queryset(cls, connection, queryset, info, args): ...
     @classmethod
-    def resolve_connection(cls, connection, args, iterable, max_limit=...): # -> ConnectionType:
+    def resolve_connection(cls, connection, args, iterable, max_limit=...):  # -> ConnectionType:
         ...
-
     @classmethod
-    def connection_resolver(cls, resolver, connection, default_manager, queryset_resolver, max_limit, enforce_first_or_last, root, info, **args):  # type: ignore
+    def connection_resolver(  # type: ignore[override]
+        cls, resolver, connection, default_manager, queryset_resolver, max_limit, enforce_first_or_last, root, info, **args
+    ):
         ...
-
-    def wrap_resolve(self, parent_resolver): # -> partial[Promise[Any] | ConnectionType]:
+    def wrap_resolve(self, parent_resolver):  # -> partial[Promise[Any] | ConnectionType]:
         ...
-
-    def get_queryset_resolver(self): # -> Callable[..., Any]:
+    def get_queryset_resolver(self):  # -> Callable[..., Any]:
         ...
-
-
-

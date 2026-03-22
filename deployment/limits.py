@@ -22,7 +22,7 @@ class MemoryLimit:
 
     def __str__(self):
         max_usage_str = '%d MiB' % self.max_usage_mib if self.max_usage_mib else 'no limit'
-        return f"Current Usage: {self.current_mib} MiB, Max Usage: {max_usage_str}"
+        return f'Current Usage: {self.current_mib} MiB, Max Usage: {max_usage_str}'
 
     def usage_ratio(self) -> float | None:
         if not self.max_usage:
@@ -37,24 +37,24 @@ class MemoryLimit:
 
     @classmethod
     def from_cgroup(cls) -> MemoryLimit | None:
-        cgroup_path = Path("/sys/fs/cgroup")
+        cgroup_path = Path('/sys/fs/cgroup')
         if not cgroup_path.exists():
             return None
 
-        current_file = cgroup_path / "memory.current"
+        current_file = cgroup_path / 'memory.current'
         if not current_file.exists():
             return None
-        max_file = cgroup_path / "memory.max"
+        max_file = cgroup_path / 'memory.max'
         try:
             current_usage = int(current_file.read_text().strip())
             if max_file.exists():
                 max_usage_str = max_file.read_text().strip()
-                max_usage = int(max_usage_str) if max_usage_str != "max" else None
+                max_usage = int(max_usage_str) if max_usage_str != 'max' else None
             else:
                 max_usage = None
             return cls(current_usage, max_usage)
         except Exception:
-            logger.exception("Unable to get memory information")
+            logger.exception('Unable to get memory information')
             return None
 
     @classmethod

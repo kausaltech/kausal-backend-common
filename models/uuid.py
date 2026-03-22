@@ -44,5 +44,6 @@ class UUIDIdentifiedModel(models.Model):  # noqa: DJ008
     if TYPE_CHECKING:
         Meta: Any
     else:
+
         class Meta:
             abstract = True

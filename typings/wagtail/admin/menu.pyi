@@ -17,7 +17,6 @@ class MenuItemInit(TypedDict, total=False):
     attrs: dict[str, Any]
     order: int
 
-
 class MenuItem(metaclass=MediaDefiningClass):
     label: StrOrPromise
     url: str
@@ -26,12 +25,7 @@ class MenuItem(metaclass=MediaDefiningClass):
     name: str
     attrs: dict[str, str]
     order: int
-    def __init__(
-        self,
-        label: StrOrPromise,
-        url: str,
-        **kwargs: Unpack[MenuItemInit]
-    ) -> None: ...
+    def __init__(self, label: StrOrPromise, url: str, **kwargs: Unpack[MenuItemInit]) -> None: ...
     def is_shown(self, request: HttpRequest) -> bool:
         """
         Whether this menu item should be shown for the given request; permission
@@ -109,7 +103,6 @@ class WagtailMenuRegisterable:
 
     def register_menu_item(self) -> None:
         """Registers the menu item with the Wagtail admin."""
-
 
 class WagtailMenuRegisterableGroup(WagtailMenuRegisterable):
     """

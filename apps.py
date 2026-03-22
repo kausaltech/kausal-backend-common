@@ -31,6 +31,7 @@ def check_graphql_schema(app_configs, **_kwargs) -> list[CheckMessage]:  # pyrig
         importlib.import_module(mod_path)
     except Exception as exc:
         from django.conf import settings
+
         if settings.DEBUG:
             console = rich.get_console()
             tbp = Traceback.from_exception(type(exc), exc, traceback=exc.__traceback__, max_frames=20, show_locals=True)
@@ -82,7 +83,7 @@ def check_model_ordering(app_configs: Sequence[AppConfig] | None, **_kwargs) -> 
         errors.append(
             CheckWarning(
                 'Model has no default ordering',
-                #hint='Add ordering to the model Meta, e.g., ordering = ("id",)',
+                # hint='Add ordering to the model Meta, e.g., ordering = ("id",)',
                 id='kausal_common.M001',
                 obj=model,
             )

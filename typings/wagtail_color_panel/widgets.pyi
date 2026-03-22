@@ -7,6 +7,7 @@ class PolyfillColorInputWidget(widgets.TextInput):
     class Media:
         css: Incomplete
         js: Incomplete
+
     def render(self, name, value, attrs: Incomplete | None = None, renderer: Incomplete | None = None): ...
 
 class ColorInputWidget(widgets.TextInput):

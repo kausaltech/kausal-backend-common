@@ -112,7 +112,7 @@ class OrganizationDeleteView(DeleteView):
         message = super().confirmation_message
         if not self.object:
             return message
-        message += '\n' + _("This will delete the following objects:") + '\n'
+        message += '\n' + _('This will delete the following objects:') + '\n'
         num_deleted_by_model = {}
         try:
             with transaction.atomic():
@@ -126,18 +126,21 @@ class OrganizationDeleteView(DeleteView):
         items = []
         for model_identifier, num_deleted in num_deleted_by_model.items():
             model = apps.get_model(model_identifier)
-            singular_str = "%(num_instances)d %(model_name_singular)s"
-            plural_str = "%(num_instances)d %(model_name_plural)s"
-            items.append(ngettext_lazy(singular_str, plural_str, num_deleted) % {
-                'num_instances': num_deleted,
-                'model_name_singular': model._meta.verbose_name,
-                'model_name_plural': model._meta.verbose_name_plural,
-            })
+            singular_str = '%(num_instances)d %(model_name_singular)s'
+            plural_str = '%(num_instances)d %(model_name_plural)s'
+            items.append(
+                ngettext_lazy(singular_str, plural_str, num_deleted)
+                % {
+                    'num_instances': num_deleted,
+                    'model_name_singular': model._meta.verbose_name,
+                    'model_name_plural': model._meta.verbose_name_plural,
+                }
+            )
         message += ';\n'.join(items)
         return message
 
 
 class OrganizationIndexView(IndexView[Organization]):
     # FIXME: in Wagtail 6.2.X this is the default, so this line can be deleted once we upgrade
-    any_permission_required = ["add", "change", "delete", "view"]
+    any_permission_required = ['add', 'change', 'delete', 'view']
     view_set: OrganizationViewSet | None = None

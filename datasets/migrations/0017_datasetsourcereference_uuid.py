@@ -12,7 +12,6 @@ def generate_uuids(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('datasets', '0016_alter_datapointcomment_options_and_more'),
     ]

@@ -110,9 +110,7 @@ class CopyViewMixin[M: Model, QS: QuerySet[Any] = QuerySet[Model]]:
     # def get_object(self, queryset: QS | None = None) -> M: ...
     def get_initial_form_instance(self) -> M: ...
 
-class CopyView[M: Model, FormT: BaseModelForm[Any], QS: QuerySet[Any] = QuerySet[M]](
-    CopyViewMixin[M, QS], CreateView[M, FormT]
-):
+class CopyView[M: Model, FormT: BaseModelForm[Any], QS: QuerySet[Any] = QuerySet[M]](CopyViewMixin[M, QS], CreateView[M, FormT]):
     def get_object(self, queryset: QS | None = None) -> M: ...  # type: ignore[override]
 
 class LastUpdatedDict(TypedDict):

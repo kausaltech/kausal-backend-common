@@ -33,7 +33,7 @@ class Node[QS: MP_NodeQuerySet[Any]](MP_Node[QS], ClusterableModel):
     class Meta:
         abstract = True
 
-    name = models.CharField[str, str](max_length=255, verbose_name=_("name"))
+    name = models.CharField[str, str](max_length=255, verbose_name=_('name'))
 
     # Disabled `node_order_by` for now. If we used this, then we wouldn't be able to use "left sibling" to specify a
     # position of a node, e.g., when calling the REST API from the grid editor. Since it would be significant work to
@@ -65,14 +65,13 @@ class Node[QS: MP_NodeQuerySet[Any]](MP_Node[QS], ClusterableModel):
         parentpath = self._get_basepath(self.path, depth - 1)
         return parentpath
 
+
 class BaseOrganizationClass(models.Model):
     identifier = models.CharField(max_length=255, unique=True, editable=False)
     name = models.CharField(max_length=255)
 
-    created_time = models.DateTimeField(auto_now_add=True,
-                                        help_text=_('The time at which the resource was created'))
-    last_modified_time = models.DateTimeField(auto_now=True,
-                                              help_text=_('The time at which the resource was updated'))
+    created_time = models.DateTimeField(auto_now_add=True, help_text=_('The time at which the resource was created'))
+    last_modified_time = models.DateTimeField(auto_now=True, help_text=_('The time at which the resource was updated'))
 
     i18n = TranslationField(fields=('name',))
 
@@ -93,8 +92,11 @@ class BaseOrganizationQuerySet[M: models.Model](MP_NodeQuerySet[M], Multilingual
 
 
 if TYPE_CHECKING:
+
     class TreeModel(MP_Node[Any]): ...
+
 else:
+
     class TreeModel: ...
 
 
@@ -178,7 +180,9 @@ class BaseOrganization(index.Indexed, TreeModel, ModelWithPrimaryLanguage, gis_m
     # Intentionally overrides ModelWithPrimaryLanguage.primary_language
     # leaving out the default keyword argument
     primary_language = models.CharField(
-        max_length=8, choices=get_supported_languages, verbose_name=_('primary language'),
+        max_length=8,
+        choices=get_supported_languages,
+        verbose_name=_('primary language'),
     )
     location = gis_models.PointField(verbose_name=_('location'), srid=4326, null=True, blank=True)
 
@@ -193,13 +197,12 @@ class BaseOrganization(index.Indexed, TreeModel, ModelWithPrimaryLanguage, gis_m
         index.SearchField('abbreviation'),
     ]
 
-
     id: int
     classification_id: int | None
 
     class Meta:
-        verbose_name = _("organization")
-        verbose_name_plural = _("organizations")
+        verbose_name = _('organization')
+        verbose_name_plural = _('organizations')
         abstract = True
 
     @property

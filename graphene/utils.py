@@ -24,10 +24,10 @@ def create_from_dataclass(kls: type[DataclassInstance]):
         if isinstance(field_type, UnionType):
             args = list(typing.get_args(field_type))
             if NoneType not in args:
-                raise TypeError("Only NoneType supported in unions")
+                raise TypeError('Only NoneType supported in unions')
             args.remove(NoneType)
             if len(args) != 1:
-                raise TypeError("Too many types in the union")
+                raise TypeError('Too many types in the union')
             field_type = args[0]
             required = False
 
@@ -36,7 +36,7 @@ def create_from_dataclass(kls: type[DataclassInstance]):
         elif field_type is int:
             gf = graphene.Int
         else:
-            raise Exception("Unsupported type: %s" % field.type)
+            raise Exception('Unsupported type: %s' % field.type)
         gfields[field.name] = gf(required=required)
     out = type(kls.__name__ + 'Type', (graphene.ObjectType,), gfields)
     return out
@@ -49,5 +49,5 @@ def get_graphene_meta(type_: type[Any]) -> BaseOptions | None:
     if type_meta is None:
         return None
     if not isinstance(type_meta, BaseOptions):
-        raise TypeError(f"Type {type_} has _meta with invalid type: {type(type_meta)}")
+        raise TypeError(f'Type {type_} has _meta with invalid type: {type(type_meta)}')
     return type_meta

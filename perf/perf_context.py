@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 
 DEBUG = False
 
+
 @dataclass
 class PerfStats:
     nr_calls: int = 0
@@ -23,6 +24,7 @@ class PerfStats:
     cum_exec_time: float = 0
     cache_hits: int = 0
     cache_misses: int = 0
+
 
 class HasId(Protocol):
     id: str
@@ -57,9 +59,12 @@ class PerfNodeEntry[NodeType: HasId, CacheResultType: Any = Any]:
         return '%.3f ms' % (time / 1000000.0)
 
     if DEBUG:
+
         def debug(self, msg: str):
             print('%-5s: %s%s: %s' % (self.time_ms(self.now()), '  ' * self.depth, self.node.id, msg))
+
     else:
+
         def debug(self, msg: str):
             pass
 
@@ -71,9 +76,13 @@ class PerfNodeEntry[NodeType: HasId, CacheResultType: Any = Any]:
         self.children.append(child)
 
     def return_from_child(self, child_pse: Self):
-        self.debug('return from child (own total before %s, child total %s)' % (
-            self.time_ms(self.total_exec_time), self.time_ms(child_pse.total_exec_time),
-        ))
+        self.debug(
+            'return from child (own total before %s, child total %s)'
+            % (
+                self.time_ms(self.total_exec_time),
+                self.time_ms(child_pse.total_exec_time),
+            )
+        )
         self.total_exec_time += child_pse.total_exec_time
         self.last_entered_at = child_pse.left_at
 
@@ -82,10 +91,15 @@ class PerfNodeEntry[NodeType: HasId, CacheResultType: Any = Any]:
         own_time = self.left_at - self.last_entered_at
         self.own_exec_time += own_time
         self.total_exec_time += self.own_exec_time
-        self.debug('leave at %s (total %s, own %s, new own %s)' % (
-            self.time_ms(self.left_at), self.time_ms(self.total_exec_time),
-            self.time_ms(self.own_exec_time), self.time_ms(own_time),
-        ))
+        self.debug(
+            'leave at %s (total %s, own %s, new own %s)'
+            % (
+                self.time_ms(self.left_at),
+                self.time_ms(self.total_exec_time),
+                self.time_ms(self.own_exec_time),
+                self.time_ms(own_time),
+            )
+        )
         if self.parent is not None:
             self.parent.return_from_child(self)
 
@@ -145,8 +159,10 @@ class PerfRunContext[NodeType: HasId, CacheResultType: Any = Any]:
                 ]
             else:
                 cache_cols = []
+
             def format_num(num: float) -> Text:
                 return Text('%.2f' % num, style='italic')
+
             table.add_row(
                 '%s%s' % ('  ' * depth, node_id),
                 Text('  ' * depth) + format_num(total_exec),
@@ -190,11 +206,15 @@ class PerfContext[NodeType: HasId, CacheResultType: Any = Any](contextlib.Abstra
         return run_ctx
 
     def __exit__(
-        self, __exc_type: type[BaseException] | None, __exc_value: BaseException | None, __traceback: TracebackType | None  # noqa: PYI063
+        self,
+        __exc_type: type[BaseException] | None,
+        __exc_value: BaseException | None,
+        __traceback: TracebackType | None,
+        /
     ) -> bool | None:
         run = self.run
         if run is None:
-            raise Exception("Exiting context with no previous run active")
+            raise Exception('Exiting context with no previous run active')
         run.end(__exc_type is not None)
         self.run = None
         return None

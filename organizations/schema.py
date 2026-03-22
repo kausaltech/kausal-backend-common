@@ -24,7 +24,6 @@ class OrganizationClassNode(DjangoNode):
         abstract = True
 
 
-
 class OrganizationNode(DjangoNode):
     ancestors = graphene.List('orgs.schema.OrganizationNode')
     descendants = graphene.List('orgs.schema.OrganizationNode')

@@ -22,13 +22,15 @@ class _ContextWrapper:
     def __init__(self, func: Callable[..., AbstractContextManager[Any]], args: tuple[Any, ...]) -> None: ...
     def __enter__(self) -> Any: ...
     def __exit__(
-        self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: Any | None,
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: Any | None,
     ) -> bool | None: ...
     def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]: ...
 
 def is_registered(model: type[models.Model] | models.Model) -> bool: ...
 def get_registered_models() -> Iterable[type[models.Model]]: ...
-
 @overload
 def register[M: type[models.Model]](
     model: None = None,
@@ -40,7 +42,6 @@ def register[M: type[models.Model]](
     ignore_duplicates: bool = False,
     use_natural_foreign_keys: bool = False,
 ) -> Callable[[M], M]: ...
-
 @overload
 def register[M: type[models.Model]](
     model: M,
@@ -52,6 +53,4 @@ def register[M: type[models.Model]](
     ignore_duplicates: bool = False,
     use_natural_foreign_keys: bool = False,
 ) -> M: ...
-
-
 def unregister(model: type[models.Model]) -> None: ...

@@ -23,6 +23,7 @@ IGNORE_PATHS = [
     '/o/token/',
 ]
 
+
 class LogUnsafeRequestMiddleware(MiddlewareMixin):
     def process_request(self, request: HttpRequest):
         if not self._should_process(request):

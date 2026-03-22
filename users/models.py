@@ -119,7 +119,6 @@ class BaseUser(AbstractUser):
     def perms(self) -> UserPermissionCache:
         from kausal_common.models.roles import UserPermissionCache
 
-
         return UserPermissionCache(cast('User', self))
 
     @overload

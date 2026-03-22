@@ -13,9 +13,12 @@ if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from actions.deferred_ops import DeferredDatabaseOperationsMixin
+
     class ModelSerializerMixinBase[M: Model](serializers.ModelSerializer[M]):
         pass
+
 else:
+
     class ModelSerializerMixinBase[M: Model]: ...
 
 
@@ -52,11 +55,11 @@ class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
             obj_id = item.get(id_attr)
             if obj_id:
                 if qs is None:
-                    errors.append({id_attr: "Must not set attribute"})
+                    errors.append({id_attr: 'Must not set attribute'})
                     continue
                 obj_ids.add(obj_id)
             elif qs is not None:
-                errors.append({id_attr: "Attribute missing"})
+                errors.append({id_attr: 'Attribute missing'})
                 continue
         if any(errors):
             raise ValidationError(errors)
@@ -81,10 +84,10 @@ class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
                 obj_id = item[id_attr]
                 self.obj_ids.append(obj_id)
                 if obj_id not in objs_by_id:
-                    errors.append({id_attr: "Unable to find object"})
+                    errors.append({id_attr: 'Unable to find object'})
                     continue
                 if obj_id in seen_ids:
-                    errors.append({id_attr: "Duplicate value"})
+                    errors.append({id_attr: 'Duplicate value'})
                     continue
                 seen_ids.add(obj_id)
                 errors.append({})  # no error for this item
@@ -139,9 +142,11 @@ class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
         grouped_by_operation_and_model: dict[str, dict[type[M], list[tuple[M, list[str]]]]] = {}
         for operation, obj, *rest in ops:
             grouped_by_operation_and_model.setdefault(
-                operation, {},
+                operation,
+                {},
             ).setdefault(
-                type(obj), [],
+                type(obj),
+                [],
             ).append(
                 tuple([obj] + rest),
             )
@@ -213,7 +218,9 @@ class BulkModelViewSet[M: Model](viewsets.ModelViewSet[M]):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return response.Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers,
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers,
         )
 
     def bulk_update(self, request, *args, **kwargs):

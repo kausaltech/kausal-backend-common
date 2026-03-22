@@ -41,7 +41,7 @@ def get_or_error[M: Model](
         qs = model_or_queryset
     else:
         qs = model_or_queryset._default_manager.all()
-        assert id is not None or kwargs, "Either id or kwargs must be provided"
+        assert id is not None or kwargs, 'Either id or kwargs must be provided'
 
     if isinstance(qs, PermissionedQuerySet):
         assert issubclass(qs.model, PermissionedModel)
@@ -56,7 +56,7 @@ def get_or_error[M: Model](
     try:
         obj = qs.get()
     except ObjectDoesNotExist as error:
-        msg = f"{qs.model._meta.verbose_name} not found"
+        msg = f'{qs.model._meta.verbose_name} not found'
         if field_name:
             raise ValidationError({field_name: msg}) from error
         raise NotFoundError(info, msg, original_error=error) from error

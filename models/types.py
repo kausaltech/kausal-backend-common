@@ -35,8 +35,8 @@ if TYPE_CHECKING:
 
 type NullableModel[M: Model] = M | None
 
-_To = TypeVar("_To", bound=Model)
-_Through = TypeVar("_Through", default=Any)
+_To = TypeVar('_To', bound=Model)
+_Through = TypeVar('_Through', default=Any)
 
 #
 # Type annotation helpers for foreign relationships
@@ -46,6 +46,7 @@ _Through = TypeVar("_Through", default=Any)
 type FK[To: Model | None] = ForeignKey[To, To]
 
 if TYPE_CHECKING:
+
     @type_check_only
     class RelatedManagerQS[To: Model, QS: QuerySet[Any]](RelatedManager[To]):  # pyright: ignore[reportGeneralTypeIssues]
         def get_queryset(self) -> QS: ...
@@ -87,8 +88,8 @@ type RevOne[From: Model, To: Model] = ReverseOneToOneDescriptor[From, To]
 M2M: TypeAlias = ManyToManyField[_To, _Through]  # pyright: ignore
 
 
-_M = TypeVar("_M", bound=Model, covariant=True)  # noqa: PLC0105
-_QS = TypeVar("_QS", bound=QuerySet[Model, Model], default=QuerySet[_M, _M], covariant=True)  # noqa: PLC0105
+_M = TypeVar('_M', bound=Model, covariant=True)  # noqa: PLC0105
+_QS = TypeVar('_QS', bound=QuerySet[Model, Model], default=QuerySet[_M, _M], covariant=True)  # noqa: PLC0105
 
 
 class ModelManager(Manager[_M], Generic[_M, _QS]):
@@ -113,7 +114,9 @@ class ModelManager(Manager[_M], Generic[_M, _QS]):
     """
 
     if TYPE_CHECKING:
+
         def get_queryset(self) -> _QS: ...  # type: ignore[override]
+
         """Returns a correctly typed QuerySet"""
 
     @classmethod
@@ -124,13 +127,13 @@ class ModelManager(Manager[_M], Generic[_M, _QS]):
             if qs_name.endswith('QuerySet'):
                 class_name = '%sManager' % qs_name.removesuffix('QuerySet')
             else:
-                class_name = "%sFrom%s" % (cls.__name__, queryset_class.__name__)
+                class_name = '%sFrom%s' % (cls.__name__, queryset_class.__name__)
 
         mgr_class = type(
             class_name,
             (cls,),
             {
-                "_queryset_class": queryset_class,
+                '_queryset_class': queryset_class,
                 **cls._get_queryset_methods(queryset_class),
             },
         )
@@ -142,7 +145,8 @@ class ModelManager(Manager[_M], Generic[_M, _QS]):
         return self.get_queryset()
 
 
-_MLQS = TypeVar("_MLQS", bound=MultilingualQuerySet[Any], default=MultilingualQuerySet[_M])
+_MLQS = TypeVar('_MLQS', bound=MultilingualQuerySet[Any], default=MultilingualQuerySet[_M])
+
 
 class MLModelManager(MultilingualManager[_M], ModelManager[_M, _MLQS]):
     """
@@ -152,20 +156,25 @@ class MLModelManager(MultilingualManager[_M], ModelManager[_M, _MLQS]):
     """
 
     if TYPE_CHECKING:
+
         @classmethod
         def from_queryset(cls, queryset_class: type[_MLQS], class_name: str | None = None) -> type[MLModelManager[_M, _MLQS]]: ...  # type: ignore[override]
         def get_queryset(self) -> _MLQS: ...  # type: ignore[override]
 
+
 _PageT = TypeVar('_PageT', bound=Page, covariant=True)  # noqa: PLC0105
 _PageQS = TypeVar('_PageQS', bound=PageQuerySet[Any], default=PageQuerySet[_PageT], covariant=True)  # noqa: PLC0105
 
+
 class PageModelManager(ModelManager[_PageT, _PageQS], PageManager[_PageT]):  # pyright: ignore
     if TYPE_CHECKING:
+
         def get_queryset(self) -> _PageQS: ...
 
 
 def manager_from_qs[M: Model, QS: QuerySet[Any] = QuerySet[M, M]](qs: type[QS]) -> ModelManager[M, QS]:
     return ModelManager[M, QS].from_queryset(qs)()
+
 
 def manager_from_mlqs[M: Model, MLQS: MultilingualQuerySet[Any]](qs: type[MLQS]) -> MLModelManager[M, MLQS]:
     return MLModelManager[M, MLQS].from_queryset(qs)()
@@ -179,13 +188,16 @@ if TYPE_CHECKING:
     class copy_signature(Generic[_F]):  # noqa: N801
         def __init__(self, target: _F) -> None: ...
         def __call__(self, wrapped: Callable[..., Any]) -> _F: ...
+
 else:
+
     def copy_signature(_):
         return lambda x: x
 
 
 type GetDisplayMethod = Callable[[], str]
 type QS[M: Model] = QuerySet[M, M]
+
 
 class AbstractModelMeta(ABCMeta, ModelBase):
     pass

@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 
 logger = logger.bind(name='graphql', markup=True)
 
+
 @dataclasses.dataclass
 class GraphQLPerfNode:
     id: str
@@ -98,6 +99,7 @@ class SchemaExtension[Ctx: GraphQLContext](StrawberrySchemaExtension):
 
     def get_schema(self) -> Schema:
         from .schema import Schema
+
         assert isinstance(self.execution_context.schema, Schema)
         return self.execution_context.schema
 
@@ -179,8 +181,9 @@ class LoggingTracingExtension(SchemaExtension[GraphQLContext]):
         if env_bool('LOG_GRAPHQL_QUERIES', default=False) and query:
             from rich.console import Console
             from rich.syntax import Syntax
+
             console = Console()
-            syntax = Syntax(code=query, lexer="graphql")
+            syntax = Syntax(code=query, lexer='graphql')
             console.print(syntax)
             console.print('Variables:')
             console.print(json.dumps(self.execution_context.variables, indent=2))

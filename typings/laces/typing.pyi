@@ -11,17 +11,13 @@ from django.utils.safestring import SafeString
 type RenderContext = Context | dict[str, Any]
 
 class HasRenderHtmlMethod(Protocol):
-    def render_html(self, parent_context: RenderContext | None) -> SafeString:
-        ...
-
+    def render_html(self, parent_context: RenderContext | None) -> SafeString: ...
 
 class HasRenderMethod(Protocol):
-    def render(self) -> SafeString:
-        ...
+    def render(self) -> SafeString: ...
 
 type Renderable = HasRenderHtmlMethod | HasRenderMethod
 
 class HasMediaProperty(Protocol):
     @property
-    def media(self) -> Media:
-        ...
+    def media(self) -> Media: ...

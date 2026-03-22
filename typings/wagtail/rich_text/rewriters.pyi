@@ -12,6 +12,7 @@ Utility classes for rewriting elements of HTML-like strings
 FIND_A_TAG = ...
 FIND_EMBED_TAG = ...
 FIND_ATTRS = ...
+
 def extract_attrs(attr_string: str) -> dict:
     """
     helper method to extract tag attributes, as a dict of un-escaped strings
@@ -20,30 +21,18 @@ def extract_attrs(attr_string: str) -> dict:
 
 class TagMatch:
     """Represents a single matched tag in a rich text string"""
-    def __init__(self, match) -> None:
-        ...
-
+    def __init__(self, match) -> None: ...
     @cached_property
-    def attrs(self): # -> dict[Any, Any]:
+    def attrs(self):  # -> dict[Any, Any]:
         ...
-
     @property
-    def start(self):
-        ...
-
+    def start(self): ...
     @property
-    def end(self):
-        ...
-
-
+    def end(self): ...
 
 class TagRewriter:
-    def __init__(self, rules=..., bulk_rules=..., reference_extractors=...) -> None:
-        ...
-
-    def get_opening_tag_regex(self):
-        ...
-
+    def __init__(self, rules=..., bulk_rules=..., reference_extractors=...) -> None: ...
+    def get_opening_tag_regex(self): ...
     def get_tag_type_from_attrs(self, attrs):
         """Given a dict of attributes from a tag, return the tag type."""
         ...
@@ -56,9 +45,7 @@ class TagRewriter:
         """
         ...
 
-    def __call__(self, html: str) -> str:
-        ...
-
+    def __call__(self, html: str) -> str: ...
     def extract_tags(self, html: str) -> dict[str, list[TagMatch]]:
         """Helper method to extract and group HTML tags and their attributes.
 
@@ -66,13 +53,9 @@ class TagRewriter:
         """
         ...
 
-    def convert_rule_to_bulk_rule(self, rule: Callable) -> Callable:
+    def convert_rule_to_bulk_rule(self, rule: Callable) -> Callable: ...
+    def extract_references(self, html):  # -> Generator[Any, Any, list[Any]]:
         ...
-
-    def extract_references(self, html): # -> Generator[Any, Any, list[Any]]:
-        ...
-
-
 
 class EmbedRewriter(TagRewriter):
     """
@@ -80,16 +63,11 @@ class EmbedRewriter(TagRewriter):
     fragment given by the embed rule for 'foo'. Each embed rule is a function
     that takes a dict of attributes and returns the HTML fragment.
     """
-    def get_opening_tag_regex(self): # -> Pattern[str]:
+    def get_opening_tag_regex(self):  # -> Pattern[str]:
         ...
-
-    def get_tag_type_from_attrs(self, attrs):
+    def get_tag_type_from_attrs(self, attrs): ...
+    def get_tag_replacements(self, tag_type, attrs_list):  # -> list[str]:
         ...
-
-    def get_tag_replacements(self, tag_type, attrs_list): # -> list[str]:
-        ...
-
-
 
 class LinkRewriter(TagRewriter):
     """
@@ -97,27 +75,16 @@ class LinkRewriter(TagRewriter):
     given by the rule for 'foo'. Each link rule is a function that takes a dict
     of attributes and returns the HTML fragment for the opening tag (only).
     """
-    def get_opening_tag_regex(self): # -> Pattern[str]:
+    def get_opening_tag_regex(self):  # -> Pattern[str]:
         ...
-
-    def get_tag_type_from_attrs(self, attrs): # -> Literal['external', 'email', 'anchor'] | None:
+    def get_tag_type_from_attrs(self, attrs):  # -> Literal['external', 'email', 'anchor'] | None:
         ...
-
-    def get_tag_replacements(self, tag_type, attrs_list): # -> list[Any] | list[str]:
+    def get_tag_replacements(self, tag_type, attrs_list):  # -> list[Any] | list[str]:
         ...
-
-
 
 class MultiRuleRewriter:
     """Rewrites HTML by applying a sequence of rewriter functions"""
-    def __init__(self, rewriters) -> None:
+    def __init__(self, rewriters) -> None: ...
+    def __call__(self, html): ...
+    def extract_references(self, html):  # -> Generator[Any, Any, None]:
         ...
-
-    def __call__(self, html):
-        ...
-
-    def extract_references(self, html): # -> Generator[Any, Any, None]:
-        ...
-
-
-

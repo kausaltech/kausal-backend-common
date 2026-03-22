@@ -116,23 +116,39 @@ class ModelPermissionPolicy[
 
     @overload
     def gql_action_allowed(
-        self, info: GQLInfo, action: Literal['add'], obj: None = ..., context: CreateContext = ...,
+        self,
+        info: GQLInfo,
+        action: Literal['add'],
+        obj: None = ...,
+        context: CreateContext = ...,
     ) -> bool: ...
 
     @overload
     def gql_action_allowed(
-        self, info: GQLInfo, action: ObjectSpecificAction, obj: M = ..., context: None = ...,
+        self,
+        info: GQLInfo,
+        action: ObjectSpecificAction,
+        obj: M = ...,
+        context: None = ...,
     ) -> bool: ...
 
     def gql_action_allowed(
-        self, info: GQLInfo, action: BaseObjectAction, obj: M | None = None, context: CreateContext | None = None,
+        self,
+        info: GQLInfo,
+        action: BaseObjectAction,
+        obj: M | None = None,
+        context: CreateContext | None = None,
     ) -> bool:
         user = info.context.user
         if action == 'add':
             if not self.is_create_context_valid(context):
-                raise TypeError("Invalid create context type for %s: %s" % (
-                    type(self), context,
-                ))
+                raise TypeError(
+                    'Invalid create context type for %s: %s'
+                    % (
+                        type(self),
+                        context,
+                    )
+                )
             if not self.user_is_authenticated(user):
                 return self.anon_can_create(context)
             return self.user_can_create(user, context)
@@ -172,7 +188,7 @@ class ModelPermissionPolicy[
         filters = None
         for action in actions:
             if not is_base_action(action):
-                logger.error("Unknown action: %s" % action)
+                logger.error('Unknown action: %s' % action)
                 return qs.none()
             q = self._construct_q(user, action)
             if q is None:
@@ -187,7 +203,7 @@ class ModelPermissionPolicy[
 
     def user_has_permission_for_instance(self, user: UserOrAnon, action: str, instance: M) -> bool:
         if not is_base_action(action):
-            logger.error("Unknown action: %s" % action)
+            logger.error('Unknown action: %s' % action)
             return False
         if not self.user_is_authenticated(user):
             return self.anon_has_perm(action, instance)

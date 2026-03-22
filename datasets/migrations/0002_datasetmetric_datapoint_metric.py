@@ -14,12 +14,7 @@ def create_default_metrics(apps, schema_editor):
     # Create a default metric for each schema
     for schema in DatasetSchema.objects.all():
         # Create default metric using schema's unit
-        default_metric = DatasetMetric.objects.create(
-            schema=schema,
-            label='Default',
-            unit=schema.unit,
-            order=0
-        )
+        default_metric = DatasetMetric.objects.create(schema=schema, label='Default', unit=schema.unit, order=0)
 
         # Update all datapoints for this schema to use the default metric
         for dataset in schema.datasets.all():
@@ -32,7 +27,6 @@ def remove_default_metrics(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('datasets', '0001_initial'),
     ]
@@ -46,8 +40,16 @@ class Migration(migrations.Migration):
                 ('label', models.CharField(max_length=100, verbose_name='label')),
                 ('uuid', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
                 ('unit', models.CharField(blank=True, max_length=50, verbose_name='unit')),
-                ('i18n', modeltrans.fields.TranslationField(fields=('label', 'unit'), required_languages=(), virtual_fields=True)),
-                ('schema', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='metrics', to='datasets.datasetschema')),
+                (
+                    'i18n',
+                    modeltrans.fields.TranslationField(fields=('label', 'unit'), required_languages=(), virtual_fields=True),
+                ),
+                (
+                    'schema',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name='metrics', to='datasets.datasetschema'
+                    ),
+                ),
             ],
             options={
                 'ordering': ('order',),
@@ -57,7 +59,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='datapoint',
             name='metric',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, related_name='data_points', to='datasets.datasetmetric', verbose_name='metric'),
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name='data_points',
+                to='datasets.datasetmetric',
+                verbose_name='metric',
+            ),
         ),
         # Run data migration to create default metrics and update datapoints
         migrations.RunPython(
@@ -68,6 +76,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='datapoint',
             name='metric',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='data_points', to='datasets.datasetmetric', verbose_name='metric'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name='data_points',
+                to='datasets.datasetmetric',
+                verbose_name='metric',
+            ),
         ),
     ]

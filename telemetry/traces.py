@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.trace import Span
 
+
 def _should_init_otel() -> bool:
     return bool(os.getenv('OTEL_EXPORTER_OTLP_TRACES_ENDPOINT'))
 
@@ -67,8 +68,6 @@ def _init_oltp_otel() -> None:
 
     # Sets the global default tracer provider
     trace.set_tracer_provider(provider)
-
-
 
 
 def redis_request_hook(span: Span, instance, args: list[Any], kwargs: dict[str, Any]):

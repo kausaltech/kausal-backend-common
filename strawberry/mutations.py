@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from strawberry.types.field import StrawberryField
     from strawberry_django.mutations.fields import DjangoMutationBase
 
+
 class MutationExtension(FieldExtension):
     def __init__(self):
         super().__init__()
@@ -70,6 +71,7 @@ type ResolverFunc = StrawberryResolver[Any] | Callable[..., Any] | staticmethod[
 
 @overload
 def mutation(*, extensions: list[FieldExtension] | None = None, **kwargs: Unpack[MutationArgs]) -> DjangoMutationBase: ...
+
 
 @overload
 def mutation(resolver: ResolverFunc, **kwargs: Unpack[MutationArgs]) -> DjangoMutationBase: ...

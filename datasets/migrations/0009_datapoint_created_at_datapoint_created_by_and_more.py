@@ -9,7 +9,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('datasets', '0008_dimensioncategory_identifier_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
@@ -25,7 +24,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='datapoint',
             name='created_by',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by'),
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='+',
+                to=settings.AUTH_USER_MODEL,
+                verbose_name='Last modified by',
+            ),
         ),
         migrations.AddField(
             model_name='datapoint',
@@ -35,7 +41,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='datapoint',
             name='last_modified_by',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by'),
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='+',
+                to=settings.AUTH_USER_MODEL,
+                verbose_name='Last modified by',
+            ),
         ),
         migrations.AddField(
             model_name='dataset',
@@ -46,7 +59,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dataset',
             name='created_by',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by'),
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='+',
+                to=settings.AUTH_USER_MODEL,
+                verbose_name='Last modified by',
+            ),
         ),
         migrations.AddField(
             model_name='dataset',
@@ -56,7 +76,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dataset',
             name='last_modified_by',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by'),
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='+',
+                to=settings.AUTH_USER_MODEL,
+                verbose_name='Last modified by',
+            ),
         ),
         migrations.AddField(
             model_name='datasetmetric',
@@ -77,7 +104,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dimension',
             name='created_by',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by'),
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='+',
+                to=settings.AUTH_USER_MODEL,
+                verbose_name='Last modified by',
+            ),
         ),
         migrations.AddField(
             model_name='dimension',
@@ -87,7 +121,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dimension',
             name='last_modified_by',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by'),
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='+',
+                to=settings.AUTH_USER_MODEL,
+                verbose_name='Last modified by',
+            ),
         ),
         migrations.AddField(
             model_name='dimensioncategory',
@@ -98,7 +139,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dimensioncategory',
             name='created_by',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by'),
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='+',
+                to=settings.AUTH_USER_MODEL,
+                verbose_name='Last modified by',
+            ),
         ),
         migrations.AddField(
             model_name='dimensioncategory',
@@ -108,36 +156,60 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dimensioncategory',
             name='last_modified_by',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by'),
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='+',
+                to=settings.AUTH_USER_MODEL,
+                verbose_name='Last modified by',
+            ),
         ),
         migrations.AlterField(
             model_name='datapoint',
             name='uuid',
-            field=models.UUIDField(db_default=django.contrib.postgres.functions.RandomUUID(), editable=False, unique=True, verbose_name='UUID'),
+            field=models.UUIDField(
+                db_default=django.contrib.postgres.functions.RandomUUID(), editable=False, unique=True, verbose_name='UUID'
+            ),
         ),
         migrations.AlterField(
             model_name='dataset',
             name='uuid',
-            field=models.UUIDField(db_default=django.contrib.postgres.functions.RandomUUID(), editable=False, unique=True, verbose_name='UUID'),
+            field=models.UUIDField(
+                db_default=django.contrib.postgres.functions.RandomUUID(), editable=False, unique=True, verbose_name='UUID'
+            ),
         ),
         migrations.AlterField(
             model_name='datasetmetric',
             name='uuid',
-            field=models.UUIDField(db_default=django.contrib.postgres.functions.RandomUUID(), editable=False, unique=True, verbose_name='UUID'),
+            field=models.UUIDField(
+                db_default=django.contrib.postgres.functions.RandomUUID(), editable=False, unique=True, verbose_name='UUID'
+            ),
         ),
         migrations.AlterField(
             model_name='dimension',
             name='uuid',
-            field=models.UUIDField(db_default=django.contrib.postgres.functions.RandomUUID(), editable=False, unique=True, verbose_name='UUID'),
+            field=models.UUIDField(
+                db_default=django.contrib.postgres.functions.RandomUUID(), editable=False, unique=True, verbose_name='UUID'
+            ),
         ),
         migrations.AlterField(
             model_name='dimensioncategory',
             name='identifier',
-            field=kausal_common.models.fields.IdentifierField(blank=True, help_text='Optional identifier that, if set, must be unique within the dimension', max_length=50, null=True, validators=[kausal_common.models.fields.IdentifierValidator()], verbose_name='identifier'),
+            field=kausal_common.models.fields.IdentifierField(
+                blank=True,
+                help_text='Optional identifier that, if set, must be unique within the dimension',
+                max_length=50,
+                null=True,
+                validators=[kausal_common.models.fields.IdentifierValidator()],
+                verbose_name='identifier',
+            ),
         ),
         migrations.AlterField(
             model_name='dimensioncategory',
             name='uuid',
-            field=models.UUIDField(db_default=django.contrib.postgres.functions.RandomUUID(), editable=False, unique=True, verbose_name='UUID'),
+            field=models.UUIDField(
+                db_default=django.contrib.postgres.functions.RandomUUID(), editable=False, unique=True, verbose_name='UUID'
+            ),
         ),
     ]

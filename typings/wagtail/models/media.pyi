@@ -33,7 +33,6 @@ class CollectionViewRestriction(BaseViewRestriction):
         verbose_name: ClassVar[StrPromise]
         verbose_name_plural: ClassVar[StrPromise]
 
-
 class Collection(MP_Node[CollectionQuerySet]):
     """
     A location in which resources such as images and documents can be grouped
@@ -51,7 +50,7 @@ class Collection(MP_Node[CollectionQuerySet]):
     def get_view_restrictions(self):
         """Return a query set of all collection view restrictions that apply to this collection"""
     def get_indented_name(self, indentation_start_depth: int = 2, html: bool = False):
-        '''
+        """
         Renders this Collection\'s name as a formatted string that displays its hierarchical depth via indentation.
         If indentation_start_depth is supplied, the Collection\'s depth is rendered relative to that depth.
         indentation_start_depth defaults to 2, the depth of the first non-Root Collection.
@@ -59,7 +58,7 @@ class Collection(MP_Node[CollectionQuerySet]):
 
         Example text output: "    ↳ Pies"
         Example HTML output: "&nbsp;&nbsp;&nbsp;&nbsp;&#x21b3 Pies"
-        '''
+        """
     class Meta:
         verbose_name: ClassVar[StrPromise]
         verbose_name_plural: ClassVar[StrPromise]
@@ -70,26 +69,26 @@ class CollectionMember(models.Model):
     """
     Base class for models that are categorised into collections
     """
+
     collection: ForeignKey[Collection, Collection]
     search_fields: Sequence[index.BaseField]
-
 
 class GroupCollectionPermissionManager(models.Manager[GroupCollectionPermission]):
     def get_by_natural_key(self, group, collection, permission): ...
 
-
 class GroupCollectionPermission(models.Model):
-    '''
+    """
     A rule indicating that a group has permission for some action (e.g. "create document")
     within a specified collection.
-    '''
+    """
+
     group: Incomplete
     collection: Incomplete
     permission: Incomplete
     objects: Incomplete
     class Meta: ...
-    def natural_key(self): ...
 
+    def natural_key(self): ...
 
 class UploadedFile(models.Model):
     """
@@ -98,6 +97,7 @@ class UploadedFile(models.Model):
     In this case, the file is stored against this model, to be turned into an Image/Document object once the full form
     has been filled in.
     """
+
     for_content_type: Incomplete
     file: Incomplete
     uploaded_by_user: Incomplete

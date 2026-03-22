@@ -18,6 +18,7 @@ class ReferenceGroups:
         and references is a list of references that occur in the QuerySet from
         that source object.
     """
+
     qs: Incomplete
     def __init__(self, qs) -> None: ...
     def __iter__(self): ...
@@ -48,6 +49,7 @@ class ReferenceIndex(models.Model):
     References are extracted from Foreign Keys, Chooser Blocks in StreamFields, and links in Rich Text Fields.
     This index allows us to efficiently find all of the references to a particular object from all of these sources.
     """
+
     content_type: Incomplete
     base_content_type: Incomplete
     object_id: Incomplete

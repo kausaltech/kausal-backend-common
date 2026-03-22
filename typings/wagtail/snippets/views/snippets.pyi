@@ -19,7 +19,6 @@ from laces.typing import Renderable
 
 def get_snippet_model_from_url_params(app_name: str, model_name: str) -> type[Model]: ...
 
-
 class SnippetType(TypedDict):
     name: str
     count: int
@@ -58,9 +57,7 @@ class EditView[M: Model, FormT: BaseModelForm[Any] = WagtailAdminModelForm[Model
     def get_side_panels(self) -> Any: ...
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]: ...
 
-class DeleteView[M: Model, FormT: BaseModelForm[Any] = WagtailAdminModelForm[Model]](
-    generic.DeleteView[M, FormT]
-):
+class DeleteView[M: Model, FormT: BaseModelForm[Any] = WagtailAdminModelForm[Model]](generic.DeleteView[M, FormT]):
     view_name: ClassVar[str]
     def run_before_hook(self) -> HttpResponse | None: ...
     def run_after_hook(self) -> HttpResponse | None: ...

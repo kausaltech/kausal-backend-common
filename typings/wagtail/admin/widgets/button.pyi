@@ -33,9 +33,7 @@ class BaseButton(Component):
         attrs: dict[str, Any] | None = None,
         priority: int = 1000,
     ) -> None: ...
-
     def get_context_data(self, parent_context: dict[str, Any]) -> dict[str, Any]: ...  # type: ignore[override]
-
     @property
     def base_attrs_string(self): ...
     @property
@@ -45,14 +43,11 @@ class BaseButton(Component):
     def __gt__(self, other: BaseButton | MenuItem): ...
     def __ge__(self, other: BaseButton | MenuItem): ...
     def __eq__(self, other: object): ...
-
     @classmethod
     def from_menu_item(cls, menu_item: MenuItem) -> Self: ...
 
-
 class Button(BaseButton):
     allow_in_dropdown: bool = True
-
 
 class HeaderButton(BaseButton):
     """An icon-only button to be displayed after the breadcrumbs in the header."""
@@ -66,7 +61,6 @@ class HeaderButton(BaseButton):
         icon_only: bool = False,
         **kwargs,
     ) -> None: ...
-
 
 class ListingButton(Button):
     def __init__(self, label: StrOrPromise = '', url: str | None = None, classname: str = '', **kwargs) -> None: ...

@@ -6,95 +6,94 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ("contenttypes", "0002_remove_content_type_name"),
-        ("datasets", "0005_datasetschemadimension_and_more"),
+        ('contenttypes', '0002_remove_content_type_name'),
+        ('datasets', '0005_datasetschemadimension_and_more'),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="DatasetSchemaMetric",
+            name='DatasetSchemaMetric',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name='ID',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "dataset schema metrics",
-                "verbose_name_plural": "dataset schema metrics",
+                'verbose_name': 'dataset schema metrics',
+                'verbose_name_plural': 'dataset schema metrics',
             },
         ),
         migrations.AlterModelOptions(
-            name="datasetmetric",
+            name='datasetmetric',
             options={},
         ),
         migrations.RemoveField(
-            model_name="datasetmetric",
-            name="order",
+            model_name='datasetmetric',
+            name='order',
         ),
         migrations.RemoveField(
-            model_name="datasetmetric",
-            name="schema",
+            model_name='datasetmetric',
+            name='schema',
         ),
         migrations.AddField(
-            model_name="dataset",
-            name="identifier",
+            model_name='dataset',
+            name='identifier',
             field=models.CharField(
                 blank=True,
                 help_text="Optional identifier that, if set, must be unique in the dataset's scope",
                 max_length=100,
                 null=True,
-                verbose_name="identifier",
+                verbose_name='identifier',
             ),
         ),
         migrations.AddField(
-            model_name="dimensionscope",
-            name="identifier",
+            model_name='dimensionscope',
+            name='identifier',
             field=models.CharField(
                 blank=True,
-                help_text="Optional identifier that, if set, must be unique in the scope",
+                help_text='Optional identifier that, if set, must be unique in the scope',
                 max_length=100,
                 null=True,
-                verbose_name="identifier",
+                verbose_name='identifier',
             ),
         ),
         migrations.AddConstraint(
-            model_name="dataset",
+            model_name='dataset',
             constraint=models.UniqueConstraint(
-                fields=("identifier", "scope_content_type", "scope_id"),
-                name="unique_identifier_per_dataset_scope",
+                fields=('identifier', 'scope_content_type', 'scope_id'),
+                name='unique_identifier_per_dataset_scope',
             ),
         ),
         migrations.AddConstraint(
-            model_name="dimensionscope",
+            model_name='dimensionscope',
             constraint=models.UniqueConstraint(
-                fields=("identifier", "scope_content_type", "scope_id"),
-                name="unique_identifier_per_dimension_scope",
+                fields=('identifier', 'scope_content_type', 'scope_id'),
+                name='unique_identifier_per_dimension_scope',
             ),
         ),
         migrations.AddField(
-            model_name="datasetschemametric",
-            name="metric",
+            model_name='datasetschemametric',
+            name='metric',
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="schemas",
-                to="datasets.datasetmetric",
+                related_name='schemas',
+                to='datasets.datasetmetric',
             ),
         ),
         migrations.AddField(
-            model_name="datasetschemametric",
-            name="schema",
+            model_name='datasetschemametric',
+            name='schema',
             field=modelcluster.fields.ParentalKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="metrics",
-                to="datasets.datasetschema",
+                related_name='metrics',
+                to='datasets.datasetschema',
             ),
         ),
     ]

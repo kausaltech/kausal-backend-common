@@ -25,6 +25,7 @@ class OrderedModel(models.Model):  # noqa: DJ008
     if TYPE_CHECKING:
         Meta: Any
     else:
+
         class Meta:
             abstract = True
 
@@ -47,7 +48,7 @@ class OrderedModel(models.Model):  # noqa: DJ008
     def check(cls, **kwargs) -> list[CheckMessage]:
         errors = super().check(**kwargs)
         if getattr(cls.filter_siblings, '__isabstractmethod__', False):
-            errors.append(checks.Warning("filter_siblings() not defined", hint="Implement filter_siblings() method", obj=cls))
+            errors.append(checks.Warning('filter_siblings() not defined', hint='Implement filter_siblings() method', obj=cls))
         return errors
 
     # Probably for compatibility with things that expect a `sort_order` field as in wagtailorderable.models.Orderable
@@ -57,7 +58,7 @@ class OrderedModel(models.Model):  # noqa: DJ008
 
     @abc.abstractmethod
     def filter_siblings(self, qs: models.QuerySet[Self]) -> models.QuerySet[Self]:
-        raise NotImplementedError("Implement in subclass")
+        raise NotImplementedError('Implement in subclass')
 
     def get_sort_order_max(self):
         """

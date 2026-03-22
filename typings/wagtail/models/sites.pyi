@@ -6,7 +6,7 @@ from django.db.models import BooleanField, CharField, ForeignKey, IntegerField, 
 from django.http import HttpRequest
 from wagtail.models import Page
 
-#from wagtail.models import Page
+# from wagtail.models import Page
 
 def get_site_for_hostname(hostname: str, port: int) -> Site:
     """Return the wagtailcore.Site object for the given hostname and port."""
@@ -14,7 +14,6 @@ def get_site_for_hostname(hostname: str, port: int) -> Site:
 class SiteManager(models.Manager[Site]):
     def get_queryset(self) -> QuerySet[Site]: ...
     def get_by_natural_key(self, hostname: str, port: int) -> Site: ...
-
 
 class SiteRootPath(NamedTuple):
     site_id: int

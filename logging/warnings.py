@@ -17,12 +17,12 @@ _warning_traceback_enabled = False
 
 IGNORE_WARNINGS = [
     "Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.",
-    "Defining `exclude_fields` is deprecated in favour of `exclude`.",
+    'Defining `exclude_fields` is deprecated in favour of `exclude`.',
 ]
 
 IGNORE_WARNINGS_STARTSWITH = [
-    "Creating a DjangoObjectType without either the `fields` or the `exclude` option is deprecated. Add an explicit ",
-    "pkg_resources is deprecated as an API",
+    'Creating a DjangoObjectType without either the `fields` or the `exclude` option is deprecated. Add an explicit ',
+    'pkg_resources is deprecated as an API',
     "'asyncio.iscoroutinefunction' is deprecated",
 ]
 

@@ -21,9 +21,8 @@ class HandleProtectedErrorMixin:
             raise ProtectedError(
                 detail={
                     'non_field_errors': _(
-                        'Cannot delete "%s" because it is connected to other objects '
-                        'such as instances, persons or actions.',
-                    ) % getattr(instance, 'name', str(instance)),
+                        'Cannot delete "%s" because it is connected to other objects such as instances, persons or actions.',
+                    )
+                    % getattr(instance, 'name', str(instance)),
                 },
             ) from err
-

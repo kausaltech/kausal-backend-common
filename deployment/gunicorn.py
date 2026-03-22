@@ -27,7 +27,7 @@ def pre_import():
     with contextlib.suppress(ImportError):
         from nodes.units import unit_registry  # type: ignore[import-not-found]  # noqa: F401
 
-    gunicorn_log.info("Additional imports completed")
+    gunicorn_log.info('Additional imports completed')
 
 
 def when_ready(server: Arbiter):

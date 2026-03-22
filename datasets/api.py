@@ -44,7 +44,7 @@ if typing.TYPE_CHECKING:
     from .models import DatasetMetricComputation
 
 router = DefaultRouter()
-all_routers: list[SimpleRouter]  = []
+all_routers: list[SimpleRouter] = []
 
 
 def get_item_with_deprecated_fallback(
@@ -54,14 +54,13 @@ def get_item_with_deprecated_fallback(
         return mapping[key]
     if deprecated_key in mapping:
         warnings.warn(
-            f"The key '{deprecated_key}' is deprecated and will be removed in a future version. "
-            f"Please use '{key}' instead.",
+            f"The key '{deprecated_key}' is deprecated and will be removed in a future version. Please use '{key}' instead.",
             DeprecationWarning,
             stacklevel=2,
         )
         return mapping[deprecated_key]
     if fail_if_not_exists:
-        raise KeyError(f"Found neither {key} nor deprecated {deprecated_key}")
+        raise KeyError(f'Found neither {key} nor deprecated {deprecated_key}')
     return default
 
 
@@ -101,6 +100,7 @@ class UuidSlugRelatedField[M: Model](serializers.SlugRelatedField[M]):
 
 class I18nFieldSerializerMixin:
     Meta: object
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         i18n_field = get_i18n_field(self.Meta.model)  # type: ignore[attr-defined]
@@ -111,14 +111,16 @@ class I18nFieldSerializerMixin:
                 # When reading, serialize the field using `<x>_i18n` to display the value in currently active language.
                 current_language_field = build_localized_fieldname(source_field, 'i18n')
                 self.fields[source_field] = serializers.CharField(  # type: ignore[attr-defined]
-                    source=current_language_field, read_only=True,
+                    source=current_language_field,
+                    read_only=True,
                 )
                 # Require language to be explicit when writing to a translatable field. That is, when writing, we expect
                 # that `<x>_en` is present, for example; `<x>` should not work.
                 for lang in get_available_languages():
                     translated_field = build_localized_fieldname(source_field, lang)
                     self.fields[translated_field] = serializers.CharField(  # type: ignore[attr-defined]
-                        write_only=True, required=False,
+                        write_only=True,
+                        required=False,
                     )
 
 
@@ -135,11 +137,10 @@ class DataPointSerializer(serializers.ModelSerializer[DataPoint]):
     dataset = UuidSlugRelatedField[Dataset](read_only=True)
     dimension_categories = UuidSlugRelatedField[DimensionCategory](
         # FIXME: Restrict queryset to dimension categories available to the dataset
-        many=True, queryset=DimensionCategory.objects.all(),
+        many=True,
+        queryset=DimensionCategory.objects.all(),
     )
-    metric = UuidSlugRelatedField[DatasetMetric](
-        many=False, queryset=DatasetMetric.objects.all()
-    )
+    metric = UuidSlugRelatedField[DatasetMetric](many=False, queryset=DatasetMetric.objects.all())
     value = serializers.DecimalField(max_digits=32, decimal_places=16, coerce_to_string=False, allow_null=True)
 
     class Meta:
@@ -184,7 +185,7 @@ class DataPointSerializer(serializers.ModelSerializer[DataPoint]):
             point_categories = set(dc.uuid for dc in point.dimension_categories.all())
             if point_categories == dimension_category_uuids:
                 raise serializers.ValidationError(
-                    "A data point with this date, dimension category, and metric combination already exists."
+                    'A data point with this date, dimension category, and metric combination already exists.'
                 )
 
         return data
@@ -213,9 +214,7 @@ class DataPointViewSet(BulkModelViewSet[DataPoint]):
     pagination_class = PageNumberPagination
     lookup_field = 'uuid'
     serializer_class = DataPointSerializer
-    permission_classes = (
-        permissions.DjangoModelPermissions,
-    )
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     def patch(self, request, *args, **kwargs):
         return self.partial_bulk_update(request, *args, **kwargs)
@@ -291,9 +290,7 @@ class DatasetMetricViewSet(viewsets.ReadOnlyModelViewSet[DatasetMetric]):
     queryset = DatasetMetric.objects.all()
     lookup_field = 'uuid'
     serializer_class = DatasetMetricSerializer
-    permission_classes = (
-        permissions.DjangoModelPermissions,
-    )
+    permission_classes = (permissions.DjangoModelPermissions,)
 
 
 class DimensionSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer[Dimension]):
@@ -315,7 +312,8 @@ class DatasetSchemaDimensionSerializer(serializers.ModelSerializer[DatasetSchema
 
 class DatasetSchemaSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer[DatasetSchema]):
     dimensions = DatasetSchemaDimensionSerializer(
-        many=True, required=False,
+        many=True,
+        required=False,
     )
     metrics = DatasetMetricSerializer(many=True, required=False, read_only=True)
 
@@ -327,17 +325,20 @@ class DatasetSchemaSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
 class DatasetSchemaViewSet(viewsets.ModelViewSet[DatasetSchema]):
     lookup_field = 'uuid'
     serializer_class = DatasetSchemaSerializer
-    permission_classes = (
-        permissions.DjangoModelPermissions,
-    )
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     def get_queryset(self):
         # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
         # TODO: check that we don't allow editing instances for which we only have view permissions
         user = user_or_anon(self.request.user)
-        return DatasetSchema.permission_policy().instances_user_has_permission_for(user, 'view').prefetch_related(
-            'metrics__computed_by__operand_a',
-            'metrics__computed_by__operand_b',
+        return (
+            DatasetSchema
+            .permission_policy()
+            .instances_user_has_permission_for(user, 'view')
+            .prefetch_related(
+                'metrics__computed_by__operand_a',
+                'metrics__computed_by__operand_b',
+            )
         )
 
     def destroy(self, request, *args, **kwargs):
@@ -385,9 +386,7 @@ class ComputedDataPointSerializer(serializers.Serializer):
 class DatasetViewSet(viewsets.ModelViewSet[Dataset]):
     lookup_field = 'uuid'
     serializer_class = DatasetSerializer
-    permission_classes = (
-        permissions.DjangoModelPermissions,
-    )
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     def get_queryset(self):
         # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
@@ -409,17 +408,13 @@ class DimensionViewSet(viewsets.ModelViewSet):
     queryset = Dimension.objects.all()
     lookup_field = 'uuid'
     serializer_class = DimensionSerializer
-    permission_classes = (
-        permissions.DjangoModelPermissions,
-    )
+    permission_classes = (permissions.DjangoModelPermissions,)
 
 
 class DimensionCategoryViewSet(viewsets.ModelViewSet):
     lookup_field = 'uuid'
     serializer_class = DimensionCategorySerializer
-    permission_classes = (
-        permissions.DjangoModelPermissions,
-    )
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     def get_queryset(self):
         return DimensionCategory.objects.filter(dimension__uuid=self.kwargs['dimension_uuid'])
@@ -429,11 +424,13 @@ class DimensionCategoryViewSet(viewsets.ModelViewSet):
         dimension = Dimension.objects.get(uuid=dimension_uuid)
         serializer.save(dimension=dimension)
 
-class UserSerializer(serializers.Serializer):
-     full_name = serializers.SerializerMethodField()
 
-     def get_full_name(self, instance):
-         return instance.get_full_name()
+class UserSerializer(serializers.Serializer):
+    full_name = serializers.SerializerMethodField()
+
+    def get_full_name(self, instance):
+        return instance.get_full_name()
+
 
 class DataPointCommentSerializer(serializers.ModelSerializer):
     data_point: UuidSlugRelatedField[DataPoint] = UuidSlugRelatedField(read_only=True)  # pyright: ignore
@@ -443,18 +440,36 @@ class DataPointCommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataPointComment
-        fields = ['uuid', 'data_point', 'text', 'is_sticky', 'is_review', 'review_state', 'resolved_at', 'resolved_by',
-                 'created_at', 'created_by', 'last_modified_at', 'last_modified_by']
-        read_only_fields = ['uuid', 'resolved_at', 'resolved_by', 'created_at', 'created_by',
-                           'last_modified_at', 'last_modified_by']
+        fields = [
+            'uuid',
+            'data_point',
+            'text',
+            'is_sticky',
+            'is_review',
+            'review_state',
+            'resolved_at',
+            'resolved_by',
+            'created_at',
+            'created_by',
+            'last_modified_at',
+            'last_modified_by',
+        ]
+        read_only_fields = [
+            'uuid',
+            'resolved_at',
+            'resolved_by',
+            'created_at',
+            'created_by',
+            'last_modified_at',
+            'last_modified_by',
+        ]
+
 
 class DataPointCommentViewSet(viewsets.ModelViewSet):
     pagination_class = None
     lookup_field = 'uuid'
     serializer_class = DataPointCommentSerializer
-    permission_classes = (
-        permissions.DjangoModelPermissions,
-    )
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     def get_queryset(self):
         data_point_uuid = get_item_with_deprecated_fallback(self.kwargs, 'data_point_uuid', 'datapoint_uuid')
@@ -463,11 +478,7 @@ class DataPointCommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         data_point_uuid = get_item_with_deprecated_fallback(self.kwargs, 'data_point_uuid', 'datapoint_uuid')
         data_point = DataPoint.objects.get(uuid=data_point_uuid)
-        serializer.save(
-            data_point=data_point,
-            created_by=self.request.user,
-            last_modified_by=self.request.user
-        )
+        serializer.save(data_point=data_point, created_by=self.request.user, last_modified_by=self.request.user)
 
     def perform_update(self, serializer):
         serializer.save(last_modified_by=self.request.user)
@@ -480,14 +491,13 @@ class DataPointCommentViewSet(viewsets.ModelViewSet):
 class DatasetCommentsViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
     serializer_class = DataPointCommentSerializer
-    permission_classes = (
-        permissions.DjangoModelPermissions,
-    )
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     def get_queryset(self):
-        return DataPointComment.objects.filter(
-            data_point__dataset__uuid=self.kwargs['dataset_uuid']
-        ).select_related('data_point', 'created_by', 'last_modified_by', 'resolved_by')
+        return DataPointComment.objects.filter(data_point__dataset__uuid=self.kwargs['dataset_uuid']).select_related(
+            'data_point', 'created_by', 'last_modified_by', 'resolved_by'
+        )
+
 
 class BaseSourceReferenceSerializer(serializers.ModelSerializer[DatasetSourceReference]):
     data_point = UuidSlugRelatedField[DataPoint](queryset=DataPoint.objects.all(), required=False)
@@ -502,15 +512,11 @@ class BaseSourceReferenceSerializer(serializers.ModelSerializer[DatasetSourceRef
         )
 
         if dataset_uuid != data.get('dataset', dataset_uuid):
-            raise serializers.ValidationError(
-                'Dataset UUID in payload different from that in the URL path'
-            )
+            raise serializers.ValidationError('Dataset UUID in payload different from that in the URL path')
         if data_point_uuid != get_item_with_deprecated_fallback(
             data, 'data_point', 'datapoint', fail_if_not_exists=False, default=data_point_uuid
         ):
-            raise serializers.ValidationError(
-                'DataPoint UUID in payload different from that in the URL path'
-            )
+            raise serializers.ValidationError('DataPoint UUID in payload different from that in the URL path')
 
         if dataset_uuid:
             data['dataset'] = dataset_uuid
@@ -520,12 +526,13 @@ class BaseSourceReferenceSerializer(serializers.ModelSerializer[DatasetSourceRef
 
     def validate(self, data):
         if 'data_point' not in data and 'dataset' not in data:
-            raise serializers.ValidationError("Please supply either data_point or dataset as reference target")
+            raise serializers.ValidationError('Please supply either data_point or dataset as reference target')
         return data
 
     class Meta:
         model = DatasetSourceReference
         fields = ['uuid', 'data_point', 'dataset', 'data_source']
+
 
 class DataPointSourceReferenceViewSet(viewsets.ModelViewSet):
     pagination_class = None
@@ -535,9 +542,7 @@ class DataPointSourceReferenceViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         data_point_uuid = get_item_with_deprecated_fallback(self.kwargs, 'data_point_uuid', 'datapoint_uuid')
-        return DatasetSourceReference.objects.filter(
-            data_point__uuid=data_point_uuid
-        ).select_related('data_source')
+        return DatasetSourceReference.objects.filter(data_point__uuid=data_point_uuid).select_related('data_source')
 
     def get_serializer_context(self) -> dict[str, str]:
         context = super().get_serializer_context()
@@ -545,6 +550,7 @@ class DataPointSourceReferenceViewSet(viewsets.ModelViewSet):
         data_point_uuid = get_item_with_deprecated_fallback(self.kwargs, 'data_point_uuid', 'datapoint_uuid')
         context['data_point_uuid'] = data_point_uuid
         return context
+
 
 class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
     pagination_class = None
@@ -557,16 +563,15 @@ class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
             OpenApiParameter(
                 name='reference_target',
                 description=(
-                    "Type of entity the sources are linked to ('dataset', 'data_point', or 'all'). "
-                    "Defaults to 'dataset'."
+                    "Type of entity the sources are linked to ('dataset', 'data_point', or 'all'). Defaults to 'dataset'."
                 ),
                 type=OpenApiTypes.STR,
                 enum=['dataset', 'data_point', 'all'],
                 default='dataset',
-                required=False
+                required=False,
             )
         ],
-        description="List all sources for a dataset with optional filtering by reference target."
+        description='List all sources for a dataset with optional filtering by reference target.',
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
@@ -576,13 +581,12 @@ class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
         reference_target = self.request.query_params.get('reference_target', 'dataset')
 
         if reference_target == 'data_point':
-            return DatasetSourceReference.objects.filter(
-                data_point__dataset__uuid=dataset_uuid
-            ).select_related('data_point', 'data_source')
+            return DatasetSourceReference.objects.filter(data_point__dataset__uuid=dataset_uuid).select_related(
+                'data_point', 'data_source'
+            )
         if reference_target == 'all':
             return DatasetSourceReference.objects.filter(
-                Q(dataset__uuid=dataset_uuid) |
-                Q(data_point__dataset__uuid=dataset_uuid)
+                Q(dataset__uuid=dataset_uuid) | Q(data_point__dataset__uuid=dataset_uuid)
             ).select_related('data_point', 'data_source')
         return DatasetSourceReference.objects.filter(dataset__uuid=dataset_uuid)
 
@@ -590,11 +594,13 @@ class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context['dataset_uuid'] = self.kwargs.get('dataset_uuid')
         data_point_uuid = get_item_with_deprecated_fallback(
-            self.kwargs, 'data_point_uuid', 'datapoint_uuid', fail_if_not_exists=False,
+            self.kwargs,
+            'data_point_uuid',
+            'datapoint_uuid',
+            fail_if_not_exists=False,
         )
         context['data_point_uuid'] = data_point_uuid
         return context
-
 
 
 class DataSourceSerializer(serializers.ModelSerializer):
@@ -613,28 +619,29 @@ class DataSourceSerializer(serializers.ModelSerializer):
         object_id = validated_data.pop('object_id', None)
 
         try:
-            content_type = ContentType.objects.get(
-                app_label=content_type_app,
-                model=content_type_model
-            )
+            content_type = ContentType.objects.get(app_label=content_type_app, model=content_type_model)
         except ContentType.DoesNotExist:
             raise serializers.ValidationError(
-                f"ContentType with app_label={content_type_app} and model={content_type_model} does not exist"
+                f'ContentType with app_label={content_type_app} and model={content_type_model} does not exist'
             ) from None
 
-        data_source = DataSource.objects.create(
-            **validated_data,
-            scope_content_type=content_type,
-            scope_id=object_id
-        )
+        data_source = DataSource.objects.create(**validated_data, scope_content_type=content_type, scope_id=object_id)
 
         return data_source
 
     class Meta:
         model = DataSource
         fields = [
-            'uuid', 'name', 'edition', 'authority', 'description', 'url', 'label',
-            'content_type_app', 'content_type_model', 'object_id'
+            'uuid',
+            'name',
+            'edition',
+            'authority',
+            'description',
+            'url',
+            'label',
+            'content_type_app',
+            'content_type_model',
+            'object_id',
         ]
         read_only_fields = ['uuid']
 
@@ -651,7 +658,7 @@ class DataSourceViewSet(viewsets.ModelViewSet):
         has_any_scope_param = any([content_type_app, content_type_model, object_id])
         has_all_scope_params = all([content_type_app, content_type_model, object_id])
         if has_any_scope_param and not has_all_scope_params:
-            raise Exception("Must specify either all or none of content_type_app, content_type_model and object_id")
+            raise Exception('Must specify either all or none of content_type_app, content_type_model and object_id')
 
         object_id = typing.cast('str', object_id)
         user = user_or_anon(self.request.user)
@@ -659,10 +666,7 @@ class DataSourceViewSet(viewsets.ModelViewSet):
 
         if has_any_scope_param:
             # Deliberately not catching ContentType.DoesNotExist because this should cause an HTTP error code IMO
-            content_type = ContentType.objects.get(
-                app_label=content_type_app,
-                model=content_type_model
-            )
+            content_type = ContentType.objects.get(app_label=content_type_app, model=content_type_model)
             qs = qs.filter(
                 scope_content_type=content_type,
                 scope_id=object_id,

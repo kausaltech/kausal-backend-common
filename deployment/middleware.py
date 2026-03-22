@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from kausal_common.deployment.types import LoggedHttpRequest
 
 
-
 class RequestStartMiddleware(MiddlewareMixin):
     def __init__(self, get_response) -> None:
         super().__init__(get_response)

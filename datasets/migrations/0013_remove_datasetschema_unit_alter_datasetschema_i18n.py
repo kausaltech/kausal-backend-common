@@ -5,7 +5,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('datasets', '0012_alter_dimensioncategory_identifier'),
     ]

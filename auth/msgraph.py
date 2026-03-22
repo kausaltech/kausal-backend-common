@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 logger = logger.bind(name='kausal_common.auth.msgraph')
 
+
 def _get_token(user: User) -> str | None:
     auth = user.social_auth.filter(provider='azure_ad').first()
     if not auth:

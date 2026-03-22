@@ -73,7 +73,7 @@ class DataSourceUsageView(UsageView[DataSource]):
         for object, references in object_list:
             from kausal_common.datasets.models import DatasetSourceReference
 
-            row = {"object": object, "references": references}
+            row = {'object': object, 'references': references}
 
             if isinstance(object, DatasetSourceReference):
                 dataset = None
@@ -84,38 +84,32 @@ class DataSourceUsageView(UsageView[DataSource]):
 
                 # Get the edit URL for the dataset
                 if dataset:
-                    row["edit_url"] = url_finder.get_edit_url(dataset)
+                    row['edit_url'] = url_finder.get_edit_url(dataset)
                 else:
-                    row["edit_url"] = None
+                    row['edit_url'] = None
 
                 if hasattr(object, 'get_admin_display_title'):
-                    row["label"] = object.get_admin_display_title()
+                    row['label'] = object.get_admin_display_title()
                 else:
-                    row["label"] = str(object)
+                    row['label'] = str(object)
 
-                if row["edit_url"]:
-                    row["edit_link_title"] = _("Edit dataset")
+                if row['edit_url']:
+                    row['edit_link_title'] = _('Edit dataset')
                 else:
-                    row["edit_link_title"] = None
+                    row['edit_link_title'] = None
             else:
                 # Default behavior for other objects
-                row["edit_url"] = url_finder.get_edit_url(object)
-                if row["edit_url"] is None:
-                    row["label"] = pgettext_lazy(
-                        "label to show for a private instance of the given model",
-                        "(Private %(model)s)"
-                    ) % {
-                        "model": object._meta.verbose_name
-                    }
-                    row["edit_link_title"] = None
+                row['edit_url'] = url_finder.get_edit_url(object)
+                if row['edit_url'] is None:
+                    row['label'] = pgettext_lazy(
+                        'label to show for a private instance of the given model', '(Private %(model)s)'
+                    ) % {'model': object._meta.verbose_name}
+                    row['edit_link_title'] = None
                 else:
-                    row["label"] = str(object)
-                    row["edit_link_title"] = pgettext_lazy(
-                        "title of a link to edit an instance of the given model",
-                        "Edit this %(model)s"
-                    ) % {
-                        "model": object._meta.verbose_name
-                    }
+                    row['label'] = str(object)
+                    row['edit_link_title'] = pgettext_lazy(
+                        'title of a link to edit an instance of the given model', 'Edit this %(model)s'
+                    ) % {'model': object._meta.verbose_name}
 
             results.append(row)
 
@@ -129,6 +123,7 @@ class DataSourceIndexView(IndexView[DataSource]):
         # Remove this if usage checks are implemented for bulk actions.
         self.columns = [c for c in super().columns if not isinstance(c, BulkActionsCheckboxColumn)]
 
+
 class DataSourceViewSet(PermissionedViewSet[DataSource, DataSourceForm]):
     model = DataSource
     menu_label = _('Data sources')
@@ -140,7 +135,7 @@ class DataSourceViewSet(PermissionedViewSet[DataSource, DataSourceForm]):
     add_view_class = DataSourceCreateView  # type: ignore[assignment]
     add_to_reference_index = True
     usage_view_class = DataSourceUsageView  # type: ignore[assignment]  # pyright: ignore[reportAssignmentType]
-    index_view_class = DataSourceIndexView # type: ignore[assignment]
+    index_view_class = DataSourceIndexView  # type: ignore[assignment]
     panels = [
         FieldPanel('name'),
         FieldPanel('edition'),

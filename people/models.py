@@ -57,23 +57,36 @@ class BasePerson(index.Indexed, ClusterableModel):
     last_name = models.CharField(max_length=100, verbose_name=_('last name'))
     email = models.EmailField(verbose_name=_('email address'))
     title = models.CharField(
-        max_length=100, null=True, blank=True,
+        max_length=100,
+        null=True,
+        blank=True,
         verbose_name=pgettext_lazy("person's role", 'title'),
-        help_text=_("Job title or role of this person"),
+        help_text=_('Job title or role of this person'),
     )
     postal_address = models.TextField(max_length=100, verbose_name=_('postal address'), null=True, blank=True)
     organization: FK[Organization] = models.ForeignKey(
-        'orgs.Organization', related_name='people', on_delete=models.CASCADE, verbose_name=_('organization'),
+        'orgs.Organization',
+        related_name='people',
+        on_delete=models.CASCADE,
+        verbose_name=_('organization'),
     )
     user: OneToOne[User | None] = models.OneToOneField(
-        'users.User', null=True, blank=True, related_name='person', on_delete=models.SET_NULL,
-        editable=False, verbose_name=_('user'),
+        'users.User',
+        null=True,
+        blank=True,
+        related_name='person',
+        on_delete=models.SET_NULL,
+        editable=False,
+        verbose_name=_('user'),
         help_text=_('Set if the person has an user account'),
     )
 
     image = models.ImageField(
-        blank=True, upload_to=image_upload_path, verbose_name=_('image'),
-        height_field='image_height', width_field='image_width',
+        blank=True,
+        upload_to=image_upload_path,
+        verbose_name=_('image'),
+        height_field='image_height',
+        width_field='image_width',
     )
     image_cropping = ImageRatioField('image', '1280x720', verbose_name=_('image cropping'))
     image_height = models.PositiveIntegerField(null=True, editable=False)
@@ -83,7 +96,11 @@ class BasePerson(index.Indexed, ClusterableModel):
     avatar_updated_at = models.DateTimeField(null=True, editable=False)
 
     created_by: FK[User | None] = models.ForeignKey(
-        'users.User', related_name='created_persons', blank=True, null=True, on_delete=models.SET_NULL,
+        'users.User',
+        related_name='created_persons',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
         verbose_name=_('created by'),
     )
     i18n = TranslationField(fields=('title',), default_language_field='organization__primary_language_lowercase')
@@ -95,14 +112,23 @@ class BasePerson(index.Indexed, ClusterableModel):
         index.AutocompleteField('first_name'),
         index.AutocompleteField('last_name'),
         index.AutocompleteField('title'),
-        index.RelatedFields('organization', [
-            index.AutocompleteField('distinct_name'),
-            index.AutocompleteField('abbreviation'),
-        ]),
+        index.RelatedFields(
+            'organization',
+            [
+                index.AutocompleteField('distinct_name'),
+                index.AutocompleteField('abbreviation'),
+            ],
+        ),
     ]
 
     public_fields: ClassVar[list[str]] = [
-        'id', 'uuid', 'first_name', 'last_name', 'email', 'title', 'organization',
+        'id',
+        'uuid',
+        'first_name',
+        'last_name',
+        'email',
+        'title',
+        'organization',
     ]
 
     class Meta:
@@ -207,12 +233,12 @@ class BasePerson(index.Indexed, ClusterableModel):
         if self.user:
             return self.user
         from users.models import User
+
         return User.objects.filter(email__iexact=self.email).first()
 
     @abstractmethod
     def create_corresponding_user(self):
         raise NotImplementedError('This method should be implemented by subclasses')
-
 
     def delete_and_deactivate_corresponding_user(self, acting_admin_user):
         target_user = getattr(self, 'user', None)
@@ -221,6 +247,7 @@ class BasePerson(index.Indexed, ClusterableModel):
         self.delete()
 
     if IS_WATCH:
+
         @abstractmethod
         def visible_for_user(self, user: UserOrAnon, *, plan: Plan | None = None, **kwargs) -> bool:
             """
@@ -235,7 +262,7 @@ class BasePerson(index.Indexed, ClusterableModel):
                 bool: True if visible, False otherwise
 
             """
-            raise NotImplementedError("This method should be implemented by subclasses")
+            raise NotImplementedError('This method should be implemented by subclasses')
 
 
 class ObjectRole(models.TextChoices):
@@ -264,15 +291,19 @@ class _ObjectRoleBase(models.Model):
     class Meta:
         abstract = True
 
+
 if TYPE_CHECKING:
+
     class ObjectRoleBase[M: models.Model](_ObjectRoleBase):  # noqa: DJ008
         object: FK[M]
         object_id: int
+
 else:
     ObjectRoleBase = _ObjectRoleBase
 
 
 if TYPE_CHECKING:
+
     class ObjectGroupPermissionBase[M: models.Model](ObjectRoleBase[M]):
         # FIXME: Add type annotation for PersonGroup when it appears in `main`
         group = models.ForeignKey('people.PersonGroup', on_delete=models.CASCADE)
@@ -281,7 +312,9 @@ if TYPE_CHECKING:
 
         class Meta:
             abstract = True
+
 else:
+
     class ObjectGroupPermissionBase(ObjectRoleBase):
         group = models.ForeignKey('people.PersonGroup', on_delete=models.CASCADE)
 
@@ -290,6 +323,7 @@ else:
 
 
 if TYPE_CHECKING:
+
     class ObjectPersonPermissionBase[M: models.Model](ObjectRoleBase[M]):
         person: FK[Person] = models.ForeignKey('people.Person', on_delete=models.CASCADE)
 
@@ -297,7 +331,9 @@ if TYPE_CHECKING:
 
         class Meta:
             abstract = True
+
 else:
+
     class ObjectPersonPermissionBase(ObjectRoleBase):
         person = models.ForeignKey('people.Person', on_delete=models.CASCADE)
 
@@ -306,12 +342,16 @@ else:
 
 
 def create_permission_membership_models[M: models.Model](
-    model: type[M]
+    model: type[M],
 ) -> tuple[type[ObjectGroupPermissionBase[M]], type[ObjectPersonPermissionBase[M]]]:
-    GroupPermissionMeta = type('Meta', (),{
-        'unique_together': (('group', 'object'),),
-        'ordering': ['object', 'group'],
-    })
+    GroupPermissionMeta = type(
+        'Meta',
+        (),
+        {
+            'unique_together': (('group', 'object'),),
+            'ordering': ['object', 'group'],
+        },
+    )
     GroupPermission = type(
         '%sGroupPermission' % model.__name__,
         (ObjectGroupPermissionBase,),
@@ -321,10 +361,14 @@ def create_permission_membership_models[M: models.Model](
             'Meta': GroupPermissionMeta,
         },
     )
-    PersonPermissionMeta = type('Meta', (),{
-        'unique_together': (('person', 'object'),),
-        'ordering': ['object', 'person'],
-    })
+    PersonPermissionMeta = type(
+        'Meta',
+        (),
+        {
+            'unique_together': (('person', 'object'),),
+            'ordering': ['object', 'person'],
+        },
+    )
     PersonPermission = type(
         '%sPersonPermission' % model.__name__,
         (ObjectPersonPermissionBase,),

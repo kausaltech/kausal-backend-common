@@ -220,11 +220,13 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
 
         try:
             from wagtail.utils.deprecation import RemovedInWagtail70Warning  # pyright: ignore[reportAttributeAccessIssue]
+
             warnings.filterwarnings(action='ignore', category=RemovedInWagtail70Warning)
         except ImportError:
             pass
         try:
             from wagtail.utils.deprecation import RemovedInWagtail80Warning  # pyright: ignore[reportAttributeAccessIssue]
+
             warnings.filterwarnings(action='ignore', category=RemovedInWagtail80Warning)
         except ImportError:
             pass

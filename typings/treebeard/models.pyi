@@ -13,7 +13,6 @@ class Node[QS: QuerySet[Any]](Model):
     @overload
     @classmethod
     def add_root(cls, **kwargs: Unpack[_InstanceKwargs[Self]]) -> Self: ...
-
     @overload
     @classmethod
     def add_root(cls, **kwargs) -> Self:
@@ -234,7 +233,6 @@ class Node[QS: QuerySet[Any]](Model):
 
     @overload
     def add_child(self, **kwargs: Unpack[_InstanceKwargs[Self]]) -> Self: ...
-
     @overload
     def add_child(self, **kwargs) -> Self:
         """
@@ -261,7 +259,6 @@ class Node[QS: QuerySet[Any]](Model):
 
     @overload
     def add_sibling(self, pos: SiblingPos | None = None, **kwargs: _InstanceKwargs[Self]) -> Self: ...
-
     @overload
     def add_sibling(self, pos: SiblingPos | None = None, **kwargs) -> Self:
         """
@@ -322,8 +319,14 @@ class Node[QS: QuerySet[Any]](Model):
         :param update: Updates the cached value.
         """
     type _MovePos = Literal[
-        'first-child', 'last-child', 'sorted-child', 'first-sibling', 'left', 'right',
-        'last-sibling', 'sorted-sibling',
+        'first-child',
+        'last-child',
+        'sorted-child',
+        'first-sibling',
+        'left',
+        'right',
+        'last-sibling',
+        'sorted-sibling',
     ]
 
     def move(self, target: Self, pos: _MovePos | None = None) -> None:

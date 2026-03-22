@@ -81,28 +81,28 @@ class TreeQuerySet(QuerySet[_NodeT, _NodeT]):
     @classmethod
     def as_manager(cls) -> models.Manager[_NodeT]: ...
 
-
 class SpecificQuerySetMixin[BaseModelQS: QuerySet[Any]]:
     def __init__(self, *args, **kwargs) -> None:
         """Set custom instance attributes"""
 
     def specific(self, defer: bool = False) -> BaseModelQS:
-        '''
+        """
         This efficiently gets all the specific items for the queryset, using
         the minimum number of queries.
 
         When the "defer" keyword argument is set to True, only generic
         field values will be loaded and all specific fields will be deferred.
-        '''
+        """
     @property
     def is_specific(self) -> bool:
         """
         Returns True if this queryset is already specific, False otherwise.
         """
 
-
 class PageQuerySet[PageT: Page = Page](
-    SearchableQuerySetMixin, SpecificQuerySetMixin[PageQuerySet[Page]], TreeQuerySet[PageT],
+    SearchableQuerySetMixin,
+    SpecificQuerySetMixin[PageQuerySet[Page]],
+    TreeQuerySet[PageT],
 ):
     def live_q(self) -> Q: ...
     def live(self) -> Self:

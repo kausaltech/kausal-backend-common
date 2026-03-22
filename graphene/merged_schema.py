@@ -128,7 +128,7 @@ def get_sb_definition(type_: type) -> StrawberryObjectType | StrawberryUnion:
             parse_literal=None,
         )
 
-    raise TypeError("Unknown type %s" % type_)
+    raise TypeError('Unknown type %s' % type_)
 
 
 def _get_graphene_type_name(type_: type) -> str | None:
@@ -156,8 +156,10 @@ def _is_graphene_named_type(
 def _is_strawberry_type(type_: Any) -> TypeGuard[WithStrawberryDefinition[Any]]:
     return has_strawberry_definition(type_)
 
+
 def is_strawberry_enum(type_: Any) -> TypeGuard[WithStrawberryEnumDefinition]:
     return has_enum_definition(type_)
+
 
 def _get_strawberry_enum_def(type_: Any) -> StrawberryEnumDefinition | None:
     if has_enum_definition(type_):
@@ -166,6 +168,7 @@ def _get_strawberry_enum_def(type_: Any) -> StrawberryEnumDefinition | None:
 
 
 SB_SCALAR_TYPES = {val.name: key for key, val in DEFAULT_SCALAR_REGISTRY.items()}
+
 
 class UnifiedGrapheneTypeMap(GrapheneTypeMap):
     """Graphene TypeMap that can handle both Strawberry and Graphene types."""
@@ -180,10 +183,8 @@ class UnifiedGrapheneTypeMap(GrapheneTypeMap):
             sb_def = enum_def
         else:
             sb_def = get_sb_definition(type_)
-        self.sb_converter.type_map[name] = ConcreteType(
-            definition=sb_def, implementation=gql_type
-        )
-        if not _is_strawberry_type(type_): # and enum_def is not None:
+        self.sb_converter.type_map[name] = ConcreteType(definition=sb_def, implementation=gql_type)
+        if not _is_strawberry_type(type_):  # and enum_def is not None:
             # We need to set the Strawberry definition so that Strawberry input type conversion works.
             setattr(type_, '__strawberry_definition__', sb_def)  # noqa: B010
             if issubclass(type_, Generic):
@@ -215,7 +216,7 @@ class UnifiedGrapheneTypeMap(GrapheneTypeMap):
             return enum_type
 
         if not issubclass(type_, SubclassWithMeta):
-            raise TypeError(f"Type {type_} is not a subclass of SubclassWithMeta")
+            raise TypeError(f'Type {type_} is not a subclass of SubclassWithMeta')
 
         name: str = getattr(type_, '_meta').name  # noqa: B009
 
@@ -272,12 +273,10 @@ class UnifiedGraphQLConverter(GraphQLCoreConverter):
         fields: dict[str, GraphQLField] = self.graphene_type_map.create_fields_for_type(graphene_type)
         for name, field in fields.items():
             if name in gql_type.fields:
-                raise ValueError(f"Field {name} already exists in {gql_type}")
+                raise ValueError(f'Field {name} already exists in {gql_type}')
             gql_type.fields[name] = field
 
-    def get_graphql_fields(
-        self, type_definition: StrawberryObjectDefinition
-    ) -> dict[str, GraphQLField]:
+    def get_graphql_fields(self, type_definition: StrawberryObjectDefinition) -> dict[str, GraphQLField]:
         fields = super().get_graphql_fields(type_definition)
         origin = type_definition.origin
         if issubclass(origin, graphene.ObjectType):
@@ -285,7 +284,7 @@ class UnifiedGraphQLConverter(GraphQLCoreConverter):
             graphene_fields: dict[str, GraphQLField] = self.graphene_type_map.create_fields_for_type(origin)
             for name, field in graphene_fields.items():
                 if name in fields:
-                    raise ValueError(f"Field {name} already exists in {type_definition.name}")
+                    raise ValueError(f'Field {name} already exists in {type_definition.name}')
                 fields[name] = field
         return fields
 

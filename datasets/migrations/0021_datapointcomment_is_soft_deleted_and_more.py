@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('datasets', '0020_alter_datapoint_options_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
@@ -26,6 +25,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='datapointcomment',
             name='soft_deleted_by',
-            field=models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='soft_deleted_messages', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(
+                blank=True,
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='soft_deleted_messages',
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 type RegistrableType = type[graphene.ObjectType[Any] | graphene.Interface[Any]]
 
+
 class GrapheneRegistry:
     types: OrderedDict[str, RegistrableType]
 
@@ -19,12 +20,13 @@ class GrapheneRegistry:
     def register(self, cls: RegistrableType) -> RegistrableType:
         meta = cast('BaseOptions', cls._meta)  # type: ignore[union-attr]  # pyright: ignore[reportAttributeAccessIssue]
         if meta.name in self.types:
-            raise ValueError(f"Type {cls.__name__} already registered")
+            raise ValueError(f'Type {cls.__name__} already registered')
         self.types[meta.name] = cls
         return cls
 
     def get_list(self) -> list[RegistrableType]:
         return list(self.types.values())
+
 
 registry = GrapheneRegistry()
 

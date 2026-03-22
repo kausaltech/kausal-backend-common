@@ -41,7 +41,7 @@ class SkipDjangoMatchingPathsFilter(BaseFilter):
         self.filter_broken_pipe = filter_broken_pipe
         if match_str_prefix is None:
             super().__init__(**kwargs)
-        match_str_prefix=f'"GET {match_str_prefix}'
+        match_str_prefix = f'"GET {match_str_prefix}'
         super().__init__(match_str_prefix, **kwargs)
 
     def filter(self, record: logging.LogRecord) -> bool:

@@ -21,7 +21,6 @@ def migrate_booleans_to_type(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('datasets', '0018_add_comment_boolean_fields'),
     ]
@@ -31,7 +30,6 @@ class Migration(migrations.Migration):
             migrate_type_to_booleans,
             reverse_code=migrate_booleans_to_type,
         ),
-
         migrations.RemoveField(
             model_name='datapointcomment',
             name='type',

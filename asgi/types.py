@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class ASGICommonScope(TypedDict):
-    type: Literal["http", "websocket"]
+    type: Literal['http', 'websocket']
     http_version: str
     method: str
     scheme: str

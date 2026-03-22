@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('datasets', '0002_datasetmetric_datapoint_metric'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
@@ -22,13 +21,58 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name='updated at')),
                 ('uuid', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
                 ('text', models.TextField()),
-                ('type', models.CharField(choices=[('review', 'Review comment'), ('sticky', 'Sticky comment'), ('plain', 'Comment')], default='plain', max_length=20)),
-                ('review_state', models.CharField(blank=True, choices=[('resolved', 'Resolved'), ('unresolved', 'Unresolved')], max_length=20)),
+                (
+                    'type',
+                    models.CharField(
+                        choices=[('review', 'Review comment'), ('sticky', 'Sticky comment'), ('plain', 'Comment')],
+                        default='plain',
+                        max_length=20,
+                    ),
+                ),
+                (
+                    'review_state',
+                    models.CharField(blank=True, choices=[('resolved', 'Resolved'), ('unresolved', 'Unresolved')], max_length=20),
+                ),
                 ('resolved_at', models.DateTimeField(editable=False, null=True, verbose_name='resolved at')),
-                ('created_by', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL)),
-                ('datapoint', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='datasets.datapoint')),
-                ('resolved_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='resolved_comments', to=settings.AUTH_USER_MODEL)),
-                ('updated_by', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL)),
+                (
+                    'created_by',
+                    models.ForeignKey(
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name='+',
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    'datapoint',
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='comments',
+                        to='datasets.datapoint',
+                    ),
+                ),
+                (
+                    'resolved_by',
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name='resolved_comments',
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    'updated_by',
+                    models.ForeignKey(
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name='+',
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'comment',

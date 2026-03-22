@@ -85,7 +85,7 @@ class ModelObjectCache[ModelT: CacheableModel[Any], QS: PermissionedQuerySet[Any
             return qs.modifiable_by(self.user)
         if action == 'delete':
             return qs.deletable_by(self.user)
-        raise KeyError("Invalid action: %s" % action)
+        raise KeyError('Invalid action: %s' % action)
 
     def filter_by_parent(self, qs: QS) -> QS:
         return qs
@@ -124,7 +124,7 @@ class ModelObjectCache[ModelT: CacheableModel[Any], QS: PermissionedQuerySet[Any
         if len(objs) == 0:
             return None
         if len(objs) > 1:
-            raise ValueError("Multiple objects found for query: %s" % q)
+            raise ValueError('Multiple objects found for query: %s' % q)
         return objs[0]
 
     def first(self, qs_filter: Q) -> ModelT | None:

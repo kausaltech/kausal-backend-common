@@ -107,16 +107,16 @@ class GraphQLContext:
         # and a scheme or host (netloc) isn't provided, skip an expensive
         # urljoin() as long as no path segments are '.' or '..'.
         if (
-            bits.path.startswith("/")
+            bits.path.startswith('/')
             and not bits.scheme
             and not bits.netloc
-            and "/./" not in bits.path
-            and "/../" not in bits.path
+            and '/./' not in bits.path
+            and '/../' not in bits.path
         ):
             # If location starts with '//' but has no netloc, reuse the
             # schema and netloc from the current request. Strip the double
             # slashes and continue as if it wasn't specified.
-            location = self.get_scheme_host() + location.removeprefix("//")
+            location = self.get_scheme_host() + location.removeprefix('//')
         else:
             # Join the constructed URL with the provided location, which
             # allows the provided location to apply query strings to the

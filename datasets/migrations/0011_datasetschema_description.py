@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('datasets', '0010_datasetmetric_order_datasetmetric_schema_and_more'),
     ]

@@ -11,19 +11,17 @@ from .base import _FC, Panel as Panel, PanelInitArgs, _BPModel, _Model, _Panel_F
 class PanelGroupOwnInitArgs(TypedDict, total=False):
     permission: str
 
-
 @type_check_only
 class PanelGroupInitArgs[FormT: ModelForm[Any]](PanelInitArgs[FormT], PanelGroupOwnInitArgs): ...
 
-
 _PPanel_co = TypeVar('_PPanel_co', bound=PanelGroup[Any], covariant=True)
-
 
 class PanelGroup[M: Model = Any, FormT: ModelForm[Any] = ModelForm[Any]](Panel[M, FormT]):
     """
     Abstract class for panels that manage a set of sub-panels.
     Concrete subclasses must attach a 'children' property
     """
+
     children: Sequence[Panel[Any]]
     permission: str | None
 
@@ -47,7 +45,6 @@ class PanelGroup[M: Model = Any, FormT: ModelForm[Any] = ModelForm[Any]](Panel[M
         def show_panel_furniture(self) -> bool: ...
         @property
         def media(self) -> Media: ...
-
 
 class TabbedInterface[M: Model, FormT: ModelForm[Any]](PanelGroup[M, FormT]):
     class BoundPanel(Panel.BoundPanel[_PPanel_co, _FC, _BPModel], Generic[_PPanel_co, _FC, _BPModel]): ...

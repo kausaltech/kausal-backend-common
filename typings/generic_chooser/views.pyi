@@ -15,6 +15,7 @@ class ModalPageFurnitureMixin(ContextMixin):
     """
     Add icon and page title to the template context
     """
+
     icon: Incomplete
     page_title: Incomplete
     def get_context_data(self, **kwargs): ...
@@ -24,6 +25,7 @@ class ChooserMixin:
     Helper methods common to all sub-views of the chooser modal. Will be subclassed to implement
     different data sources (e.g. database versus REST API).
     """
+
     preserve_url_parameters: Incomplete
     def get_object(self, pk) -> Any:
         """
@@ -85,6 +87,7 @@ class ChooserMixin:
 
 class ModelChooserMixin[M: Model, QS: QuerySet[Any] = QuerySet[Model]](ChooserMixin):
     """Mixin for chooser modals backed by the database / ORM"""
+
     model: type[M]
     order_by: Incomplete
     permission_policy: Incomplete
@@ -99,6 +102,7 @@ class ModelChooserMixin[M: Model, QS: QuerySet[Any] = QuerySet[Model]](ChooserMi
 
 class DRFChooserMixin(ChooserMixin):
     """Mixin for chooser modals backed by a Django REST Framework API"""
+
     api_base_url: Incomplete
     title_field_name: Incomplete
     def get_api_parameters(self, search_term=None, **kwargs): ...

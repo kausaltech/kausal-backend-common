@@ -7,8 +7,8 @@ from kausal_common.context import get_django_project_name
 from kausal_common.deployment import env_bool
 from kausal_common.deployment.gunicorn import get_gunicorn_hooks
 
-bind = "0.0.0.0:8000"
-#workers = min(multiprocessing.cpu_count() * 2 + 1, 4)
+bind = '0.0.0.0:8000'
+# workers = min(multiprocessing.cpu_count() * 2 + 1, 4)
 KUBE_MODE = env_bool('KUBERNETES_MODE', default=False)
 TEST_MODE = env_bool('TEST_MODE', default=False)
 # Use only one worker in test mode to avoid process isolation issues

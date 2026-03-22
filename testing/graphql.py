@@ -19,10 +19,12 @@ if TYPE_CHECKING:
 
     from kausal_common.strawberry.context import GraphQLContext
 
+
 def format_error(error: Exception):
     if isinstance(error, GraphQLError):
         return error.formatted
-    return {"message": str(error)}
+    return {'message': str(error)}
+
 
 DEFAULT_STORE_DIR = Path('query-store')
 
@@ -76,6 +78,7 @@ class OperationMessage:
     kind: Literal['VALIDATION', 'ERROR']
     message: str
 
+
 class OperationMessageDict(TypedDict):
     kind: Literal['VALIDATION', 'ERROR']
     message: str
@@ -85,14 +88,16 @@ def assert_operation_errors(op_data: dict[str, Any], messages: Iterable[Operatio
     keys = set(op_data.keys())
     keys.discard('__typename')
     if 'messages' not in keys:
-        assert not messages, "No error messages in operation data"
+        assert not messages, 'No error messages in operation data'
     keys.discard('messages')
-    assert not keys, f"Unexpected keys in operation data: {keys}"
+    assert not keys, f'Unexpected keys in operation data: {keys}'
 
     incoming_message_set = set((msg['kind'], msg['message']) for msg in op_data['messages'])
+
     def msg_to_tuple(msg: OperationMessage | OperationMessageDict) -> tuple[str, str]:
         if isinstance(msg, OperationMessage):
             return msg.kind, msg.message
         return msg['kind'], msg['message']
+
     required_message_set = set(msg_to_tuple(msg) for msg in messages)
     assert incoming_message_set == required_message_set

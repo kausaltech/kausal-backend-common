@@ -16,9 +16,7 @@ if typing.TYPE_CHECKING:
 
 def get_permission_policy[M: PermissionedModel](key: str) -> ModelPermissionPolicy[M, QS[M]]:
     if not hasattr(dataset_config, key):
-        raise ImproperlyConfigured(
-            f'{key} is required in the settings to use the datasets app.'
-        )
+        raise ImproperlyConfigured(f'{key} is required in the settings to use the datasets app.')
     permission_policy_class_name: str = getattr(dataset_config, key)
     parts = permission_policy_class_name.split('.')
     module_name = '.'.join(parts[0:-1])

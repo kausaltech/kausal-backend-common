@@ -16,6 +16,7 @@ _is_patched = False
 
 FILENAME_LINE = re.compile(r'^(.*):(\d+)\s')
 
+
 def _render_stack_with_links(self: Traceback, stack: Stack) -> Group:
     group = old_render_stack(self, stack)
     for r in group._renderables:
@@ -28,7 +29,7 @@ def _render_stack_with_links(self: Traceback, stack: Stack) -> Group:
         p = Path(fn)
         if not p.exists():
             continue
-        r.stylize("link %s#%s" % (p.as_uri(), line), 0, len(fn) + len(line) + 1)
+        r.stylize('link %s#%s' % (p.as_uri(), line), 0, len(fn) + len(line) + 1)
 
     return group
 

@@ -46,10 +46,8 @@ class AbstractDocument(CollectionMember, index.Indexed, models.Model):
     @property
     def content_disposition(self) -> str: ...
 
-
 class Document(AbstractDocument):
     admin_form_fields: ClassVar[tuple[str, ...]]
     class Meta(AbstractDocument.Meta): ...
-
 
 document_served: Signal

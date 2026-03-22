@@ -10,6 +10,7 @@ from graphql.language import ast
 
 # GIS-related types copied from https://github.com/EverWinter23/graphene-gis
 
+
 class GISScalar(Scalar):
     @property
     def geom_typeid(self):
@@ -38,28 +39,28 @@ class PointScalar(GISScalar):
     geom_typeid = 0
 
     class Meta:
-        description = "A GIS Point geojson"
+        description = 'A GIS Point geojson'
 
 
 class LineStringScalar(GISScalar):
     geom_typeid = 1
 
     class Meta:
-        description = "A GIS LineString geojson"
+        description = 'A GIS LineString geojson'
 
 
 class PolygonScalar(GISScalar):
     geom_typeid = 3
 
     class Meta:
-        description = "A GIS Polygon geojson"
+        description = 'A GIS Polygon geojson'
 
 
 GIS_FIELD_SCALAR = {
-    "PointField": PointScalar,
-    "LineStringField": LineStringScalar,
-    "PolygonField": PolygonScalar,
-    "GeometryField": GISScalar,
+    'PointField': PointScalar,
+    'LineStringField': LineStringScalar,
+    'PolygonField': PolygonScalar,
+    'GeometryField': GISScalar,
 }
 
 
@@ -70,5 +71,6 @@ GIS_FIELD_SCALAR = {
 def gis_converter(field, registry=None):
     class_name = field.__class__.__name__
     return GIS_FIELD_SCALAR[class_name](
-        required=not field.null, description=field.help_text,
+        required=not field.null,
+        description=field.help_text,
     )

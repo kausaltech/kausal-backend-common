@@ -6,97 +6,96 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ("datasets", "0021_datapointcomment_is_soft_deleted_and_more"),
+        ('datasets', '0021_datapointcomment_is_soft_deleted_and_more'),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="datasetmetric",
+            name='datasetmetric',
             options={
-                "verbose_name": "dataset metric",
-                "verbose_name_plural": "dataset metrics",
+                'verbose_name': 'dataset metric',
+                'verbose_name_plural': 'dataset metrics',
             },
         ),
         migrations.AlterField(
-            model_name="datasetschema",
-            name="time_resolution",
+            model_name='datasetschema',
+            name='time_resolution',
             field=models.CharField(
-                choices=[("yearly", "Yearly"), ("monthly", "Monthly")],
-                default="yearly",
-                help_text="Time resolution of the time stamps of data points in this dataset",
+                choices=[('yearly', 'Yearly'), ('monthly', 'Monthly')],
+                default='yearly',
+                help_text='Time resolution of the time stamps of data points in this dataset',
                 max_length=16,
             ),
         ),
         migrations.CreateModel(
-            name="DatasetMetricComputation",
+            name='DatasetMetricComputation',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name='ID',
                     ),
                 ),
-                ("order", models.PositiveIntegerField(default=0, verbose_name="order")),
+                ('order', models.PositiveIntegerField(default=0, verbose_name='order')),
                 (
-                    "operation",
+                    'operation',
                     models.CharField(
                         choices=[
-                            ("multiply", "Multiply"),
-                            ("divide", "Divide"),
-                            ("add", "Add"),
-                            ("subtract", "Subtract"),
+                            ('multiply', 'Multiply'),
+                            ('divide', 'Divide'),
+                            ('add', 'Add'),
+                            ('subtract', 'Subtract'),
                         ],
                         max_length=16,
-                        verbose_name="operation",
+                        verbose_name='operation',
                     ),
                 ),
                 (
-                    "operand_a",
+                    'operand_a',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="+",
-                        to="datasets.datasetmetric",
-                        verbose_name="operand A",
+                        related_name='+',
+                        to='datasets.datasetmetric',
+                        verbose_name='operand A',
                     ),
                 ),
                 (
-                    "operand_b",
+                    'operand_b',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="+",
-                        to="datasets.datasetmetric",
-                        verbose_name="operand B",
+                        related_name='+',
+                        to='datasets.datasetmetric',
+                        verbose_name='operand B',
                     ),
                 ),
                 (
-                    "schema",
+                    'schema',
                     modelcluster.fields.ParentalKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="computations",
-                        to="datasets.datasetschema",
-                        verbose_name="schema",
+                        related_name='computations',
+                        to='datasets.datasetschema',
+                        verbose_name='schema',
                     ),
                 ),
                 (
-                    "target_metric",
+                    'target_metric',
                     models.ForeignKey(
-                        help_text="The metric whose values are computed by this operation",
+                        help_text='The metric whose values are computed by this operation',
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="computed_by",
-                        to="datasets.datasetmetric",
-                        verbose_name="target metric",
+                        related_name='computed_by',
+                        to='datasets.datasetmetric',
+                        verbose_name='target metric',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "dataset metric computation",
-                "verbose_name_plural": "dataset metric computations",
-                "ordering": ["schema", "order"],
+                'verbose_name': 'dataset metric computation',
+                'verbose_name_plural': 'dataset metric computations',
+                'ordering': ['schema', 'order'],
             },
         ),
     ]

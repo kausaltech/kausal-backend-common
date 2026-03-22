@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('contenttypes', '0002_remove_content_type_name'),
         ('datasets', '0003_datapointcomment'),
@@ -31,7 +30,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='datapointcomment',
             name='last_modified_by',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by'),
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='+',
+                to=settings.AUTH_USER_MODEL,
+                verbose_name='Last modified by',
+            ),
         ),
         migrations.AlterField(
             model_name='datapointcomment',
@@ -41,7 +47,14 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='datapointcomment',
             name='created_by',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by'),
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='+',
+                to=settings.AUTH_USER_MODEL,
+                verbose_name='Last modified by',
+            ),
         ),
         migrations.CreateModel(
             name='DataSource',
@@ -53,12 +66,46 @@ class Migration(migrations.Migration):
                 ('scope_id', models.PositiveIntegerField()),
                 ('name', models.CharField(max_length=200, verbose_name='name')),
                 ('edition', models.CharField(blank=True, max_length=100, null=True, verbose_name='edition')),
-                ('authority', models.CharField(blank=True, help_text='The organization responsible for the data source', max_length=200, null=True, verbose_name='authority')),
+                (
+                    'authority',
+                    models.CharField(
+                        blank=True,
+                        help_text='The organization responsible for the data source',
+                        max_length=200,
+                        null=True,
+                        verbose_name='authority',
+                    ),
+                ),
                 ('description', models.TextField(blank=True, null=True, verbose_name='description')),
                 ('url', models.URLField(blank=True, null=True, verbose_name='URL')),
-                ('created_by', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by')),
-                ('last_modified_by', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by')),
-                ('scope_content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='contenttypes.contenttype')),
+                (
+                    'created_by',
+                    models.ForeignKey(
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name='+',
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name='Last modified by',
+                    ),
+                ),
+                (
+                    'last_modified_by',
+                    models.ForeignKey(
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name='+',
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name='Last modified by',
+                    ),
+                ),
+                (
+                    'scope_content_type',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name='+', to='contenttypes.contenttype'
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Data source',
@@ -71,11 +118,52 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Created at')),
                 ('last_modified_at', models.DateTimeField(auto_now=True, verbose_name='Last modified at')),
-                ('created_by', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by')),
-                ('datapoint', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='source_references', to='datasets.datapoint')),
-                ('dataset', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='source_references', to='datasets.dataset')),
-                ('last_modified_by', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Last modified by')),
-                ('data_source', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='references', to='datasets.datasource')),
+                (
+                    'created_by',
+                    models.ForeignKey(
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name='+',
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name='Last modified by',
+                    ),
+                ),
+                (
+                    'datapoint',
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='source_references',
+                        to='datasets.datapoint',
+                    ),
+                ),
+                (
+                    'dataset',
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='source_references',
+                        to='datasets.dataset',
+                    ),
+                ),
+                (
+                    'last_modified_by',
+                    models.ForeignKey(
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name='+',
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name='Last modified by',
+                    ),
+                ),
+                (
+                    'data_source',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT, related_name='references', to='datasets.datasource'
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'data source reference',

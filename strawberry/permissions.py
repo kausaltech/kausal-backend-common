@@ -9,10 +9,12 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable
 
     from kausal_common.const import IS_PATHS
+
     if IS_PATHS:
         from paths import gql
     else:
         from aplans import gql
+
 
 class BasePermission(sb.BasePermission, ABC):
     @abstractmethod

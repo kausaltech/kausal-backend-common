@@ -5,22 +5,21 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ("datasets", "0011_datasetschema_description"),
+        ('datasets', '0011_datasetschema_description'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="dimensioncategory",
-            name="identifier",
+            model_name='dimensioncategory',
+            name='identifier',
             field=kausal_common.models.fields.IdentifierField(
                 blank=True,
-                help_text="Optional identifier that, if set, must be unique within the dimension",
+                help_text='Optional identifier that, if set, must be unique within the dimension',
                 max_length=200,
                 null=True,
                 validators=[kausal_common.models.fields.IdentifierValidator()],
-                verbose_name="identifier",
+                verbose_name='identifier',
             ),
         ),
     ]

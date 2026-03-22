@@ -11,7 +11,6 @@ def model_from_serializable_data(model, data, check_fks: bool = True, strict_fks
 def get_all_child_relations(model): ...
 def get_all_child_m2m_relations(model): ...
 
-
 class ClusterableModel(models.Model):
     def serializable_data(self) -> dict[str, Any]: ...
     def to_json(self) -> str: ...
@@ -20,9 +19,17 @@ class ClusterableModel(models.Model):
     @classmethod
     def from_json(cls, json_data: str, check_fks: bool = True, strict_fks: bool = False) -> Self: ...
     def copy_child_relation(
-        self, child_relation: str | ParentalKey, target: Self, commit: bool = False, append: bool = False,
+        self,
+        child_relation: str | ParentalKey,
+        target: Self,
+        commit: bool = False,
+        append: bool = False,
     ): ...
     def copy_all_child_relations(
-        self, target: Self, exclude: Sequence[str] | None = None, commit: bool = False, append: bool = False,
+        self,
+        target: Self,
+        exclude: Sequence[str] | None = None,
+        commit: bool = False,
+        append: bool = False,
     ): ...
     def copy_cluster(self, exclude_fields: Sequence[str] | None = None): ...

@@ -41,7 +41,7 @@ class DatasetChooserViewSet(ModelChooserViewSet):
 
     icon = 'kausal-dataset'
     model = Dataset
-    page_title = _("Choose a dataset")
+    page_title = _('Choose a dataset')
     per_page = 30
 
 

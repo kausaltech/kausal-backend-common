@@ -15,9 +15,7 @@ class HelpPanel(Panel):
     This panel does not support the ``help_text`` parameter.
     """
     def __init__(self, content: StrOrPromise = ..., template: str = ..., **kwargs) -> None: ...
-
     def clone_kwargs(self): ...
-
     @property
     def clean_name(self) -> str: ...
 

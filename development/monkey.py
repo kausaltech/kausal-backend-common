@@ -12,6 +12,7 @@ def _monkeypatch_one_class(kls: type) -> None:
 
 def monkeypatch_initial() -> None:
     import django_stubs_ext
+
     django_stubs_ext.monkeypatch(include_builtins=True)
 
 
@@ -33,15 +34,28 @@ def _monkeypatch_second() -> None:
     from treebeard.models import Node
 
     extra_classes: list[type] = [
-        ModelViewSet, ParentalKey, ParentalManyToManyField,
-        JSONField, ManyToManyField, Node,
-        Panel, Panel.BoundPanel, BaseObjectMixin,
-        BasePermissionPolicy, ObjectType, Interface,
-        Block, Revision, View, MenuItem, Model
+        ModelViewSet,
+        ParentalKey,
+        ParentalManyToManyField,
+        JSONField,
+        ManyToManyField,
+        Node,
+        Panel,
+        Panel.BoundPanel,
+        BaseObjectMixin,
+        BasePermissionPolicy,
+        ObjectType,
+        Interface,
+        Block,
+        Revision,
+        View,
+        MenuItem,
+        Model,
     ]
 
     try:
         from generic_chooser.views import ChooserCreateTabMixin, ChooserListingTabMixin, ChooserMixin, ChooserViewSet
+
         extra_classes.append(ChooserMixin)
         extra_classes.append(ChooserViewSet)
         extra_classes.append(ChooserCreateTabMixin)
@@ -53,6 +67,7 @@ def _monkeypatch_second() -> None:
         from wagtail_modeladmin.helpers.permission import PermissionHelper
         from wagtail_modeladmin.options import ModelAdmin
         from wagtail_modeladmin.views import WMABaseView
+
         extra_classes.append(PermissionHelper)
         extra_classes.append(WMABaseView)
         extra_classes.append(ModelAdmin)
@@ -61,6 +76,7 @@ def _monkeypatch_second() -> None:
 
     try:
         from factory.declarations import LazyAttribute, RelatedFactory, SelfAttribute, SubFactory
+
         extra_classes.append(SubFactory)
         extra_classes.append(RelatedFactory)
         extra_classes.append(LazyAttribute)

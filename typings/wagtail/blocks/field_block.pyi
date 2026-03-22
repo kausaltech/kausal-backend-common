@@ -86,7 +86,6 @@ class FieldBlock[F: Field](Block[FieldBlockMeta]):
     def required(self): ...
     def get_form_state(self, value): ...
 
-
 class FieldBlockAdapter(Adapter):
     js_constructor: str
     def js_args(self, block: FieldBlock[Any]) -> list: ...
@@ -122,10 +121,8 @@ class TextBlock(FieldBlock[CharField]):
         validators: Sequence[_ValidatorCallable] = (),
         **kwargs,
     ) -> None: ...
-
     @property
     def field(self) -> CharField: ...
-
     def get_searchable_content(self, value: str) -> list[str]: ...
     Meta: type[Any]
 
@@ -342,10 +339,17 @@ class RichTextBlock(FieldBlock):
     class Meta:
         icon: str
 
-
 class RawHTMLBlock(FieldBlock):
     field: Incomplete
-    def __init__(self, required: bool = True, help_text: Incomplete | None = None, max_length: Incomplete | None = None, min_length: Incomplete | None = None, validators=(), **kwargs) -> None: ...
+    def __init__(
+        self,
+        required: bool = True,
+        help_text: Incomplete | None = None,
+        max_length: Incomplete | None = None,
+        min_length: Incomplete | None = None,
+        validators=(),
+        **kwargs,
+    ) -> None: ...
     def get_default(self): ...
     def to_python(self, value): ...
     def normalize(self, value): ...

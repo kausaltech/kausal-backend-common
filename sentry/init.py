@@ -165,6 +165,7 @@ class NullTransport(sentry_sdk.Transport):
 
 DISABLED_DEFAULT_INTEGRATIONS = {'modules', 'argv', 'loguru', 'logging', 'graphene', 'strawberry', 'aiohttp', 'gql', 'tornado'}
 
+
 def _get_integrations() -> list[Integration]:
     from django.db.models.signals import post_init, pre_init
 
@@ -180,10 +181,7 @@ def _get_integrations() -> list[Integration]:
             continue
         integration = integration_cls()
         integrations.append(integration)
-    integrations.append(DjangoIntegration(
-        middleware_spans=False,
-        signals_denylist=[pre_init, post_init]
-    ))
+    integrations.append(DjangoIntegration(middleware_spans=False, signals_denylist=[pre_init, post_init]))
     integrations.append(Boto3Integration())
     integrations.append(CeleryIntegration())
     integrations.append(RedisIntegration())
@@ -216,7 +214,7 @@ def init_sentry(dsn: str | None, deployment_type: str | None = None):
 
     integrations = _get_integrations()
 
-    experiments: Experiments = {"transport_http2": not bool(spotlight_url)}
+    experiments: Experiments = {'transport_http2': not bool(spotlight_url)}
     if is_spotlight_enabled():
         experiments['enable_logs'] = is_spotlight_enabled()
 

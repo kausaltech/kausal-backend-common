@@ -12,49 +12,48 @@ def set_schema(apps, schema_editor):
         dsm = list(DatasetSchemaMetric.objects.filter(metric=metric))
         if not dsm:
             raise Exception(
-                f"DatasetMetric {metric} is not linked to a schema. Check if you want to delete all metrics without a "
-                "schema, run DatasetMetric.objects.exclude(id__in=DatasetSchemaMetric.objects.all()).delete() and try "
-                "again."
+                f'DatasetMetric {metric} is not linked to a schema. Check if you want to delete all metrics without a '
+                'schema, run DatasetMetric.objects.exclude(id__in=DatasetSchemaMetric.objects.all()).delete() and try '
+                'again.'
             )
         if len(dsm) > 1:
-            raise Exception(f"DatasetMetric {metric} is linked to {len(dsm)} schemas; expected 1")
+            raise Exception(f'DatasetMetric {metric} is linked to {len(dsm)} schemas; expected 1')
         metric.schema = dsm[0].schema
         metric.save(update_fields=['schema'])
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ("datasets", "0009_datapoint_created_at_datapoint_created_by_and_more"),
+        ('datasets', '0009_datapoint_created_at_datapoint_created_by_and_more'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="datasetmetric",
-            name="order",
-            field=models.PositiveIntegerField(default=0, verbose_name="order"),
+            model_name='datasetmetric',
+            name='order',
+            field=models.PositiveIntegerField(default=0, verbose_name='order'),
         ),
         migrations.AddField(
-            model_name="datasetmetric",
-            name="schema",
+            model_name='datasetmetric',
+            name='schema',
             field=modelcluster.fields.ParentalKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="metrics",
-                to="datasets.datasetschema",
+                related_name='metrics',
+                to='datasets.datasetschema',
                 null=True,
             ),
         ),
         migrations.RunPython(set_schema, migrations.RunPython.noop),
         migrations.AlterField(
-            model_name="datasetmetric",
-            name="schema",
+            model_name='datasetmetric',
+            name='schema',
             field=modelcluster.fields.ParentalKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="metrics",
-                to="datasets.datasetschema",
+                related_name='metrics',
+                to='datasets.datasetschema',
             ),
         ),
         migrations.DeleteModel(
-            name="DatasetSchemaMetric",
+            name='DatasetSchemaMetric',
         ),
     ]

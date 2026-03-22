@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('datasets', '0015_datapointdimensioncategory_and_more'),
     ]
@@ -17,11 +16,19 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name='datapointdimensioncategory',
-            options={'ordering': ('data_point', 'dimension_category__dimension__created_at'), 'verbose_name': 'data point dimension category', 'verbose_name_plural': 'data point dimension categories'},
+            options={
+                'ordering': ('data_point', 'dimension_category__dimension__created_at'),
+                'verbose_name': 'data point dimension category',
+                'verbose_name_plural': 'data point dimension categories',
+            },
         ),
         migrations.AlterModelOptions(
             name='datasetsourcereference',
-            options={'ordering': ('data_point__dataset', 'data_point'), 'verbose_name': 'data source reference', 'verbose_name_plural': 'data source references'},
+            options={
+                'ordering': ('data_point__dataset', 'data_point'),
+                'verbose_name': 'data source reference',
+                'verbose_name_plural': 'data source references',
+            },
         ),
         migrations.AlterModelOptions(
             name='dimension',
@@ -49,7 +56,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='datapointdimensioncategory',
             name='dimension_category',
-            field=models.ForeignKey(db_column='dimensioncategory_id', on_delete=django.db.models.deletion.PROTECT, related_name='data_point_links', to='datasets.dimensioncategory'),
+            field=models.ForeignKey(
+                db_column='dimensioncategory_id',
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name='data_point_links',
+                to='datasets.dimensioncategory',
+            ),
         ),
         migrations.AlterUniqueTogether(
             name='datapointdimensioncategory',

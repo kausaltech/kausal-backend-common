@@ -68,20 +68,20 @@ def convert_language_code(
 
     language, region = regex_match.groups()
     match output_format:
-        case "kausal" | "next.js" | "wagtail":
+        case 'kausal' | 'next.js' | 'wagtail':
             result = language.lower()
-            result += f"-{region.upper()}" if region else ""
+            result += f'-{region.upper()}' if region else ''
             return result
-        case "django":
+        case 'django':
             result = language.lower()
-            result += f"-{region.lower()}" if region else ""
+            result += f'-{region.lower()}' if region else ''
             return result
-        case "modeltrans":
+        case 'modeltrans':
             result = language.lower()
-            result += f"_{region.lower()}" if region else ""
+            result += f'_{region.lower()}' if region else ''
             return result
         case _:
-            format_options = ["kausal", "django", "modeltrans", "next.js", "wagtail"]
+            format_options = ['kausal', 'django', 'modeltrans', 'next.js', 'wagtail']
             error_message = f"'{output_format}' is not a valid language code format. Valid formats are {format_options}"
             raise ValueError(error_message)
 
@@ -89,9 +89,11 @@ def convert_language_code(
 def get_supported_languages():
     yield from settings.LANGUAGES
 
+
 def get_default_language():
     """Return the global default language from Django settings."""
     return settings.LANGUAGES[0][0]
+
 
 def get_default_language_lowercase():
     return get_default_language().lower()

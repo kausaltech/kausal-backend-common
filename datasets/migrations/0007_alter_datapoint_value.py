@@ -4,21 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ("datasets", "0006_datasetschemametric_alter_datasetmetric_options_and_more"),
+        ('datasets', '0006_datasetschemametric_alter_datasetmetric_options_and_more'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="datapoint",
-            name="value",
+            model_name='datapoint',
+            name='value',
             field=models.DecimalField(
                 blank=True,
                 decimal_places=16,
                 max_digits=32,
                 null=True,
-                verbose_name="value",
+                verbose_name='value',
             ),
         ),
     ]

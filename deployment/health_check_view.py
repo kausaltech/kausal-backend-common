@@ -32,12 +32,12 @@ def check_database():
     try:
         with conn.cursor() as cursor:
             if not cursor.db.is_usable():
-                logger.error("Database connection unusable")
+                logger.error('Database connection unusable')
                 return dict(status='fail')
             if cursor.db.close_at is not None:
                 conn_time_left = round(cursor.db.close_at - start, 1)
     except Exception as e:
-        logger.exception("Database health check error")
+        logger.exception('Database health check error')
         sentry_sdk.capture_exception(e)
         return dict(status='fail')
     latency = round((time.monotonic() - start) * 1000000)
@@ -51,7 +51,7 @@ def check_cache() -> dict:
         resp = cache.get_or_set('health-check', default='checked', timeout=1)
     except Exception as e:
         sentry_sdk.capture_exception(e)
-        logger.exception("Cache health check error")
+        logger.exception('Cache health check error')
         return dict(status='fail')
 
     latency = round((time.monotonic() - start) * 1000000)
@@ -63,7 +63,7 @@ def check_cache() -> dict:
 
 
 def check_garbage_collection() -> dict:
-    out: dict  = dict(status='pass')
+    out: dict = dict(status='pass')
     nr_unreachable = gc.collect()
     out['nr_unreachable'] = nr_unreachable
     # if nr_unreachable:

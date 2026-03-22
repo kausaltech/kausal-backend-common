@@ -217,9 +217,9 @@ class PerfCounter:
             pc.display('All done')
 
 
-
 STDLIB_PATH = sysconfig.get_path('stdlib')
 PLATLIB_PATH = sysconfig.get_path('platlib')
+
 
 @dataclass(slots=True)
 class ModelCreationFrameCount:
@@ -229,12 +229,14 @@ class ModelCreationFrameCount:
 
     def __str__(self):
         from django.conf import settings
+
         if self.stack is None:
             assert self.gql_path is not None
-            return f'GraphQL path: {'.'.join(self.gql_path)} ({self.count})'
+            return f'GraphQL path: {".".join(self.gql_path)} ({self.count})'
         last_frame = self.stack[-1]
         filename = last_frame.filename.removeprefix(settings.BASE_DIR)
         return f'{filename}:{last_frame.lineno} ({self.count})'
+
 
 @dataclass(slots=True)
 class ModelCreation:
@@ -270,7 +272,7 @@ class ModelCreation:
                     by_stack.count += 1
                 return
 
-            print("Unknown frame:\n%s" % '\n'.join(traceback.format_stack(limit=20)))
+            print('Unknown frame:\n%s' % '\n'.join(traceback.format_stack(limit=20)))
             self.unknown_count += 1
             return
 
@@ -334,4 +336,3 @@ class ModelCreationCounter(AbstractContextManager['ModelCreationCounter', None])
                     print('\n'.join(['    %s' % f for f in printed_stack]))
                 else:
                     print('    %s' % frame_count)
-

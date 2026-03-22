@@ -18,18 +18,19 @@ class LogFormatter:
 
     To be registered with log_registry.register_action.
     """
+
     label: str
     message: str
     comment: str
     def format_message(self, log_entry) -> str: ...
     def format_comment(self, log_entry) -> str: ...
 
-
 class LogContext:
     """
     Stores data about the environment in which a logged action happens -
     e.g. the active user - to be stored in the log entry for that action.
     """
+
     user: AbstractBaseUser | None
     uuid: UUID | None
     def __init__(self, user: AbstractBaseUser | None = None, generate_uuid: bool = True) -> None: ...
@@ -49,6 +50,7 @@ class LogActionRegistry:
     A central store for log actions.
     The expected format for registered log actions: Namespaced action, Action label, Action message (or callable)
     """
+
     has_scanned_for_actions: bool
     formatters: Mapping[str, LogFormatter]
     choices: list[tuple[str, str]]

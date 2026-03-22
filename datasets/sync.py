@@ -67,7 +67,8 @@ class DimensionCategoryModel(ScopeAwareDjangoDiffModel[DimensionCategory]):
     def get_queryset(cls, dimension_qs: DimensionQuerySet) -> QuerySet[DimensionCategory, dict[str, Any]]:
         cat_fields = cls._django_fields.field_names - {'dimension'}
         categories = (
-            DimensionCategory.objects.filter(dimension__in=dimension_qs)
+            DimensionCategory.objects
+            .filter(dimension__in=dimension_qs)
             .values(*cat_fields)
             .annotate(_instance_pk=F('pk'))
             .annotate(dimension=F('dimension__uuid'))
@@ -145,7 +146,9 @@ class DimensionModel(ScopeAwareDjangoDiffModel[Dimension]):
     def get_queryset(cls, scope: DimensionScopeType) -> QuerySet[Dimension, dict[str, Any]]:
         dim_fields = list(cls._django_fields.plain_fields.keys())
         dimensions = (
-            Dimension.objects.get_queryset().for_scope(scope)
+            Dimension.objects
+            .get_queryset()
+            .for_scope(scope)
             .distinct()
             .annotate(identifier=F('scopes__identifier'))
             .values(*dim_fields, 'identifier', _instance_pk=F('pk'))
@@ -183,7 +186,8 @@ class DatasetMetricModel(ScopeAwareDjangoDiffModel[DatasetMetric]):
         schemas = DatasetSchema.objects.get_queryset().for_scope(scope)
         metric_fields = cls._django_fields.field_names - {'ds_schema'}
         metrics = (
-            DatasetMetric.objects.filter(schema__in=schemas)
+            DatasetMetric.objects
+            .filter(schema__in=schemas)
             .values(*metric_fields)
             .annotate(_instance_pk=F('pk'))
             .annotate(ds_schema=F('schema__uuid'))
@@ -237,7 +241,9 @@ class DatasetSchemaModel(ScopeAwareDjangoDiffModel[DatasetSchema]):
 
         ds_dims = DatasetSchemaDimension.objects.filter(schema=OuterRef('pk')).values_list('dimension__uuid')
         schemas = (
-            DatasetSchema.objects.get_queryset().for_scope(scope)
+            DatasetSchema.objects
+            .get_queryset()
+            .for_scope(scope)
             .values(*schema_fields)
             .annotate(_instance_pk=F('pk'))
             .annotate(dimensions=ArraySubquery(ds_dims))
@@ -279,7 +285,8 @@ class DataPointModel(DjangoDiffModel[DataPoint]):
     def get_queryset(cls, dataset: Dataset) -> QuerySet[DataPoint, dict[str, Any]]:
         # Get dimension categories as JSON array
         dim_cats = (
-            DataPointDimensionCategory.objects.filter(
+            DataPointDimensionCategory.objects
+            .filter(
                 data_point_id=OuterRef('pk'),
             )
             .annotate(
@@ -290,7 +297,8 @@ class DataPointModel(DjangoDiffModel[DataPoint]):
 
         point_fields = cls._django_fields.field_names - {'dataset', 'metric_uuid', 'dimension_categories'}
         data_points = (
-            DataPoint.objects.filter(dataset=dataset)
+            DataPoint.objects
+            .filter(dataset=dataset)
             .values(*point_fields)
             .annotate(_instance_pk=F('pk'))
             .annotate(dataset=F('dataset__uuid'))
@@ -349,7 +357,8 @@ class DatasetModel(DjangoDiffModel[Dataset]):
         schemas = DatasetSchema.objects.get_queryset().for_scope(scope)
         dataset_fields = cls._django_fields.field_names - {'ds_schema'}
         datasets = (
-            Dataset.objects.filter(schema__in=schemas)
+            Dataset.objects
+            .filter(schema__in=schemas)
             .values(*dataset_fields)
             .annotate(_instance_pk=F('pk'))
             .annotate(ds_schema=F('schema__uuid'))

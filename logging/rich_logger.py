@@ -432,4 +432,5 @@ def enable_sql_query_logging[C: Callable[..., Any]](func: C) -> C:
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         with log_sql_queries():
             return func(*args, **kwargs)
+
     return cast('C', wrapper)

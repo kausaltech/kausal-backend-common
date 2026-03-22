@@ -26,43 +26,28 @@ class ButtonHelper:
     url_helper: AdminURLHelper
     permission_helper: PermissionHelper[Any]
 
-    def __init__(self, view, request) -> None:
+    def __init__(self, view, request) -> None: ...
+    def finalise_classname(self, classnames_add=..., classnames_exclude=...):  # -> str:
         ...
-
-    def finalise_classname(self, classnames_add=..., classnames_exclude=...): # -> str:
+    def add_button(self, classnames_add=..., classnames_exclude=...):  # -> dict[str, Any | str]:
         ...
-
-    def add_button(self, classnames_add=..., classnames_exclude=...): # -> dict[str, Any | str]:
+    def inspect_button(self, pk, classnames_add=..., classnames_exclude=...):  # -> dict[str, Any | str]:
         ...
-
-    def inspect_button(self, pk, classnames_add=..., classnames_exclude=...): # -> dict[str, Any | str]:
+    def edit_button(self, pk, classnames_add=..., classnames_exclude=...):  # -> dict[str, Any | str]:
         ...
-
-    def edit_button(self, pk, classnames_add=..., classnames_exclude=...): # -> dict[str, Any | str]:
+    def delete_button(self, pk, classnames_add=..., classnames_exclude=...):  # -> dict[str, Any | str]:
         ...
-
-    def delete_button(self, pk, classnames_add=..., classnames_exclude=...): # -> dict[str, Any | str]:
+    def get_buttons_for_obj(self, obj, exclude=..., classnames_add=..., classnames_exclude=...):  # -> list[Any]:
         ...
-
-    def get_buttons_for_obj(self, obj, exclude=..., classnames_add=..., classnames_exclude=...): # -> list[Any]:
+    def get_primary_button(self, obj):  # -> dict[str, Any | str] | None:
         ...
-
-    def get_primary_button(self, obj): # -> dict[str, Any | str] | None:
-        ...
-
-
 
 class PageButtonHelper(ButtonHelper):
     unpublish_button_classnames = ...
     copy_button_classnames = ...
-    def unpublish_button(self, pk, classnames_add=..., classnames_exclude=...): # -> dict[str, Any | str]:
+    def unpublish_button(self, pk, classnames_add=..., classnames_exclude=...):  # -> dict[str, Any | str]:
         ...
-
-    def copy_button(self, pk, classnames_add=..., classnames_exclude=...): # -> dict[str, Any | str]:
+    def copy_button(self, pk, classnames_add=..., classnames_exclude=...):  # -> dict[str, Any | str]:
         ...
-
-    def get_buttons_for_obj(self, obj, exclude=..., classnames_add=..., classnames_exclude=...): # -> list[Any]:
+    def get_buttons_for_obj(self, obj, exclude=..., classnames_add=..., classnames_exclude=...):  # -> list[Any]:
         ...
-
-
-

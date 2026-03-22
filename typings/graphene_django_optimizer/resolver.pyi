@@ -12,7 +12,6 @@ type SelectRelated = SelectRelatedVal | Callable[[Any], str]
 type PrefetchRelatedVal = str | Prefetch
 type PrefetchRelated = PrefetchRelatedVal | Callable[[Any], PrefetchRelatedVal]
 
-
 def resolver_hints(
     model_field: str | Sequence[str] | None = None,
     select_related: SelectRelated | Sequence[SelectRelated] | type[noop] = ...,

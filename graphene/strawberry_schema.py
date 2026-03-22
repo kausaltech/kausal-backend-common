@@ -30,8 +30,8 @@ class SchemaMerger:
     """Converts a GraphQL schema to a Strawberry schema."""
 
     def __init__(self, sb_schema: strawberry.Schema, gr_schema: graphene.Schema):
-        self.sb_schema = cast("GraphQLSchema", sb_schema._schema)
-        self.gr_schema = cast("GraphQLSchema", gr_schema.graphql_schema)
+        self.sb_schema = cast('GraphQLSchema', sb_schema._schema)
+        self.gr_schema = cast('GraphQLSchema', gr_schema.graphql_schema)
 
         sb_query_type = self.sb_schema.query_type
         assert sb_query_type is not None
@@ -72,7 +72,7 @@ class SchemaMerger:
             if not should_include(type_):
                 continue
             if type_.name in type_map:
-                raise ValueError(f"Type {type_.name} already exists")
+                raise ValueError(f'Type {type_.name} already exists')
             type_map[type_.name] = type_
             types.append(type_)
         return types
@@ -101,7 +101,7 @@ class SchemaMerger:
                     if directive.name == sd.name:
                         return False
                 if set(d.locations) & set(directive.locations):
-                    raise ValueError(f"Directive {directive.name} already exists")
+                    raise ValueError(f'Directive {directive.name} already exists')
             return True
 
         for directive in gr_directives:
@@ -114,11 +114,11 @@ class SchemaMerger:
         fields: dict[str, GraphQLField] = {}
         for name, field in sb_fields.items():
             if name in fields:
-                raise ValueError(f"Field {name} already exists in {sb_fields}")
+                raise ValueError(f'Field {name} already exists in {sb_fields}')
             fields[name] = field
         for name, field in gr_fields.items():
             if name in fields:
-                raise ValueError(f"Field {name} already exists in {gr_fields}")
+                raise ValueError(f'Field {name} already exists in {gr_fields}')
             fields[name] = field
         return fields
 
@@ -140,12 +140,12 @@ class StrawberryCompatibleTypeMap(GrapheneTypeMap):
         if gql_schema.mutation_type:
             for name, field in gql_schema.mutation_type.fields.items():
                 if name in mutation_type.fields:
-                    raise ValueError(f"Field {name} already exists in {mutation_type}")
+                    raise ValueError(f'Field {name} already exists in {mutation_type}')
                 mutation_type.fields[name] = field
         for type_ in gql_schema.type_map.values():
             if not is_abstract_type(type_):
                 continue
-            imp_types = gql_schema.get_possible_types(cast("GraphQLAbstractType", type_))
+            imp_types = gql_schema.get_possible_types(cast('GraphQLAbstractType', type_))
             for imp_type in imp_types:
                 if imp_type.name not in self:
                     self.types.append(imp_type)
@@ -177,9 +177,7 @@ class CombinedSchema(graphene.Schema):
         self.query = query
         self.mutation = mutation
         self.subscription = subscription
-        type_map = StrawberryCompatibleTypeMap(
-            sb_schema, query, mutation, subscription, types, auto_camelcase=auto_camelcase
-        )
+        type_map = StrawberryCompatibleTypeMap(sb_schema, query, mutation, subscription, types, auto_camelcase=auto_camelcase)
         if directives is None:
             directives = ()
         sb_directives = sb_schema._schema.directives

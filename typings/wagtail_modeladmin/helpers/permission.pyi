@@ -13,9 +13,7 @@ class PermissionHelper[M: Model]:
     user can do with a 'typical' model (where permissions are granted
     model-wide), and to a specific instance of that model.
     """
-    def __init__(self, model: type[M], inspect_view_enabled: bool = ...) -> None:
-        ...
-
+    def __init__(self, model: type[M], inspect_view_enabled: bool = ...) -> None: ...
     def get_all_model_permissions(self) -> QuerySet[Permission, Permission]:
         """
         Return a queryset of all Permission objects pertaining to the `model`
@@ -23,12 +21,8 @@ class PermissionHelper[M: Model]:
         """
 
     @cached_property
-    def all_permission_codenames(self) -> Iterable[str]:
-        ...
-
-    def get_perm_codename(self, action: str) -> str:
-        ...
-
+    def all_permission_codenames(self) -> Iterable[str]: ...
+    def get_perm_codename(self, action: str) -> str: ...
     def user_has_specific_permission(self, user, perm_codename: str) -> bool:
         """
         Combine `perm_codename` with `self.opts.app_label` to call the provided
@@ -73,13 +67,8 @@ class PermissionHelper[M: Model]:
         """
         ...
 
-    def user_can_unpublish_obj(self, user: User, obj: M) -> bool:
-        ...
-
-    def user_can_copy_obj(self, user: User, obj: M) -> bool:
-        ...
-
-
+    def user_can_unpublish_obj(self, user: User, obj: M) -> bool: ...
+    def user_can_copy_obj(self, user: User, obj: M) -> bool: ...
 
 class PagePermissionHelper(PermissionHelper[Page]):
     """
@@ -89,7 +78,7 @@ class PagePermissionHelper(PermissionHelper[Page]):
     relevant. We generally need to determine permissions on an
     object-specific basis.
     """
-    def get_valid_parent_pages(self, user): # -> QuerySet[Page, Page]:
+    def get_valid_parent_pages(self, user):  # -> QuerySet[Page, Page]:
         """
         Identifies possible parent pages for the current user by first looking
         at allowed_parent_page_models() on self.model to limit options to the
@@ -98,7 +87,7 @@ class PagePermissionHelper(PermissionHelper[Page]):
         """
         ...
 
-    def user_can_list(self, user): # -> Literal[True]:
+    def user_can_list(self, user):  # -> Literal[True]:
         """
         For models extending Page, permitted actions are determined by
         permissions on individual objects. Rather than check for change
@@ -108,7 +97,7 @@ class PagePermissionHelper(PermissionHelper[Page]):
         """
         ...
 
-    def user_can_create(self, user): # -> bool:
+    def user_can_create(self, user):  # -> bool:
         """
         For models extending Page, whether or not a page of this type can be
         added somewhere in the tree essentially determines the add permission,
@@ -116,14 +105,7 @@ class PagePermissionHelper(PermissionHelper[Page]):
         """
         ...
 
-    def user_can_edit_obj(self, user, obj):
-        ...
-
-    def user_can_delete_obj(self, user, obj):
-        ...
-
-    def user_can_unpublish_obj(self, user, obj):
-        ...
-
-    def user_can_copy_obj(self, user, obj):
-        ...
+    def user_can_edit_obj(self, user, obj): ...
+    def user_can_delete_obj(self, user, obj): ...
+    def user_can_unpublish_obj(self, user, obj): ...
+    def user_can_copy_obj(self, user, obj): ...

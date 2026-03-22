@@ -8,72 +8,51 @@ from wagtail.widget_adapters import WidgetAdapter
 DEFAULT_DATE_FORMAT = ...
 DEFAULT_DATETIME_FORMAT = ...
 DEFAULT_TIME_FORMAT = ...
+
 class AdminDateInput(widgets.DateInput):
     template_name: str
-    def __init__(self, attrs=..., format=...) -> None:
+    def __init__(self, attrs=..., format=...) -> None: ...
+    def get_config(self):  # -> dict[str, Any | str]:
         ...
-
-    def get_config(self): # -> dict[str, Any | str]:
+    def get_context(self, name, value, attrs):  # -> dict[str, Any]:
         ...
-
-    def get_context(self, name, value, attrs): # -> dict[str, Any]:
-        ...
-
     @property
-    def media(self): # -> Media:
+    def media(self):  # -> Media:
         ...
-
-
 
 class AdminDateInputAdapter(WidgetAdapter):
     js_constructor: str
-    def js_args(self, widget): # -> list[Any]:
+    def js_args(self, widget):  # -> list[Any]:
         ...
-
-
 
 class AdminTimeInput(widgets.TimeInput):
     template_name: str
-    def __init__(self, attrs=..., format=...) -> None:
+    def __init__(self, attrs=..., format=...) -> None: ...
+    def get_config(self):  # -> dict[str, Any | str]:
         ...
-
-    def get_config(self): # -> dict[str, Any | str]:
+    def get_context(self, name, value, attrs):  # -> dict[str, Any]:
         ...
-
-    def get_context(self, name, value, attrs): # -> dict[str, Any]:
-        ...
-
     @property
-    def media(self): # -> Media:
+    def media(self):  # -> Media:
         ...
-
-
 
 class AdminTimeInputAdapter(WidgetAdapter):
     js_constructor: str
-    def js_args(self, widget): # -> list[Any]:
+    def js_args(self, widget):  # -> list[Any]:
         ...
-
-
 
 class AdminDateTimeInput(widgets.DateTimeInput):
     template_name: str
-    def __init__(self, attrs=..., format=..., time_format=..., js_overlay_parent_selector=...) -> None:
+    def __init__(self, attrs=..., format=..., time_format=..., js_overlay_parent_selector=...) -> None: ...
+    def get_config(self):  # -> dict[str, Any | str]:
         ...
-
-    def get_config(self): # -> dict[str, Any | str]:
+    def get_context(self, name, value, attrs):  # -> dict[str, Any]:
         ...
-
-    def get_context(self, name, value, attrs): # -> dict[str, Any]:
-        ...
-
     @property
-    def media(self): # -> Media:
+    def media(self):  # -> Media:
         ...
-
-
 
 class AdminDateTimeInputAdapter(WidgetAdapter):
     js_constructor: str
-    def js_args(self, widget): # -> list[Any]:
+    def js_args(self, widget):  # -> list[Any]:
         ...

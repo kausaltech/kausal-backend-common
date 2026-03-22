@@ -18,7 +18,6 @@ _ChildForm = TypeVar('_ChildForm', bound=ModelForm, default=WagtailAdminModelFor
 _ChildFormSet = TypeVar('_ChildFormSet', bound=BaseModelFormSet, default=BaseChildFormSet)
 _ChildModel = TypeVar('_ChildModel', bound=Model, default=Model)
 
-
 @type_check_only
 class InlinePanelOwnInitArgs(TypedDict, total=False):
     panels: Sequence[Panel] | None
@@ -26,11 +25,8 @@ class InlinePanelOwnInitArgs(TypedDict, total=False):
     min_num: int | None
     max_num: int | None
 
-
 @type_check_only
 class InlinePanelInitArgs(PanelInitArgs[Any], InlinePanelOwnInitArgs): ...
-
-
 
 class InlinePanel(Panel[_Model], Generic[_Model, _RelatedModel]):
     relation_name: str
@@ -45,15 +41,14 @@ class InlinePanel(Panel[_Model], Generic[_Model, _RelatedModel]):
         relation_name: str,
         **kwargs: Unpack[InlinePanelInitArgs],
     ) -> None: ...
-
     @cached_property
     def panel_definitions(self) -> Sequence[Panel[_RelatedModel]]: ...
-
     @cached_property
     def child_edit_handler(self) -> MultiFieldPanel[_RelatedModel]: ...
 
     class BoundPanel(
-        Panel.BoundPanel[_IPPanel_co, _ChildForm, _ChildModel], Generic[_IPPanel_co, _ChildForm, _ChildFormSet, _ChildModel, _BPModel],
+        Panel.BoundPanel[_IPPanel_co, _ChildForm, _ChildModel],
+        Generic[_IPPanel_co, _ChildForm, _ChildFormSet, _ChildModel, _BPModel],
     ):
         panel: _IPPanel_co
         formset: _ChildFormSet

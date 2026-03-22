@@ -18,7 +18,6 @@ class BreadcrumbItem(TypedDict):
     label: StrOrPromise
     sublabel: NotRequired[StrOrPromise]
 
-
 class WagtailAdminTemplateMixin(TemplateResponseMixin, ContextMixin):
     page_title: ClassVar[StrOrPromise]
     page_subtitle: ClassVar[StrOrPromise]
@@ -37,9 +36,6 @@ class WagtailAdminTemplateMixin(TemplateResponseMixin, ContextMixin):
     def get_header_buttons(self) -> list[Any]: ...
     def get_header_more_buttons(self) -> list[Any]: ...
     def get_template_names(self) -> list[str]: ...
-
-
-
 
 class BaseObjectMixin[M: Model, QS: QuerySet[Any] = QuerySet[Model], PKT: Any = int]:
     # model: type[ModelT]

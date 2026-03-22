@@ -12,11 +12,8 @@ def camelcase_to_underscore(name):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
-RegisteredAPIView = TypedDict('RegisteredAPIView', {
-    'class': 'type[ViewSetMixin]',
-    'name': str,
-    'basename': NotRequired[str]
-})
+
+RegisteredAPIView = TypedDict('RegisteredAPIView', {'class': 'type[ViewSetMixin]', 'name': str, 'basename': NotRequired[str]})
 
 
 def register_view_helper(view_list: list[RegisteredAPIView], klass, name=None, basename=None):
@@ -39,7 +36,7 @@ def register_view_helper(view_list: list[RegisteredAPIView], klass, name=None, b
 def register_view(klass, *args, **kwargs):
     frame = inspect.currentframe()
     if frame is None:
-        raise ValueError("Failed to get the current frame")
+        raise ValueError('Failed to get the current frame')
     calling_module = inspect.getmodule(frame.f_back)
 
     all_views = getattr(calling_module, 'all_views', None)

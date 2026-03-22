@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 ENV_VARIABLE_PATTERN = re.compile(r'[A-Z][A-Z0-9_]*')
 
+
 @functools.cache
 def get_deployment_build_id() -> str | None:
     return os.getenv('BUILD_ID', None)

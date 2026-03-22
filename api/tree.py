@@ -11,11 +11,13 @@ from treebeard.mp_tree import MP_Node
 
 if TYPE_CHECKING:
     from typing import Any
+
     class ModelSerializerMixinBase[M: Model](serializers.ModelSerializer[M]):
         pass
-else:
-    class ModelSerializerMixinBase[M: Model]: ...
 
+else:
+
+    class ModelSerializerMixinBase[M: Model]: ...
 
 
 class PrevSiblingField[M: MP_Node[Any]](serializers.CharField):
@@ -50,7 +52,6 @@ class PrevSiblingField[M: MP_Node[Any]](serializers.CharField):
             return model.objects.get(id=data)  # type: ignore[attr-defined]
 
 
-
 class TreebeardParentField[M: MP_Node[Any]](serializers.CharField):
     # For serializers of Treebeard node models
     def get_attribute(self, instance: M):
@@ -77,7 +78,9 @@ class TreebeardParentField[M: MP_Node[Any]](serializers.CharField):
         except FieldDoesNotExist:
             return model.objects.get(id=data)
 
+
 # Regarding the metaclass: https://stackoverflow.com/a/58304791/14595546
+
 
 class TreebeardModelSerializerMixin[M: MP_Node[Any]](ModelSerializerMixinBase[M], metaclass=serializers.SerializerMetaclass):
     parent = TreebeardParentField[M](allow_null=True, required=False)  # type: ignore[assignment]
@@ -99,7 +102,7 @@ class TreebeardModelSerializerMixin[M: MP_Node[Any]](ModelSerializerMixinBase[M]
             assert child_data['uuid'] is None or isinstance(child_data['uuid'], UUID)
             if child_data['uuid'] == uuid:
                 return child_data
-        raise exceptions.ValidationError(detail="No validated instance with the given UUID found")
+        raise exceptions.ValidationError(detail='No validated instance with the given UUID found')
 
     def run_validation(self, *args, **kwargs):
         data = super().run_validation(*args, **kwargs)
@@ -139,7 +142,7 @@ class TreebeardModelSerializerMixin[M: MP_Node[Any]](ModelSerializerMixinBase[M]
                     else:
                         left_sibling_parent_uuid = parent.uuid  # type: ignore[attr-defined]
             if left_sibling_parent_uuid != data['parent']:
-                raise exceptions.ValidationError("Instance and left sibling have different parents")
+                raise exceptions.ValidationError('Instance and left sibling have different parents')
         return data
 
     def create(self, validated_data):

@@ -16,7 +16,7 @@ def _breadcrumb_from_record(record: LogRecord) -> dict[str, Any]:
 
     return {
         'type': 'log',
-        'level': LOGGING_TO_EVENT_LEVEL.get(record.levelno, record.levelname.lower() if record.levelname else ""),
+        'level': LOGGING_TO_EVENT_LEVEL.get(record.levelno, record.levelname.lower() if record.levelname else ''),
         'category': record.name,
         'message': record.getMessage(),
         'timestamp': datetime.fromtimestamp(record.created, UTC),

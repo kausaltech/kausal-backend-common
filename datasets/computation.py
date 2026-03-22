@@ -57,11 +57,7 @@ def _compute_metric_values(
     results: list[tuple[date, frozenset[int], int, Decimal | None]] = []
 
     for comp in computations:
-        keys = {
-            (d, dims)
-            for d, dims, m in values
-            if m in (comp.operand_a_id, comp.operand_b_id)
-        }
+        keys = {(d, dims) for d, dims, m in values if m in (comp.operand_a_id, comp.operand_b_id)}
         for d, dims in sorted(keys):
             key_a = (d, dims, comp.operand_a_id)
             key_b = (d, dims, comp.operand_b_id)
@@ -100,11 +96,7 @@ def _resolve_computed_values(
         all_dim_cat_ids |= dims
 
     metrics_by_id = {m.id: m for m in DatasetMetric.objects.filter(id__in=metric_ids)}
-    dim_cats_by_id = (
-        {dc.id: dc for dc in DimensionCategory.objects.filter(id__in=all_dim_cat_ids)}
-        if all_dim_cat_ids
-        else {}
-    )
+    dim_cats_by_id = {dc.id: dc for dc in DimensionCategory.objects.filter(id__in=all_dim_cat_ids)} if all_dim_cat_ids else {}
 
     return [
         ComputedValue(
@@ -124,7 +116,9 @@ def compute_for_queryset(
     """Compute metric values from a data point queryset."""
     computations = list(
         DatasetMetricComputation.objects.filter(schema=dataset.schema).select_related(
-            'target_metric', 'operand_a', 'operand_b',
+            'target_metric',
+            'operand_a',
+            'operand_b',
         )
     )
     if not computations:

@@ -1,13 +1,10 @@
 from collections.abc import Callable
 from typing import TypeVar, overload
 
-_FN = TypeVar("_FN", bound=Callable)
+_FN = TypeVar('_FN', bound=Callable)
 
 @overload
 def register(hook_name: str, *, order: int = ...) -> Callable[[_FN], _FN]: ...
-
 @overload
 def register(hook_name: str, /, fn: Callable, *, order: int = ...) -> None: ...
-
-
 def get_hooks(hook_name: str) -> list[Callable]: ...

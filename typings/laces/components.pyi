@@ -17,6 +17,7 @@ class Component(metaclass=MediaDefiningClass):
     component. This works the same as `Media` class used by Django forms.
     See also: https://docs.djangoproject.com/en/4.2/topics/forms/media/
     """  # noqa: E501
+
     template_name: str
     def render_html(self, parent_context: RenderContext | None = None) -> SafeString:
         """
@@ -37,8 +38,6 @@ class Component(metaclass=MediaDefiningClass):
     @property
     def media(self) -> Media:
         """Return the media definitions for this component."""
-
-
 
 class MediaContainer(list[HasMediaProperty]):
     """

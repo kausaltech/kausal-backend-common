@@ -24,19 +24,16 @@ class PanelComparison[Obj](Protocol):
     def __init__(self, obj_a: Obj, obj_b: Obj): ...
     def has_changed(self) -> bool: ...
 
-
 _FC = TypeVar('_FC', bound=ModelForm[Any], default=ModelForm[Any])
 
 @overload
 def get_form_for_model[M: Model](model: type[M], **kwargs) -> type[WagtailAdminModelForm[M]]: ...
-
 @overload
 def get_form_for_model[FormT: ModelForm[Any]](model: type[Model], form_class: type[FormT], **kwargs) -> type[FormT]:
     """
     Construct a ModelForm subclass using the given model and base form class. Any additional
     keyword arguments are used to populate the form's Meta class.
     """
-
 
 type PanelContext = dict[str, Any]
 
@@ -54,7 +51,6 @@ class PanelInitArgs[F: ModelForm[Any]](TypedDict, total=False):
     base_form_class: type[F]
     icon: str
     attrs: dict[str, str]
-
 
 class Panel(Generic[_Model, _Panel_Form]):
     """
@@ -75,6 +71,7 @@ class Panel(Generic[_Model, _Panel_Form]):
     :param icon: The name of the icon to display next to the panel heading.
     :param attrs: A dictionary of HTML attributes to add to the panel's HTML element.
     """
+
     BASE_ATTRS: ClassVar[dict[str, str]]
     heading: StrOrPromise
     classname: str
@@ -85,9 +82,9 @@ class Panel(Generic[_Model, _Panel_Form]):
     attrs: dict[str, str]
 
     def __init__(
-        self, **kwargs: Unpack[PanelInitArgs[_Panel_Form]],
+        self,
+        **kwargs: Unpack[PanelInitArgs[_Panel_Form]],
     ) -> None: ...
-
     def clone(self) -> Self:
         """
         Create a clone of this panel definition. By default, constructs a new instance, passing the
@@ -159,6 +156,7 @@ class Panel(Generic[_Model, _Panel_Form]):
         """
         A template component for a panel that has been associated with a model instance, form, and request.
         """
+
         panel: _Panel_co
         instance: _BPModel
         request: HttpRequest
@@ -189,13 +187,13 @@ class Panel(Generic[_Model, _Panel_Form]):
         def get_context_data(self, parent_context: PanelContext = ...) -> PanelContext: ...
         def get_comparison(self) -> Sequence[PanelComparison[Any]]: ...
         def render_missing_fields(self) -> str | SafeString:
-            '''
+            """
             Helper function: render all of the fields that are defined on the form but not "claimed" by
             any panels via required_fields. These fields are most likely to be hidden fields introduced
             by the forms framework itself, such as ORDER / DELETE fields on formset members.
             (If they aren\'t actually hidden fields, then they will appear as ugly unstyled / label-less fields
             outside of the panel furniture. But there\'s not much we can do about that.)
-            '''
+            """
         def render_form_content(self) -> str | SafeString:
             """
             Render this as an 'object', ensuring that all fields necessary for a valid form

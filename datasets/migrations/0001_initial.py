@@ -20,353 +20,345 @@ OLD_PATHS_TABLES = (
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ("contenttypes", "0002_remove_content_type_name"),
+        ('contenttypes', '0002_remove_content_type_name'),
     ]
 
     operations = [
-        migrations.RunSQL([
-            f"DROP TABLE IF EXISTS {table};"
-            for table in OLD_PATHS_TABLES
-        ]),
+        migrations.RunSQL([f'DROP TABLE IF EXISTS {table};' for table in OLD_PATHS_TABLES]),
         migrations.CreateModel(
-            name="DatasetSchema",
+            name='DatasetSchema',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name='ID',
                     ),
                 ),
                 (
-                    "uuid",
+                    'uuid',
                     models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
                 ),
                 (
-                    "time_resolution",
+                    'time_resolution',
                     models.CharField(
-                        choices=[("yearly", "Yearly")],
-                        default="yearly",
-                        help_text="Time resolution of the time stamps of data points in this dataset",
+                        choices=[('yearly', 'Yearly')],
+                        default='yearly',
+                        help_text='Time resolution of the time stamps of data points in this dataset',
                         max_length=16,
                     ),
                 ),
                 (
-                    "unit",
-                    models.CharField(blank=True, max_length=100, verbose_name="unit"),
+                    'unit',
+                    models.CharField(blank=True, max_length=100, verbose_name='unit'),
                 ),
-                ("name", models.CharField(max_length=100, verbose_name="name")),
+                ('name', models.CharField(max_length=100, verbose_name='name')),
                 (
-                    "start_date",
+                    'start_date',
                     models.DateField(
                         blank=True,
-                        help_text="First applicable date for datapoints in these datasets",
+                        help_text='First applicable date for datapoints in these datasets',
                         null=True,
-                        verbose_name="start date",
+                        verbose_name='start date',
                     ),
                 ),
                 (
-                    "i18n",
+                    'i18n',
                     modeltrans.fields.TranslationField(
-                        fields=["unit", "name"],
+                        fields=['unit', 'name'],
                         required_languages=(),
                         virtual_fields=True,
                     ),
                 ),
             ],
             options={
-                "verbose_name": "dataset schema",
-                "verbose_name_plural": "dataset schemas",
+                'verbose_name': 'dataset schema',
+                'verbose_name_plural': 'dataset schemas',
             },
         ),
         migrations.CreateModel(
-            name="Dimension",
+            name='Dimension',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name='ID',
                     ),
                 ),
                 (
-                    "uuid",
+                    'uuid',
                     models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
                 ),
-                ("name", models.CharField(max_length=100, verbose_name="name")),
+                ('name', models.CharField(max_length=100, verbose_name='name')),
                 (
-                    "i18n",
-                    modeltrans.fields.TranslationField(
-                        fields=["name"], required_languages=(), virtual_fields=True
-                    ),
+                    'i18n',
+                    modeltrans.fields.TranslationField(fields=['name'], required_languages=(), virtual_fields=True),
                 ),
             ],
             options={
-                "verbose_name": "dimension",
-                "verbose_name_plural": "dimensions",
-                "ordering": ("name",),
+                'verbose_name': 'dimension',
+                'verbose_name_plural': 'dimensions',
+                'ordering': ('name',),
             },
         ),
         migrations.CreateModel(
-            name="Dataset",
+            name='Dataset',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name='ID',
                     ),
                 ),
                 (
-                    "uuid",
+                    'uuid',
                     models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
                 ),
-                ("scope_id", models.PositiveIntegerField(blank=True, null=True)),
+                ('scope_id', models.PositiveIntegerField(blank=True, null=True)),
                 (
-                    "scope_content_type",
+                    'scope_content_type',
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="+",
-                        to="contenttypes.contenttype",
+                        related_name='+',
+                        to='contenttypes.contenttype',
                     ),
                 ),
                 (
-                    "schema",
+                    'schema',
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.PROTECT,
-                        related_name="datasets",
-                        to="datasets.datasetschema",
-                        verbose_name="schema",
+                        related_name='datasets',
+                        to='datasets.datasetschema',
+                        verbose_name='schema',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "dataset",
-                "verbose_name_plural": "datasets",
-                "ordering": ("id",),
+                'verbose_name': 'dataset',
+                'verbose_name_plural': 'datasets',
+                'ordering': ('id',),
             },
         ),
         migrations.CreateModel(
-            name="DatasetSchemaScope",
+            name='DatasetSchemaScope',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name='ID',
                     ),
                 ),
-                ("scope_id", models.PositiveIntegerField()),
+                ('scope_id', models.PositiveIntegerField()),
                 (
-                    "schema",
+                    'schema',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="scopes",
-                        to="datasets.datasetschema",
+                        related_name='scopes',
+                        to='datasets.datasetschema',
                     ),
                 ),
                 (
-                    "scope_content_type",
+                    'scope_content_type',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="+",
-                        to="contenttypes.contenttype",
+                        related_name='+',
+                        to='contenttypes.contenttype',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "dataset schema scope",
-                "verbose_name_plural": "dataset schema scopes",
+                'verbose_name': 'dataset schema scope',
+                'verbose_name_plural': 'dataset schema scopes',
             },
         ),
         migrations.CreateModel(
-            name="DimensionCategory",
+            name='DimensionCategory',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name='ID',
                     ),
                 ),
-                ("order", models.PositiveIntegerField(default=0, verbose_name="order")),
+                ('order', models.PositiveIntegerField(default=0, verbose_name='order')),
                 (
-                    "uuid",
+                    'uuid',
                     models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
                 ),
-                ("label", models.CharField(max_length=100, verbose_name="label")),
+                ('label', models.CharField(max_length=100, verbose_name='label')),
                 (
-                    "i18n",
-                    modeltrans.fields.TranslationField(
-                        fields=["label"], required_languages=(), virtual_fields=True
-                    ),
+                    'i18n',
+                    modeltrans.fields.TranslationField(fields=['label'], required_languages=(), virtual_fields=True),
                 ),
                 (
-                    "dimension",
+                    'dimension',
                     modelcluster.fields.ParentalKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="categories",
-                        to="datasets.dimension",
+                        related_name='categories',
+                        to='datasets.dimension',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "dimension category",
-                "verbose_name_plural": "dimension categories",
+                'verbose_name': 'dimension category',
+                'verbose_name_plural': 'dimension categories',
             },
         ),
         migrations.CreateModel(
-            name="DatasetSchemaDimensionCategory",
+            name='DatasetSchemaDimensionCategory',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name='ID',
                     ),
                 ),
-                ("order", models.PositiveIntegerField(default=0, verbose_name="order")),
+                ('order', models.PositiveIntegerField(default=0, verbose_name='order')),
                 (
-                    "schema",
+                    'schema',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        related_name="dimension_categories",
-                        to="datasets.datasetschema",
+                        related_name='dimension_categories',
+                        to='datasets.datasetschema',
                     ),
                 ),
                 (
-                    "category",
+                    'category',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        related_name="schemas",
-                        to="datasets.dimensioncategory",
+                        related_name='schemas',
+                        to='datasets.dimensioncategory',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "dataset schema dimension category",
-                "verbose_name_plural": "dataset schema dimension categories",
+                'verbose_name': 'dataset schema dimension category',
+                'verbose_name_plural': 'dataset schema dimension categories',
             },
         ),
         migrations.CreateModel(
-            name="DataPoint",
+            name='DataPoint',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name='ID',
                     ),
                 ),
                 (
-                    "uuid",
+                    'uuid',
                     models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
                 ),
                 (
-                    "date",
+                    'date',
                     models.DateField(
                         help_text="Date of this data point in context of the dataset's time resolution",
-                        verbose_name="date",
+                        verbose_name='date',
                     ),
                 ),
                 (
-                    "value",
+                    'value',
                     models.DecimalField(
                         blank=True,
                         decimal_places=4,
                         max_digits=10,
                         null=True,
-                        verbose_name="value",
+                        verbose_name='value',
                     ),
                 ),
                 (
-                    "dataset",
+                    'dataset',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="data_points",
-                        to="datasets.dataset",
-                        verbose_name="dataset",
+                        related_name='data_points',
+                        to='datasets.dataset',
+                        verbose_name='dataset',
                     ),
                 ),
                 (
-                    "dimension_categories",
+                    'dimension_categories',
                     models.ManyToManyField(
                         blank=True,
-                        related_name="data_points",
-                        to="datasets.dimensioncategory",
-                        verbose_name="dimension categories",
+                        related_name='data_points',
+                        to='datasets.dimensioncategory',
+                        verbose_name='dimension categories',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "data point",
-                "verbose_name_plural": "data points",
-                "ordering": ("date",),
+                'verbose_name': 'data point',
+                'verbose_name_plural': 'data points',
+                'ordering': ('date',),
             },
         ),
         migrations.CreateModel(
-            name="DimensionScope",
+            name='DimensionScope',
             fields=[
                 (
-                    "id",
+                    'id',
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name="ID",
+                        verbose_name='ID',
                     ),
                 ),
-                ("order", models.PositiveIntegerField(default=0, verbose_name="order")),
-                ("scope_id", models.PositiveIntegerField()),
+                ('order', models.PositiveIntegerField(default=0, verbose_name='order')),
+                ('scope_id', models.PositiveIntegerField()),
                 (
-                    "dimension",
+                    'dimension',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="scopes",
-                        to="datasets.dimension",
+                        related_name='scopes',
+                        to='datasets.dimension',
                     ),
                 ),
                 (
-                    "scope_content_type",
+                    'scope_content_type',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="+",
-                        to="contenttypes.contenttype",
+                        related_name='+',
+                        to='contenttypes.contenttype',
                     ),
                 ),
             ],
             options={
-                "verbose_name": "dimension scope",
-                "verbose_name_plural": "dimension scopes",
+                'verbose_name': 'dimension scope',
+                'verbose_name_plural': 'dimension scopes',
             },
         ),
         migrations.AddConstraint(
-            model_name="dataset",
+            model_name='dataset',
             constraint=models.UniqueConstraint(
-                fields=("schema", "scope_content_type", "scope_id"),
-                name="unique_dataset_per_scope_per_schema",
+                fields=('schema', 'scope_content_type', 'scope_id'),
+                name='unique_dataset_per_scope_per_schema',
             ),
         ),
     ]

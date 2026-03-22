@@ -29,6 +29,7 @@ def _parse_column_value(value_str: str) -> str | int | bool:
 
 valuetype = str | int | bool
 
+
 def parse_table(input_str: str) -> tuple[tuple[str, ...], list[tuple[valuetype, ...]]]:
     """
     Parse a whitespace-separated table into headers and type-checked data rows.

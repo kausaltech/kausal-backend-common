@@ -3,7 +3,6 @@ from __future__ import annotations
 _otel_initialized = False
 
 
-
 def init_telemetry() -> None:
     from .metrics import init_metrics
     from .traces import init_traces

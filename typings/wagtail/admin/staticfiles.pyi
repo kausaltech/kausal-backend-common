@@ -9,15 +9,13 @@ if use_version_strings:
     VERSION_HASH = ...
 else:
     VERSION_HASH = ...
-if os.environ.get("WAGTAIL_FAIL_ON_VERSIONED_STATIC", "0") == "1":
-    def versioned_static(path):
-        ...
+if os.environ.get('WAGTAIL_FAIL_ON_VERSIONED_STATIC', '0') == '1':
+    def versioned_static(path): ...
 
 else:
-    def versioned_static(path): # -> str:
+    def versioned_static(path):  # -> str:
         """
         Wrapper for Django's static file finder to append a cache-busting query parameter
         that updates on each Wagtail version
         """
         ...
-

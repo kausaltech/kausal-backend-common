@@ -18,6 +18,7 @@ class StructBlockValidationError(ValidationError):
 
 class StructValue[B: StructBlock = StructBlock](collections.OrderedDict[str, Block]):
     """A class that generates a StructBlock value from provided sub-blocks"""
+
     block: B
     def __init__(self, block: B, *args) -> None: ...
     def __html__(self): ...
@@ -35,7 +36,9 @@ class PlaceholderBoundBlock(BoundBlock):
 class BaseStructBlock[M: BlockMeta = BlockMeta](Block[M]):
     search_index: bool
     child_blocks: collections.OrderedDict[str, Block]
-    def __init__(self, local_blocks: Sequence[tuple[str, Block[Any] | BaseBlock]] | None = None, search_index: bool = True, **kwargs) -> None: ...
+    def __init__(
+        self, local_blocks: Sequence[tuple[str, Block[Any] | BaseBlock]] | None = None, search_index: bool = True, **kwargs
+    ) -> None: ...
     @classmethod
     def construct_from_lookup(cls, lookup, child_blocks, **kwargs): ...
     def get_default(self):

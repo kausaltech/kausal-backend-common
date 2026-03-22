@@ -8,20 +8,19 @@ from django.core.validators import MaxLengthValidator
 from django.db.models import Model
 
 features = ...
-@cache
-def get_rewriter(): # -> MultiRuleRewriter:
-    ...
 
+@cache
+def get_rewriter():  # -> MultiRuleRewriter:
+    ...
 def expand_db_html(html):
     """
     Expand database-representation HTML into proper HTML usable on front-end templates
     """
     ...
 
-def extract_references_from_rich_text(html): # -> Generator[Any, Any, None]:
+def extract_references_from_rich_text(html):  # -> Generator[Any, Any, None]:
     ...
-
-def get_text_for_indexing(richtext): # -> str:
+def get_text_for_indexing(richtext):  # -> str:
     """
     Return a plain text version of a rich text string, suitable for search indexing;
     like Django's strip_tags, but ensures that whitespace is left between block elements
@@ -36,20 +35,12 @@ class RichText:
     and renders to the front-end HTML rendering.
     Used as the native value of a wagtailcore.blocks.field_block.RichTextBlock.
     """
-    def __init__(self, source) -> None:
+    def __init__(self, source) -> None: ...
+    def __html__(self):  # -> SafeString:
         ...
-
-    def __html__(self): # -> SafeString:
+    def __bool__(self):  # -> bool:
         ...
-
-
-    def __bool__(self): # -> bool:
-        ...
-
-    def __eq__(self, other) -> bool:
-        ...
-
-
+    def __eq__(self, other) -> bool: ...
 
 class EntityHandler:
     """
@@ -71,13 +62,9 @@ class EntityHandler:
         ...
 
     @classmethod
-    def get_instance(cls, attrs: dict) -> Model:
-        ...
-
+    def get_instance(cls, attrs: dict) -> Model: ...
     @classmethod
-    def get_many(cls, attrs_list: list[dict]) -> list[Model]:
-        ...
-
+    def get_many(cls, attrs_list: list[dict]) -> list[Model]: ...
     @staticmethod
     def expand_db_attributes(attrs: dict) -> str:
         """
@@ -95,7 +82,7 @@ class EntityHandler:
         ...
 
     @classmethod
-    def extract_references(cls, attrs): # -> list[Any]:
+    def extract_references(cls, attrs):  # -> list[Any]:
         """
         Yields a sequence of (content_type_id, object_id, model_path, content_path) tuples for the
         database objects referenced by this entity, as per
@@ -103,23 +90,13 @@ class EntityHandler:
         """
         ...
 
-
-
-class LinkHandler(EntityHandler):
-    ...
-
-
-class EmbedHandler(EntityHandler):
-    ...
-
+class LinkHandler(EntityHandler): ...
+class EmbedHandler(EntityHandler): ...
 
 class RichTextMaxLengthValidator(MaxLengthValidator):
     """
     A variant of MaxLengthValidator that only counts text (not HTML tags) towards the limit
     Un-escapes entities for consistency with client-side character count.
     """
-    def clean(self, x): # -> int:
+    def clean(self, x):  # -> int:
         ...
-
-
-

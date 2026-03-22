@@ -19,6 +19,7 @@ elif IS_WATCH:
 else:
     raise RuntimeError('No admin form found')
 
+
 class NodeChoiceField[M: Node[MP_NodeQuerySet[Any]]](ModelChoiceField[M]):
     def label_from_instance(self, obj):
         depth_line = '-' * (obj.get_depth() - 1)
@@ -45,7 +46,7 @@ class NodeForm[M: Node[MP_NodeQuerySet[Any]]](ModelForm[M]):
     def clean_parent(self):
         parent = self.cleaned_data['parent']
         if (parent is not None and parent == self.instance) or parent in self.instance.get_descendants():
-            raise ValidationError(_("A node cannot be moved under itself in the hierarchy."), code='invalid_parent')
+            raise ValidationError(_('A node cannot be moved under itself in the hierarchy.'), code='invalid_parent')
         return parent
 
     def save(self, commit: bool = True) -> M:

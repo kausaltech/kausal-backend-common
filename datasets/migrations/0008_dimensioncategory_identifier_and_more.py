@@ -4,28 +4,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ("datasets", "0007_alter_datapoint_value"),
+        ('datasets', '0007_alter_datapoint_value'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="dimensioncategory",
-            name="identifier",
+            model_name='dimensioncategory',
+            name='identifier',
             field=models.CharField(
                 blank=True,
-                help_text="Optional identifier that, if set, must be unique for the dataset",
+                help_text='Optional identifier that, if set, must be unique for the dataset',
                 max_length=100,
                 null=True,
-                verbose_name="identifier",
+                verbose_name='identifier',
             ),
         ),
         migrations.AddConstraint(
-            model_name="dimensioncategory",
+            model_name='dimensioncategory',
             constraint=models.UniqueConstraint(
-                fields=("identifier", "dimension"),
-                name="unique_identifier_per_dimension",
+                fields=('identifier', 'dimension'),
+                name='unique_identifier_per_dimension',
             ),
         ),
     ]

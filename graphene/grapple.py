@@ -27,7 +27,10 @@ if TYPE_CHECKING:
 
 
 def make_grapple_field(
-    field_name: str, block_type: type[blocks.StructBlock], is_list: bool = False, required: bool = True,
+    field_name: str,
+    block_type: type[blocks.StructBlock],
+    is_list: bool = False,
+    required: bool = True,
 ) -> Callable[[], GraphQLField]:
     def resolve() -> GraphQLField:
         ret = registry.streamfield_blocks[block_type]
@@ -39,12 +42,17 @@ def make_grapple_field(
 
     return resolve
 
+
 type GrappleWrapperField = tuple[GraphQLField, Callable[[Any], Any]]
 type GrappleFieldDef = GraphQLField | GrappleWrapperField
 
+
 def grapple_field[T: BaseType](
-    field_name: str, field_type: type[T] | Callable[[], type[T]], resolver: Callable[..., Any] | None = None,
-    is_list: bool = False, required: bool = True,
+    field_name: str,
+    field_type: type[T] | Callable[[], type[T]],
+    resolver: Callable[..., Any] | None = None,
+    is_list: bool = False,
+    required: bool = True,
 ) -> Callable[[], GrappleFieldDef]:
     def get_wrapper(field) -> graphene.Field:
         wrapped: Structure = field
@@ -59,6 +67,7 @@ def grapple_field[T: BaseType](
         if not is_list and not required and resolver is None:
             return field
         return field, get_wrapper
+
     return resolve
 
 
@@ -84,6 +93,7 @@ def _get_graphql_wrapper(field_name: str, is_list: bool, required: bool) -> Call
             return stream_value
 
         return graphene.Field(wrapper, resolver=resolve_streamfield)
+
     return get_wrapper
 
 
@@ -101,9 +111,7 @@ def _make_union_streamfield(
     union_name = f'{type_name}{field_name_camel}Union'
     union_class = type(union_name, (graphene.Union,), {'Meta': Meta, 'resolve_type': resolve_type})
 
-    return (
-        GraphQLField(field_name, field_type=union_class), _get_graphql_wrapper(field_name, is_list=True, required=required)
-    )
+    return (GraphQLField(field_name, field_type=union_class), _get_graphql_wrapper(field_name, is_list=True, required=required))
 
 
 def make_grapple_streamfield(

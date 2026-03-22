@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('datasets', '0023_alter_target_metric_onetoone'),
     ]
@@ -24,18 +23,34 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name='datasetschemadimension',
-            options={'ordering': ['schema', 'order'], 'verbose_name': 'dataset schema dimension', 'verbose_name_plural': 'dataset schema dimensions'},
+            options={
+                'ordering': ['schema', 'order'],
+                'verbose_name': 'dataset schema dimension',
+                'verbose_name_plural': 'dataset schema dimensions',
+            },
         ),
         migrations.AlterModelOptions(
             name='datasetschemascope',
-            options={'ordering': ('schema', 'id'), 'verbose_name': 'dataset schema scope', 'verbose_name_plural': 'dataset schema scopes'},
+            options={
+                'ordering': ('schema', 'id'),
+                'verbose_name': 'dataset schema scope',
+                'verbose_name_plural': 'dataset schema scopes',
+            },
         ),
         migrations.AlterModelOptions(
             name='datasource',
-            options={'ordering': ['scope_content_type', 'scope_id', 'id'], 'verbose_name': 'Data source', 'verbose_name_plural': 'Data sources'},
+            options={
+                'ordering': ['scope_content_type', 'scope_id', 'id'],
+                'verbose_name': 'Data source',
+                'verbose_name_plural': 'Data sources',
+            },
         ),
         migrations.AlterModelOptions(
             name='dimensionscope',
-            options={'ordering': ('scope_content_type', 'scope_id', 'order'), 'verbose_name': 'dimension scope', 'verbose_name_plural': 'dimension scopes'},
+            options={
+                'ordering': ('scope_content_type', 'scope_id', 'order'),
+                'verbose_name': 'dimension scope',
+                'verbose_name_plural': 'dimension scopes',
+            },
         ),
     ]

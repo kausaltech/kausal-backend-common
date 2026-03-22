@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('datasets', '0014_alter_datasetschema_start_date_alter_dimension_uuid'),
     ]
@@ -17,8 +16,24 @@ class Migration(migrations.Migration):
                     name='DataPointDimensionCategory',
                     fields=[
                         ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                        ('datapoint', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='dimension_category_links', to='datasets.datapoint', db_column='datapoint_id')),
-                        ('dimension_category', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='datapoint_links', to='datasets.dimensioncategory', db_column='dimensioncategory_id')),
+                        (
+                            'datapoint',
+                            models.ForeignKey(
+                                on_delete=django.db.models.deletion.CASCADE,
+                                related_name='dimension_category_links',
+                                to='datasets.datapoint',
+                                db_column='datapoint_id',
+                            ),
+                        ),
+                        (
+                            'dimension_category',
+                            models.ForeignKey(
+                                on_delete=django.db.models.deletion.PROTECT,
+                                related_name='datapoint_links',
+                                to='datasets.dimensioncategory',
+                                db_column='dimensioncategory_id',
+                            ),
+                        ),
                     ],
                     options={
                         'verbose_name': 'data point dimension category',
@@ -30,11 +45,15 @@ class Migration(migrations.Migration):
                 migrations.AlterField(
                     model_name='datapoint',
                     name='dimension_categories',
-                    field=models.ManyToManyField(blank=True, related_name='data_points', through='datasets.DataPointDimensionCategory', to='datasets.dimensioncategory', verbose_name='dimension categories'),
+                    field=models.ManyToManyField(
+                        blank=True,
+                        related_name='data_points',
+                        through='datasets.DataPointDimensionCategory',
+                        to='datasets.dimensioncategory',
+                        verbose_name='dimension categories',
+                    ),
                 ),
             ],
-            database_operations=[
-
-            ]
+            database_operations=[],
         )
     ]

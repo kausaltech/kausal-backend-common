@@ -11,8 +11,4 @@ class SlugInput(widgets.TextInput):
     fields syncing their value to this field (see `TitleFieldPanel`) if
     also used.
     """
-    def __init__(self, attrs=...) -> None:
-        ...
-
-
-
+    def __init__(self, attrs=...) -> None: ...

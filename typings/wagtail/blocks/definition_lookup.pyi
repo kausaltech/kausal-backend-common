@@ -1,7 +1,7 @@
 from _typeshed import Incomplete
 
 class BlockDefinitionLookup:
-    '''
+    """
     A utility for constructing StreamField Block objects in migrations, starting from
     a compact representation that avoids repeating the same definition whenever a
     block is re-used in multiple places over the block definition tree.
@@ -28,7 +28,8 @@ class BlockDefinitionLookup:
     `construct_from_lookup(lookup, *args, **kwargs)`, where `lookup` is
     the `BlockDefinitionLookup` instance. The method should return a block instance
     constructed from the provided arguments (after performing any lookups).
-    '''
+    """
+
     blocks: Incomplete
     block_classes: Incomplete
     def __init__(self, blocks) -> None: ...
@@ -38,6 +39,7 @@ class BlockDefinitionLookupBuilder:
     """
     Helper for constructing the lookup data used by BlockDefinitionLookup
     """
+
     blocks: Incomplete
     block_indexes_by_type: Incomplete
     def __init__(self) -> None: ...

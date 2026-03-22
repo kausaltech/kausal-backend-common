@@ -21,11 +21,13 @@ if TYPE_CHECKING:
 
 
 def init_metrics():
-    resource = Resource.create(attributes={
-        SERVICE_NAME: get_project_id(),
-        SERVICE_VERSION: get_deployment_build_id() or 'dev',
-        DEPLOYMENT_ENVIRONMENT_NAME: str(get_deployment_environment()),
-    })
+    resource = Resource.create(
+        attributes={
+            SERVICE_NAME: get_project_id(),
+            SERVICE_VERSION: get_deployment_build_id() or 'dev',
+            DEPLOYMENT_ENVIRONMENT_NAME: str(get_deployment_environment()),
+        }
+    )
 
     metric_readers: list[MetricReader] = []
     prometheus_port = os.getenv('METRICS_PORT', None)

@@ -23,9 +23,11 @@ type DBFieldT = type[DBField]
 FORM_FIELD_OVERRIDES: dict[DBFieldT, dict]
 DIRECT_FORM_FIELD_OVERRIDES: dict[DBFieldT, dict]
 
-
 def register_form_field_override(
-    db_field_class: type[DBField], to: type[Model] | None = None, override: dict[str, Any] = ..., exact_class: bool = False,
+    db_field_class: type[DBField],
+    to: type[Model] | None = None,
+    override: dict[str, Any] = ...,
+    exact_class: bool = False,
 ) -> None:
     """
     Define parameters for form fields to be used by WagtailAdminModelForm for a given
@@ -45,7 +47,6 @@ class WagtailAdminModelFormMetaclass(PermissionedFormMetaclass, ClusterFormMetac
     @classmethod
     def child_form(cls) -> type[WagtailAdminModelForm]: ...
 
-
 class BaseModelFormKwargs[M: Model](TypedDict, total=False):
     data: _DataT | None
     files: _FilesT | None
@@ -62,14 +63,15 @@ class BaseModelFormKwargs[M: Model](TypedDict, total=False):
 _U = TypeVar('_U', bound=AbstractBaseUser, default=AbstractBaseUser, covariant=True)
 _M = TypeVar('_M', bound=Model, default=Model)
 
-
 class WagtailAdminModelForm(
-    PermissionedForm, ClusterForm[_M], Generic[_M, _U], metaclass=WagtailAdminModelFormMetaclass,
+    PermissionedForm,
+    ClusterForm[_M],
+    Generic[_M, _U],
+    metaclass=WagtailAdminModelFormMetaclass,
 ):
     for_user: _U | None
 
     def __init__(self, *args, for_user: _U | None = ..., **kwargs: Unpack[BaseModelFormKwargs[_M]]) -> None: ...
-
 
 class WagtailAdminDraftStateFormMixin:
     @property

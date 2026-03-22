@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     type ASGIAppCallable = Callable[[ASGIScope, ASGIReceiveCallable, ASGISendCallable], Awaitable[None]]
     type ASGIApplication = UvicornASGIApplication | _ASGIApplicationProtocol | StarletteASGIApp | ASGIAppCallable
 
+
 class GeneralRequestMiddleware(BaseMiddleware):
     """General request middleware that performs token auth and log context setup."""
 
@@ -51,25 +52,30 @@ def HTTPMiddleware(inner: ASGIApplication) -> ASGIApplication:  # noqa: N802
 
     from asgi_cors import asgi_cors  # type: ignore[import-untyped]
 
-    return cast('ASGIApplication',SentryAsgiMiddleware(
-        ProxyHeadersMiddleware(
-            AuthMiddlewareStack(  # pyright: ignore[reportArgumentType]
-                GeneralRequestMiddleware(
-                    asgi_cors(inner, allow_all=True, headers=settings.CORS_ALLOW_HEADERS))
+    return cast(
+        'ASGIApplication',
+        SentryAsgiMiddleware(
+            ProxyHeadersMiddleware(
+                AuthMiddlewareStack(  # pyright: ignore[reportArgumentType]
+                    GeneralRequestMiddleware(asgi_cors(inner, allow_all=True, headers=settings.CORS_ALLOW_HEADERS))
+                ),
+                trusted_hosts='*',
             ),
-            trusted_hosts='*'
+            asgi_version=3,
         ),
-        asgi_version=3,
-    ))
+    )
 
 
 def WebSocketMiddleware(inner: ASGIApplication) -> ASGIApplication:  # noqa: N802
-    return cast('ASGIApplication',SentryAsgiMiddleware(
-        ProxyHeadersMiddleware(
-            AllowedHostsOriginValidator(  # pyright: ignore[reportArgumentType]
-                AuthMiddlewareStack(GeneralRequestMiddleware(inner))
+    return cast(
+        'ASGIApplication',
+        SentryAsgiMiddleware(
+            ProxyHeadersMiddleware(
+                AllowedHostsOriginValidator(  # pyright: ignore[reportArgumentType]
+                    AuthMiddlewareStack(GeneralRequestMiddleware(inner))
+                ),
+                trusted_hosts='*',
             ),
-            trusted_hosts='*'
+            asgi_version=3,
         ),
-        asgi_version=3,
-    ))
+    )

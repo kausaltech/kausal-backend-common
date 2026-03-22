@@ -8,4 +8,3 @@ def to_datetimepicker_format(python_format_string):
     the nearest PHP datetime format string possible.
     """
     ...
-

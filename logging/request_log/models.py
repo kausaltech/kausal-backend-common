@@ -16,6 +16,7 @@ class BaseLoggedRequest(models.Model):
     raw_request = models.TextField()
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL, related_name='logged_requests')
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
+
     class Meta:
         abstract = True
         ordering = ['created_at']
@@ -23,7 +24,7 @@ class BaseLoggedRequest(models.Model):
     def save(self, *args, **kwargs):
         result = super().save(*args, **kwargs)
         date_cutoff = timezone.now() - timedelta(days=settings.REQUEST_LOG_MAX_DAYS)
-        self.__class__.objects.filter(created_at__lt=date_cutoff).delete() # type: ignore
+        self.__class__.objects.filter(created_at__lt=date_cutoff).delete()  # type: ignore
         return result
 
     def __str__(self):

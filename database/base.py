@@ -23,7 +23,7 @@ class DatabaseWrapper(PostgisDatabaseWrapper):
         # one more time.
         try:
             return super().create_cursor(name=name)
-        except (InterfaceError, OperationalError):
+        except InterfaceError, OperationalError:
             close_old_connections()
             db_connection.connect()
             return super().create_cursor(name=name)

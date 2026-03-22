@@ -1032,11 +1032,9 @@ class WorkflowContentType(models.Model):
     content_type: ForeignKey[ContentType]
     workflow: ForeignKey[Workflow]
 
-
 class WorkflowTask(Orderable):
     workflow: ForeignKey[Workflow]
     task: ForeignKey[Task]
-
 
 class TaskQuerySet(SpecificQuerySetMixin[TaskQuerySet], models.QuerySet[Task]):
     def active(self): ...
@@ -1157,7 +1155,6 @@ class WorkflowStateQuerySet(models.QuerySet[WorkflowState]):
 
 class WorkflowStateManager(Manager[WorkflowState]):
     def get_queryset(self) -> WorkflowStateQuerySet: ...
-
 
 class WorkflowState(models.Model):
     """Tracks the status of a started Workflow on an object."""

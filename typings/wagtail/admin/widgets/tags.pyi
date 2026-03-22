@@ -6,11 +6,6 @@ from taggit.forms import TagWidget
 
 class AdminTagWidget(TagWidget):
     template_name = ...
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None: ...
+    def get_context(self, name, value, attrs):  # -> dict[str, Any]:
         ...
-
-    def get_context(self, name, value, attrs): # -> dict[str, Any]:
-        ...
-
-
-

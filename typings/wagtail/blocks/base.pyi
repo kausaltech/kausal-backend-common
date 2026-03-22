@@ -27,7 +27,6 @@ class BlockMeta(Protocol):
 
 BlockMetaT = TypeVar('BlockMetaT', bound=BlockMeta, default=BlockMeta)  # noqa: PYI001
 
-
 class Block[BlockMetaT: BlockMeta = BlockMeta](metaclass=BaseBlock):
     name: str
     creation_counter: int
@@ -242,6 +241,7 @@ class DeclarativeSubBlocksMetaclass(BaseBlock):
 
 class BlockWidget(forms.Widget):
     """Wraps a block object as a widget so that it can be incorporated into a Django form"""
+
     block_def: Incomplete
     def __init__(self, block_def, attrs: Incomplete | None = None) -> None: ...
     @property
@@ -250,7 +250,12 @@ class BlockWidget(forms.Widget):
     def block_json(self): ...
     def id_for_label(self, prefix: str) -> str: ...
     def render_with_errors(
-        self, name, value, attrs: Incomplete | None = None, errors: Incomplete | None = None, renderer: Incomplete | None = None,
+        self,
+        name,
+        value,
+        attrs: Incomplete | None = None,
+        errors: Incomplete | None = None,
+        renderer: Incomplete | None = None,
     ): ...
     def render(self, name, value, attrs: Incomplete | None = None, renderer: Incomplete | None = None): ...
     @cached_property
@@ -260,6 +265,7 @@ class BlockWidget(forms.Widget):
 
 class BlockField(forms.Field):
     """Wraps a block object as a form field so that it can be incorporated into a Django form"""
+
     block: Incomplete
     def __init__(self, block: Incomplete | None = None, **kwargs) -> None: ...
     def clean(self, value): ...

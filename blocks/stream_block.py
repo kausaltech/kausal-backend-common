@@ -65,12 +65,16 @@ def generate_stream_block[M: Model](
         #     register_streamfield_block(field_block_class)
         field_blocks[target_field_name] = field_block
 
-    block_class = type(name, (*mixins, blocks.StreamBlock), {
-        '__module__': __name__,
-        **field_blocks,
-        **extra_classvars,
-        'graphql_types': graphql_types,
-    })
+    block_class = type(
+        name,
+        (*mixins, blocks.StreamBlock),
+        {
+            '__module__': __name__,
+            **field_blocks,
+            **extra_classvars,
+            'graphql_types': graphql_types,
+        },
+    )
 
     register_streamfield_block(block_class)
     return block_class

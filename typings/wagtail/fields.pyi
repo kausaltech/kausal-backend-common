@@ -19,17 +19,13 @@ class RichTextField(models.TextField[_RTF_ST, _RTF_GT], Generic[_RTF_ST, _RTF_GT
 
     @classmethod
     def __new__(cls, *args, editor: str | None = None, features: Sequence[str] | None = None, **kwargs) -> Self: ...
-
     def __init__(self, *args, editor: str | None = None, features: Sequence[str] | None = None, **kwargs) -> None: ...
-
     def clone(self): ...
     def get_searchable_content(self, value): ...
     def extract_references(self, value) -> Generator[None]: ...
 
-
 type StreamFieldNamedBlock = tuple[str, Block[Any]]
 type StreamFieldBlocks = Block[Any] | type[Block[Any]] | Sequence[StreamFieldNamedBlock]
-
 
 class StreamField[GT: StreamValue | None = StreamValue](models.Field[Any, GT]):
     stream_block: StreamBlock
@@ -46,7 +42,6 @@ class StreamField[GT: StreamValue | None = StreamValue](models.Field[Any, GT]):
         null: bool = False,
         **kwargs,
     ) -> Self: ...
-
     def __init__(
         self,
         block_types: StreamFieldBlocks,

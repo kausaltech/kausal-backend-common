@@ -6,19 +6,15 @@ from wagtail.admin.widgets import AdminTagWidget
 
 from taggit.forms import TagField as TaggitTagField
 
-def validate_tag_length(value, max_tag_length=...): # -> None:
+def validate_tag_length(value, max_tag_length=...):  # -> None:
     ...
 
 class TagField(TaggitTagField):
     """
     Extends taggit's TagField with the option to prevent creating tags that do not already exist
     """
+
     widget = AdminTagWidget
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None: ...
+    def clean(self, value):  # -> list[Any] | Any:
         ...
-
-    def clean(self, value): # -> list[Any] | Any:
-        ...
-
-
-

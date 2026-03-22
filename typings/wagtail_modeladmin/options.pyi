@@ -25,22 +25,18 @@ class WagtailRegisterable:
     Base class, providing a more convenient way for ModelAdmin or
     ModelAdminGroup instances to be registered with Wagtail's admin area.
     """
+
     add_to_settings_menu: bool
     add_to_admin_menu: bool
     exclude_from_explorer: bool
-    def register_with_wagtail(self): # -> None:
+    def register_with_wagtail(self):  # -> None:
         ...
-
-    def register_admin_url_finders(self): # -> None:
+    def register_admin_url_finders(self):  # -> None:
         ...
-
-    def register_indexing(self): # -> None:
+    def register_indexing(self):  # -> None:
         ...
-
-    def will_modify_explorer_page_queryset(self): # -> Literal[False]:
+    def will_modify_explorer_page_queryset(self):  # -> Literal[False]:
         ...
-
-
 
 class ModelAdmin[M: Model](WagtailRegisterable):
     """
@@ -50,6 +46,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
     of control over how the data is represented, and other methods to make the
     additional functionality available via various Wagtail hooks.
     """
+
     model: type[M]
     opts: Options[M]
     menu_label: StrOrPromise | None
@@ -113,7 +110,6 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
 
     def get_url_helper_class(self) -> type[PageAdminURLHelper | AdminURLHelper]: ...
-
     def get_button_helper_class(self) -> type[PageButtonHelper | ButtonHelper]:
         """
         Returns a ButtonHelper class to help generate buttons for the given
@@ -153,31 +149,31 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         in the list view.
         """
 
-    def get_list_display_add_buttons(self, request: HttpRequest): # -> Literal['__str__']:
+    def get_list_display_add_buttons(self, request: HttpRequest):  # -> Literal['__str__']:
         """
         Return the name of the field/method from list_display where action
         buttons should be added. Defaults to the first item from
         get_list_display()
         """
 
-    def get_list_export(self, request): # -> tuple[()]:
+    def get_list_export(self, request):  # -> tuple[()]:
         """
         Return a sequence containing the fields/method output to be displayed
         in spreadsheet exports.
         """
 
-    def get_empty_value_display(self, field_name=...): # -> SafeString:
+    def get_empty_value_display(self, field_name=...):  # -> SafeString:
         """
         Return the empty_value_display value defined on ModelAdmin
         """
 
-    def get_list_filter(self, request): # -> tuple[Literal['locale']] | tuple[()]:
+    def get_list_filter(self, request):  # -> tuple[Literal['locale']] | tuple[()]:
         """
         Returns a sequence containing the fields to be displayed as filters in
         the right sidebar in the list view.
         """
 
-    def get_ordering(self, request): # -> tuple[()]:
+    def get_ordering(self, request):  # -> tuple[()]:
         """
         Returns a sequence defining the default ordering for results in the
         list view.
@@ -189,32 +185,32 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         admin site.
         """
 
-    def get_search_fields(self, request): # -> tuple[()]:
+    def get_search_fields(self, request):  # -> tuple[()]:
         """
         Returns a sequence defining which fields on a model should be searched
         when a search is initiated from the list view.
         """
 
-    def get_search_handler(self, request, search_fields=...): # -> search_handler_class:
+    def get_search_handler(self, request, search_fields=...):  # -> search_handler_class:
         """
         Returns an instance of ``self.search_handler_class`` that can be used by
         ``IndexView``.
         """
 
-    def get_extra_search_kwargs(self, request, search_term): # -> dict[Any, Any]:
+    def get_extra_search_kwargs(self, request, search_term):  # -> dict[Any, Any]:
         """
         Returns a dictionary of additional kwargs to be sent to
         ``SearchHandler.search_queryset()``.
         """
 
-    def get_extra_attrs_for_row(self, obj, context): # -> dict[Any, Any]:
+    def get_extra_attrs_for_row(self, obj, context):  # -> dict[Any, Any]:
         """
         Return a dictionary of HTML attributes to be added to the `<tr>`
         element for the supplied `obj` when rendering the results table in
         `index_view`. `data-object-pk` is already added by default.
         """
 
-    def get_extra_class_names_for_field_col(self, obj, field_name): # -> list[Any]:
+    def get_extra_class_names_for_field_col(self, obj, field_name):  # -> list[Any]:
         """
         Return a list of additional CSS class names to be added to the table
         cell's `class` attribute when rendering the output of `field_name` for
@@ -223,7 +219,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         Must always return a list.
         """
 
-    def get_extra_attrs_for_field_col(self, obj, field_name): # -> dict[Any, Any]:
+    def get_extra_attrs_for_field_col(self, obj, field_name):  # -> dict[Any, Any]:
         """
         Return a dictionary of additional HTML attributes to be added to a
         table cell when rendering the output of `field_name` for `obj` in
@@ -232,35 +228,29 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         Must always return a dictionary.
         """
 
-    def get_prepopulated_fields(self, request): # -> dict[Any, Any]:
+    def get_prepopulated_fields(self, request):  # -> dict[Any, Any]:
         """
         Returns a sequence specifying custom prepopulated fields slugs on Create/Edit pages.
         """
 
-    def get_form_fields_exclude(self): # -> list[Any]:
+    def get_form_fields_exclude(self):  # -> list[Any]:
         """
         Returns a list or tuple of fields names to be excluded from Create/Edit pages.
         """
 
-    def get_index_view_extra_css(self): # -> list[Any]:
+    def get_index_view_extra_css(self):  # -> list[Any]:
         ...
-
-    def get_index_view_extra_js(self): # -> list[Any]:
+    def get_index_view_extra_js(self):  # -> list[Any]:
         ...
-
-    def get_form_view_extra_css(self): # -> list[Any]:
+    def get_form_view_extra_css(self):  # -> list[Any]:
         ...
-
-    def get_form_view_extra_js(self): # -> list[Any]:
+    def get_form_view_extra_js(self):  # -> list[Any]:
         ...
-
-    def get_inspect_view_extra_css(self): # -> list[Any]:
+    def get_inspect_view_extra_css(self):  # -> list[Any]:
         ...
-
-    def get_inspect_view_extra_js(self): # -> list[Any]:
+    def get_inspect_view_extra_js(self):  # -> list[Any]:
         ...
-
-    def get_inspect_view_fields(self): # -> list[Any]:
+    def get_inspect_view_fields(self):  # -> list[Any]:
         """
         Return a list of field names, indicating the model fields that
         should be displayed in the 'inspect' view. Returns the value of the
@@ -269,14 +259,14 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         'inspect_view_fields_exclude' not being included.
         """
 
-    def index_view(self, request): # -> HttpResponseBase:
+    def index_view(self, request):  # -> HttpResponseBase:
         """
         Instantiates a class-based view to provide listing functionality for
         the assigned model. The view class used can be overridden by changing
         the 'index_view_class' attribute.
         """
 
-    def create_view(self, request): # -> HttpResponseBase:
+    def create_view(self, request):  # -> HttpResponseBase:
         """
         Instantiates a class-based view to provide 'creation' functionality for
         the assigned model, or redirect to Wagtail's create view if the
@@ -284,7 +274,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         changing the 'create_view_class' attribute.
         """
 
-    def choose_parent_view(self, request): # -> HttpResponseBase:
+    def choose_parent_view(self, request):  # -> HttpResponseBase:
         """
         Instantiates a class-based view to allows a parent page to be chosen
         for a new object, where the assigned model extends Wagtail's Page
@@ -293,7 +283,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         'choose_parent_view_class' attribute.
         """
 
-    def inspect_view(self, request, instance_pk): # -> HttpResponseBase:
+    def inspect_view(self, request, instance_pk):  # -> HttpResponseBase:
         """
         Instantiates a class-based view to provide 'inspect' functionality for
         the assigned model. The view class used can be overridden by changing
@@ -301,7 +291,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def edit_view(self, request, instance_pk): # -> HttpResponseBase:
+    def edit_view(self, request, instance_pk):  # -> HttpResponseBase:
         """
         Instantiates a class-based view to provide 'edit' functionality for the
         assigned model, or redirect to Wagtail's edit view if the assigned
@@ -310,7 +300,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def delete_view(self, request, instance_pk): # -> HttpResponseBase:
+    def delete_view(self, request, instance_pk):  # -> HttpResponseBase:
         """
         Instantiates a class-based view to provide 'delete confirmation'
         functionality for the assigned model, or redirect to Wagtail's delete
@@ -320,10 +310,9 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def history_view(self, request, instance_pk): # -> HttpResponseBase:
+    def history_view(self, request, instance_pk):  # -> HttpResponseBase:
         ...
-
-    def get_edit_handler(self): # -> ObjectList[Model, WagtailAdminModelForm[Model, AbstractBaseUser]]:
+    def get_edit_handler(self):  # -> ObjectList[Model, WagtailAdminModelForm[Model, AbstractBaseUser]]:
         """
         Returns the appropriate edit_handler for this modeladmin class.
         edit_handlers can be defined either on the model itself or on the
@@ -332,7 +321,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def get_templates(self, action=...): # -> list[str]:
+    def get_templates(self, action=...):  # -> list[str]:
         """
         Utility function that provides a list of templates to try for a given
         view, when the template isn't overridden by one of the template
@@ -340,7 +329,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def get_index_template(self): # -> str | list[str]:
+    def get_index_template(self):  # -> str | list[str]:
         """
         Returns a template to be used when rendering 'index_view'. If a
         template is specified by the 'index_template_name' attribute, that will
@@ -348,7 +337,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def get_choose_parent_template(self): # -> str | list[str]:
+    def get_choose_parent_template(self):  # -> str | list[str]:
         """
         Returns a template to be used when rendering 'choose_parent_view'. If a
         template is specified by the 'choose_parent_template_name' attribute,
@@ -357,7 +346,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def get_inspect_template(self): # -> str | list[str]:
+    def get_inspect_template(self):  # -> str | list[str]:
         """
         Returns a template to be used when rendering 'inspect_view'. If a
         template is specified by the 'inspect_template_name' attribute, that
@@ -366,7 +355,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def get_history_template(self): # -> str | list[str]:
+    def get_history_template(self):  # -> str | list[str]:
         """
         Returns a template to be used when rendering 'history_view'. If a
         template is specified by the 'history_template_name' attribute, that
@@ -375,7 +364,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def get_create_template(self): # -> str | list[str]:
+    def get_create_template(self):  # -> str | list[str]:
         """
         Returns a template to be used when rendering 'create_view'. If a
         template is specified by the 'create_template_name' attribute,
@@ -384,7 +373,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def get_edit_template(self): # -> str | list[str]:
+    def get_edit_template(self):  # -> str | list[str]:
         """
         Returns a template to be used when rendering 'edit_view'. If a template
         is specified by the 'edit_template_name' attribute, that will be used.
@@ -392,7 +381,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def get_delete_template(self): # -> str | list[str]:
+    def get_delete_template(self):  # -> str | list[str]:
         """
         Returns a template to be used when rendering 'delete_view'. If
         a template is specified by the 'delete_template_name'
@@ -401,7 +390,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def get_menu_item(self, order=...): # -> ModelAdminMenuItem:
+    def get_menu_item(self, order=...):  # -> ModelAdminMenuItem:
         """
         Utilised by Wagtail's 'register_menu_item' hook to create a menu item
         to access the listing view, or can be called by ModelAdminGroup
@@ -409,7 +398,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def get_permissions_for_registration(self): # -> QuerySet[Permission, Permission]:
+    def get_permissions_for_registration(self):  # -> QuerySet[Permission, Permission]:
         """
         Utilised by Wagtail's 'register_permissions' hook to allow permissions
         for a model to be assigned to groups in settings. This is only required
@@ -417,29 +406,24 @@ class ModelAdmin[M: Model](WagtailRegisterable):
         """
         ...
 
-    def get_admin_urls_for_registration(self): # -> tuple[URLPattern, ...] | tuple[URLPattern, URLPattern, URLPattern, URLPattern, URLPattern] | tuple[URLPattern, URLPattern, URLPattern, URLPattern]:
+    def get_admin_urls_for_registration(
+        self,
+    ):  # -> tuple[URLPattern, ...] | tuple[URLPattern, URLPattern, URLPattern, URLPattern, URLPattern] | tuple[URLPattern, URLPattern, URLPattern, URLPattern]:
         """
         Utilised by Wagtail's 'register_admin_urls' hook to register urls for
         our the views that class offers.
         """
         ...
 
-    def will_modify_explorer_page_queryset(self): # -> bool:
+    def will_modify_explorer_page_queryset(self):  # -> bool:
         ...
-
-    def modify_explorer_page_queryset(self, parent_page, queryset, request):
+    def modify_explorer_page_queryset(self, parent_page, queryset, request): ...
+    def register_with_wagtail(self):  # -> None:
         ...
-
-    def register_with_wagtail(self): # -> None:
+    def register_admin_url_finders(self):  # -> None:
         ...
-
-    def register_admin_url_finders(self): # -> None:
+    def register_indexing(self):  # -> None:
         ...
-
-    def register_indexing(self): # -> None:
-        ...
-
-
 
 class ModelAdminGroup(WagtailRegisterable):
     """
@@ -447,6 +431,7 @@ class ModelAdminGroup(WagtailRegisterable):
     SnippetModelAdmin instances. Creates a menu item with a submenu for
     accessing the listing pages of those instances
     """
+
     items: Sequence[type[ModelAdmin[Any]]] = ...
     menu_label: StrOrPromise | None
     menu_item_name = ...
@@ -459,22 +444,17 @@ class ModelAdminGroup(WagtailRegisterable):
         access later
         """
 
-    def get_menu_label(self): # -> Literal['']:
+    def get_menu_label(self):  # -> Literal['']:
         ...
-
-    def get_menu_item_name(self): # -> None:
+    def get_menu_item_name(self):  # -> None:
         ...
-
-    def get_app_label_from_subitems(self): # -> Literal['']:
+    def get_app_label_from_subitems(self):  # -> Literal['']:
         ...
-
-    def get_menu_icon(self): # -> Literal['folder-open-inverse']:
+    def get_menu_icon(self):  # -> Literal['folder-open-inverse']:
         ...
-
-    def get_menu_order(self): # -> Literal[999]:
+    def get_menu_order(self):  # -> Literal[999]:
         ...
-
-    def get_menu_item(self): # -> GroupMenuItem | None:
+    def get_menu_item(self):  # -> GroupMenuItem | None:
         """
         Utilised by Wagtail's 'register_menu_item' hook to create a menu
         for this group with a submenu linking to listing pages for any
@@ -482,10 +462,9 @@ class ModelAdminGroup(WagtailRegisterable):
         """
         ...
 
-    def get_submenu_items(self): # -> list[Any]:
+    def get_submenu_items(self):  # -> list[Any]:
         ...
-
-    def get_permissions_for_registration(self): # -> QuerySet[Permission, Permission]:
+    def get_permissions_for_registration(self):  # -> QuerySet[Permission, Permission]:
         """
         Utilised by Wagtail's 'register_permissions' hook to allow permissions
         for a all models grouped by this class to be assigned to Groups in
@@ -493,29 +472,22 @@ class ModelAdminGroup(WagtailRegisterable):
         """
         ...
 
-    def get_admin_urls_for_registration(self): # -> tuple[()]:
+    def get_admin_urls_for_registration(self):  # -> tuple[()]:
         """
         Utilised by Wagtail's 'register_admin_urls' hook to register urls for
         used by any associated ModelAdmin instances
         """
         ...
 
-    def will_modify_explorer_page_queryset(self): # -> bool:
+    def will_modify_explorer_page_queryset(self):  # -> bool:
         ...
-
-    def modify_explorer_page_queryset(self, parent_page, queryset, request):
+    def modify_explorer_page_queryset(self, parent_page, queryset, request): ...
+    def register_with_wagtail(self):  # -> None:
         ...
-
-    def register_with_wagtail(self): # -> None:
+    def register_admin_url_finders(self):  # -> None:
         ...
-
-    def register_admin_url_finders(self): # -> None:
+    def register_indexing(self):  # -> None:
         ...
-
-    def register_indexing(self): # -> None:
-        ...
-
-
 
 def modeladmin_register[AdminT: ModelAdmin[Any] | ModelAdminGroup](modeladmin_class: type[AdminT]) -> type[AdminT]:
     """

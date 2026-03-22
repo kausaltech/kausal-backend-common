@@ -88,17 +88,19 @@ class StreamValue(MutableSequence):
         assigned to the item - this is managed by the enclosing StreamBlock and is not a property
         of blocks in general) and a `block_type` property.
         """
+
         id: Incomplete
         def __init__(self, *args, **kwargs) -> None: ...
         @property
         def block_type(self):
-            '''
+            """
             Syntactic sugar so that we can say child.block_type instead of child.block.name.
             (This doesn\'t belong on BoundBlock itself because the idea of block.name denoting
             the child\'s "type" (\'heading\', \'paragraph\' etc) is unique to StreamBlock, and in the
             wider context people are liable to confuse it with the block class (CharBlock etc).
-            '''
+            """
         def get_prep_value(self): ...
+
     class RawDataView(MutableSequence):
         """
         Internal helper class to present the stream data in raw JSONish format. For backwards
@@ -107,6 +109,7 @@ class StreamValue(MutableSequence):
         accessed, any changes to fields within raw data will not propagate back to the BoundBlock
         and will not be saved back when calling get_prep_value.
         """
+
         stream_value: StreamValue
         def __init__(self, stream_value) -> None: ...
         def __getitem__(self, i): ...
@@ -114,12 +117,14 @@ class StreamValue(MutableSequence):
         def __setitem__(self, i, item) -> None: ...
         def __delitem__(self, i) -> None: ...
         def insert(self, i, item) -> None: ...
+
     class BlockNameLookup(Mapping):
         """
         Dict-like object returned from `blocks_by_name`, for looking up a stream's blocks by name.
         Uses lazy evaluation on access, so that we're not redundantly constructing StreamChild
         instances for blocks of different names.
         """
+
         stream_value: StreamValue
         block_names: list[str]
         find_all: bool
@@ -127,6 +132,7 @@ class StreamValue(MutableSequence):
         def __getitem__(self, block_name): ...
         def __iter__(self): ...
         def __len__(self) -> int: ...
+
     stream_block: StreamBlock
     is_lazy: bool
     raw_text: str | None

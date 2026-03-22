@@ -18,7 +18,18 @@ class ImageRatioField(models.CharField):
     box_max_height: Incomplete
     width: int
     height: int
-    def __init__(self, image_field, size: str = '0x0', free_crop: bool = False, adapt_rotation: bool = False, allow_fullsize: bool = False, verbose_name: Incomplete | None = None, help_text: Incomplete | None = None, hide_image_field: bool = False, size_warning=...) -> None: ...
+    def __init__(
+        self,
+        image_field,
+        size: str = '0x0',
+        free_crop: bool = False,
+        adapt_rotation: bool = False,
+        allow_fullsize: bool = False,
+        verbose_name: Incomplete | None = None,
+        help_text: Incomplete | None = None,
+        hide_image_field: bool = False,
+        size_warning=...,
+    ) -> None: ...
     def deconstruct(self): ...
     def contribute_to_class(self, cls, name, **kwargs) -> None: ...  # type: ignore[override]
     def initial_cropping(self, sender, instance, *args, **kwargs): ...

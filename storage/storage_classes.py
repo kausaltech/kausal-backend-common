@@ -56,7 +56,7 @@ class LocalMediaStorageWithS3Fallback(Storage):
             # Wagtail's ImageFileMixin expects NotImplementedError for files that are not stored locally.
             # Alternatively, we could also override `ImageFileMixin.is_stored_locally()` in `AplansImage`,
             # but then we'd have to check there which storage backend is used.
-            raise NotImplementedError("File does not exist locally.")
+            raise NotImplementedError('File does not exist locally.')
         return self.fs_storage.path(name)
 
     def delete(self, name: str) -> None:
@@ -88,4 +88,3 @@ class LocalMediaStorageWithS3Fallback(Storage):
     @cached_property
     def location(self) -> str:
         return str(self.fs_storage.location)
-

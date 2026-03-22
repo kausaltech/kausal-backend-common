@@ -61,35 +61,21 @@ def dataset(schema):
 def existing_data_point(dataset, metric, dimension_categories):
     category1, _ = dimension_categories
     return DataPointFactory.create(
-        dataset=dataset,
-        date=datetime.date(2023, 1, 1),
-        metric=metric,
-        value=Decimal(100),
-        dimension_categories=[category1]
+        dataset=dataset, date=datetime.date(2023, 1, 1), metric=metric, value=Decimal(100), dimension_categories=[category1]
     )
 
 
 @pytest.fixture
 def serializer_context(dataset, api_factory):
     request = api_factory.post(f'/datasets/{dataset.uuid}/data_points/')
-    return {
-        'view': type('obj', (object,), {
-            'kwargs': {'dataset_uuid': str(dataset.uuid)}
-        }),
-        'request': request
-    }
+    return {'view': type('obj', (object,), {'kwargs': {'dataset_uuid': str(dataset.uuid)}}), 'request': request}
 
 
 def test_duplicate_data_point_validation(existing_data_point, metric, dimension_categories, serializer_context):
     """Test that trying to create a duplicate data_point raises validation error."""
     category1, _ = dimension_categories
 
-    data = {
-        'date': '2023-01-01',
-        'dimension_categories': [str(category1.uuid)],
-        'metric': str(metric.uuid),
-        'value': '200'
-    }
+    data = {'date': '2023-01-01', 'dimension_categories': [str(category1.uuid)], 'metric': str(metric.uuid), 'value': '200'}
 
     # Test that validation raises an error
     serializer = DataPointSerializer(data=data, context=serializer_context)
@@ -104,12 +90,7 @@ def test_different_dimension_categories_passes(existing_data_point, metric, dime
     """Test that creating data points with different dimension categories passes."""
     _, category2 = dimension_categories
 
-    data = {
-        'date': '2023-01-01',
-        'dimension_categories': [str(category2.uuid)],
-        'metric': str(metric.uuid),
-        'value': '200'
-    }
+    data = {'date': '2023-01-01', 'dimension_categories': [str(category2.uuid)], 'metric': str(metric.uuid), 'value': '200'}
 
     # Test that validation passes
     serializer = DataPointSerializer(data=data, context=serializer_context)
@@ -120,12 +101,7 @@ def test_different_date_passes(existing_data_point, metric, dimension_categories
     """Test that creating data points with different dates passes."""
     category1, _ = dimension_categories
 
-    data = {
-        'date': '2024-01-01',
-        'dimension_categories': [str(category1.uuid)],
-        'metric': str(metric.uuid),
-        'value': '200'
-    }
+    data = {'date': '2024-01-01', 'dimension_categories': [str(category1.uuid)], 'metric': str(metric.uuid), 'value': '200'}
 
     # Test that validation passes
     serializer = DataPointSerializer(data=data, context=serializer_context)
@@ -143,7 +119,7 @@ def test_different_metric_passes(existing_data_point, dimension_categories, seri
         'date': '2023-01-01',
         'dimension_categories': [str(category1.uuid)],
         'metric': str(different_metric.uuid),
-        'value': '200'
+        'value': '200',
     }
 
     # Test that validation passes
@@ -152,6 +128,7 @@ def test_different_metric_passes(existing_data_point, dimension_categories, seri
 
 
 # --- Monthly resolution tests ---
+
 
 @pytest.fixture
 def monthly_schema():
@@ -201,9 +178,7 @@ def monthly_existing_data_point(monthly_dataset, monthly_metric, monthly_dimensi
 def monthly_serializer_context(monthly_dataset, api_factory):
     request = api_factory.post(f'/datasets/{monthly_dataset.uuid}/data_points/')
     return {
-        'view': type('obj', (object,), {
-            'kwargs': {'dataset_uuid': str(monthly_dataset.uuid)}
-        }),
+        'view': type('obj', (object,), {'kwargs': {'dataset_uuid': str(monthly_dataset.uuid)}}),
         'request': request,
     }
 
@@ -245,9 +220,7 @@ def test_monthly_different_month_passes(
     assert serializer.is_valid()
 
 
-def test_yearly_same_year_different_month_raises(
-    existing_data_point, metric, dimension_categories, serializer_context
-):
+def test_yearly_same_year_different_month_raises(existing_data_point, metric, dimension_categories, serializer_context):
     """Yearly resolution: same year but different month should still raise a validation error."""
     category1, _ = dimension_categories
 

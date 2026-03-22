@@ -38,10 +38,13 @@ if TYPE_CHECKING:
         graphql_query_language: str
 
     if IS_PATHS:
+
         @type_check_only
         class GQLInfo(GraphQLResolveInfo):
             context: GraphQLContext
+
     else:
+
         @type_check_only
         class GQLInfo(GraphQLResolveInfo):
             context: GraphQLContext
@@ -105,6 +108,7 @@ def _get_user(info: GQLInfo) -> UserOrAnon:
 
 
 if IS_PATHS:
+
     def resolve_user_roles(obj: Model, info: GQLInfo) -> list[str]:
         assert isinstance(obj, PermissionedModel)
         user = _get_user(info)
@@ -187,6 +191,7 @@ class DjangoNode(DjangoObjectType[M], Generic[M]):
         cls._resolve_i18n_fields()
 
         from kausal_common.models.permissions import PermissionedModel
+
         if not issubclass(model, PermissionedModel):
             fields = cls._meta.fields
             if 'allowed_actions' in cls._meta.fields:
@@ -195,5 +200,6 @@ class DjangoNode(DjangoObjectType[M], Generic[M]):
     if TYPE_CHECKING:
         Meta: Any
     else:
+
         class Meta:
             abstract = True

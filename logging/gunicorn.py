@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 access_log = logging.getLogger('gunicorn.access')
 error_log = logging.getLogger('gunicorn.error')
 
+
 class Logger(BaseLogger):
     def setup(self, cfg):
         super().setup(cfg)

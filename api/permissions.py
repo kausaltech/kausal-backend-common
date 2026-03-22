@@ -120,9 +120,7 @@ class NestedPermissionModelMeta[M: PermissionedModel, NestedParent: Permissioned
     nested_parent_model: type[NestedParent]
 
 
-class NestedResourcePermissionPolicyDRFPermission[
-    M: PermissionedModel, CreateContext, NestedParent: PermissionedModel
-](
+class NestedResourcePermissionPolicyDRFPermission[M: PermissionedModel, CreateContext, NestedParent: PermissionedModel](
     PermissionPolicyDRFPermissionBase[M, CreateContext], permissions.DjangoModelPermissions, ABC, metaclass=_MetaClass
 ):
     Meta: NestedPermissionModelMeta[M, NestedParent]

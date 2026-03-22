@@ -36,6 +36,7 @@ class BaseContext(TypedDict):
 type RequestType = HttpRequest | StrawberryGraphQLWSConsumer[Any] | ChannelsRequest | StarletteRequest
 type ResponseType = HttpResponse | StrawberryGraphQLWSConsumer[Any] | TemporalResponse | None
 
+
 def get_base_context(
     request: RequestType,
     response: ResponseType,
@@ -64,6 +65,7 @@ class GraphQLView[Context: GraphQLContext = GraphQLContext](StrawberryGraphQLVie
 
     def get_base_context(self, request: HttpRequest, response: HttpResponse) -> BaseContext:
         return get_base_context(request, response)
+
     def decode_json(self, data: str | bytes) -> object:
         return orjson.loads(data)
 
@@ -113,7 +115,7 @@ class SyncGraphQLHTTPConsumer[Context: GraphQLContext = GraphQLContext](Strawber
         context: Context | None = UNSET,
         root_value: Any | None = UNSET,
     ) -> ChannelsResponse | MultipartChannelsResponse:
-        if request.method and request.method.lower() == "options":
+        if request.method and request.method.lower() == 'options':
             return ChannelsResponse(
                 content=b'',
                 status=200,

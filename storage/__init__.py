@@ -11,6 +11,7 @@ def storage_settings_from_s3_url(url: ParseResult, deployment_type: str | None =
     assert url.scheme == 's3'
     if deployment_type is None:
         from django.conf import settings
+
         deployment_type = settings.DEPLOYMENT_TYPE
 
     opts = {

@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 def get_debugger():
     from .debugger import get_debugger_cls
+
     return get_debugger_cls()()
 
 

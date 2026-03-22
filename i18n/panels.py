@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 class PrimaryLanguagePanel(FieldPanel):
     @override
-    def get_bound_panel(self, instance=None, request=None, form=None, prefix="panel"):
+    def get_bound_panel(self, instance=None, request=None, form=None, prefix='panel'):
         bound_panel = super().get_bound_panel(instance, request, form, prefix)
         language = get_language_from_default_language_field(bound_panel.instance)
         bound_panel.heading = f'{bound_panel.heading} ({language.upper()})'
@@ -45,12 +45,10 @@ class TranslatedFieldRowPanel[M: Model, P: Any](FieldRowPanel[M, P]):
         self.field_name = field_name
         self.widget = widget
         primary_panel = PrimaryLanguagePanel(field_name, widget=widget, **kwargs)
-        lang_panels = [TranslatedLanguagePanel(
-            field_name=field_name,
-            language=lang[0],
-            widget=widget,
-            **kwargs
-        ) for lang in settings.LANGUAGES]
+        lang_panels = [
+            TranslatedLanguagePanel(field_name=field_name, language=lang[0], widget=widget, **kwargs)
+            for lang in settings.LANGUAGES
+        ]
         super().__init__(children=[primary_panel, *lang_panels], **kwargs)
 
     def clone_kwargs(self):
@@ -66,12 +64,10 @@ class TranslatedFieldPanel(MultiFieldPanel):
         self.field_name = field_name
         self.widget = widget
         primary_panel = PrimaryLanguagePanel(field_name, widget=widget, **kwargs)
-        lang_panels = [TranslatedLanguagePanel(
-            field_name=field_name,
-            language=lang[0],
-            widget=widget,
-            **kwargs
-        ) for lang in settings.LANGUAGES]
+        lang_panels = [
+            TranslatedLanguagePanel(field_name=field_name, language=lang[0], widget=widget, **kwargs)
+            for lang in settings.LANGUAGES
+        ]
         super().__init__(children=[primary_panel, *lang_panels], **kwargs)
 
     def clone_kwargs(self):

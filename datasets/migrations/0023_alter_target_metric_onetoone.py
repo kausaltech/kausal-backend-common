@@ -5,21 +5,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ("datasets", "0022_add_dataset_metric_computation"),
+        ('datasets', '0022_add_dataset_metric_computation'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="datasetmetriccomputation",
-            name="target_metric",
+            model_name='datasetmetriccomputation',
+            name='target_metric',
             field=models.OneToOneField(
-                help_text="The metric whose values are computed by this operation",
+                help_text='The metric whose values are computed by this operation',
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="computed_by",
-                to="datasets.datasetmetric",
-                verbose_name="target metric",
+                related_name='computed_by',
+                to='datasets.datasetmetric',
+                verbose_name='target metric',
             ),
         ),
     ]

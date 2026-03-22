@@ -61,6 +61,7 @@ def get_cluster_context() -> ClusterContext:
 
 
 if TYPE_CHECKING:
+
     class LoggedHttpRequest(HttpRequest):
         correlation_id: str
         sentry_scope: Scope
