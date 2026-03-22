@@ -10,7 +10,7 @@ FROM caddy:2 AS caddy
 FROM ${base_image} AS base
 
 ARG POSTGRESQL_MAJOR_VERSION=18
-ARG UV_VERSION=0.10.5
+ARG UV_VERSION=0.10.12
 ARG NVM_VERSION=0.40.4
 ARG ubuntu_codename="noble"
 
@@ -86,7 +86,7 @@ RUN <<EOT
   for cmd in in /opt/nvm/versions/node/*/bin/* ; do
     ln -s $cmd /usr/local/bin
   done
-  corepack enable npm pnpm
+  corepack enable pnpm
 EOT
 
 # Leave the uv install script in the image, because it's useful for debugging.
@@ -123,7 +123,8 @@ ENV \
   UV_INSTALL_DIR=${UV_HOME} \
   UV_BIN=${UV_HOME}/uv \
   UV_LINK_MODE=copy \
-  UV_PYTHON_INSTALL_DIR=${UV_HOME}
+  UV_PYTHON_INSTALL_DIR=${UV_HOME} \
+  UV_COMPILE_BYTECODE=1
 
 WORKDIR ${app_path}
 
@@ -142,106 +143,56 @@ RUN \
   echo ${UV_HOME}/*/lib | tee /etc/ld.so.conf.d/uv-python.conf && \
   ldconfig
 
-COPY requirements.txt* requirements-prod.txt* uv.lock* ${app_path}/
+ARG INSTALL_DEV_DEPS
+COPY uv.lock* ${app_path}/
 ENV CC=gcc
 # TODO: Should '--compile-bytecode' be included below?
-ENV PIP_INSTALL="$UV_BIN pip install --link-mode=copy"
 RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
     --mount=type=secret,id=EXTRA_PYPI_INDEX <<EOF
   set -e
   export LIBRARY_PATH=$(cat /etc/ld.so.conf.d/uv-python.conf)
   . ${VIRTUAL_ENV}/bin/activate
-  # If uv.lock exists, we'll just do a "uv sync".
-  if [ -f uv.lock ] ; then
-    EXTRAS=""
-    if [ -f /run/secrets/EXTRA_PYPI_INDEX ] ; then
-      UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX)
-    else
-      UV_EXTRA_INDEX_URL=""
-    fi
-    if [ ! -z "$UV_EXTRA_INDEX_URL" ] ; then
-      export UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX)
-      EXTRAS="--extra kausal"
-    else
-      EXTRAS="--no-extra kausal"
-    fi
-    ${UV_BIN} sync --no-dev --active --group prod $EXTRAS --locked
+
+  EXTRAS=""
+  if [ -f /run/secrets/EXTRA_PYPI_INDEX ] ; then
+    UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX)
   else
-    ${PIP_INSTALL} -r requirements-prod.txt -r requirements.txt
+    UV_EXTRA_INDEX_URL=""
   fi
-EOF
-
-# If uWSGI is installed, check that it actually starts, and if not, purge the uv cache
-# and try again. uWSGI might be compiled with an old libc version.
-RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOF
-  set -e
-  if which uwsgi 2>&1 > /dev/null ; then
-    if ! uwsgi --version > /dev/null ; then
-      ${UV_BIN} cache clean uwsgi
-      LIBRARY_PATH=$(cat /etc/ld.so.conf.d/uv-python.conf) \
-        ${PIP_INSTALL} --no-binary uwsgi --reinstall-package uwsgi uwsgi
-      uwsgi --version
-    fi
+  if [ ! -z "$UV_EXTRA_INDEX_URL" ] ; then
+    export UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX)
+    EXTRAS="--extra kausal"
+  else
+    EXTRAS="--no-extra kausal"
   fi
+  if [ ! -z "${INSTALL_DEV_DEPS}" ] ; then
+    DEV_DEPS="--group dev --group lint"
+  else
+    DEV_DEPS="--no-dev"
+  fi
+  ${UV_BIN} sync --active $DEV_DEPS --group prod $EXTRAS --locked
 EOF
-
-# Install extra dependencies
-COPY requirements-kausal.txt* ${app_path}/
-RUN --mount=type=secret,id=EXTRA_PYPI_INDEX \
-    if [ -f /run/secrets/EXTRA_PYPI_INDEX -a -f ${app_path}/requirements-kausal.txt ] ; then \
-        UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX) \
-        ${PIP_INSTALL} -r ${app_path}/requirements-kausal.txt ; \
-    fi
 
 # Install node
 COPY package.json package-lock.json* pnpm-lock.yaml* ${app_path}/
 ENV NPM_CONFIG_CACHE=${XDG_CACHE_HOME}/npm
 RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
   set -e
-  if [ -f package-lock.json ] ; then
-    npm ci
-  elif [ -f pnpm-lock.yaml ] ; then
-    pnpm config set store-dir ${XDG_CACHE_HOME}/pnpm-store
-    pnpm install --frozen-lockfile
-  else
-    echo "No package-lock.json or pnpm-lock.yaml found"
-    exit 1
-  fi
+  pnpm config set store-dir ${XDG_CACHE_HOME}/pnpm-store
+  echo "Installing Node.js dependencies..."
+  pnpm install --prod --frozen-lockfile
+  echo "Generating Node.js SBOM..."
+  mkdir -p /sbom
+  pnpm sbom --sbom-format cyclonedx > /sbom/node-js.sbom.cdx.json
 EOT
 
 RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
   set -e
-  if [ -f package-lock.json ] ; then
-    pnpx @cyclonedx/cyclonedx-npm --output-file /sbom/node-js.sbom.cdx.json
-  else
-    # FIXME: Wait for pnpm sbom to land in the released version
-    echo pnpm sbom --sbom-format cyclonedx
-  fi
-EOT
-
-ARG INSTALL_DEV_DEPS
-COPY requirements-dev.txt* ${app_path}/
-# We'll either install all dev dependencies or only IPython (for convenience)
-RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOF
-  set -e
-  export LIBRARY_PATH=$(cat /etc/ld.so.conf.d/uv-python.conf)
-  if [ -f ${app_path}/requirements-dev.txt ] ; then
-    if [ ! -z "${INSTALL_DEV_DEPS}" ] ; then
-      ${PIP_INSTALL} -r ${app_path}/requirements-dev.txt
-    else \
-      ${PIP_INSTALL} $(cat ${app_path}/requirements-dev.txt | grep '^ipython=')
-    fi
-  fi
-EOF
-
-RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
-  set -e ; \
-  mkdir -p /sbom ; \
+  mkdir -p /sbom
   echo "Generating Python SBOM..." ; \
   ${UV_HOME}/uvx --from cyclonedx-bom cyclonedx-py environment --pyproject ${app_path}/pyproject.toml \
     -o /sbom/python.sbom.cdx.json ${VIRTUAL_ENV} ; \
-  echo "Generating Node.js SBOM..." ; \
-  echo npx -y @cyclonedx/cyclonedx-npm --output-file /sbom/node-js.sbom.cdx.json
+EOT
 
 #
 # Final image
