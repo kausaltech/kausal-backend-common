@@ -17,7 +17,7 @@ def monkeypatch_initial() -> None:
 
 def _monkeypatch_second() -> None:
     import django_stubs_ext
-    from django.db.models import ManyToManyField
+    from django.db.models import ManyToManyField, Model
     from django.db.models.fields.json import JSONField
     from django.views import View
     from graphene import Interface, ObjectType
@@ -37,7 +37,7 @@ def _monkeypatch_second() -> None:
         JSONField, ManyToManyField, Node,
         Panel, Panel.BoundPanel, BaseObjectMixin,
         BasePermissionPolicy, ObjectType, Interface,
-        Block, Revision, View, MenuItem
+        Block, Revision, View, MenuItem, Model
     ]
 
     try:

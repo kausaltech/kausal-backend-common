@@ -12,9 +12,18 @@ from rest_framework.exceptions import ValidationError
 if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from actions.deferred_ops import DeferredDatabaseOperationsMixin
+    class ModelSerializerMixinBase[M: Model](serializers.ModelSerializer[M]):
+        pass
+else:
+    class ModelSerializerMixinBase[M: Model]: ...
 
-class BulkSerializerValidationInstanceMixin:
-    def run_validation(self, data: dict[str, Any]):
+
+class BulkSerializerValidationInstanceMixin[M: Model](ModelSerializerMixinBase[M]):
+    parent: BulkListSerializer[M]
+    _instance: M | None
+
+    def run_validation(self, data: Any = serializers.empty) -> Any:
         if self.parent and self.instance is not None:
             assert isinstance(self.instance, models.query.QuerySet)
             self._instance = self.parent.objs_by_id.get(data['id'])
@@ -24,10 +33,11 @@ class BulkSerializerValidationInstanceMixin:
 
 
 class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
-    child: serializers.ModelSerializer[M]
+    child: DeferredDatabaseOperationsMixin[M]
     # instance: models.QuerySet[M] | None
     update_lookup_field = 'id'
     _refresh_cache: bool
+    objs_by_id: dict[int, M]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -52,7 +62,7 @@ class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
             raise ValidationError(errors)
 
         if qs is not None:
-            objs_by_id = {}
+            objs_by_id: dict[int, M] = {}
             self.obj_ids = []
             qs = qs.filter(**{'%s__in' % id_attr: obj_ids})
             for obj in qs:
@@ -177,10 +187,9 @@ class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
         return result
 
     def to_representation(self, value):
-        if self._refresh_cache:
-            if hasattr(self.child, 'initialize_cache_context'):
-                self.child.initialize_cache_context()
-                self._refresh_cache = False
+        if self._refresh_cache and hasattr(self.child, 'initialize_cache_context'):
+            self.child.initialize_cache_context()
+            self._refresh_cache = False
         return super().to_representation(value)
 
     def run_validation(self, *args, **kwargs):

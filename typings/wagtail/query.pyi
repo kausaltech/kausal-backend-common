@@ -1,4 +1,4 @@
-from typing import Any, Generic, Self, TypeVar
+from typing import Any, Generator, Generic, Self, TypeVar
 
 from django.db import models
 from django.db.models import Model, Q, QuerySet
@@ -80,13 +80,12 @@ class TreeQuerySet(QuerySet[_NodeT, _NodeT]):
     @classmethod
     def as_manager(cls) -> models.Manager[_NodeT]: ...
 
-_BaseModelQS = TypeVar('_BaseModelQS', bound=QuerySet[Any], covariant=True)
 
-class SpecificQuerySetMixin(Generic[_BaseModelQS]):
+class SpecificQuerySetMixin[BaseModelQS: QuerySet[Any]]:
     def __init__(self, *args, **kwargs) -> None:
         """Set custom instance attributes"""
 
-    def specific(self, defer: bool = False) -> _BaseModelQS:
+    def specific(self, defer: bool = False) -> BaseModelQS:
         '''
         This efficiently gets all the specific items for the queryset, using
         the minimum number of queries.
@@ -100,11 +99,9 @@ class SpecificQuerySetMixin(Generic[_BaseModelQS]):
         Returns True if this queryset is already specific, False otherwise.
         """
 
-_PageT = TypeVar('_PageT', bound=Page, default=Page)
 
-
-class PageQuerySet(
-    Generic[_PageT], SearchableQuerySetMixin, SpecificQuerySetMixin[PageQuerySet[Page]], TreeQuerySet[_PageT],
+class PageQuerySet[PageT: Page = Page](
+    SearchableQuerySetMixin, SpecificQuerySetMixin[PageQuerySet[Page]], TreeQuerySet[PageT],
 ):
     def live_q(self) -> Q: ...
     def live(self) -> Self:
@@ -262,12 +259,12 @@ class PageQuerySet(
         Used by `is_site_root` method on `wagtailcore.models.Page`.
         """
 
-class SpecificIterable(BaseIterable):
-    def __iter__(self):
+class SpecificIterable[M: Model](BaseIterable[M]):
+    def __iter__(self) -> Generator[M]:
         """
         Identify and return all specific items in a queryset, and return them
         in the same order, with any annotations intact.
         """
 
-class DeferredSpecificIterable(ModelIterable):
+class DeferredSpecificIterable[M: Model](ModelIterable[M]):
     def __iter__(self): ...

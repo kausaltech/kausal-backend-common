@@ -36,7 +36,7 @@ def is_base_action(action: str) -> TypeGuard[ObjectSpecificAction]:
 class ModelPermissionPolicy[
     M: PermissionedModel,
     CreateContext: Any = Any,
-    QS: 'PermissionedQuerySet[Any]' = 'PermissionedQuerySet[M]',
+    QS: PermissionedQuerySet[Any] = PermissionedQuerySet[M],  # type: ignore[type-var]
 ](ABC, WagtailModelPermissionPolicy[M, User, QS]):
     public_fields: list[str]
     """List of fields that are public."""

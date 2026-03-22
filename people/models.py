@@ -6,7 +6,7 @@ import uuid
 from abc import abstractmethod
 from datetime import timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, ClassVar, cast
 
 from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile
@@ -101,7 +101,7 @@ class BasePerson(index.Indexed, ClusterableModel):
         ]),
     ]
 
-    public_fields = [
+    public_fields: ClassVar[list[str]] = [
         'id', 'uuid', 'first_name', 'last_name', 'email', 'title', 'organization',
     ]
 

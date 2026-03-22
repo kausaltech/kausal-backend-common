@@ -11,13 +11,12 @@ from people.models import Person
 
 
 class PersonSerializer(
-    BulkSerializerValidationInstanceMixin,
-    serializers.ModelSerializer,
+    BulkSerializerValidationInstanceMixin[Person],
+    serializers.ModelSerializer[Person],
     ModelWithImageSerializerMixin,
 ):
     uuid = serializers.UUIDField(required=False)
     avatar_url = serializers.SerializerMethodField()
-
 
     def get_avatar_url(self, obj: Person) -> str | None:
         return obj.get_avatar_url(self.context['request'])

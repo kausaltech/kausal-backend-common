@@ -8,7 +8,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.checks import CheckMessage
 from django.db import models
-from django.db.models import Manager, ManyToManyField, Model, Q, QuerySet
+from django.db.models import ForeignKey, Manager, ManyToManyField, Model, Q, QuerySet
 from django.db.models.base import ModelBase
 from django.db.models.fields.related_descriptors import ReverseManyToOneDescriptor
 from django.forms import Form
@@ -67,6 +67,8 @@ from _typeshed import Incomplete
 from modelsearch import index
 from treebeard.mp_tree import MP_Node, MP_NodeManager
 
+from users.base import AbstractUser
+
 from .audit_log import (
     BaseLogEntry as BaseLogEntry,
     BaseLogEntryManager as BaseLogEntryManager,
@@ -102,40 +104,40 @@ PAGE_TEMPLATE_VAR: str
 COMMENTS_RELATION_NAME: str
 
 _F = TypeVar('_F', bound=Callable[..., Any])
+
 @type_check_only
 class _copy_signature(Generic[_F]):  # noqa: N801
     def __init__(self, target: _F) -> None: ...
     def __call__(self, wrapped: Callable[..., Any]) -> _F: ...
 
-
 def reassign_root_page_locale_on_delete(sender, instance, **kwargs) -> None: ...
-
 def get_page_models() -> Sequence[type[Page]]:
     """
     Returns a list of all non-abstract Page model classes defined in this project.
     """
+
 def get_page_content_types(include_base_page_type: bool = True) -> QuerySet[ContentType]:
     """
     Returns a queryset of all ContentType objects corresponding to Page model classes.
     """
+
 def get_default_page_content_type() -> ContentType:
     """
     Returns the content type to use as a default for pages whose content type
     has been deleted.
     """
-def get_streamfield_names(model_class: type[Model]) -> tuple[str, ...]: ...
 
+def get_streamfield_names(model_class: type[Model]) -> tuple[str, ...]: ...
 
 class PageBase(models.base.ModelBase):
     """Metaclass for Page"""
     def __init__(cls, name, bases, dct) -> None: ...  # noqa: N805
 
-
 type SerializableData = dict[str, Any]
-
 
 class RevisionMixin(models.Model):
     """A mixin that allows a model to have revisions."""
+
     latest_revision: models.ForeignKey[Revision[Self] | None, Revision[Self] | None]
     default_exclude_fields_in_copy: ClassVar[Iterable[str]]
 
@@ -181,11 +183,15 @@ class RevisionMixin(models.Model):
         * ``locale``
         """
     def save_revision(
-        self, user: AbstractBaseUser | None = None, approved_go_live_at: str | datetime | None = None,
-        changed: bool = True, log_action: bool | str = False, previous_revision: Revision[Any] | None = None,
+        self,
+        user: AbstractBaseUser | None = None,
+        approved_go_live_at: str | datetime | None = None,
+        changed: bool = True,
+        log_action: bool | str = False,
+        previous_revision: Revision[Any] | None = None,
         clean: bool = True,
     ) -> Revision[Any]:
-        '''
+        """
         Creates and saves a revision.
 
         :param user: The user performing the action.
@@ -197,8 +203,7 @@ class RevisionMixin(models.Model):
         :type previous_revision: Revision
         :param clean: Set this to ``False`` to skip cleaning object content before saving this revision.
         :return: The newly created revision.
-        '''
-
+        """
 
 type _DTSet = datetime | str
 type _NullableDTF = models.DateTimeField[_DTSet | None, datetime | None]
@@ -220,8 +225,13 @@ class DraftStateMixin(models.Model):
     @property
     def status_string(self) -> StrOrPromise: ...
     def publish(
-        self, revision: Revision[Any], user: AbstractBaseUser | None = None, changed: bool = True, log_action: bool = True,
-        previous_revision: Revision[Any] | None = None, skip_permission_checks: bool = False,
+        self,
+        revision: Revision[Any],
+        user: AbstractBaseUser | None = None,
+        changed: bool = True,
+        log_action: bool = True,
+        previous_revision: Revision[Any] | None = None,
+        skip_permission_checks: bool = False,
     ) -> None:
         """
         Publish a revision of the object by applying the changes in the revision to the live object.
@@ -235,7 +245,10 @@ class DraftStateMixin(models.Model):
         :type previous_revision: Revision
         """
     def unpublish(
-        self, set_expired: bool = False, commit: bool = True, user: AbstractBaseUser | None = None,
+        self,
+        set_expired: bool = False,
+        commit: bool = True,
+        user: AbstractBaseUser | None = None,
         log_action: bool = True,
     ):
         """
@@ -261,11 +274,12 @@ class DraftStateMixin(models.Model):
     def get_scheduled_revision_as_object(self) -> Self: ...
     def get_lock(self) -> BaseLock | None: ...
 
-
 class PreviewableMixin:
     """A mixin that allows a model to have previews."""
     def make_preview_request(
-        self, original_request: HttpRequest | None = None, preview_mode: str | None = None,
+        self,
+        original_request: HttpRequest | None = None,
+        preview_mode: str | None = None,
         extra_request_attrs: dict[str, Any] | None = None,
     ) -> HttpResponseBase:
         """
@@ -405,7 +419,6 @@ class WorkflowMixin:
     def status_string(self): ...
     def get_lock(self): ...
 
-
 _PageModel = TypeVar('_PageModel', bound=Page, default=Page, covariant=True)
 
 class BasePageManager(models.Manager[_PageModel], Generic[_PageModel]):
@@ -417,9 +430,6 @@ class BasePageManager(models.Manager[_PageModel], Generic[_PageModel]):
         """
 
 class PageManager(BasePageManager[_PageModel], MP_NodeManager[Any]): ...
-
-
-
 
 class AbstractPage(models.Model):
     """
@@ -435,7 +445,6 @@ PAGE_PERMISSION_TYPES: list[tuple[str, StrOrPromise, StrOrPromise]]
 PAGE_PERMISSION_TYPE_CHOICES: list[tuple[str, StrOrPromise]]
 PAGE_PERMISSION_CODENAMES: list[str]
 
-
 class Page(
     AbstractPage,
     WorkflowMixin,
@@ -445,7 +454,10 @@ class Page(
     RevisionMixin,
     TranslatableMixin[PageQuerySet[Page]],
     MP_Node[PageQuerySet[Page]],
-    SpecificMixin[Page], index.Indexed, ClusterableModel, metaclass=PageBase,
+    SpecificMixin[Page],
+    index.Indexed,
+    ClusterableModel,
+    metaclass=PageBase,
 ):
     title: models.CharField[str, str]
     draft_title: models.CharField[str, str]
@@ -529,9 +541,14 @@ class Page(
         This includes translations of site root pages as well.
         """
     def save(  # noqa: DJ012
-        self, force_insert: bool | tuple[ModelBase, ...] = ..., force_update: bool = ...,
-        using: str | None = ..., update_fields: Iterable[str] | None = ...,
-        clean: bool = True, user: AbstractBaseUser | None = None, log_action: bool = False,
+        self,
+        force_insert: bool | tuple[ModelBase, ...] = ...,
+        force_update: bool = ...,
+        using: str | None = ...,
+        update_fields: Iterable[str] | None = ...,
+        clean: bool = True,
+        user: AbstractBaseUser | None = None,
+        log_action: bool = False,
     ):
         """
         Overrides default method behaviour to make additional updates unique to pages,
@@ -566,10 +583,13 @@ class Page(
 
     @_copy_signature(RevisionMixin.save_revision)
     def save_revision(self, *args, **kwargs) -> Revision[Self]: ...
-
     def get_latest_revision_as_object(self) -> Self: ...
     def update_aliases(
-        self, *, revision: Revision[Self] | None = None, _content: SerializableData | None = None, _updated_ids: Sequence[int] | None = None
+        self,
+        *,
+        revision: Revision[Self] | None = None,
+        _content: SerializableData | None = None,
+        _updated_ids: Sequence[int] | None = None,
     ) -> None:
         """
         Publishes all aliases that follow this page with the latest content from this page.
@@ -581,9 +601,10 @@ class Page(
         """
     @_copy_signature(DraftStateMixin.publish)
     def publish(self, *args, **kwargs) -> None: ...
-
     @_copy_signature(DraftStateMixin.unpublish)
-    def unpublish(self, set_expired: bool = False, commit: bool = True, user: Incomplete | None = None, log_action: bool = True): ...
+    def unpublish(
+        self, set_expired: bool = False, commit: bool = True, user: Incomplete | None = None, log_action: bool = True
+    ): ...
     context_object_name: str | None = None
     def get_context(self, request: HttpRequest, *args, **kwargs) -> dict[str, Any]: ...
     def get_preview_context(self, request, mode_name: str) -> dict[str, Any]: ...
@@ -634,7 +655,6 @@ class Page(
 
     @property
     def url(self) -> str | None: ...
-
     def relative_url(self, current_site, request: Incomplete | None = None):
         """
         Return the 'most appropriate' URL for this page taking into account the site we're currently on;
@@ -705,14 +725,14 @@ class Page(
         """
     @classmethod
     def get_verbose_name(cls) -> StrOrPromise:
-        '''
+        """
         Returns the human-readable "verbose name" of this page model e.g "Blog page".
-        '''
+        """
     @classmethod
     def get_page_description(cls) -> str:
-        '''
+        """
         Returns a page description if it\'s set. For example "A multi-purpose web page".
-        '''
+        """
     @property
     def approved_schedule(self): ...
     def has_unpublished_subtree(self):
@@ -757,7 +777,12 @@ class Page(
         _mpnode_attrs: tuple[str, int] | None = None,
     ) -> Self: ...
     def copy_for_translation(
-        self, locale: Locale, *, copy_parents: bool = False, alias: bool = False, exclude_fields: Sequence[str] | None = None,
+        self,
+        locale: Locale,
+        *,
+        copy_parents: bool = False,
+        alias: bool = False,
+        exclude_fields: Sequence[str] | None = None,
     ) -> Self:
         """Creates a copy of this page in the specified locale."""
     def permissions_for_user(self, user: AbstractBaseUser) -> PagePermissionTester:
@@ -865,24 +890,20 @@ class Page(
     @property
     def has_workflow(self) -> bool:
         """Returns True if the page or an ancestor has an active workflow assigned, otherwise False"""
-    #def get_workflow(self) -> Workflow | None:
+    # def get_workflow(self) -> Workflow | None:
     #    """Returns the active workflow assigned to the page or its nearest ancestor"""
-
 
 class Orderable(models.Model):
     sort_order: models.IntegerField[int | None, int | None]
     sort_order_field: str
 
-
 _RevTargetT = TypeVar('_RevTargetT', bound=Model, default=Model)
-
 
 class RevisionQuerySet(models.QuerySet[Revision[_RevTargetT]], Generic[_RevTargetT]):
     def page_revisions_q(self) -> Q: ...
     def page_revisions(self) -> RevisionQuerySet[Page]: ...
     def not_page_revisions(self) -> Self: ...
     def for_instance[M: Model](self, instance: M) -> RevisionQuerySet[M]: ...
-
 
 class RevisionsManager(models.Manager[Revision[_RevTargetT]], Generic[_RevTargetT]):
     def get_queryset(self) -> RevisionQuerySet[_RevTargetT]: ...
@@ -897,7 +918,6 @@ class RevisionsManager(models.Manager[Revision[_RevTargetT]], Generic[_RevTarget
 
 class PageRevisionsManager(RevisionsManager[Page]):
     def get_queryset(self) -> RevisionQuerySet[Page]: ...
-
 
 class Revision[M: Model](models.Model):
     content_type: models.ForeignKey[ContentType]
@@ -921,24 +941,24 @@ class Revision[M: Model](models.Model):
     def is_latest_revision(self) -> bool: ...
     def delete(self) -> tuple[int, dict[str, int]]: ...  # type: ignore
     def publish(
-        self, user: AbstractBaseUser | None = None, changed: bool = True,
-        log_action: bool = True, previous_revision: Revision[M] | None = None,
+        self,
+        user: AbstractBaseUser | None = None,
+        changed: bool = True,
+        log_action: bool = True,
+        previous_revision: Revision[M] | None = None,
         skip_permission_checks: bool = False,
     ): ...
     def get_previous(self) -> Self: ...
     def get_next(self) -> Self: ...
 
-
 class GroupPagePermissionManager(models.Manager[GroupPagePermission]):
     def create(self, **kwargs): ...
-
 
 class GroupPagePermission(models.Model):
     group: models.ForeignKey[Group, Group]
     page: models.ForeignKey[Page, Page]
     permission: models.ForeignKey[Permission, Permission]
     objects: ClassVar[GroupPagePermissionManager]
-
 
 class PagePermissionTester:
     user: AbstractBaseUser
@@ -982,7 +1002,6 @@ class PagePermissionTester:
     def can_copy_to(self, destination: Page, recursive: bool = False) -> bool: ...
     def can_view_revisions(self) -> bool: ...
 
-
 class PageViewRestriction(BaseViewRestriction):
     page: models.ForeignKey[Page, Page]
     passed_view_restrictions_session_key: str
@@ -999,7 +1018,6 @@ class PageViewRestriction(BaseViewRestriction):
         :param user: the user removing the view restriction
         """
 
-
 class WorkflowPage(models.Model):
     page: Page
     workflow: Workflow
@@ -1010,28 +1028,23 @@ class WorkflowPage(models.Model):
         This includes all descendants of the page excluding any that have other WorkflowPages.
         """
 
-
 class WorkflowContentType(models.Model):
-    content_type: ContentType
-    workflow: Workflow
+    content_type: ForeignKey[ContentType]
+    workflow: ForeignKey[Workflow]
 
 
 class WorkflowTask(Orderable):
-    workflow: Workflow
-    task: WorkflowTask
+    workflow: ForeignKey[Workflow]
+    task: ForeignKey[Task]
 
 
-class TaskQuerySet(SpecificQuerySetMixin, models.QuerySet[Task]):
+class TaskQuerySet(SpecificQuerySetMixin[TaskQuerySet], models.QuerySet[Task]):
     def active(self): ...
 
 class TaskManager(models.Manager[Task]):
     def get_queryset(self) -> TaskQuerySet: ...
 
-
-_StateT = TypeVar('_StateT', bound=TaskState, default=TaskState)
-
-
-class Task(SpecificMixin['Task'], models.Model, Generic[_StateT]):
+class Task[StateT: TaskState = TaskState](SpecificMixin['Task'], models.Model):
     name: models.CharField[str, str]
     content_type: models.ForeignKey[ContentType]
     active: models.BooleanField[bool, bool]
@@ -1044,25 +1057,24 @@ class Task(SpecificMixin['Task'], models.Model, Generic[_StateT]):
 
     def __init__(self, *args, **kwargs) -> None: ...
     @property
-    def workflows(self) -> QuerySet[Workflow]:
+    def workflows(self) -> QuerySet[Workflow, Workflow]:
         """Returns all ``Workflow`` instances that use this task"""
     @property
-    def active_workflows(self) -> QuerySet[Workflow]:
+    def active_workflows(self) -> QuerySet[Workflow, Workflow]:
         """Return a ``QuerySet``` of active workflows that this task is part of"""
     @classmethod
     def get_verbose_name(cls) -> StrOrPromise:
-        '''
+        """
         Returns the human-readable "verbose name" of this task model e.g "Group approval task".
-        '''
+        """
 
-    task_state_class: type[_StateT] | None
+    task_state_class: type[StateT] | None
 
     @classmethod
-    def get_task_state_class(cls) -> type[_StateT]: ...
-
-    def start(self, workflow_state: WorkflowState, user: AbstractBaseUser | None = None) -> _StateT:
+    def get_task_state_class(cls) -> type[StateT]: ...
+    def start(self, workflow_state: WorkflowState, user: AbstractBaseUser | None = None) -> StateT:
         """Start this task on the provided workflow state by creating an instance of TaskState"""
-    def on_action(self, task_state: _StateT, user: AbstractBaseUser, action_name: str, **kwargs) -> None:
+    def on_action(self, task_state: StateT, user: AbstractBaseUser, action_name: str, **kwargs) -> None:
         """Performs an action on a task state determined by the ``action_name`` string passed"""
     def user_can_access_editor(self, obj, user):
         """Returns True if a user who would not normally be able to access the editor for the object should be able to if the object is currently on this task.
@@ -1149,6 +1161,7 @@ class WorkflowStateManager(Manager[WorkflowState]):
 
 class WorkflowState(models.Model):
     """Tracks the status of a started Workflow on an object."""
+
     STATUS_IN_PROGRESS: str
     STATUS_APPROVED: str
     STATUS_NEEDS_CHANGES: str
@@ -1198,36 +1211,34 @@ class WorkflowState(models.Model):
         been started yet (so won't have a TaskState).
         """
     def all_tasks_with_state(self):
-        '''
+        """
         Returns a list of Task objects that are linked with this WorkflowState\'s
         workflow, and have the latest task state.
 
         In a "Submit for moderation -> reject at step 1 -> resubmit -> accept" workflow, this ensures
         the task list reflects the accept, rather than the reject.
-        '''
+        """
     @property
     def is_active(self): ...
     @property
     def is_at_final_task(self):
         """Returns the next active task, which has not been either approved or skipped"""
 
-
 class BaseTaskStateManager[M: Model](models.Manager[M]):
     def reviewable_by(self, user): ...
 
-
-class TaskStateQuerySet(SpecificQuerySetMixin, models.QuerySet[TaskState]):
+class TaskStateQuerySet(SpecificQuerySetMixin[TaskStateQuerySet], models.QuerySet[TaskState]):
     def for_instance(self, instance: Model):
         """
         Filters to only TaskStates for the given instance
         """
 
 class TaskStateManager(BaseTaskStateManager[TaskState]):
-     def get_queryset(self) -> TaskStateQuerySet: ...
-
+    def get_queryset(self) -> TaskStateQuerySet: ...
 
 class TaskState(SpecificMixin['TaskState'], models.Model):
     """Tracks the status of a given Task for a particular revision."""
+
     STATUS_IN_PROGRESS: str
     STATUS_APPROVED: str
     STATUS_REJECTED: str
@@ -1235,7 +1246,7 @@ class TaskState(SpecificMixin['TaskState'], models.Model):
     STATUS_CANCELLED: str
     STATUS_CHOICES: tuple[tuple[str, StrOrPromise], ...]
     workflow_state: models.ForeignKey[WorkflowState]
-    revision: models.ForeignKey[Revision]
+    revision: models.ForeignKey[Revision[TaskState]]
     task: models.ForeignKey[Task[Any], Task[Any]]
     status: models.CharField[str, str]
     started_at: models.DateTimeField[datetime, datetime]
@@ -1273,32 +1284,37 @@ class TaskState(SpecificMixin['TaskState'], models.Model):
     def log_state_change_action(self, user, action) -> None:
         """Log the approval/rejection action"""
 
-
-class PageLogEntryQuerySet(LogEntryQuerySet):
+class PageLogEntryQuerySet[LogEntryModel: BaseLogEntry[Any] = BaseLogEntry[AbstractUser], UserModel: AbstractUser = AbstractUser](
+    LogEntryQuerySet[LogEntryModel, UserModel]
+):
     def get_content_type_ids(self): ...
     def filter_on_content_type(self, content_type): ...
 
-class PageLogEntryManager(BaseLogEntryManager):
+class PageLogEntryManager[
+    LogEntryM: PageLogEntry[Any] = PageLogEntry[AbstractUser],
+    PageModel: Page = Page,
+    QS: PageLogEntryQuerySet[Any, Any] = PageLogEntryQuerySet[LogEntryM, AbstractUser],
+](BaseLogEntryManager[LogEntryM, QS, PageModel, AbstractUser]):
     def get_queryset(self): ...
     def get_instance_title(self, instance): ...
     def log_action(self, instance, action, **kwargs): ...
     def viewable_by_user(self, user): ...
     def for_instance(self, instance): ...
 
-class PageLogEntry(BaseLogEntry):
-    page: Incomplete
-    objects: Incomplete
+class PageLogEntry[UserModel: AbstractUser = AbstractUser](BaseLogEntry[UserModel]):
+    page: models.ForeignKey[Page]
+    objects: ClassVar[PageLogEntryManager[Any, Any, Any]]
 
     @cached_property
     def object_id(self) -> int: ...  # type: ignore[override]
     @cached_property
     def message(self): ...
 
-
 class Comment(ClusterableModel):
     """
     A comment on a field, or a field within a streamfield block
     """
+
     page: Incomplete
     user: Incomplete
     text: Incomplete

@@ -22,7 +22,6 @@ from wagtail.admin.panels.inline_panel import InlinePanel
 from kausal_common.const import IS_PATHS, IS_WATCH
 from kausal_common.datasets.permission_policy import get_permission_policy
 from kausal_common.models.fields import IdentifierField
-from kausal_common.models.permission_policy import ParentInheritedPolicy
 from kausal_common.models.uuid import UUIDIdentifiedModel
 from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase, ObjectRole
 
@@ -44,11 +43,11 @@ if TYPE_CHECKING:
 
     from ..models.types import FK, M2M, RevMany, RevManyToManyQS
     if IS_PATHS:
+        from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
+
         from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase
 
         from paths.dataset_permission_policy import DatasetSchemaPermissionPolicy
-
-        from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
 
         type DatasetScopeType = InstanceConfig
         type DimensionScopeType = InstanceConfig
@@ -687,6 +686,14 @@ class DataPointBase(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel,
         ordering = ('date', 'id')
 
 
+class DataPointQuerySet(PermissionedQuerySet['DataPoint']):
+    pass
+
+
+class DataPointManager(PermissionedManager['DataPoint', DataPointQuerySet]):
+    pass
+
+
 # Note that the P in DataPoint is upper case. Rationale: The word "datapoint" seems to be rarely used.
 # Source: https://english.stackexchange.com/questions/508238/word-choice-data-points-or-datapoints
 # This is in contract to "dataset", which seems to be more common than "data set".
@@ -706,8 +713,8 @@ class DataPoint(DataPointBase):
         DatasetMetric, related_name='data_points', on_delete=models.PROTECT, verbose_name=_('metric')
     )
 
-    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
-    _default_manager: ClassVar[PermissionedManager[Self]]
+    objects: ClassVar[DataPointManager] = DataPointManager()
+    _default_manager: ClassVar[DataPointManager]
 
     class Meta:
         verbose_name = _('data point')

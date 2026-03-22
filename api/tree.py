@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
-from django.core.exceptions import FieldDoesNotExist
+from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
 from django.db.models.base import Model
 from rest_framework import exceptions, serializers
 
@@ -13,9 +13,14 @@ from orgs.models import Organization
 
 if TYPE_CHECKING:
     from typing import Any
+    class ModelSerializerMixinBase[M: Model](serializers.ModelSerializer[M]):
+        pass
+else:
+    class ModelSerializerMixinBase[M: Model]: ...
 
 
-class PrevSiblingField[M: Model](serializers.CharField):
+
+class PrevSiblingField[M: MP_Node[Any]](serializers.CharField):
     parent: serializers.ModelSerializer[M]
 
     # Instances must implement method get_prev_sibling(). (Treebeard nodes do that.) Must be used in ModelSerializer so
@@ -76,8 +81,8 @@ class TreebeardParentField[M: MP_Node[Any]](serializers.CharField):
 
 # Regarding the metaclass: https://stackoverflow.com/a/58304791/14595546
 
-class TreebeardModelSerializerMixin[M: MP_Node[Any]](metaclass=serializers.SerializerMetaclass):
-    parent = TreebeardParentField[M](allow_null=True, required=False)
+class TreebeardModelSerializerMixin[M: MP_Node[Any]](ModelSerializerMixinBase[M], metaclass=serializers.SerializerMetaclass):
+    parent = TreebeardParentField[M](allow_null=True, required=False)  # type: ignore[assignment]
     left_sibling = PrevSiblingField[M](allow_null=True, required=False)
 
     def get_field_names(self, declared_fields, info):
@@ -85,17 +90,18 @@ class TreebeardModelSerializerMixin[M: MP_Node[Any]](metaclass=serializers.Seria
         fields += ['parent', 'left_sibling']
         return fields
 
-    def _get_instance_from_uuid(self, uuid: UUID | str | None):
+    def _get_instance_from_uuid(self, uuid: UUID | str | None) -> M | None:
         if uuid is None:
             return None
-        return self.Meta.model.objects.get(uuid=uuid)
+        model = cast('type[M]', self.Meta.model)
+        return model._default_manager.get(uuid=uuid)  # type: ignore[misc, return-value]
 
     def _get_validated_instance_data(self, uuid: UUID):
         for child_data in getattr(self.parent, '_children_validated_so_far', []):
             assert child_data['uuid'] is None or isinstance(child_data['uuid'], UUID)
             if child_data['uuid'] == uuid:
                 return child_data
-        raise exceptions.ValidationError("No validated instance with the given UUID found")
+        raise exceptions.ValidationError(detail="No validated instance with the given UUID found")
 
     def run_validation(self, *args, **kwargs):
         data = super().run_validation(*args, **kwargs)
@@ -122,17 +128,18 @@ class TreebeardModelSerializerMixin[M: MP_Node[Any]](metaclass=serializers.Seria
             else:
                 try:
                     left_sibling = self._get_instance_from_uuid(data['left_sibling'])
-                except self.Meta.model.DoesNotExist:
+                except ObjectDoesNotExist:
                     # Maybe the instance is not created yet because it is about to be created in the same request
                     left_sibling = self._get_validated_instance_data(data['left_sibling'])
                     left_sibling_parent_uuid = left_sibling['parent']
                     assert left_sibling_parent_uuid is None or isinstance(left_sibling_parent_uuid, UUID)
                 else:
                     assert left_sibling is not None
-                    if left_sibling.parent is None:
+                    parent = left_sibling.get_parent()
+                    if parent is None:
                         left_sibling_parent_uuid = None
                     else:
-                        left_sibling_parent_uuid = left_sibling.parent.uuid
+                        left_sibling_parent_uuid = parent.uuid  # type: ignore[attr-defined]
             if left_sibling_parent_uuid != data['parent']:
                 raise exceptions.ValidationError("Instance and left sibling have different parents")
         return data
@@ -142,13 +149,14 @@ class TreebeardModelSerializerMixin[M: MP_Node[Any]](metaclass=serializers.Seria
         parent = self._get_instance_from_uuid(parent_uuid)
         left_sibling_uuid = validated_data.pop('left_sibling', None)
         left_sibling = self._get_instance_from_uuid(left_sibling_uuid)
-        instance = Organization(**validated_data)
+        Model = cast('type[M]', self.Meta.model)
+        instance = Model(**validated_data)
         # This sucks, but I don't think Treebeard provides an easier way of doing this
         if left_sibling is None:
             if parent is None:
-                first_root = Organization.get_first_root_node()
+                first_root = Model.get_first_root_node()
                 if first_root is None:
-                    Organization.add_root(instance=instance)
+                    Model.add_root(instance=instance)
                 else:
                     first_root.add_sibling('left', instance=instance)
             else:
@@ -171,11 +179,12 @@ class TreebeardModelSerializerMixin[M: MP_Node[Any]](metaclass=serializers.Seria
         left_sibling = self._get_instance_from_uuid(left_sibling_uuid)
         # If this is called from BulkListSerializer, then `instance` might be in some weird state and if we don't
         # re-fetch it we'll get weird integrity errors.
-        instance = instance._meta.model.objects.get(pk=instance.pk)
+        Model = cast('type[M]', instance._meta.model)
+        instance = Model.objects.get(pk=instance.pk)
         super().update(instance, validated_data)
         if left_sibling is None:
             if parent is None:
-                first_root = Organization.get_first_root_node()
+                first_root = Model.get_first_root_node()
                 assert first_root is not None  # if there were no root, there would be no node and thus no `instance`
                 instance.move(first_root, 'left')
             else:

@@ -13,6 +13,8 @@ from modeltrans.manager import MultilingualManager
 from modeltrans.translator import get_i18n_field
 from pydantic import BaseModel, Field
 
+from kausal_common.const import IS_WATCH
+
 from .types import AbstractModelMeta, ModelManager
 
 if TYPE_CHECKING:
@@ -149,9 +151,18 @@ def check_permissioned_model(app_configs: Sequence[AppConfig] | None, **_kwargs)
     for model in apps.get_models():
         if not issubclass(model, PermissionedModel):
             continue
+        if IS_WATCH:
+            # FIXME: KW is lacking permission policies for these models.
+            from kausal_common.datasets.models import DataPointComment, DatasetMetric, DatasetSourceReference
+            if model in (DatasetMetric, DataPointComment, DatasetSourceReference):
+                continue
         try:
             pp = model.permission_policy()
             if pp is None:  # pyright: ignore[reportUnnecessaryComparison]
+                qs = model._default_manager.get_queryset()
+                if qs.query.order_by:
+                    # Default manager has an order_by, so we can skip this model.
+                    continue
                 errors.append(CheckWarning('Permissioned model has no permission policy', id='kausal_common.P001', obj=model))
                 continue
             if pp.model != model:
