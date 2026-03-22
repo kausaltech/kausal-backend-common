@@ -4,9 +4,9 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
-from django.http import HttpRequest
 from typing_extensions import TypedDict
 
+from django.http import HttpRequest
 from django.utils.text import slugify
 from graphql import GraphQLError
 
@@ -19,12 +19,12 @@ if TYPE_CHECKING:
 
     from kausal_common.strawberry.context import GraphQLContext
 
-counter = 0
-
 def format_error(error: Exception):
     if isinstance(error, GraphQLError):
         return error.formatted
     return {"message": str(error)}
+
+DEFAULT_STORE_DIR = Path('query-store')
 
 
 def capture_query(
@@ -34,9 +34,8 @@ def capture_query(
     response: GraphQLHTTPResponse,
     exec_time: float | None = None,
     instance_id: str | None = None,
+    store_dir: Path = DEFAULT_STORE_DIR,
 ):
-    global counter  # noqa: PLW0603
-
     if not data.operation_name:
         return
     request_headers = context.get_request_headers()
@@ -57,17 +56,19 @@ def capture_query(
         execution_time=exec_time,
         has_session=has_session,
     )
-    store_dir = Path('query-store')
     store_dir.mkdir(exist_ok=True)
     instance_id_part = ''
     if instance_id:
         instance_id_part = f'-{instance_id}'
     op_name = slugify(data.operation_name) or 'unnamed'
-    path = store_dir / Path('%04d%s-%s.json'% (counter, instance_id_part, op_name))
+    used_indices = {int(p.name[:4]) for p in store_dir.glob('????-*.json') if p.name[:4].isdigit()}
+    index = 1
+    while index in used_indices:
+        index += 1
+    path = store_dir / f'{index:04d}{instance_id_part}-{op_name}.json'
     logger.info('Capturing GraphQL query and response to %s' % path)
     with path.open('w') as f:
         f.write(json.dumps(out, ensure_ascii=False, indent=2, sort_keys=False))
-    counter += 1
 
 
 @dataclass
