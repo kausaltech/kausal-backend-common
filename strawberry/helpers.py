@@ -44,7 +44,7 @@ def get_or_error[M: Model](
         assert id is not None or kwargs, "Either id or kwargs must be provided"
 
     if isinstance(qs, PermissionedQuerySet):
-        assert isinstance(qs.model, PermissionedModel)
+        assert issubclass(qs.model, PermissionedModel)
         qs = qs.filter_by_perm(info.context.user, for_action)
 
     if id is not None:
