@@ -43,8 +43,7 @@ class DjangoConnectionField(ConnectionField):
     @classmethod
     def connection_resolver(  # type: ignore[override]
         cls, resolver, connection, default_manager, queryset_resolver, max_limit, enforce_first_or_last, root, info, **args
-    ):
-        ...
+    ): ...
     def wrap_resolve(self, parent_resolver):  # -> partial[Promise[Any] | ConnectionType]:
         ...
     def get_queryset_resolver(self):  # -> Callable[..., Any]:

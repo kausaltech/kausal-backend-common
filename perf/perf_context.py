@@ -206,11 +206,7 @@ class PerfContext[NodeType: HasId, CacheResultType: Any = Any](contextlib.Abstra
         return run_ctx
 
     def __exit__(
-        self,
-        __exc_type: type[BaseException] | None,
-        __exc_value: BaseException | None,
-        __traceback: TracebackType | None,
-        /
+        self, __exc_type: type[BaseException] | None, __exc_value: BaseException | None, __traceback: TracebackType | None, /
     ) -> bool | None:
         run = self.run
         if run is None:

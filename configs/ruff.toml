@@ -1,5 +1,5 @@
 line-length = 130
-exclude = ["node_modules", "**/migrations", "Attic", ".venv"]
+exclude = ["node_modules", "migrations", "__generated__", "Attic", ".venv"]
 
 [lint]
 select = ["ALL"]
@@ -122,6 +122,7 @@ django = [
 [format]
 quote-style = "single"
 preview = true
+exclude = ["migrations"]
 
 [lint.flake8-builtins]
 builtins-ignorelist = ["id", "format", "print", "input", "next", "type"]
