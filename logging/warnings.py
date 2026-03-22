@@ -4,6 +4,7 @@ import sys
 import types
 import warnings
 from typing import TextIO
+from warnings import filterwarnings
 
 import rich
 from rich.traceback import Traceback
@@ -60,7 +61,7 @@ def warn_with_traceback(
 
 
 def warning_traceback_enabled() -> bool:
-    return env_bool('LOG_WARNING_TRACEBACK', default=True)
+    return env_bool('LOG_WARNING_TRACEBACK', default=False)
 
 
 def register_warning_handler():
@@ -70,3 +71,24 @@ def register_warning_handler():
         return
     _warning_traceback_enabled = True
     warnings.showwarning = warn_with_traceback
+
+
+def configure_warning_filters():
+    if 'pytest' in sys.modules:
+        # pytest has its own warning filters
+        return
+
+    try:
+        from wagtail.utils.deprecation import RemovedInWagtail70Warning
+
+        warnings.filterwarnings(action='ignore', category=RemovedInWagtail70Warning)
+    except ImportError:
+        pass
+    try:
+        from wagtail.utils.deprecation import RemovedInWagtail80Warning
+
+        warnings.filterwarnings(action='ignore', category=RemovedInWagtail80Warning)
+    except ImportError:
+        pass
+
+    filterwarnings(action='ignore', message='Core Pydantic V1 functionality', category=UserWarning)

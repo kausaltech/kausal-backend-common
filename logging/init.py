@@ -12,7 +12,7 @@ from django.conf import settings
 from loguru import logger
 
 from kausal_common.deployment import env_bool
-from kausal_common.logging.warnings import register_warning_handler, warning_traceback_enabled
+from kausal_common.logging.warnings import configure_warning_filters, register_warning_handler, warning_traceback_enabled
 
 from .handler import LoguruLogger, loguru_logfmt_sink
 from .rich_logger import get_rich_log_console, loguru_rich_sink
@@ -215,24 +215,10 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
         )
         return conf
 
-    if True:
-        import warnings
-
-        try:
-            from wagtail.utils.deprecation import RemovedInWagtail70Warning  # pyright: ignore[reportAttributeAccessIssue]
-
-            warnings.filterwarnings(action='ignore', category=RemovedInWagtail70Warning)
-        except ImportError:
-            pass
-        try:
-            from wagtail.utils.deprecation import RemovedInWagtail80Warning  # pyright: ignore[reportAttributeAccessIssue]
-
-            warnings.filterwarnings(action='ignore', category=RemovedInWagtail80Warning)
-        except ImportError:
-            pass
-
     if log_format != 'logfmt' and warning_traceback_enabled():
         register_warning_handler()
+    else:
+        configure_warning_filters()
 
     logging.setLoggerClass(LoguruLogger)
 
