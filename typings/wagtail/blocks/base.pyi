@@ -1,4 +1,3 @@
-# ruff: noqa: D400, D415, D205, D401, D200, D204
 from collections import OrderedDict
 from collections.abc import Iterable, Mapping
 from typing import Any, ClassVar, Protocol, Self, TypeVar, type_check_only
@@ -239,7 +238,7 @@ class DeclarativeSubBlocksMetaclass(BaseBlock):
     declared_blocks: ClassVar[OrderedDict[str, BaseBlock]]
     base_blocks: ClassVar[OrderedDict[str, BaseBlock]]
 
-    def __new__(mcs, name, bases, attrs): ...  # noqa: N804
+    def __new__(mcs, name, bases, attrs): ...
 
 class BlockWidget(forms.Widget):
     """Wraps a block object as a widget so that it can be incorporated into a Django form"""

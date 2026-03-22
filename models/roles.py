@@ -259,7 +259,7 @@ _ModelT = TypeVar('_ModelT', bound=Model)
 _QS = TypeVar('_QS', bound=QuerySet[Any, Any], default=QuerySet[_ModelT, _ModelT], covariant=True)  # noqa: PLC0105
 
 
-class InstanceFieldGroupRole(Generic[_ModelT, _QS], InstanceSpecificRole[_ModelT], abc.ABC):  # noqa: UP046
+class InstanceFieldGroupRole(InstanceSpecificRole[_ModelT], abc.ABC, Generic[_ModelT, _QS]):
     instance_group_field_name: ClassVar[str]
 
     def check(self) -> list[CheckMessage]:

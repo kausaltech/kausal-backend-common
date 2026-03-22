@@ -14,7 +14,7 @@ if typing.TYPE_CHECKING:
     from kausal_common.models.types import QS
 
 
-def get_permission_policy[_M: PermissionedModel](key: str) -> ModelPermissionPolicy[_M, QS[_M]]:
+def get_permission_policy[M: PermissionedModel](key: str) -> ModelPermissionPolicy[M, QS[M]]:
     if not hasattr(dataset_config, key):
         raise ImproperlyConfigured(
             f'{key} is required in the settings to use the datasets app.'

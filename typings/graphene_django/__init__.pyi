@@ -7,4 +7,4 @@ from .types import DjangoObjectType
 from .utils import bypass_get_queryset
 
 __version__ = ...
-__all__ = ["__version__", "DjangoObjectType", "DjangoListField", "DjangoConnectionField", "bypass_get_queryset"]
+__all__ = ["DjangoConnectionField", "DjangoListField", "DjangoObjectType", "__version__", "bypass_get_queryset"]

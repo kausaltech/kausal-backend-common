@@ -23,6 +23,8 @@ if TYPE_CHECKING:
     from kausal_common.models.roles import InstanceSpecificRole, UserPermissionCache
     from kausal_common.models.types import QS, RevMany
 
+    from users.models import User
+
 
 class UserManager[UM: BaseUser](DjangoUserManager[UM]):
     def create_superuser(
@@ -103,7 +105,7 @@ class BaseUser(AbstractUser):
             return f'{self.last_name} {self.first_name} ({self.email})'
         return self.email
 
-    def __rich_repr__(self) -> Generator[tuple[str, Any], Any, None]:
+    def __rich_repr__(self) -> Generator[tuple[str, Any], Any]:
         yield 'email', self.email
         yield 'first_name', self.first_name
         yield 'last_name', self.last_name
@@ -117,9 +119,8 @@ class BaseUser(AbstractUser):
     def perms(self) -> UserPermissionCache:
         from kausal_common.models.roles import UserPermissionCache
 
-        from users.models import User
 
-        return UserPermissionCache(cast(User, self))
+        return UserPermissionCache(cast('User', self))
 
     @overload
     def has_instance_role[M: Model](self, role: InstanceSpecificRole[M], obj: M) -> bool: ...

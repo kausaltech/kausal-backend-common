@@ -9,6 +9,7 @@ from users.models import User
 
 from .utils import parse_request_payload
 
+
 class BaseLoggedRequest(models.Model):
     method = models.CharField(max_length=8)
     path = models.CharField(max_length=2000)

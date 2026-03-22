@@ -45,14 +45,14 @@ class GrapheneSettings:
     """
     def __init__(self, user_settings=..., defaults=..., import_strings=...) -> None:
         ...
-    
+
     @property
     def user_settings(self): # -> Any | dict[Any, Any]:
         ...
-    
+
     def __getattr__(self, attr): # -> Any | list[Any] | None:
         ...
-    
+
 
 
 graphene_settings = ...

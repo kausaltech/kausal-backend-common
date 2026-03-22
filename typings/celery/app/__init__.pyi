@@ -4,7 +4,7 @@ from ..contrib.django import DjangoTask
 from .base import Celery as Celery
 from .utils import AppPickler as AppPickler
 
-__all__ = ['Celery', 'AppPickler', 'shared_task']
+__all__ = ['AppPickler', 'Celery', 'shared_task']
 
 default_app: Incomplete
 

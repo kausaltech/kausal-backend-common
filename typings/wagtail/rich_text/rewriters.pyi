@@ -22,32 +22,32 @@ class TagMatch:
     """Represents a single matched tag in a rich text string"""
     def __init__(self, match) -> None:
         ...
-    
+
     @cached_property
     def attrs(self): # -> dict[Any, Any]:
         ...
-    
+
     @property
     def start(self):
         ...
-    
+
     @property
     def end(self):
         ...
-    
+
 
 
 class TagRewriter:
     def __init__(self, rules=..., bulk_rules=..., reference_extractors=...) -> None:
         ...
-    
+
     def get_opening_tag_regex(self):
         ...
-    
+
     def get_tag_type_from_attrs(self, attrs):
         """Given a dict of attributes from a tag, return the tag type."""
         ...
-    
+
     def get_tag_replacements(self, tag_type, attrs_list):
         """Given a list of attribute dicts, all taken from tags of the same type, return a
         corresponding list of replacement strings to replace the tags with.
@@ -55,23 +55,23 @@ class TagRewriter:
         Return an empty list for cases when you don't want any replacements made.
         """
         ...
-    
+
     def __call__(self, html: str) -> str:
         ...
-    
+
     def extract_tags(self, html: str) -> dict[str, list[TagMatch]]:
         """Helper method to extract and group HTML tags and their attributes.
 
         Returns a dict of TagMatch objects, mapping tag types to a list of all TagMatch objects of that tag type.
         """
         ...
-    
+
     def convert_rule_to_bulk_rule(self, rule: Callable) -> Callable:
         ...
-    
+
     def extract_references(self, html): # -> Generator[Any, Any, list[Any]]:
         ...
-    
+
 
 
 class EmbedRewriter(TagRewriter):
@@ -82,13 +82,13 @@ class EmbedRewriter(TagRewriter):
     """
     def get_opening_tag_regex(self): # -> Pattern[str]:
         ...
-    
+
     def get_tag_type_from_attrs(self, attrs):
         ...
-    
+
     def get_tag_replacements(self, tag_type, attrs_list): # -> list[str]:
         ...
-    
+
 
 
 class LinkRewriter(TagRewriter):
@@ -99,25 +99,25 @@ class LinkRewriter(TagRewriter):
     """
     def get_opening_tag_regex(self): # -> Pattern[str]:
         ...
-    
+
     def get_tag_type_from_attrs(self, attrs): # -> Literal['external', 'email', 'anchor'] | None:
         ...
-    
+
     def get_tag_replacements(self, tag_type, attrs_list): # -> list[Any] | list[str]:
         ...
-    
+
 
 
 class MultiRuleRewriter:
     """Rewrites HTML by applying a sequence of rewriter functions"""
     def __init__(self, rewriters) -> None:
         ...
-    
+
     def __call__(self, html):
         ...
-    
+
     def extract_references(self, html): # -> Generator[Any, Any, None]:
         ...
-    
+
 
 

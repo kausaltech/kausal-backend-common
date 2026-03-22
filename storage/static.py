@@ -25,7 +25,7 @@ class ManifestStaticFilesStorage(DjangoManifestStorage):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def post_process(self, paths: dict[str, Any], dry_run: bool = False, **options: Any) -> Iterator[tuple[str, str, bool]]:  # noqa: ANN401
+    def post_process(self, paths: dict[str, Any], dry_run: bool = False, **options: Any) -> Iterator[tuple[str, str, bool]]:
         new_paths: OrderedDict[str, Any] = OrderedDict(paths)
         ignore_dirs: set[PurePath] = set()
         for key in paths.keys():

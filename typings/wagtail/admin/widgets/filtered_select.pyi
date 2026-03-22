@@ -20,19 +20,19 @@ class FilteredSelect(forms.Select):
     """
     def __init__(self, attrs=..., choices=..., filter_field=...) -> None:
         ...
-    
+
     def build_attrs(self, base_attrs, extra_attrs=...): # -> dict[str, Any]:
         ...
-    
+
     def optgroups(self, name, value, attrs=...): # -> list[Any]:
         ...
-    
+
     def create_option(self, name, value, label, selected, index, subindex=..., attrs=..., filter_value=...): # -> dict[str, Any]:
         ...
-    
+
     @property
     def media(self): # -> Media:
         ...
-    
+
 
 

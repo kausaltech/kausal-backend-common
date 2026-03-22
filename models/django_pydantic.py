@@ -657,7 +657,7 @@ class DjangoDiffModel[ModelT: Model](DiffSyncModel):
         instance = self._model._default_manager.get(pk=self._instance_pk)
         if not self.is_object_deletion_allowed(instance):
             return None
-        obj_count, related = instance.delete()
+        _obj_count, related = instance.delete()
         if related:
             related_objs_str = '; '.join('%s: %d' % (key, val) for key, val in related.items())
             related_str = 'with related objects: %s' % related_objs_str

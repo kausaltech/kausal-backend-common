@@ -1,4 +1,3 @@
-# ruff: noqa: ANN401
 from collections.abc import Sequence
 from typing import Any, Self, overload
 

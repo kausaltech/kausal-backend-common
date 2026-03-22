@@ -359,7 +359,6 @@ class DatasetModel(DjangoDiffModel[Dataset]):
     @classmethod
     def create_related(cls, adapter: DjangoAdapter, _ids: dict, _attrs: dict, _instance: Dataset, /) -> None:
         assert isinstance(adapter, DatasetDjangoAdapter)
-        scope = adapter.scope
         pass
 
     @classmethod

@@ -1,4 +1,3 @@
-# ruff: noqa: ANN401, PLR0913
 from collections.abc import Callable, Collection, Generator, Sequence
 from typing import Any
 
@@ -19,7 +18,7 @@ class HttpError(Exception):
     def __init__(self, response: HttpResponse, message: str | None = None, *args, **kwargs) -> None: ...
 
 def get_accepted_content_types(request: HttpRequest) -> list[str]: ...
-def instantiate_middleware(middlewares) -> Generator[Any, None, None]: ...
+def instantiate_middleware(middlewares) -> Generator[Any]: ...
 
 type MiddlewareType = MiddlewareManager | Sequence[type | Callable]
 type ValidationRulesType = Collection[type[ASTValidationRule]]

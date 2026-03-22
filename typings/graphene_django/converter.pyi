@@ -12,7 +12,7 @@ from .compat import ArrayField, HStoreField, RangeField
 class BlankValueField(Field):
     def wrap_resolve(self, parent_resolver): # -> _Wrapped[Callable[..., Any], Any, Callable[..., Any], Any | None]:
         ...
-    
+
 
 
 def convert_choice_name(name): # -> str:
@@ -22,10 +22,9 @@ def get_choices(choices): # -> Generator[Any | tuple[str, Any, str], Any, None]:
     ...
 
 def convert_choices_to_named_enum_with_descriptions(name, choices): # -> Any:
-    class EnumWithDescriptionsType:
-        ...
-    
-    
+    ...
+
+
 
 def generate_enum_name(django_model_meta, field): # -> Any | str:
     ...
@@ -63,7 +62,7 @@ if hasattr(models, "SmallAutoField"):
     @convert_django_field.register(models.SmallAutoField)
     def convert_field_small_to_id(field, registry=...):
         ...
-    
+
 @convert_django_field.register(models.UUIDField)
 def convert_field_to_uuid(field, registry=...): # -> UUID:
     ...

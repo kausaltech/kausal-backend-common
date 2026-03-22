@@ -16,9 +16,9 @@ class ThumbnailMixin:
     thumb_default = ...
     def __init__(self, *args, **kwargs) -> None:
         ...
-    
+
     def admin_thumb(self, obj): # -> SafeString | Literal['']:
         ...
-    
+
 
 

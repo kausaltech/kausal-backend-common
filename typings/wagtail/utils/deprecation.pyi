@@ -37,9 +37,9 @@ class MovedDefinitionHandler:
     """
     def __init__(self, real_module, moved_definitions, warning_class) -> None:
         ...
-    
+
     def __getattr__(self, name): # -> Any:
         ...
-    
+
 
 

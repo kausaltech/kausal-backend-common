@@ -13,6 +13,6 @@ class SlugInput(widgets.TextInput):
     """
     def __init__(self, attrs=...) -> None:
         ...
-    
+
 
 

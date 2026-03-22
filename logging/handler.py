@@ -7,15 +7,17 @@ import traceback
 import warnings
 from datetime import UTC, datetime
 from logging import LogRecord, StreamHandler
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-import loguru
 from logfmter.formatter import Logfmter
 from loguru import logger
 from rich.text import Text
 
 from kausal_common.deployment import env_bool
 from kausal_common.logging.warnings import warning_traceback_enabled
+
+if TYPE_CHECKING:
+    import loguru
 
 ISO_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 

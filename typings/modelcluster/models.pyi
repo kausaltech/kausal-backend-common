@@ -1,4 +1,3 @@
-# ruff: noqa: FBT001, FBT002
 from collections.abc import Sequence
 from typing import Any, Self
 
@@ -17,7 +16,7 @@ class ClusterableModel(models.Model):
     def serializable_data(self) -> dict[str, Any]: ...
     def to_json(self) -> str: ...
     @classmethod
-    def from_serializable_data(cls, data: dict[str, Any], check_fks: bool = True, strict_fks: bool = False) -> Any: ...  # noqa: ANN401
+    def from_serializable_data(cls, data: dict[str, Any], check_fks: bool = True, strict_fks: bool = False) -> Any: ...
     @classmethod
     def from_json(cls, json_data: str, check_fks: bool = True, strict_fks: bool = False) -> Self: ...
     def copy_child_relation(

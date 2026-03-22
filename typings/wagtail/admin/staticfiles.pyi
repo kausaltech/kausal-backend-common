@@ -12,7 +12,7 @@ else:
 if os.environ.get("WAGTAIL_FAIL_ON_VERSIONED_STATIC", "0") == "1":
     def versioned_static(path):
         ...
-    
+
 else:
     def versioned_static(path): # -> str:
         """
@@ -20,4 +20,4 @@ else:
         that updates on each Wagtail version
         """
         ...
-    
+

@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, cast
 import graphene
 from graphene.types.schema import TypeMap as GrapheneTypeMap
 from graphql import (
-    GraphQLAbstractType,
     GraphQLObjectType,
     GraphQLScalarType,
     GraphQLSchema,
@@ -19,6 +18,7 @@ if TYPE_CHECKING:
 
     import strawberry
     from graphql import (
+        GraphQLAbstractType,
         GraphQLDirective,
         GraphQLField,
         GraphQLNamedType,
@@ -30,8 +30,8 @@ class SchemaMerger:
     """Converts a GraphQL schema to a Strawberry schema."""
 
     def __init__(self, sb_schema: strawberry.Schema, gr_schema: graphene.Schema):
-        self.sb_schema = cast(GraphQLSchema, sb_schema._schema)
-        self.gr_schema = cast(GraphQLSchema, gr_schema.graphql_schema)
+        self.sb_schema = cast("GraphQLSchema", sb_schema._schema)
+        self.gr_schema = cast("GraphQLSchema", gr_schema.graphql_schema)
 
         sb_query_type = self.sb_schema.query_type
         assert sb_query_type is not None
@@ -145,7 +145,7 @@ class StrawberryCompatibleTypeMap(GrapheneTypeMap):
         for type_ in gql_schema.type_map.values():
             if not is_abstract_type(type_):
                 continue
-            imp_types = gql_schema.get_possible_types(cast(GraphQLAbstractType, type_))
+            imp_types = gql_schema.get_possible_types(cast("GraphQLAbstractType", type_))
             for imp_type in imp_types:
                 if imp_type.name not in self:
                     self.types.append(imp_type)

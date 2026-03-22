@@ -64,7 +64,7 @@ def existing_data_point(dataset, metric, dimension_categories):
         dataset=dataset,
         date=datetime.date(2023, 1, 1),
         metric=metric,
-        value=Decimal('100'),
+        value=Decimal(100),
         dimension_categories=[category1]
     )
 

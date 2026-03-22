@@ -30,7 +30,8 @@ def _parse_column_value(value_str: str) -> str | int | bool:
 valuetype = str | int | bool
 
 def parse_table(input_str: str) -> tuple[tuple[str, ...], list[tuple[valuetype, ...]]]:
-    """Parse a whitespace-separated table into headers and type-checked data rows.
+    """
+    Parse a whitespace-separated table into headers and type-checked data rows.
 
     Intended for use in pytest parameterization where you want to define test cases
     in a readable tabular format with automatic type inference.
@@ -63,6 +64,7 @@ def parse_table(input_str: str) -> tuple[tuple[str, ...], list[tuple[valuetype, 
 
     Raises:
         ValueError: If rows have mismatched column counts or incompatible types
+
     """
     original_lines = input_str.strip().split('\n')
     lines = []
@@ -96,11 +98,11 @@ def parse_table(input_str: str) -> tuple[tuple[str, ...], list[tuple[valuetype, 
             raise ValueError(f'Row {i} has {len(parts)} elements but expected {num_columns}\n{line}')
 
         row = []
-        for j, (part, expected_type) in enumerate(zip(parts, column_types)):
+        for j, (part, expected_type) in enumerate(zip(parts, column_types, strict=True)):
             value = _parse_column_value(part)
             if not isinstance(value, expected_type):
                 highlighted = _highlight_cell_in_line(line, j)
-                raise ValueError(
+                raise TypeError(
                     f'Row {i}, column {j}: expected {expected_type.__name__}, got {type(value).__name__}\n{highlighted}'
                 )
             row.append(value)

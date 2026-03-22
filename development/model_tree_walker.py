@@ -167,7 +167,7 @@ class TreeWalker:
         )
 
     @group()
-    def walk(self) -> Generator[RenderableType, None, None]:
+    def walk(self) -> Generator[RenderableType]:
         meta = self.model._meta
         table = Table(title=f'{meta.label}', title_justify='left')
         grouped_fields = GroupedFields(self.model)

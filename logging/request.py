@@ -214,7 +214,7 @@ class RequestCommonMeta:
         if user:
             user_data['id'] = str(user.uuid)
             user_data['email'] = user.email
-        return user_data if user_data else None
+        return user_data or None
 
     def _enter_viztracer_stack(self, stack: ExitStack, operation_name: str) -> None:
         from django.db import connection

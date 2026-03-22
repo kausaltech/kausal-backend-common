@@ -1,4 +1,5 @@
-from typing import Any, Generator, Generic, Self, TypeVar
+from collections.abc import Generator
+from typing import Any, Self, TypeVar
 
 from django.db import models
 from django.db.models import Model, Q, QuerySet

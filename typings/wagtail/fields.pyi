@@ -13,7 +13,7 @@ from wagtail.rich_text import (
 _RTF_ST = TypeVar('_RTF_ST', default=str | Combinable)
 _RTF_GT = TypeVar('_RTF_GT', default=str)
 
-class RichTextField(Generic[_RTF_ST, _RTF_GT], models.TextField[_RTF_ST, _RTF_GT]):
+class RichTextField(models.TextField[_RTF_ST, _RTF_GT], Generic[_RTF_ST, _RTF_GT]):
     editor: str
     features: Sequence[str] | None
 

@@ -7,13 +7,13 @@ from django import forms
 class PageChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj): # -> LiteralString:
         ...
-    
+
 
 
 class ParentChooserForm(forms.Form):
     parent_page = ...
     def __init__(self, valid_parents_qs, *args, **kwargs) -> None:
         ...
-    
+
 
 

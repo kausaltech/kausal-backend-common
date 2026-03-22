@@ -16,9 +16,9 @@ class TagField(TaggitTagField):
     widget = AdminTagWidget
     def __init__(self, *args, **kwargs) -> None:
         ...
-    
+
     def clean(self, value): # -> list[Any] | Any:
         ...
-    
+
 
 

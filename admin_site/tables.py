@@ -1,4 +1,4 @@
-"""Helper classes for formatting data as tables"""
+"""Helper classes for formatting data as tables."""
 
 from django.utils.translation import gettext_lazy as _
 from wagtail.admin.ui.tables import DateColumn

@@ -2,24 +2,28 @@ from __future__ import annotations
 
 import functools
 import logging
-from collections.abc import Callable, Generator, Sequence
+from collections.abc import Callable
 from contextlib import contextmanager
 from datetime import datetime
-from logging import LogRecord
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import loguru
-from rich.console import Console, ConsoleRenderable, RenderableType
+from rich.console import Console
 from rich.containers import Renderables
 from rich.logging import RichHandler
 from rich.style import Style
-from rich.text import Text, TextType
+from rich.text import Text
 
 from kausal_common.deployment import env_bool
 from kausal_common.logging.handler import loguru_make_record
 
 if TYPE_CHECKING:
+    from collections.abc import Generator, Sequence
+    from logging import LogRecord
+
+    from rich.console import ConsoleRenderable, RenderableType
+    from rich.text import TextType
     from rich.traceback import Traceback
 
 FormatTimeCallable = Callable[[datetime], Text]

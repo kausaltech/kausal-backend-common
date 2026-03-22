@@ -9,8 +9,6 @@ from rest_framework import exceptions, serializers
 
 from treebeard.mp_tree import MP_Node
 
-from orgs.models import Organization
-
 if TYPE_CHECKING:
     from typing import Any
     class ModelSerializerMixinBase[M: Model](serializers.ModelSerializer[M]):

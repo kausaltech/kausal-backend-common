@@ -15,38 +15,38 @@ class FeatureRegistry:
     """
     def __init__(self) -> None:
         ...
-    
+
     def get_default_features(self): # -> list[Any]:
         ...
-    
+
     def register_editor_plugin(self, editor_name, feature_name, plugin): # -> None:
         ...
-    
+
     def get_editor_plugin(self, editor_name, feature_name): # -> None:
         ...
-    
+
     def register_link_type(self, handler): # -> None:
         ...
-    
+
     def get_link_types(self): # -> dict[Any, Any]:
         ...
-    
+
     def register_embed_type(self, handler): # -> None:
         ...
-    
+
     def get_embed_types(self): # -> dict[Any, Any]:
         ...
-    
+
     def register_converter_rule(self, converter_name, feature_name, rule): # -> None:
         ...
-    
+
     def get_converter_rule(self, converter_name, feature_name): # -> None:
         ...
-    
+
     @staticmethod
     def function_as_entity_handler(identifier, fn): # -> type[EntityHandlerRegisteredAsFunction]:
         """Supports legacy registering of entity handlers as functions."""
         ...
-    
+
 
 
