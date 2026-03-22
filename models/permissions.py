@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Self, cast
 
+from django.apps import apps
+from django.core.checks import Error as CheckError, Warning as CheckWarning, register as register_check
 from django.db import models
 from django.db.models import QuerySet
 from graphql import GraphQLError
@@ -11,9 +13,15 @@ from modeltrans.manager import MultilingualManager
 from modeltrans.translator import get_i18n_field
 from pydantic import BaseModel, Field
 
-from .types import ModelManager
+from .types import AbstractModelMeta, ModelManager
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from django.apps import AppConfig
+    from django.core.checks import CheckMessage
+    from django.db.models import Manager
+
     from rich.repr import RichReprResult
 
     from kausal_common.graphene import GQLInfo
@@ -23,7 +31,7 @@ if TYPE_CHECKING:
     from .permission_policy import ObjectSpecificAction
 
 
-class PermissionedModel(models.Model):
+class PermissionedModel(models.Model, ABC, metaclass=AbstractModelMeta):
     child_models: ClassVar[list[type[PermissionedModel]]] = []
 
     if TYPE_CHECKING:
@@ -35,8 +43,8 @@ class PermissionedModel(models.Model):
     @abstractmethod
     def __str__(self) -> str: ...
 
-    @abstractmethod
-    def __rich_repr__(self) -> RichReprResult: ...
+    if TYPE_CHECKING:
+        def __rich_repr__(self) -> RichReprResult: ...
 
     @classmethod
     @abstractmethod
@@ -50,11 +58,12 @@ class PermissionedModel(models.Model):
             raise GraphQLError("Permission denied for action '%s'" % action, nodes=info.field_nodes)
 
 
-_Model = TypeVar('_Model', bound=PermissionedModel, covariant=True)  # noqa: PLC0105
-
-class PermissionedQuerySet(QuerySet[_Model, _Model]):
+class PermissionedQuerySet[M: PermissionedModel](QuerySet[M, M]):
+    if TYPE_CHECKING:
+        @classmethod
+        def as_manager(cls) -> Manager[M]: ...
     @property
-    def _pp(self) -> ModelPermissionPolicy[_Model, Self, Any]:
+    def _pp(self) -> ModelPermissionPolicy[M, Self, Any]:
         return self.model.permission_policy()
 
     def viewable_by(self, user: UserOrAnon) -> Self:
@@ -67,15 +76,9 @@ class PermissionedQuerySet(QuerySet[_Model, _Model]):
     def filter_by_perm(self, user: UserOrAnon, action: ObjectSpecificAction) -> Self:
         return self._pp.filter_by_perm(self, user, action)
 
-
-_PM = TypeVar("_PM", bound=PermissionedModel, covariant=True)  # noqa: PLC0105
-_PQS = TypeVar(  # noqa: PLC0105
-    "_PQS",
-    bound=PermissionedQuerySet[PermissionedModel],
-    default=PermissionedQuerySet[_PM], covariant=True
-)
-
-class PermissionedManager(MultilingualManager[_PM], ModelManager[_PM, _PQS]):
+class PermissionedManager[M: PermissionedModel, QS: PermissionedQuerySet[Any] = PermissionedQuerySet[M]](
+    MultilingualManager[M], ModelManager[M, QS]
+):
     """
     Manager for PermissionedModel instances.
 
@@ -91,13 +94,13 @@ class PermissionedManager(MultilingualManager[_PM], ModelManager[_PM, _PQS]):
             self._queryset_class = PermissionedQuerySet
 
     if TYPE_CHECKING:
-        def _patch_queryset[QS: QuerySet[Any]](self, qs: QS) -> QS: ...
+        def _patch_queryset[Q: QuerySet[Any]](self, qs: Q) -> Q: ...
 
-    def get_queryset(self) -> _PQS:  # type: ignore[override]
+    def get_queryset(self) -> QS:
         qs = super(ModelManager, self).get_queryset()
         if get_i18n_field(self.model):
             qs = self._patch_queryset(qs)
-        return cast('_PQS', qs)
+        return cast('QS', qs)
 
 
 class ModelAction(Enum):
@@ -138,3 +141,24 @@ def get_user_permissions_for_instance(user: UserOrAnon, obj: PermissionedModel) 
         creatable_related_models=[model.__name__ for model in pp.creatable_child_models(user, obj)],
     )
     return obj_perms
+
+
+@register_check
+def check_permissioned_model(app_configs: Sequence[AppConfig] | None, **_kwargs) -> list[CheckMessage]:  # pyright: ignore[reportUnusedParameter]
+    errors: list[CheckMessage] = []
+    for model in apps.get_models():
+        if not issubclass(model, PermissionedModel):
+            continue
+        try:
+            pp = model.permission_policy()
+            if pp is None:  # pyright: ignore[reportUnnecessaryComparison]
+                errors.append(CheckWarning('Permissioned model has no permission policy', id='kausal_common.P001', obj=model))
+                continue
+            if pp.model != model:
+                errors.append(
+                    CheckError('Permissioned model has permission policy for wrong model', id='kausal_common.P002', obj=model)
+                )
+                continue
+        except AttributeError:
+            errors.append(CheckWarning('Permissioned model has no permission policy', id='kausal_common.P001', obj=model))
+    return errors

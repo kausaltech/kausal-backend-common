@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING, ClassVar, Self
+from abc import ABC
+from typing import TYPE_CHECKING, ClassVar, Self, cast
 from warnings import deprecated
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import QuerySet
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from modelcluster.fields import ParentalKey
@@ -20,13 +22,14 @@ from wagtail.admin.panels.inline_panel import InlinePanel
 from kausal_common.const import IS_PATHS, IS_WATCH
 from kausal_common.datasets.permission_policy import get_permission_policy
 from kausal_common.models.fields import IdentifierField
+from kausal_common.models.permission_policy import ParentInheritedPolicy
 from kausal_common.models.uuid import UUIDIdentifiedModel
 from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase, ObjectRole
 
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
 from ..models.permissions import PermissionedManager, PermissionedModel, PermissionedQuerySet
-from ..models.types import ModelManager, RevMany
+from ..models.types import AbstractModelMeta, ModelManager, RevMany
 from .config import dataset_config
 
 if TYPE_CHECKING:
@@ -59,7 +62,7 @@ if TYPE_CHECKING:
         type DimensionScopeType = Plan | CategoryType
 
 
-class DimensionQuerySet(PermissionedQuerySet['Dimension']):
+class DimensionQuerySet(models.QuerySet['Dimension']):
     def for_scope(self, scope: DimensionScopeType) -> Self:
         return self.filter(
             scopes__scope_content_type=ContentType.objects.get_for_model(type(scope)),
@@ -68,12 +71,12 @@ class DimensionQuerySet(PermissionedQuerySet['Dimension']):
 
 
 _DimensionManager = models.Manager.from_queryset(DimensionQuerySet)
-class DimensionManager(PermissionedManager['Dimension', DimensionQuerySet], _DimensionManager):  # pyright: ignore
+class DimensionManager(ModelManager['Dimension', DimensionQuerySet], _DimensionManager):  # pyright: ignore
     """Model manager for Dimension."""
 del _DimensionManager
 
 
-class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, PermissionedModel):
+class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=100, verbose_name=_('name'))
 
@@ -106,7 +109,11 @@ class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel, Perm
                 yield 'scopes', [scope.scope for scope in scopes]
 
 
-class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, PermissionedModel):
+class DimensionCategoryManager(ModelManager['DimensionCategory', models.QuerySet['DimensionCategory']]):
+    pass
+
+
+class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel):
     identifier = IdentifierField[str | None, str | None](
         null=True,
         blank=True,
@@ -120,8 +127,8 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, 
     i18n = TranslationField(fields=['label'])
     label_i18n: str
 
-    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
-    _default_manager: ClassVar[PermissionedManager[Self]]
+    objects: ClassVar[DimensionCategoryManager] = DimensionCategoryManager()
+    _default_manager: ClassVar[DimensionCategoryManager]
 
     class Meta:
         verbose_name = _('dimension category')
@@ -149,7 +156,7 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel, 
         return qs.filter(dimension=self.dimension)
 
 
-class DimensionScopeQuerySet(PermissionedQuerySet['DimensionScope']):
+class DimensionScopeQuerySet(QuerySet['DimensionScope']):
     if IS_PATHS:
         def for_instance_config(self, instance_config: InstanceConfig) -> Self:
             return self.filter(scope_content_type=ContentType.objects.get_for_model(instance_config), scope_id=instance_config.pk)
@@ -162,13 +169,13 @@ class DimensionScopeQuerySet(PermissionedQuerySet['DimensionScope']):
         )
 
 
-_DimensionScopeManager = models.Manager.from_queryset(DimensionScopeQuerySet)
-class DimensionScopeManager(ModelManager['DimensionScope', DimensionScopeQuerySet], _DimensionScopeManager):
+_DimensionScopeManager = cast('models.Manager[DimensionScope]', models.Manager.from_queryset(DimensionScopeQuerySet))
+class DimensionScopeManager(ModelManager['DimensionScope', DimensionScopeQuerySet], _DimensionScopeManager):  # type: ignore[valid-type, misc]
     """Model manager for DimensionScope."""
 del _DimensionScopeManager
 
 
-class DimensionScope(OrderedModel, PermissionedModel):
+class DimensionScope(OrderedModel):
     """Link a dimension to a context in which it can be used, such as a plan or a category type."""
 
     dimension = models.ForeignKey(Dimension, on_delete=models.CASCADE, related_name='scopes')
@@ -197,11 +204,12 @@ class DimensionScope(OrderedModel, PermissionedModel):
                 name='unique_identifier_per_dimension_scope',
             ),
         )
+        ordering = ('scope_content_type', 'scope_id', 'order')
 
     def __str__(self):
         return f'{self.dimension.name} ({self.scope})'
 
-    def filter_siblings(self, qs: models.QuerySet[DimensionScope]) -> models.QuerySet[DimensionScope]:
+    def filter_siblings(self, qs: QS[DimensionScope]) -> QS[DimensionScope]:
         return qs.filter(scope_content_type=self.scope_content_type, scope_id=self.scope_id)
 
 
@@ -340,6 +348,7 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     class Meta:
         verbose_name = _('dataset schema')
         verbose_name_plural = _('dataset schemas')
+        ordering = ('id',)
 
     def __str__(self):
         if self.name_i18n:
@@ -395,6 +404,7 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
     class Meta:
         verbose_name = _('dataset metric')
         verbose_name_plural = _('dataset metrics')
+        ordering = ('schema', 'order')
 
     def __str__(self):
         return self.label or self.name or str(self.uuid)
@@ -407,7 +417,7 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
         # Remember that this is not called automatically by save()
         dataset_config.validate_unit(self.unit)
 
-    def filter_siblings(self, qs: models.QuerySet[DatasetMetric]) -> models.QuerySet[DatasetMetric]:
+    def filter_siblings(self, qs: QS[DatasetMetric]) -> QS[DatasetMetric]:
         return qs.filter(schema=self.schema)
 
     @classmethod
@@ -476,22 +486,26 @@ class DatasetMetricComputation(OrderedModel):
     def __str__(self):
         return f'{self.target_metric} = {self.operand_a} {self.operation} {self.operand_b}'
 
-    def filter_siblings(self, qs: models.QuerySet[Self]) -> models.QuerySet[Self]:
+    def filter_siblings(self, qs: QS[Self]) -> QS[Self]:
         return qs.filter(schema=self.schema)
 
 
-class DatasetSchemaDimension(OrderedModel, PermissionedModel):
+class DatasetSchemaDimensionManager(ModelManager['DatasetSchemaDimension', models.QuerySet['DatasetSchemaDimension']]):
+    pass
+
+
+class DatasetSchemaDimension(OrderedModel):
     schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='dimensions', null=False, blank=False)
     dimension = models.ForeignKey(Dimension, on_delete=models.CASCADE, related_name='schemas', null=False, blank=False)
 
-    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
-    _default_manager: ClassVar[PermissionedManager[Self]]
+    objects: ClassVar[DatasetSchemaDimensionManager] = DatasetSchemaDimensionManager()
 
     class Meta:
+        ordering = ['schema', 'order']
         verbose_name = _('dataset schema dimension')
         verbose_name_plural = _('dataset schema dimensions')
 
-    def filter_siblings(self, qs: models.QuerySet[DatasetSchemaDimension]) -> models.QuerySet[DatasetSchemaDimension]:
+    def filter_siblings(self, qs: QS[Self]) -> QS[Self]:
         return qs.filter(schema=self.schema)
 
 
@@ -516,17 +530,17 @@ class DatasetQuerySet(PermissionedQuerySet['Dataset']):
             viewable_schemas_for_user = DatasetSchemaPersonPermission.objects.filter(
                 role__in=[ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
                 person=user.person,
-            ).values_list('object')  # type: ignore[misc]
+            ).values_list('object')
             viewable_schemas_for_group = DatasetSchemaGroupPermission.objects.filter(
                 role__in=[ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
                 group__persons=user.person,
-            ).values_list('object')  # type: ignore[misc]
+            ).values_list('object')
             return self.filter(models.Q(schema__in=viewable_schemas_for_user)
                                | models.Q(schema__in=viewable_schemas_for_group))
 
     if IS_WATCH:
         def for_plan(self, plan: Plan) -> Self:
-            from actions.models import Plan  # type: ignore
+            from actions.models import Plan
 
             return self.filter(scope_content_type=ContentType.objects.get_for_model(Plan), scope_id=plan.pk)
 
@@ -578,7 +592,7 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     class Meta:
         verbose_name = _('dataset')
         verbose_name_plural = _('datasets')
-        ordering = ('id',)
+        ordering = ('schema', 'id')
         constraints = (
             models.UniqueConstraint(
                 fields=['schema', 'scope_content_type', 'scope_id'],
@@ -620,7 +634,7 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
             ic.invalidate_cache()
 
 
-class DatasetSchemaScope(PermissionedModel):
+class DatasetSchemaScope(models.Model):
     """Link a dataset schema to a context in which it can be used."""
 
     schema = models.ForeignKey(DatasetSchema, on_delete=models.CASCADE, related_name='scopes')
@@ -630,12 +644,12 @@ class DatasetSchemaScope(PermissionedModel):
         'scope_content_type', 'scope_id',
     )
 
-    objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
-    _default_manager: ClassVar[PermissionedManager[Self]]
+    objects: ClassVar[ModelManager[DatasetSchemaScope]] = ModelManager()
 
     class Meta:
         verbose_name = _('dataset schema scope')
         verbose_name_plural = _('dataset schema scopes')
+        ordering = ('schema', 'id')
 
     def __str__(self):
         return f'DatasetSchemaScope schema:{self.schema.uuid} scope:{self.scope}'
@@ -648,7 +662,7 @@ class DatasetSchemaScope(PermissionedModel):
         return retval
 
 
-class DataPointBase(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
+class DataPointBase(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel, ABC, metaclass=AbstractModelMeta):
     """
     Abstract base for tabular data cells.
 
@@ -909,6 +923,7 @@ class DataSource(UserModifiableModel, PermissionedModel):
         yield 'name', self.name
 
     class Meta:
+        ordering = ['scope_content_type', 'scope_id', 'id']
         verbose_name = _('Data source')
         verbose_name_plural = _('Data sources')
 
