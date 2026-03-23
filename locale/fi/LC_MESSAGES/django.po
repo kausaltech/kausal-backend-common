@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-17 08:21+0200\n"
-"PO-Revision-Date: 2026-03-23 11:09+0000\n"
+"PO-Revision-Date: 2026-03-23 14:28+0000\n"
 "Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
 "Language-Team: Finnish <https://weblate.kausal.tech/projects/kausal-backend-"
 "common/django/fi/>\n"
@@ -139,7 +139,7 @@ msgstr "Vuosittainen"
 
 #: kausal_common/datasets/models.py
 msgid "Monthly"
-msgstr ""
+msgstr "Kuukausittainen"
 
 #: kausal_common/datasets/models.py
 msgid "Time resolution of the time stamps of data points in this dataset"
@@ -239,19 +239,19 @@ msgstr "tietoaineistojen metriikat"
 
 #: kausal_common/datasets/models.py
 msgid "Multiply"
-msgstr ""
+msgstr "Kerro"
 
 #: kausal_common/datasets/models.py
 msgid "Divide"
-msgstr ""
+msgstr "Jaa"
 
 #: kausal_common/datasets/models.py
 msgid "Add"
-msgstr ""
+msgstr "Lisää"
 
 #: kausal_common/datasets/models.py
 msgid "Subtract"
-msgstr ""
+msgstr "Vähennä"
 
 #: kausal_common/datasets/models.py
 msgid "schema"
@@ -263,7 +263,7 @@ msgstr "tietoaineiston metriikka"
 
 #: kausal_common/datasets/models.py
 msgid "The metric whose values are computed by this operation"
-msgstr ""
+msgstr "Metriikka, jonka arvot tämä operaatio laskee"
 
 #: kausal_common/datasets/models.py
 msgid "operation"
@@ -271,11 +271,11 @@ msgstr "sijainti"
 
 #: kausal_common/datasets/models.py
 msgid "operand A"
-msgstr ""
+msgstr "operandi A"
 
 #: kausal_common/datasets/models.py
 msgid "operand B"
-msgstr ""
+msgstr "operandi B"
 
 #: kausal_common/datasets/models.py
 msgid "dataset metric computation"
