@@ -14,7 +14,6 @@ from kausal_common.const import IS_WATCH
 if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-
     if IS_WATCH:
         from actions.deferred_ops import DeferredDatabaseOperationsMixin
 

@@ -22,7 +22,7 @@ def get_language_from_default_language_field(
     from modeltrans.utils import get_instance_field_value
 
     if not i18n_field:
-        i18n_field = get_i18n_field(instance._meta.model)  # pyright: ignore
+        i18n_field = get_i18n_field(instance._meta.model)
 
     if i18n_field is None:
         raise ValueError('No i18n field found for', instance)
@@ -34,7 +34,7 @@ def get_language_from_default_language_field(
     if isinstance(default_language, str):
         default_language = default_language.lower()
     else:
-        raise ValueError('Invalid default_language for', instance, default_language)
+        raise TypeError('Invalid default_language for', instance, default_language)
     return default_language
 
 

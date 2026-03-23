@@ -14,14 +14,17 @@ from django.utils.translation import (
     gettext as gettext,  # noqa: PLC0414
     gettext_lazy as gettext_lazy,  # noqa: PLC0414
 )
+from django_stubs_ext import StrPromise
 from pydantic import BaseModel, model_validator
 from pydantic_core import core_schema
 
 from kausal_common.i18n.helpers import convert_language_code
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from django.db.models import Model
-    from django_stubs_ext import StrPromise
+    from django.utils.functional import Promise
     from pydantic import GetCoreSchemaHandler
     from pydantic_core import CoreSchema
 
@@ -40,6 +43,7 @@ except ImproperlyConfigured:
 class TranslatedString:
     i18n: dict[str, str]
     default_language: str
+    _lazy_source: Promise | None = None
 
     def __init__(self, *args: str, default_language: str | None = None, **kwargs: str):
         self.i18n = {}
@@ -63,6 +67,23 @@ class TranslatedString:
         self.default_language = default_language
 
         self.i18n.update(kwargs)
+
+    @classmethod
+    def from_lazy_string(cls, lazy_str: Promise) -> TranslatedString:
+        from django.utils import translation
+
+        if SUPPORTED_LANGUAGES is None:
+            all_langs = {'en'}
+        else:
+            all_langs = SUPPORTED_LANGUAGES
+        i18n: dict[str, str] = {}
+        for lang in all_langs:
+            with translation.override(lang):
+                i18n[convert_language_code(lang, 'kausal')] = str(lazy_str)
+        default_str = i18n.pop('en')
+        ts = cls(default_str, default_language='en', **i18n)
+        ts._lazy_source = lazy_str
+        return ts
 
     def get_fallback(self) -> str:
         dl = self.default_language

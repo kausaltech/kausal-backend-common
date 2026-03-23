@@ -147,4 +147,7 @@ runtime-evaluated-decorators = [
   "strawberry.types.field",
   "kausal_common.strawberry.grapple.grapple_field",
 ]
-runtime-evaluated-base-classes = ["pydantic.BaseModel", "mcp_server.generated_base.ObjectBaseModel", "kausal_common.i18n.pydantic.I18nBaseModel"]
+runtime-evaluated-base-classes = [
+  "pydantic.BaseModel", "mcp_server.generated_base.ObjectBaseModel", "kausal_common.i18n.pydantic.I18nBaseModel",
+  "params.base.Parameter"
+]

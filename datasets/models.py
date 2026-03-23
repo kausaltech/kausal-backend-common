@@ -44,11 +44,11 @@ if TYPE_CHECKING:
     from ..models.types import FK, M2M, RevMany, RevManyToManyQS
 
     if IS_PATHS:
-        from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
-
         from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase
 
         from paths.dataset_permission_policy import DatasetSchemaPermissionPolicy
+
+        from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
 
         type DatasetScopeType = InstanceConfig
         type DimensionScopeType = InstanceConfig
