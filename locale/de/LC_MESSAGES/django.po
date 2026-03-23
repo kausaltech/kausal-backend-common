@@ -11,7 +11,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-17 08:21+0200\n"
-"PO-Revision-Date: 2026-03-23 14:28+0000\n"
+"PO-Revision-Date: 2026-03-23 14:37+0000\n"
 "Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
 "Language-Team: German <https://weblate.kausal.tech/projects/kausal-backend-"
 "common/django/de/>\n"
@@ -144,7 +144,7 @@ msgstr "Jährlich"
 
 #: kausal_common/datasets/models.py
 msgid "Monthly"
-msgstr ""
+msgstr "Monatlich"
 
 #: kausal_common/datasets/models.py
 msgid "Time resolution of the time stamps of data points in this dataset"
@@ -249,19 +249,19 @@ msgstr "Datensatzmessgrößen"
 
 #: kausal_common/datasets/models.py
 msgid "Multiply"
-msgstr ""
+msgstr "Multiplizieren"
 
 #: kausal_common/datasets/models.py
 msgid "Divide"
-msgstr ""
+msgstr "Dividieren"
 
 #: kausal_common/datasets/models.py
 msgid "Add"
-msgstr ""
+msgstr "Addieren"
 
 #: kausal_common/datasets/models.py
 msgid "Subtract"
-msgstr ""
+msgstr "Subtrahieren"
 
 #: kausal_common/datasets/models.py
 msgid "schema"
@@ -273,7 +273,7 @@ msgstr "Datensatzmessgröße"
 
 #: kausal_common/datasets/models.py
 msgid "The metric whose values are computed by this operation"
-msgstr ""
+msgstr "Die Messgröße, deren Werte durch diese Operation berechnet werden"
 
 #: kausal_common/datasets/models.py
 msgid "operation"
@@ -281,11 +281,11 @@ msgstr "Standort"
 
 #: kausal_common/datasets/models.py
 msgid "operand A"
-msgstr ""
+msgstr "Operand A"
 
 #: kausal_common/datasets/models.py
 msgid "operand B"
-msgstr ""
+msgstr "Operand B"
 
 #: kausal_common/datasets/models.py
 msgid "dataset metric computation"
