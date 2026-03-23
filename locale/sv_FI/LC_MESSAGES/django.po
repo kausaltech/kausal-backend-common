@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-17 08:21+0200\n"
-"PO-Revision-Date: 2026-03-23 11:09+0000\n"
+"PO-Revision-Date: 2026-03-23 14:37+0000\n"
 "Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
 "Language-Team: Swedish <https://weblate.kausal.tech/projects/kausal-backend-"
 "common/django/sv_FI/>\n"
@@ -22,147 +22,151 @@ msgstr ""
 #: kausal_common/admin_site/tables.py
 #: kausal_common/models/modification_tracking.py
 msgid "Last modified at"
-msgstr ""
+msgstr "Senast ändrad"
 
 #: kausal_common/api/exceptions.py
 msgid "Cannot delete instance because other objects reference it."
-msgstr ""
+msgstr "Kan inte ta bort instans eftersom andra objekt refererar till den."
 
 #: kausal_common/api/exceptions.py
 #, python-format
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
 msgstr ""
+"Kan inte ta bort \"%s\" eftersom det är kopplat till andra objekt som "
+"planer, personer eller åtgärder."
 
 #: kausal_common/blocks/base.py
 msgid "Label"
-msgstr ""
+msgstr "Etikett"
 
 #: kausal_common/blocks/base.py
 msgid "Label for the column to be used instead of the default"
-msgstr ""
+msgstr "Etikett för kolumnen som ska användas istället för standardkolumnen"
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
 msgid "Help text"
-msgstr ""
+msgstr "Hjälptext"
 
 #: kausal_common/blocks/base.py
 msgid "Help text for the column to be shown in the UI"
-msgstr ""
+msgstr "Hjälptext för fältet som ska visas i användargränssnittet"
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
 msgid "Heading to show instead of the default"
-msgstr ""
+msgstr "Rubrik som ska visas istället för standardrubriken"
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
 msgid "Field label"
-msgstr ""
+msgstr "Fältetikett"
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
 msgid "Help text for the field to be shown in the UI"
-msgstr ""
+msgstr "Hjälptext för fältet som ska visas i användargränssnittet"
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
 #, python-format
 msgid "Content block: %(label)s"
-msgstr ""
+msgstr "Innehållsblock:%(label)s"
 
 #: kausal_common/blocks/base.py
 msgid "Label for 'show all'"
-msgstr ""
+msgstr "Etikett för 'visa alla'"
 
 #: kausal_common/blocks/base.py
 #, python-format
 msgid "Filter: %(filter_label)s"
-msgstr ""
+msgstr "Filter: %(filter_label)s"
 
 #: kausal_common/datasets/chooser.py
 msgid "Choose a dataset"
-msgstr ""
+msgstr "Välj ett dataset"
 
 #: kausal_common/datasets/chooser.py
 msgid "Choose another dataset"
-msgstr ""
+msgstr "Välj ett annat dataset"
 
 #: kausal_common/datasets/models.py kausal_common/organizations/models.py
 msgid "name"
-msgstr ""
+msgstr "namn"
 
 #: kausal_common/datasets/models.py
 msgid "dimension"
-msgstr ""
+msgstr "dimension"
 
 #: kausal_common/datasets/models.py
 msgid "dimensions"
-msgstr ""
+msgstr "dimensioner"
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique within the dimension"
-msgstr ""
+msgstr "Valfri identifierare som, om angiven, måste vara unik inom dimensionen"
 
 #: kausal_common/datasets/models.py
 msgid "label"
-msgstr ""
+msgstr "etikett"
 
 #: kausal_common/datasets/models.py
 msgid "dimension category"
-msgstr ""
+msgstr "dimensionskategori"
 
 #: kausal_common/datasets/models.py
 msgid "dimension categories"
-msgstr ""
+msgstr "dimensionskategorier"
 
 #: kausal_common/datasets/models.py kausal_common/models/fields.py
 msgid "identifier"
-msgstr ""
+msgstr "identifierare"
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the scope"
 msgstr ""
+"Valfri identifierare som, om angiven, måste vara unik inom "
+"tillämpningsområdet"
 
 #: kausal_common/datasets/models.py
 msgid "dimension scope"
-msgstr ""
+msgstr "dimensionsomfång"
 
 #: kausal_common/datasets/models.py
 msgid "dimension scopes"
-msgstr ""
+msgstr "dimensionsomfång"
 
 #: kausal_common/datasets/models.py
 msgid "Yearly"
-msgstr ""
+msgstr "År"
 
 #: kausal_common/datasets/models.py
 msgid "Monthly"
-msgstr ""
+msgstr "Månadsvis"
 
 #: kausal_common/datasets/models.py
 msgid "Time resolution of the time stamps of data points in this dataset"
-msgstr ""
+msgstr "Tidsupplösning för tidsstämplarna för datapunkter i detta dataset"
 
 #: kausal_common/datasets/models.py
 msgid "start date"
-msgstr ""
+msgstr "startdatum"
 
 #: kausal_common/datasets/models.py
 msgid "For a newly created dataset, start entering values from this year"
-msgstr ""
+msgstr "För ett nyskapat dataset, börja ange värden från detta år"
 
 #: kausal_common/datasets/models.py
 #: kausal_common/templates/kausal_common/people/chooser_results.html
 msgid "Name"
-msgstr ""
+msgstr "Namn"
 
 #: kausal_common/datasets/models.py
 msgid "Descriptive name of the dataset schema"
-msgstr ""
+msgstr "Beskrivande namn på datasetets schema"
 
 #: kausal_common/datasets/models.py
 msgid "Description"
-msgstr ""
+msgstr "Beskrivning"
 
 #: kausal_common/datasets/models.py
 msgid "Description of the content and use of the dataset"
-msgstr ""
+msgstr "Beskrivning av datasetets innehåll och användning"
 
 #: kausal_common/datasets/models.py
 msgid "Time resolution"
@@ -170,45 +174,45 @@ msgstr "Tidsupplösning"
 
 #: kausal_common/datasets/models.py
 msgid "Initial date"
-msgstr ""
+msgstr "Startdatum"
 
 #: kausal_common/datasets/models.py
 msgid "Metrics"
-msgstr ""
+msgstr "Mätvärden"
 
 #: kausal_common/datasets/models.py
 msgid "Defines the interpretation and units for the values of the dataset"
-msgstr ""
+msgstr "Definierar tolkning och enheter för datasetets värden"
 
 #: kausal_common/datasets/models.py
 msgid "Dimensions"
-msgstr ""
+msgstr "Dimensioner"
 
 #: kausal_common/datasets/models.py
 msgid "Used when metrics are tracked for multiple categories"
-msgstr ""
+msgstr "Används när mätvärden spåras för flera kategorier"
 
 #: kausal_common/datasets/models.py
 msgctxt "list of persons and their respective permissions on a dataset schema"
 msgid "Person permissions"
-msgstr ""
+msgstr "Behörigheter"
 
 #: kausal_common/datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain persons"
-msgstr ""
+msgstr "Ger vissa personer behörighet till dataset med detta schema"
 
 #: kausal_common/datasets/models.py
 msgctxt "list of person groups and their respective permissions on a dataset schema"
 msgid "Group permissions"
-msgstr ""
+msgstr "Behörigheter"
 
 #: kausal_common/datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain person groups"
-msgstr ""
+msgstr "Ger vissa persongrupper behörighet till dataset med detta schema"
 
 #: kausal_common/datasets/models.py
 msgid "Permissions"
-msgstr ""
+msgstr "Behörigheter"
 
 #: kausal_common/datasets/models.py
 msgid "dataset schema"
@@ -216,107 +220,109 @@ msgstr "dataschema"
 
 #: kausal_common/datasets/models.py
 msgid "dataset schemas"
-msgstr ""
+msgstr "datascheman"
 
 #: kausal_common/datasets/models.py
 msgid "unit"
-msgstr ""
+msgstr "enhet"
 
 #: kausal_common/datasets/models.py
 msgid "dataset metric"
-msgstr ""
+msgstr "datasetmätvärde"
 
 #: kausal_common/datasets/models.py
 msgid "dataset metrics"
-msgstr ""
+msgstr "datasetmätvärden"
 
 #: kausal_common/datasets/models.py
 msgid "Multiply"
-msgstr ""
+msgstr "Multiplicera"
 
 #: kausal_common/datasets/models.py
 msgid "Divide"
-msgstr ""
+msgstr "Dividera"
 
 #: kausal_common/datasets/models.py
 msgid "Add"
-msgstr ""
+msgstr "Addera"
 
 #: kausal_common/datasets/models.py
 msgid "Subtract"
-msgstr ""
+msgstr "Subtrahera"
 
 #: kausal_common/datasets/models.py
 msgid "schema"
-msgstr ""
+msgstr "schema"
 
 #: kausal_common/datasets/models.py
 msgid "target metric"
-msgstr ""
+msgstr "målmätvärde"
 
 #: kausal_common/datasets/models.py
 msgid "The metric whose values are computed by this operation"
-msgstr ""
+msgstr "Mätvärdet vars värden beräknas av denna operation"
 
 #: kausal_common/datasets/models.py
 msgid "operation"
-msgstr ""
+msgstr "operation"
 
 #: kausal_common/datasets/models.py
 msgid "operand A"
-msgstr ""
+msgstr "operand A"
 
 #: kausal_common/datasets/models.py
 msgid "operand B"
-msgstr ""
+msgstr "operand B"
 
 #: kausal_common/datasets/models.py
 msgid "dataset metric computation"
-msgstr ""
+msgstr "datasetmätvärdeskalkyl"
 
 #: kausal_common/datasets/models.py
 msgid "dataset metric computations"
-msgstr ""
+msgstr "datasetmätvärdeskalkylationer"
 
 #: kausal_common/datasets/models.py
 msgid "dataset schema dimension"
-msgstr ""
+msgstr "dataschemadimension"
 
 #: kausal_common/datasets/models.py
 msgid "dataset schema dimensions"
-msgstr ""
+msgstr "dataschemadimensioner"
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the dataset's scope"
 msgstr ""
+"Valfri identifierare som, om angiven, måste vara unik inom datasetets "
+"tillämpningsområde"
 
 #: kausal_common/datasets/models.py
 msgid "dataset"
-msgstr ""
+msgstr "dataset"
 
 #: kausal_common/datasets/models.py
 msgid "datasets"
-msgstr ""
+msgstr "datauppsättningar"
 
 #: kausal_common/datasets/models.py
 msgid "dataset schema scope"
-msgstr ""
+msgstr "dataschemautfallet"
 
 #: kausal_common/datasets/models.py
 msgid "dataset schema scopes"
-msgstr ""
+msgstr "dataschemautfall"
 
 #: kausal_common/datasets/models.py
 msgid "date"
-msgstr ""
+msgstr "datum"
 
 #: kausal_common/datasets/models.py
 msgid "Date of this data point in context of the dataset's time resolution"
-msgstr ""
+msgstr "Datum för denna datapunkt i relation till datasetets tidsupplösning"
 
 #: kausal_common/datasets/models.py
 msgid "value"
-msgstr ""
+msgstr "värde"
 
 #: kausal_common/datasets/models.py
 msgid "metric"
@@ -324,327 +330,329 @@ msgstr "mätvärde"
 
 #: kausal_common/datasets/models.py
 msgid "data point"
-msgstr ""
+msgstr "datapunkt"
 
 #: kausal_common/datasets/models.py
 msgid "data points"
-msgstr ""
+msgstr "datapunkter"
 
 #: kausal_common/datasets/models.py
 msgid "data point dimension category"
-msgstr ""
+msgstr "dimensionskategori"
 
 #: kausal_common/datasets/models.py
 msgid "data point dimension categories"
-msgstr ""
+msgstr "dimensionskategorier"
 
 #: kausal_common/datasets/models.py
 msgctxt "review state of data point comment"
 msgid "Resolved"
-msgstr ""
+msgstr "Löst"
 
 #: kausal_common/datasets/models.py
 msgctxt "review state of data point comment"
 msgid "Unresolved"
-msgstr ""
+msgstr "Olöst"
 
 #: kausal_common/datasets/models.py
 msgid "Sticky comment"
-msgstr ""
+msgstr "Fäst kommentar"
 
 #: kausal_common/datasets/models.py
 msgctxt "Boolean to indicate if this comment is a review"
 msgid "Review comment"
-msgstr ""
+msgstr "Granskningskommentar"
 
 #: kausal_common/datasets/models.py
 msgctxt "date and time when a data point comment was resolved"
 msgid "resolved at"
-msgstr ""
+msgstr "löst vid"
 
 #: kausal_common/datasets/models.py
 msgid "comment"
-msgstr ""
+msgstr "kommentar"
 
 #: kausal_common/datasets/models.py
 msgid "comments"
-msgstr ""
+msgstr "kommentarer"
 
 #: kausal_common/datasets/models.py
 msgctxt "data source"
 msgid "edition"
-msgstr ""
+msgstr "utgåva"
 
 #: kausal_common/datasets/models.py
 msgctxt "authority (responsible organization) for data source"
 msgid "authority"
-msgstr ""
+msgstr "ansvarig organisation"
 
 #: kausal_common/datasets/models.py
 msgid "The organization responsible for the data source"
-msgstr ""
+msgstr "Organisationen som ansvarar för datakällan"
 
 #: kausal_common/datasets/models.py kausal_common/organizations/models.py
 msgid "description"
-msgstr ""
+msgstr "beskrivning"
 
 #: kausal_common/datasets/models.py kausal_common/organizations/models.py
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #: kausal_common/datasets/models.py
 msgid "Data source"
-msgstr ""
+msgstr "Datakälla"
 
 #: kausal_common/datasets/models.py kausal_common/datasets/wagtail_hooks.py
 msgid "Data sources"
-msgstr ""
+msgstr "Datakällor"
 
 #: kausal_common/datasets/models.py
 msgid "Unknown schema"
-msgstr ""
+msgstr "Okänd"
 
 #: kausal_common/datasets/models.py
 #, python-format
 msgid "Data source reference in: %(schema)s"
-msgstr ""
+msgstr "Datakällreferens i: %(schema)s"
 
 #: kausal_common/datasets/models.py
 msgid "Data source reference"
-msgstr ""
+msgstr "Datakällreferens"
 
 #: kausal_common/datasets/models.py
 msgid "data source reference"
-msgstr ""
+msgstr "datakällreferens"
 
 #: kausal_common/datasets/models.py
 msgid "data source references"
-msgstr ""
+msgstr "datakällreferenser"
 
 #: kausal_common/datasets/wagtail_hooks.py
 msgid "Edit dataset"
-msgstr ""
+msgstr "Redigera data"
 
 #: kausal_common/datasets/wagtail_hooks.py
 #, python-format
 msgctxt "label to show for a private instance of the given model"
 msgid "(Private %(model)s)"
-msgstr ""
+msgstr "(Privat %(model)s)"
 
 #: kausal_common/datasets/wagtail_hooks.py
 #, python-format
 msgctxt "title of a link to edit an instance of the given model"
 msgid "Edit this %(model)s"
-msgstr ""
+msgstr "Redigera denna %(model)s"
 
 #: kausal_common/models/modification_tracking.py
 msgid "Created at"
-msgstr ""
+msgstr "skapad vid"
 
 #: kausal_common/models/modification_tracking.py
 msgid "Last modified by"
-msgstr ""
+msgstr "Senast ändrad av"
 
 #: kausal_common/models/ordered.py
 msgctxt "integer to specify the sorting order of model instances"
 msgid "order"
-msgstr ""
+msgstr "ordning"
 
 #: kausal_common/models/uuid.py
 msgid "UUID"
-msgstr ""
+msgstr "UUID"
 
 #: kausal_common/organizations/forms.py
 msgid "A node cannot be moved under itself in the hierarchy."
-msgstr ""
+msgstr "En nod kan inte flyttas under sig själv i hierarkin."
 
 #: kausal_common/organizations/models.py
 msgctxt "node"
 msgid "Parent"
-msgstr ""
+msgstr "förälder"
 
 #: kausal_common/organizations/models.py
 msgid "The time at which the resource was created"
-msgstr ""
+msgstr "Tidpunkten då resursen skapades"
 
 #: kausal_common/organizations/models.py
 msgid "The time at which the resource was updated"
-msgstr ""
+msgstr "Tidpunkten då resursen uppdaterades"
 
 #: kausal_common/organizations/models.py
 msgctxt "organization"
 msgid "Classification"
-msgstr ""
+msgstr "Klassificering"
 
 #: kausal_common/organizations/models.py
 msgid "An organization category (e.g., committee)"
-msgstr ""
+msgstr "En organisationskategori, t.ex. kommitté"
 
 #: kausal_common/organizations/models.py
 msgid "Full name of the organization"
-msgstr ""
+msgstr "Organisationens fullständiga namn"
 
 #: kausal_common/organizations/models.py
 msgctxt "organization"
 msgid "short name"
-msgstr ""
+msgstr "kort namn"
 
 #: kausal_common/organizations/models.py
 msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
 msgstr ""
+"Kort version eller förkortning av organisationsnamnet som visas när det inte "
+"är nödvändigt att visa det fullständiga namnet"
 
 #: kausal_common/organizations/models.py
 msgctxt "organization"
 msgid "distinct name"
-msgstr ""
+msgstr "unikt namn"
 
 #: kausal_common/organizations/models.py
 msgid "A distinct name for this organization (generated automatically)"
-msgstr ""
+msgstr "Ett tydligt namn för denna organisation (genereras automatiskt)"
 
 #: kausal_common/organizations/models.py kausal_common/people/models.py
 #: kausal_common/users/models.py
 msgid "email address"
-msgstr ""
+msgstr "e-postadress"
 
 #: kausal_common/organizations/models.py
 msgctxt "organization"
 msgid "founding date"
-msgstr ""
+msgstr "grundningsdatum"
 
 #: kausal_common/organizations/models.py
 msgctxt "organization"
 msgid "dissolution date"
-msgstr ""
+msgstr "upplösningsdatum"
 
 #: kausal_common/organizations/models.py
 msgid "created at"
-msgstr ""
+msgstr "skapad vid"
 
 #: kausal_common/organizations/models.py
 msgid "The time at which the object for this organization was created"
-msgstr ""
+msgstr "Tidpunkten då objektet för denna organisation skapades"
 
 #: kausal_common/organizations/models.py kausal_common/people/models.py
 msgid "created by"
-msgstr ""
+msgstr "skapad av"
 
 #: kausal_common/organizations/models.py
 msgid "updated at"
-msgstr ""
+msgstr "uppdaterad vid"
 
 #: kausal_common/organizations/models.py
 msgid "The time at which the object for this organization was last updated"
-msgstr ""
+msgstr "Tidpunkten då objektet för denna organisation senast uppdaterades"
 
 #: kausal_common/organizations/models.py
 msgid "updated by"
-msgstr ""
+msgstr "uppdaterad av"
 
 #: kausal_common/organizations/models.py
 msgid "primary language"
-msgstr ""
+msgstr "primärspråk"
 
 #: kausal_common/organizations/models.py
 msgid "location"
-msgstr ""
+msgstr "plats"
 
 #: kausal_common/organizations/models.py kausal_common/people/models.py
 msgid "organization"
-msgstr ""
+msgstr "organisation"
 
 #: kausal_common/organizations/models.py
 msgid "organizations"
-msgstr ""
+msgstr "organisationer"
 
 #: kausal_common/organizations/views.py
 #, python-format
 msgid "New child %(model)s for %(parent)s"
-msgstr ""
+msgstr "Ny underordnad %(model)s för %(parent)s"
 
 #: kausal_common/organizations/views.py
 msgid "This will delete the following objects:"
-msgstr ""
+msgstr "Detta kommer att ta bort följande objekt:"
 
 #: kausal_common/people/api.py kausal_common/people/models.py
 msgid "Person with this email already exists"
-msgstr ""
+msgstr "Personen med det här e-postmeddelandet finns redan"
 
 #: kausal_common/people/api.py
 msgid "Not all objects have an email address"
-msgstr ""
+msgstr "Alla objekt har inte en e-postadress"
 
 #: kausal_common/people/api.py
 #, python-format
 msgid "Duplicate email addresses: %s"
-msgstr ""
+msgstr "Duplicera e-postadresser:%s"
 
 #: kausal_common/people/chooser.py
 msgctxt "person chooser"
 msgid "Create new"
-msgstr ""
+msgstr "Skapa ny"
 
 #: kausal_common/people/chooser.py
 msgid "Choose person"
-msgstr ""
+msgstr "Välj person"
 
 #: kausal_common/people/chooser.py
 msgid "Choose a person"
-msgstr ""
+msgstr "Välj en person"
 
 #: kausal_common/people/chooser.py
 msgid "Choose another person"
-msgstr ""
+msgstr "Välj en annan person"
 
 #: kausal_common/people/chooser.py
 msgid "Edit this person"
-msgstr ""
+msgstr "Redigera den här personen"
 
 #: kausal_common/people/models.py
 msgid "first name"
-msgstr ""
+msgstr "förnamn"
 
 #: kausal_common/people/models.py
 msgid "last name"
-msgstr ""
+msgstr "efternamn"
 
 #: kausal_common/people/models.py
 msgctxt "person's role"
 msgid "title"
-msgstr ""
+msgstr "titel"
 
 #: kausal_common/people/models.py
 msgid "Job title or role of this person"
-msgstr ""
+msgstr "Personens jobbtitel eller roll"
 
 #: kausal_common/people/models.py
 msgid "postal address"
-msgstr ""
+msgstr "postadress"
 
 #: kausal_common/people/models.py
 msgid "user"
-msgstr ""
+msgstr "användare"
 
 #: kausal_common/people/models.py
 msgid "Set if the person has an user account"
-msgstr ""
+msgstr "Ange om personen har ett användarkonto"
 
 #: kausal_common/people/models.py
 msgid "image"
-msgstr ""
+msgstr "bild"
 
 #: kausal_common/people/models.py
 msgid "image cropping"
-msgstr ""
+msgstr "bildbeskärning"
 
 #: kausal_common/people/models.py
 msgid "person"
-msgstr ""
+msgstr "person"
 
 #: kausal_common/people/models.py
 msgid "people"
-msgstr ""
+msgstr "personer"
 
 #: kausal_common/templates/kausal_common/people/chooser_results.html
 msgid "Organization"
-msgstr ""
+msgstr "organisation"
