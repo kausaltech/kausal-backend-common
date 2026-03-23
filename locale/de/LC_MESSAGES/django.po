@@ -11,9 +11,10 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-17 08:21+0200\n"
-"PO-Revision-Date: 2026-01-02 14:40+0000\n"
-"Last-Translator: Bernhard Bliem <bernhard.bliem@kausal.tech>\n"
-"Language-Team: German <https://weblate.kausal.tech/projects/kausal-backend-common/django/de/>\n"
+"PO-Revision-Date: 2026-03-23 11:09+0000\n"
+"Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
+"Language-Team: German <https://weblate.kausal.tech/projects/kausal-backend-"
+"common/django/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -168,7 +169,7 @@ msgstr "Beschreibung des Inhalts und der Verwendung des Datensatzes"
 
 #: kausal_common/datasets/models.py
 msgid "Time resolution"
-msgstr "Zeitauflösung"
+msgstr "Zeitliche Auflösung"
 
 #: kausal_common/datasets/models.py
 msgid "Initial date"
