@@ -402,32 +402,15 @@ msgstr "URL"
 
 #: kausal_common/datasets/models.py
 msgid "Data source"
-msgstr "tietoaineistot"
+msgstr "Tietolähteet"
 
 #: kausal_common/datasets/models.py kausal_common/datasets/wagtail_hooks.py
 msgid "Data sources"
-msgstr "tietoaineistot"
+msgstr "Tietolähteet"
 
 #: kausal_common/datasets/models.py
 msgid "Unknown schema"
 msgstr "Tuntematon sisältö"
-
-#: kausal_common/datasets/models.py
-#, python-format
-msgid "Data source reference in: %(schema)s"
-msgstr "Heräteasetukset"
-
-#: kausal_common/datasets/models.py
-msgid "Data source reference"
-msgstr "Heräteasetukset"
-
-#: kausal_common/datasets/models.py
-msgid "data source reference"
-msgstr "tietolähdeviite"
-
-#: kausal_common/datasets/models.py
-msgid "data source references"
-msgstr "Heräteasetukset"
 
 #: kausal_common/datasets/wagtail_hooks.py
 msgid "Edit dataset"
@@ -443,7 +426,7 @@ msgstr "(Yksityinen %(model)s)"
 #, python-format
 msgctxt "title of a link to edit an instance of the given model"
 msgid "Edit this %(model)s"
-msgstr "Muokkaa tätä henkilöä"
+msgstr "Muokkaa tätä: %(model)s"
 
 #: kausal_common/models/modification_tracking.py
 msgid "Created at"

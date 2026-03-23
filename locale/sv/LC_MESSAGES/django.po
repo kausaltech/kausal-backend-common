@@ -414,11 +414,6 @@ msgid "Unknown schema"
 msgstr "Okänd"
 
 #: kausal_common/datasets/models.py
-#, python-format
-msgid "Data source reference in: %(schema)s"
-msgstr "Meddelanden"
-
-#: kausal_common/datasets/models.py
 msgid "Data source reference"
 msgstr "referens"
 
@@ -439,12 +434,6 @@ msgstr "Redigera data"
 msgctxt "label to show for a private instance of the given model"
 msgid "(Private %(model)s)"
 msgstr "(Privat %(model)s)"
-
-#: kausal_common/datasets/wagtail_hooks.py
-#, python-format
-msgctxt "title of a link to edit an instance of the given model"
-msgid "Edit this %(model)s"
-msgstr "Redigera den här personen"
 
 #: kausal_common/models/modification_tracking.py
 msgid "Created at"
