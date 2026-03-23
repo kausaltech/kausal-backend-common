@@ -8,15 +8,16 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-17 08:21+0200\n"
-"PO-Revision-Date: 2024-12-11 10:47+0000\n"
-"Last-Translator: Timo Tuominen <timo.tuominen@kausal.tech>\n"
-"Language-Team: Swedish <https://weblate.kausal.tech/projects/watch/django/sv_FI/>\n"
+"PO-Revision-Date: 2026-03-23 11:09+0000\n"
+"Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
+"Language-Team: Swedish <https://weblate.kausal.tech/projects/kausal-backend-"
+"common/django/sv_FI/>\n"
 "Language: sv_FI\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.4.2\n"
+"X-Generator: Weblate 5.15.1\n"
 
 #: kausal_common/admin_site/tables.py
 #: kausal_common/models/modification_tracking.py
@@ -165,7 +166,7 @@ msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "Time resolution"
-msgstr ""
+msgstr "Tidsupplösning"
 
 #: kausal_common/datasets/models.py
 msgid "Initial date"
@@ -211,7 +212,7 @@ msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "dataset schema"
-msgstr ""
+msgstr "dataschema"
 
 #: kausal_common/datasets/models.py
 msgid "dataset schemas"
@@ -319,7 +320,7 @@ msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "metric"
-msgstr ""
+msgstr "mätvärde"
 
 #: kausal_common/datasets/models.py
 msgid "data point"
