@@ -419,11 +419,6 @@ msgid "Unknown schema"
 msgstr "Ukendt indhold"
 
 #: kausal_common/datasets/models.py
-#, python-format
-msgid "Data source reference in: %(schema)s"
-msgstr "Notifikationspræferencer"
-
-#: kausal_common/datasets/models.py
 msgid "Data source reference"
 msgstr "reference"
 
@@ -444,12 +439,6 @@ msgstr "Rediger data"
 msgctxt "label to show for a private instance of the given model"
 msgid "(Private %(model)s)"
 msgstr "(Privat %(model)s)"
-
-#: kausal_common/datasets/wagtail_hooks.py
-#, python-format
-msgctxt "title of a link to edit an instance of the given model"
-msgid "Edit this %(model)s"
-msgstr "Rediger denne person"
 
 #: kausal_common/models/modification_tracking.py
 msgid "Created at"
@@ -589,11 +578,6 @@ msgstr "En person med denne e-mailadresse findes allerede"
 #: kausal_common/people/api.py
 msgid "Not all objects have an email address"
 msgstr "Ikke alle objekter har en e-mailadresse"
-
-#: kausal_common/people/api.py
-#, python-format
-msgid "Duplicate email addresses: %s"
-msgstr "email adresse"
 
 #: kausal_common/people/chooser.py
 msgctxt "person chooser"
