@@ -187,7 +187,7 @@ class PerfRunContext[NodeType: HasId, CacheResultType: Any = Any]:
         console.print(table)
 
 
-class PerfContext[NodeType: HasId, CacheResultType: Any = Any](contextlib.AbstractContextManager):
+class PerfContext[NodeType: HasId, CacheResultType: Any = Any](contextlib.AbstractContextManager[PerfRunContext[NodeType]]):
     run: PerfRunContext[NodeType, CacheResultType] | None
     enabled: bool = False
     min_ms: float
@@ -200,8 +200,10 @@ class PerfContext[NodeType: HasId, CacheResultType: Any = Any](contextlib.Abstra
         self.run = None
 
     def __enter__(self):
+        super().__enter__()
         run_ctx = PerfRunContext(self)
-        assert self.run is None
+        if self.run is not None:
+            raise RuntimeError('PerfContext already has a run active')
         self.run = run_ctx
         return run_ctx
 
