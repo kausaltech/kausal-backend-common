@@ -240,7 +240,12 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
 
 
 def _should_use_logfmt() -> bool:
+    import sys
+
     if env_bool('KUBERNETES_LOGGING', default=False) or env_bool('KUBERNETES_MODE', default=False):
+        return True
+
+    if not sys.stdout.isatty() or not sys.stderr.isatty():
         return True
 
     console = get_rich_log_console()
