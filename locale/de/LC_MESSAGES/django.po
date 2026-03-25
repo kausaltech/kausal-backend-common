@@ -11,10 +11,9 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-17 08:21+0200\n"
-"PO-Revision-Date: 2026-03-23 14:37+0000\n"
-"Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
-"Language-Team: German <https://weblate.kausal.tech/projects/kausal-backend-"
-"common/django/de/>\n"
+"PO-Revision-Date: 2026-01-02 14:40+0000\n"
+"Last-Translator: Bernhard Bliem <bernhard.bliem@kausal.tech>\n"
+"Language-Team: German <https://weblate.kausal.tech/projects/kausal-backend-common/django/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -34,9 +33,7 @@ msgstr "Instanz kann nicht gelöscht werden, da andere Objekte darauf verweisen.
 #: kausal_common/api/exceptions.py
 #, python-format
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
-msgstr ""
-"„%s“ kann nicht gelöscht werden, da das Objekt mit anderen Objekten wie "
-"Instanzen, Personen oder Maßnahmen verknüpft ist."
+msgstr "„%s“ kann nicht gelöscht werden, da das Objekt mit anderen Objekten wie Instanzen, Personen oder Maßnahmen verknüpft ist."
 
 #: kausal_common/blocks/base.py
 msgid "Label"
@@ -44,8 +41,7 @@ msgstr "Beschriftung"
 
 #: kausal_common/blocks/base.py
 msgid "Label for the column to be used instead of the default"
-msgstr ""
-"Spaltenbeschriftung, die anstelle des Standardwerts verwendet werden soll"
+msgstr "Spaltenbeschriftung, die anstelle des Standardwerts verwendet werden soll"
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
 msgid "Help text"
@@ -53,8 +49,7 @@ msgstr "Hilfetext"
 
 #: kausal_common/blocks/base.py
 msgid "Help text for the column to be shown in the UI"
-msgstr ""
-"Hilfetext für die Spalte, der in der Benutzeroberfläche angezeigt werden soll"
+msgstr "Hilfetext für die Spalte, der in der Benutzeroberfläche angezeigt werden soll"
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
 msgid "Heading to show instead of the default"
@@ -104,9 +99,7 @@ msgstr "Dimensionen"
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique within the dimension"
-msgstr ""
-"Optionale Kennung, die, falls festgelegt, innerhalb der Dimension eindeutig "
-"sein muss"
+msgstr "Optionale Kennung, die, falls festgelegt, innerhalb der Dimension eindeutig sein muss"
 
 #: kausal_common/datasets/models.py
 msgid "label"
@@ -126,9 +119,7 @@ msgstr "Kennung"
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the scope"
-msgstr ""
-"Optionale Kennung, die, falls festgelegt, innerhalb des Geltungsbereichs "
-"eindeutig sein muss"
+msgstr "Optionale Kennung, die, falls festgelegt, innerhalb des Geltungsbereichs eindeutig sein muss"
 
 #: kausal_common/datasets/models.py
 msgid "dimension scope"
@@ -144,7 +135,7 @@ msgstr "Jährlich"
 
 #: kausal_common/datasets/models.py
 msgid "Monthly"
-msgstr "Monatlich"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "Time resolution of the time stamps of data points in this dataset"
@@ -156,9 +147,7 @@ msgstr "Beginndatum"
 
 #: kausal_common/datasets/models.py
 msgid "For a newly created dataset, start entering values from this year"
-msgstr ""
-"Für einen neu erstellten Datensatz beginnen Sie mit der Eingabe der Werte "
-"aus diesem Jahr"
+msgstr "Für einen neu erstellten Datensatz beginnen Sie mit der Eingabe der Werte aus diesem Jahr"
 
 #: kausal_common/datasets/models.py
 #: kausal_common/templates/kausal_common/people/chooser_results.html
@@ -179,7 +168,7 @@ msgstr "Beschreibung des Inhalts und der Verwendung des Datensatzes"
 
 #: kausal_common/datasets/models.py
 msgid "Time resolution"
-msgstr "Zeitliche Auflösung"
+msgstr "Zeitauflösung"
 
 #: kausal_common/datasets/models.py
 msgid "Initial date"
@@ -191,8 +180,7 @@ msgstr "Messgrößen"
 
 #: kausal_common/datasets/models.py
 msgid "Defines the interpretation and units for the values of the dataset"
-msgstr ""
-"Legt die Interpretation und die Einheiten für die Werte des Datensatzes fest"
+msgstr "Legt die Interpretation und die Einheiten für die Werte des Datensatzes fest"
 
 #: kausal_common/datasets/models.py
 msgid "Dimensions"
@@ -209,8 +197,7 @@ msgstr "Berechtigungen für Personen"
 
 #: kausal_common/datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain persons"
-msgstr ""
-"Erteilt bestimmten Personen Berechtigungen für Datensätze dieses Schemas"
+msgstr "Erteilt bestimmten Personen Berechtigungen für Datensätze dieses Schemas"
 
 #: kausal_common/datasets/models.py
 msgctxt "list of person groups and their respective permissions on a dataset schema"
@@ -219,9 +206,7 @@ msgstr "Berechtigungen für Gruppen"
 
 #: kausal_common/datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain person groups"
-msgstr ""
-"Erteilt bestimmten Personengruppen Berechtigungen für Datensätze dieses "
-"Schemas"
+msgstr "Erteilt bestimmten Personengruppen Berechtigungen für Datensätze dieses Schemas"
 
 #: kausal_common/datasets/models.py
 msgid "Permissions"
@@ -249,49 +234,57 @@ msgstr "Datensatzmessgrößen"
 
 #: kausal_common/datasets/models.py
 msgid "Multiply"
-msgstr "Multiplizieren"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "Divide"
-msgstr "Dividieren"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "Add"
-msgstr "Addieren"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "Subtract"
-msgstr "Subtrahieren"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "schema"
 msgstr "Schema"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset metric"
 msgid "target metric"
 msgstr "Datensatzmessgröße"
 
 #: kausal_common/datasets/models.py
 msgid "The metric whose values are computed by this operation"
-msgstr "Die Messgröße, deren Werte durch diese Operation berechnet werden"
+msgstr ""
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "location"
 msgid "operation"
 msgstr "Standort"
 
 #: kausal_common/datasets/models.py
 msgid "operand A"
-msgstr "Operand A"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "operand B"
-msgstr "Operand B"
+msgstr ""
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset metric"
 msgid "dataset metric computation"
 msgstr "Datensatzmessgröße"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset metrics"
 msgid "dataset metric computations"
 msgstr "Datensatzmessgrößen"
 
@@ -305,9 +298,7 @@ msgstr "Datensatzschema-Dimensionen"
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the dataset's scope"
-msgstr ""
-"Optionale Kennung, die, falls gesetzt, im Geltungsbereich des Datensatzes "
-"eindeutig sein muss"
+msgstr "Optionale Kennung, die, falls gesetzt, im Geltungsbereich des Datensatzes eindeutig sein muss"
 
 #: kausal_common/datasets/models.py
 msgid "dataset"
@@ -331,9 +322,7 @@ msgstr "Datum"
 
 #: kausal_common/datasets/models.py
 msgid "Date of this data point in context of the dataset's time resolution"
-msgstr ""
-"Datum dieses Datenpunkts im Zusammenhang mit der zeitlichen Auflösung des "
-"Datensatzes"
+msgstr "Datum dieses Datenpunkts im Zusammenhang mit der zeitlichen Auflösung des Datensatzes"
 
 #: kausal_common/datasets/models.py
 msgid "value"
@@ -477,8 +466,7 @@ msgstr "UUID"
 
 #: kausal_common/organizations/forms.py
 msgid "A node cannot be moved under itself in the hierarchy."
-msgstr ""
-"Ein Knoten kann in der Hierarchie nicht unter sich selbst verschoben werden."
+msgstr "Ein Knoten kann in der Hierarchie nicht unter sich selbst verschoben werden."
 
 #: kausal_common/organizations/models.py
 msgctxt "node"
@@ -513,9 +501,7 @@ msgstr "Kurzname"
 
 #: kausal_common/organizations/models.py
 msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
-msgstr ""
-"Kurzform oder Abkürzung des Organisationsnamens, die angezeigt wird, wenn es "
-"nicht erforderlich ist, den vollständigen Namen anzuzeigen"
+msgstr "Kurzform oder Abkürzung des Organisationsnamens, die angezeigt wird, wenn es nicht erforderlich ist, den vollständigen Namen anzuzeigen"
 
 #: kausal_common/organizations/models.py
 msgctxt "organization"

@@ -12,19 +12,20 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-17 08:21+0200\n"
-"PO-Revision-Date: 2026-03-23 19:39+0000\n"
-"Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
-"Language-Team: Danish <https://weblate.kausal.tech/projects/kausal-backend-"
-"common/django/da/>\n"
+"PO-Revision-Date: 2025-04-02 07:20+0000\n"
+"Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
+"Language-Team: Danish <https://weblate.kausal.tech/projects/watch/django/da/>\n"
 "Language: da\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.15.1\n"
+"X-Generator: Weblate 5.4.2\n"
 
 #: kausal_common/admin_site/tables.py
 #: kausal_common/models/modification_tracking.py
+#, fuzzy
+#| msgid "Last modified"
 msgid "Last modified at"
 msgstr "Sidst ændret"
 
@@ -33,41 +34,42 @@ msgid "Cannot delete instance because other objects reference it."
 msgstr "Forekomsten kan ikke slettes, fordi andre objekter refererer til den."
 
 #: kausal_common/api/exceptions.py
-#, python-format
+#, fuzzy, python-format
+#| msgid "Cannot delete \"%s\" because it is connected to other objects such as plans, persons or actions."
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
-msgstr ""
-"Du kan ikke slette \"%s\", fordi det er forbundet med andre objekter som "
-"planer, personer eller handlinger."
+msgstr "Du kan ikke slette \"%s\", fordi det er forbundet med andre objekter som planer, personer eller handlinger."
 
 #: kausal_common/blocks/base.py
 msgid "Label"
-msgstr "Etiket"
+msgstr ""
 
 #: kausal_common/blocks/base.py
 msgid "Label for the column to be used instead of the default"
-msgstr "Kolonnetiket, der bruges i stedet for standarden"
+msgstr ""
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
 msgid "Help text"
 msgstr "hjælpetekst"
 
 #: kausal_common/blocks/base.py
+#, fuzzy
+#| msgid "Set if action identifiers should be visible in the public UI"
 msgid "Help text for the column to be shown in the UI"
-msgstr ""
-"Indstil, om handlingsidentifikatorer skal være synlige i den offentlige "
-"brugergrænseflade"
+msgstr "Indstil, om handlingsidentifikatorer skal være synlige i den offentlige brugergrænseflade"
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
 msgid "Heading to show instead of the default"
-msgstr "Overskrift, der vises i stedet for standarden"
+msgstr ""
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+#, fuzzy
+#| msgid "fields"
 msgid "Field label"
 msgstr "felter"
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
 msgid "Help text for the field to be shown in the UI"
-msgstr "Hjælpetekst til feltet, der skal vises i brugergrænsefladen"
+msgstr ""
 
 #: kausal_common/blocks/base.py kausal_common/blocks/fields.py
 #, python-format
@@ -84,10 +86,14 @@ msgid "Filter: %(filter_label)s"
 msgstr "Filter: %(filter_label)s"
 
 #: kausal_common/datasets/chooser.py
+#, fuzzy
+#| msgid "Choose a category type"
 msgid "Choose a dataset"
 msgstr "Vælg en kategoritype"
 
 #: kausal_common/datasets/chooser.py
+#, fuzzy
+#| msgid "Choose another attribute"
 msgid "Choose another dataset"
 msgstr "Vælg en anden attribut"
 
@@ -106,10 +112,10 @@ msgstr "dimensioner"
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique within the dimension"
 msgstr ""
-"Valgfri identifikator, som, hvis den er angivet, skal være unik inden for "
-"dimensionen"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "fields"
 msgid "label"
 msgstr "felter"
 
@@ -128,28 +134,32 @@ msgstr "identifikator"
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the scope"
 msgstr ""
-"Valgfri identifikator, som, hvis den er angivet, skal være unik inden for "
-"omfanget"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimensions"
 msgid "dimension scope"
 msgstr "dimensioner"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimension categories"
 msgid "dimension scopes"
 msgstr "dimensionskategorier"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Year"
 msgid "Yearly"
 msgstr "År"
 
 #: kausal_common/datasets/models.py
 msgid "Monthly"
-msgstr "Månedligt"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "Time resolution of the time stamps of data points in this dataset"
-msgstr "Tidsopløsning for tidsstempler for datapunkter i dette datasæt"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "start date"
@@ -157,7 +167,7 @@ msgstr "start dato"
 
 #: kausal_common/datasets/models.py
 msgid "For a newly created dataset, start entering values from this year"
-msgstr "For et nyoprettet datasæt, begynd at indtaste værdier fra dette år"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 #: kausal_common/templates/kausal_common/people/chooser_results.html
@@ -169,18 +179,26 @@ msgid "Descriptive name of the dataset schema"
 msgstr "Beskrivende navn på datasættets skema"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "description"
 msgid "Description"
 msgstr "beskrivelse"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Description to show after the field content"
 msgid "Description of the content and use of the dataset"
 msgstr "Beskrivelse, der skal vises efter feltets indhold"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "time resolution"
 msgid "Time resolution"
-msgstr "Tidsopløsning"
+msgstr "tidsopløsning"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "start date"
 msgid "Initial date"
 msgstr "start dato"
 
@@ -190,43 +208,55 @@ msgstr "Metrikker"
 
 #: kausal_common/datasets/models.py
 msgid "Defines the interpretation and units for the values of the dataset"
-msgstr "Definerer fortolkning og enheder for datasættets værdier"
+msgstr ""
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimensions"
 msgid "Dimensions"
 msgstr "dimensioner"
 
 #: kausal_common/datasets/models.py
 msgid "Used when metrics are tracked for multiple categories"
-msgstr "Bruges når måleenheder spores for flere kategorier"
+msgstr ""
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Permission denied"
 msgctxt "list of persons and their respective permissions on a dataset schema"
 msgid "Person permissions"
 msgstr "Adgang nægtet"
 
 #: kausal_common/datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain persons"
-msgstr "Giver visse personer adgang til datasæt med dette skema"
+msgstr ""
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Permission denied"
 msgctxt "list of person groups and their respective permissions on a dataset schema"
 msgid "Group permissions"
 msgstr "Adgang nægtet"
 
 #: kausal_common/datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain person groups"
-msgstr "Giver visse persongrupper adgang til datasæt med dette skema"
+msgstr ""
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Permission denied"
 msgid "Permissions"
 msgstr "Adgang nægtet"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
 msgid "dataset schema"
-msgstr "datasætskema"
+msgstr "datasætlicens"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
 msgid "dataset schemas"
 msgstr "datasætlicens"
 
@@ -235,74 +265,88 @@ msgid "unit"
 msgstr "enhed"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
 msgid "dataset metric"
 msgstr "datasætlicens"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
 msgid "dataset metrics"
 msgstr "datasætlicens"
 
 #: kausal_common/datasets/models.py
 msgid "Multiply"
-msgstr "Multiplicer"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "Divide"
-msgstr "Divider"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "Add"
-msgstr "Addér"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "Subtract"
-msgstr "Subtrahér"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "schema"
-msgstr "skema"
+msgstr ""
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
 msgid "target metric"
 msgstr "datasætlicens"
 
 #: kausal_common/datasets/models.py
 msgid "The metric whose values are computed by this operation"
-msgstr "Den måleenhed, hvis værdier beregnes af denne operation"
+msgstr ""
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Location"
 msgid "operation"
 msgstr "Beliggenhed"
 
 #: kausal_common/datasets/models.py
 msgid "operand A"
-msgstr "operand A"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "operand B"
-msgstr "operand B"
+msgstr ""
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
 msgid "dataset metric computation"
 msgstr "datasætlicens"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
 msgid "dataset metric computations"
 msgstr "datasætlicens"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimensions"
 msgid "dataset schema dimension"
 msgstr "dimensioner"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimensions"
 msgid "dataset schema dimensions"
 msgstr "dimensioner"
 
 #: kausal_common/datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the dataset's scope"
 msgstr ""
-"Valgfri identifikator, som, hvis den er angivet, skal være unik inden for "
-"datasættets omfang"
 
 #: kausal_common/datasets/models.py
 msgid "dataset"
@@ -313,10 +357,14 @@ msgid "datasets"
 msgstr "datasæt"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset license"
 msgid "dataset schema scope"
 msgstr "datasætlicens"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dataset licenses"
 msgid "dataset schema scopes"
 msgstr "datasætlicenser"
 
@@ -326,7 +374,7 @@ msgstr "dato"
 
 #: kausal_common/datasets/models.py
 msgid "Date of this data point in context of the dataset's time resolution"
-msgstr "Dato for dette datapunkt i relation til datasættets tidsopløsning"
+msgstr ""
 
 #: kausal_common/datasets/models.py
 msgid "value"
@@ -334,44 +382,62 @@ msgstr "værdi"
 
 #: kausal_common/datasets/models.py
 msgid "metric"
-msgstr "måleenhed"
+msgstr ""
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Last data point"
 msgid "data point"
 msgstr "Sidste datapunkt"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Last data point"
 msgid "data points"
 msgstr "Sidste datapunkt"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimension category"
 msgid "data point dimension category"
 msgstr "dimensionskategori"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "dimension categories"
 msgid "data point dimension categories"
 msgstr "dimensionskategorier"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "created at"
 msgctxt "review state of data point comment"
 msgid "Resolved"
 msgstr "oprettet kl"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "created at"
 msgctxt "review state of data point comment"
 msgid "Unresolved"
 msgstr "oprettet kl"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "comment"
 msgid "Sticky comment"
 msgstr "kommentar"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "comment"
 msgctxt "Boolean to indicate if this comment is a review"
 msgid "Review comment"
 msgstr "kommentar"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "created at"
 msgctxt "date and time when a data point comment was resolved"
 msgid "resolved at"
 msgstr "oprettet kl"
@@ -381,20 +447,28 @@ msgid "comment"
 msgstr "kommentar"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "comment"
 msgid "comments"
 msgstr "kommentar"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Section"
 msgctxt "data source"
 msgid "edition"
 msgstr "Afsnit"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "author"
 msgctxt "authority (responsible organization) for data source"
 msgid "authority"
 msgstr "forfatter"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "main organization for the plan"
 msgid "The organization responsible for the data source"
 msgstr "hovedorganisation for planen"
 
@@ -407,30 +481,42 @@ msgid "URL"
 msgstr "URL"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "datasets"
 msgid "Data source"
 msgstr "datasæt"
 
 #: kausal_common/datasets/models.py kausal_common/datasets/wagtail_hooks.py
+#, fuzzy
+#| msgid "datasets"
 msgid "Data sources"
 msgstr "datasæt"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Unknown content"
 msgid "Unknown schema"
 msgstr "Ukendt indhold"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
 msgid "Data source reference"
 msgstr "reference"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
 msgid "data source reference"
 msgstr "reference"
 
 #: kausal_common/datasets/models.py
+#, fuzzy
+#| msgid "Notification preferences"
 msgid "data source references"
 msgstr "Notifikationspræferencer"
 
 #: kausal_common/datasets/wagtail_hooks.py
+#, fuzzy
+#| msgid "Edit data"
 msgid "Edit dataset"
 msgstr "Rediger data"
 
@@ -441,27 +527,35 @@ msgid "(Private %(model)s)"
 msgstr "(Privat %(model)s)"
 
 #: kausal_common/models/modification_tracking.py
+#, fuzzy
+#| msgid "created at"
 msgid "Created at"
 msgstr "oprettet kl"
 
 #: kausal_common/models/modification_tracking.py
+#, fuzzy
+#| msgid "Last modified"
 msgid "Last modified by"
 msgstr "Sidst ændret"
 
 #: kausal_common/models/ordered.py
+#, fuzzy
+#| msgid "order"
 msgctxt "integer to specify the sorting order of model instances"
 msgid "order"
 msgstr "bestille"
 
 #: kausal_common/models/uuid.py
 msgid "UUID"
-msgstr "UUID"
+msgstr ""
 
 #: kausal_common/organizations/forms.py
 msgid "A node cannot be moved under itself in the hierarchy."
 msgstr "En node kan ikke flyttes under sig selv i hierarkiet."
 
 #: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "Parent"
 msgctxt "node"
 msgid "Parent"
 msgstr "Forælder"
@@ -475,19 +569,25 @@ msgid "The time at which the resource was updated"
 msgstr "Det tidspunkt, hvor ressourcen blev opdateret"
 
 #: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "Classification"
 msgctxt "organization"
 msgid "Classification"
 msgstr "Klassifikation"
 
 #: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "An organization category, e.g. committee"
 msgid "An organization category (e.g., committee)"
 msgstr "En organisationskategori, f.eks. udvalg"
 
 #: kausal_common/organizations/models.py
 msgid "Full name of the organization"
-msgstr "Organisationens fulde navn"
+msgstr ""
 
 #: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "Short name"
 msgctxt "organization"
 msgid "short name"
 msgstr "Kort navn"
@@ -495,10 +595,10 @@ msgstr "Kort navn"
 #: kausal_common/organizations/models.py
 msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
 msgstr ""
-"Kort version eller forkortelse af organisationsnavnet, der vises når det "
-"ikke er nødvendigt at vise det fulde navn"
 
 #: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "first name"
 msgctxt "organization"
 msgid "distinct name"
 msgstr "fornavn"
@@ -515,18 +615,22 @@ msgstr "email adresse"
 #: kausal_common/organizations/models.py
 msgctxt "organization"
 msgid "founding date"
-msgstr "stiftelsesdato"
+msgstr ""
 
 #: kausal_common/organizations/models.py
 msgctxt "organization"
 msgid "dissolution date"
-msgstr "opløsningsdato"
+msgstr ""
 
 #: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "created at"
 msgid "created at"
 msgstr "oprettet kl"
 
 #: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "The time at which the resource was created"
 msgid "The time at which the object for this organization was created"
 msgstr "Det tidspunkt, hvor ressourcen blev oprettet"
 
@@ -535,22 +639,32 @@ msgid "created by"
 msgstr "lavet af"
 
 #: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "created at"
 msgid "updated at"
 msgstr "oprettet kl"
 
 #: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "The time at which the resource was updated"
 msgid "The time at which the object for this organization was last updated"
 msgstr "Det tidspunkt, hvor ressourcen blev opdateret"
 
 #: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "created by"
 msgid "updated by"
 msgstr "lavet af"
 
 #: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "Primary language"
 msgid "primary language"
 msgstr "Primære sprog"
 
 #: kausal_common/organizations/models.py
+#, fuzzy
+#| msgid "Location"
 msgid "location"
 msgstr "Beliggenhed"
 
@@ -565,9 +679,11 @@ msgstr "organisationer"
 #: kausal_common/organizations/views.py
 #, python-format
 msgid "New child %(model)s for %(parent)s"
-msgstr "Ny underordnet %(model)s for %(parent)s"
+msgstr ""
 
 #: kausal_common/organizations/views.py
+#, fuzzy
+#| msgid "This will mark the following actions as complete:"
 msgid "This will delete the following objects:"
 msgstr "Dette vil markere følgende handlinger som fuldførte:"
 
@@ -580,6 +696,8 @@ msgid "Not all objects have an email address"
 msgstr "Ikke alle objekter har en e-mailadresse"
 
 #: kausal_common/people/chooser.py
+#, fuzzy
+#| msgid "Create new"
 msgctxt "person chooser"
 msgid "Create new"
 msgstr "Lav ny"
@@ -615,7 +733,7 @@ msgstr "titel"
 
 #: kausal_common/people/models.py
 msgid "Job title or role of this person"
-msgstr "Personens jobtitel eller rolle"
+msgstr ""
 
 #: kausal_common/people/models.py
 msgid "postal address"
@@ -646,5 +764,7 @@ msgid "people"
 msgstr "mennesker"
 
 #: kausal_common/templates/kausal_common/people/chooser_results.html
+#, fuzzy
+#| msgid "organization"
 msgid "Organization"
 msgstr "organisation"
