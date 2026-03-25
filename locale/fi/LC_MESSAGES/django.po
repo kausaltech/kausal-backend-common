@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-17 08:21+0200\n"
+"POT-Creation-Date: 2026-03-25 11:46+0100\n"
 "PO-Revision-Date: 2026-03-12 09:21+0000\n"
 "Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
 "Language-Team: Finnish <https://weblate.kausal.tech/projects/kausal-backend-common/django/fi/>\n"
@@ -445,6 +445,26 @@ msgstr "Tietolähteet"
 #| msgid "Unknown content"
 msgid "Unknown schema"
 msgstr "Tuntematon sisältö"
+
+#: kausal_common/datasets/models.py
+#, python-format
+msgid "Data source reference in: %(schema)s"
+msgstr ""
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+msgid "Data source reference"
+msgstr "Tietolähteet"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+msgid "data source reference"
+msgstr "Tietolähteet"
+
+#: kausal_common/datasets/models.py
+#, fuzzy
+msgid "data source references"
+msgstr "Tietolähteet"
 
 #: kausal_common/datasets/wagtail_hooks.py
 #, fuzzy

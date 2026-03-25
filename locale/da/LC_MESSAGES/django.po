@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-17 08:21+0200\n"
+"POT-Creation-Date: 2026-03-25 11:46+0100\n"
 "PO-Revision-Date: 2025-04-02 07:20+0000\n"
 "Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
 "Language-Team: Danish <https://weblate.kausal.tech/projects/watch/django/da/>\n"
@@ -499,6 +499,11 @@ msgid "Unknown schema"
 msgstr "Ukendt indhold"
 
 #: kausal_common/datasets/models.py
+#, fuzzy, python-format
+msgid "Data source reference in: %(schema)s"
+msgstr "reference"
+
+#: kausal_common/datasets/models.py
 #, fuzzy
 msgid "Data source reference"
 msgstr "reference"
@@ -525,6 +530,13 @@ msgstr "Rediger data"
 msgctxt "label to show for a private instance of the given model"
 msgid "(Private %(model)s)"
 msgstr "(Privat %(model)s)"
+
+#: kausal_common/datasets/wagtail_hooks.py
+#, fuzzy, python-format
+#| msgid "Edit this person"
+msgctxt "title of a link to edit an instance of the given model"
+msgid "Edit this %(model)s"
+msgstr "Rediger denne person"
 
 #: kausal_common/models/modification_tracking.py
 #, fuzzy
@@ -694,6 +706,12 @@ msgstr "En person med denne e-mailadresse findes allerede"
 #: kausal_common/people/api.py
 msgid "Not all objects have an email address"
 msgstr "Ikke alle objekter har en e-mailadresse"
+
+#: kausal_common/people/api.py
+#, fuzzy, python-format
+#| msgid "email address"
+msgid "Duplicate email addresses: %s"
+msgstr "email adresse"
 
 #: kausal_common/people/chooser.py
 #, fuzzy

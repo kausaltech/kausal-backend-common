@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-17 08:21+0200\n"
+"POT-Creation-Date: 2026-03-25 11:46+0100\n"
 "PO-Revision-Date: 2025-04-02 12:20+0000\n"
 "Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
 "Language-Team: Swedish <https://weblate.kausal.tech/projects/watch/django/sv/>\n"
@@ -488,6 +488,11 @@ msgid "Unknown schema"
 msgstr "Okänd"
 
 #: kausal_common/datasets/models.py
+#, fuzzy, python-format
+msgid "Data source reference in: %(schema)s"
+msgstr "referens"
+
+#: kausal_common/datasets/models.py
 #, fuzzy
 msgid "Data source reference"
 msgstr "referens"
@@ -513,6 +518,13 @@ msgstr "Redigera data"
 msgctxt "label to show for a private instance of the given model"
 msgid "(Private %(model)s)"
 msgstr ""
+
+#: kausal_common/datasets/wagtail_hooks.py
+#, fuzzy, python-format
+#| msgid "Edit this person"
+msgctxt "title of a link to edit an instance of the given model"
+msgid "Edit this %(model)s"
+msgstr "Redigera den här personen"
 
 #: kausal_common/models/modification_tracking.py
 #, fuzzy
