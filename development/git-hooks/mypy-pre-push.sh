@@ -4,8 +4,11 @@ set -euo pipefail
 
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
-# Filter the files and store the result
-mapfile -t filtered_files < <(printf '%s\n' "$@" | "${SCRIPT_DIR}/filter-mypy-ignores.py")
+# Filter the files and store the result (read loop: macOS /bin/bash is 3.2, no mapfile)
+filtered_files=()
+while IFS= read -r line; do
+    filtered_files+=("$line")
+done < <(printf '%s\n' "$@" | "${SCRIPT_DIR}/filter-mypy-ignores.py")
 
 # Check if there are any files left after filtering
 if [ ${#filtered_files[@]} -gt 0 ]; then
