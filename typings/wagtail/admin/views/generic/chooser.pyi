@@ -1,16 +1,25 @@
-from _typeshed import Incomplete
 from django.utils.functional import cached_property as cached_property
 from django.views.generic.base import ContextMixin, View
 from wagtail import hooks as hooks
 from wagtail.admin.admin_url_finder import AdminURLFinder as AdminURLFinder
-from wagtail.admin.forms.choosers import BaseFilterForm as BaseFilterForm, CollectionFilterMixin as CollectionFilterMixin, LocaleFilterMixin as LocaleFilterMixin, SearchFilterMixin as SearchFilterMixin
+from wagtail.admin.forms.choosers import (
+    BaseFilterForm as BaseFilterForm,
+    CollectionFilterMixin as CollectionFilterMixin,
+    LocaleFilterMixin as LocaleFilterMixin,
+    SearchFilterMixin as SearchFilterMixin,
+)
 from wagtail.admin.modal_workflow import render_modal_workflow as render_modal_workflow
 from wagtail.admin.paginator import WagtailPaginator as WagtailPaginator
 from wagtail.admin.ui.tables import Column as Column, LocaleColumn as LocaleColumn, Table as Table, TitleColumn as TitleColumn
 from wagtail.coreutils import resolve_model_string as resolve_model_string
 from wagtail.models import CollectionMember as CollectionMember, TranslatableMixin as TranslatableMixin
-from wagtail.permission_policies import BlanketPermissionPolicy as BlanketPermissionPolicy, ModelPermissionPolicy as ModelPermissionPolicy
+from wagtail.permission_policies import (
+    BlanketPermissionPolicy as BlanketPermissionPolicy,
+    ModelPermissionPolicy as ModelPermissionPolicy,
+)
 from wagtail.search.index import class_is_indexed as class_is_indexed
+
+from _typeshed import Incomplete
 
 class ModalPageFurnitureMixin(ContextMixin):
     icon: Incomplete

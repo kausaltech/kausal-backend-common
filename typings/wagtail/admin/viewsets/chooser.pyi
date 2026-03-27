@@ -1,4 +1,3 @@
-
 from django.db.models import Model
 from django.utils.functional import cached_property as cached_property
 from django_stubs_ext import StrOrPromise
