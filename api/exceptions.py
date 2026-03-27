@@ -1,8 +1,18 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions, status
+
+if TYPE_CHECKING:
+
+    class DestroyMixinBase:
+        def perform_destroy(self, instance) -> None: ...
+
+else:
+    DestroyMixinBase = object
 
 
 class ProtectedError(exceptions.APIException):
@@ -11,7 +21,7 @@ class ProtectedError(exceptions.APIException):
     default_code = 'protected_error'
 
 
-class HandleProtectedErrorMixin:
+class HandleProtectedErrorMixin(DestroyMixinBase):
     """Mixin for viewsets that use DRF's DestroyModelMixin to handle ProtectedError gracefully."""
 
     def perform_destroy(self, instance):

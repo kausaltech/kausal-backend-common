@@ -21,8 +21,6 @@ from pydantic_core import core_schema
 from kausal_common.i18n.helpers import convert_language_code
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
     from django.db.models import Model
     from django.utils.functional import Promise
     from pydantic import GetCoreSchemaHandler

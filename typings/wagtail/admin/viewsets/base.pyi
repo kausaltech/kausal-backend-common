@@ -10,6 +10,7 @@ from wagtail.admin.menu import WagtailMenuRegisterable, WagtailMenuRegisterableG
 class ViewSet(WagtailMenuRegisterable):
     name: ClassVar[str | None]
     icon: ClassVar[str]
+    UNDEFINED: ClassVar[object]
 
     def __init__(self, name: str | None = None, **kwargs: Any) -> None: ...
     url_prefix: cached_property[str] | str

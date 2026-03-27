@@ -26,6 +26,7 @@ def _monkeypatch_second() -> None:
     from wagtail.admin.menu import MenuItem
     from wagtail.admin.panels import Panel
     from wagtail.admin.views.generic.base import BaseObjectMixin
+    from wagtail.admin.viewsets.base import ViewSet
     from wagtail.admin.viewsets.model import ModelViewSet
     from wagtail.blocks.base import Block
     from wagtail.models import Revision
@@ -34,6 +35,7 @@ def _monkeypatch_second() -> None:
     from treebeard.models import Node
 
     extra_classes: list[type] = [
+        ViewSet,
         ModelViewSet,
         ParentalKey,
         ParentalManyToManyField,

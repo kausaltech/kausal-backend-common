@@ -5,6 +5,7 @@ from typing import Any, overload
 
 from django.contrib.auth.models import AbstractBaseUser
 from django.db import models
+from django.db.models import Model
 
 def is_active() -> bool: ...
 def is_manage_manually() -> bool: ...
@@ -32,7 +33,7 @@ class _ContextWrapper:
 def is_registered(model: type[models.Model] | models.Model) -> bool: ...
 def get_registered_models() -> Iterable[type[models.Model]]: ...
 @overload
-def register[M: type[models.Model]](
+def register[M: Model](
     model: None = None,
     fields: Iterable[str] | None = None,
     exclude: Iterable[str] = (),
@@ -41,10 +42,10 @@ def register[M: type[models.Model]](
     for_concrete_model: bool = True,
     ignore_duplicates: bool = False,
     use_natural_foreign_keys: bool = False,
-) -> Callable[[M], M]: ...
+) -> Callable[[type[M]], type[M]]: ...
 @overload
-def register[M: type[models.Model]](
-    model: M,
+def register[M: Model](
+    model: type[M],
     fields: Iterable[str] | None = None,
     exclude: Iterable[str] = (),
     follow: Iterable[str] = (),
@@ -52,5 +53,5 @@ def register[M: type[models.Model]](
     for_concrete_model: bool = True,
     ignore_duplicates: bool = False,
     use_natural_foreign_keys: bool = False,
-) -> M: ...
+) -> type[M]: ...
 def unregister(model: type[models.Model]) -> None: ...

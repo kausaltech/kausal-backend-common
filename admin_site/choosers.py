@@ -4,12 +4,13 @@ from functools import wraps
 from typing import TYPE_CHECKING, Any
 
 from django.db.models import Model
+from django.views import View
 from wagtail.admin.viewsets.chooser import ChooserViewSet as BaseChooserViewSet
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
 
-    from wagtail.admin.views.generic.chooser import ChooseResultsView, ChooseView, ChosenView, View
+    from wagtail.admin.views.generic.chooser import ChooseResultsView, ChooseView, ChosenView
 
 
 def inject_view(viewset_method: Callable[..., Any]) -> Callable[..., Any]:
@@ -20,7 +21,7 @@ def inject_view(viewset_method: Callable[..., Any]) -> Callable[..., Any]:
     return wrapped
 
 
-class ChooserViewSet[M: Model](BaseChooserViewSet):
+class ChooserViewSet[M: Model](BaseChooserViewSet[M]):
     get_object_list: Callable[[ChooseView | ChooseResultsView], Iterable[M]]
     get_chosen_response_data: Callable[[ChosenView, M], dict[str, Any]]
     model: type[M]

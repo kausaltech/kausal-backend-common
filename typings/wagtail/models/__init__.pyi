@@ -345,12 +345,11 @@ class PreviewableMixin:
         rendering logic.
         """
 
-_UserT = TypeVar('_UserT', bound=AbstractBaseUser, default=AbstractBaseUser)
-
-class LockableMixin(models.Model, Generic[_UserT]):
+class LockableMixin[UserT: AbstractBaseUser = AbstractBaseUser](models.Model):
     locked: models.BooleanField[bool, bool]
     locked_at: _NullableDTF
-    locked_by: models.ForeignKey[_UserT | None]
+    locked_by: models.ForeignKey[UserT | None]
+    locked_by_id: int | None
 
     @classmethod
     def check(cls, **kwargs) -> list[CheckMessage]: ...

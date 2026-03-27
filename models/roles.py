@@ -347,7 +347,7 @@ class RoleRegistry:
         """Register a role in the role registry."""
         from .roles import InstanceSpecificRole
 
-        if not isinstance(role, InstanceSpecificRole):  # pyright: ignore[reportUnnecessaryIsInstance]
+        if not isinstance(role, InstanceSpecificRole):
             msg = f'Only InstanceSpecificRole instances can be registered. Got {role}'
             raise TypeError(msg)
 

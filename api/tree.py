@@ -10,7 +10,6 @@ from rest_framework import exceptions, serializers
 from treebeard.mp_tree import MP_Node
 
 if TYPE_CHECKING:
-    from typing import Any
 
     class ModelSerializerMixinBase[M: Model](serializers.ModelSerializer[M]):
         pass
@@ -52,28 +51,38 @@ class PrevSiblingField[M: MP_Node[Any]](serializers.CharField):
             return model.objects.get(id=data)  # type: ignore[attr-defined]
 
 
-class TreebeardParentField[M: MP_Node[Any]](serializers.CharField):
+class TreebeardParentField[M: MP_Node[Any]](serializers.Field[M | UUID | None, str | int | None, str | int | None, M]):
+    parent: serializers.ModelSerializer[M]
+
     # For serializers of Treebeard node models
-    def get_attribute(self, instance: M):
+    def get_attribute(self, instance: M) -> M | None:
         return instance.get_parent()
 
-    def to_representation(self, value):
+    def to_representation(self, value: M | UUID | None) -> str | int | None:
         # value is the parent of the original instance
         if value is None:
             return None
+        if isinstance(value, UUID):
+            return str(value)
         try:
             value._meta.get_field('uuid')
-            return str(value.uuid)
         except FieldDoesNotExist:
-            return value.id
+            # no uuid field -> fall back to primary key
+            return str(value.pk)
+        uuid = getattr(value, 'uuid')  # noqa: B009
+        if uuid:
+            return str(uuid)
+        return None
 
-    def to_internal_value(self, data):
+    def to_internal_value(self, data: str | int | None) -> M | UUID | None:
         # FIXME: No validation (e.g., permission checking)
-        model = self.parent.Meta.model
+        model = cast('type[M]', self.parent.Meta.model)
         # We use a UUID as the value for this field if the model has a field called uuid. Otherwise we use the
         # related model instance itself.
         try:
             model._meta.get_field('uuid')
+            if not isinstance(data, str):
+                self.fail(key='invalid')
             return UUID(data)
         except FieldDoesNotExist:
             return model.objects.get(id=data)
@@ -83,7 +92,7 @@ class TreebeardParentField[M: MP_Node[Any]](serializers.CharField):
 
 
 class TreebeardModelSerializerMixin[M: MP_Node[Any]](ModelSerializerMixinBase[M], metaclass=serializers.SerializerMetaclass):
-    parent = TreebeardParentField[M](allow_null=True, required=False)  # type: ignore[assignment]
+    parent = TreebeardParentField[M](allow_null=True, required=False)  # type: ignore[assignment]  # pyright: ignore[reportAssignmentType]
     left_sibling = PrevSiblingField[M](allow_null=True, required=False)
 
     def get_field_names(self, declared_fields, info):
