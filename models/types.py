@@ -22,6 +22,7 @@ from ..development.monkey import monkeypatch_generic_support
 
 if TYPE_CHECKING:
     # These should only be used in typing scope.
+    from abc import ABC
     from typing import type_check_only
 
     from django.db.models.fields.related_descriptors import (
@@ -197,6 +198,14 @@ else:
 
 type GetDisplayMethod = Callable[[], str]
 type QS[M: Model] = QuerySet[M, M]
+
+
+# Django migrations do not like the real ABC base, so we have the real
+# ABC only for type checkers.
+if TYPE_CHECKING:
+    ModelABC = ABC
+else:
+    ModelABC = object
 
 
 class AbstractModelMeta(ABCMeta, ModelBase):

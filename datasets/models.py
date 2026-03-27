@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import uuid
-from abc import ABC
 from typing import TYPE_CHECKING, ClassVar, Self, cast
 from warnings import deprecated
 
@@ -44,11 +43,11 @@ if TYPE_CHECKING:
     from ..models.types import FK, M2M, RevMany, RevManyToManyQS
 
     if IS_PATHS:
-        from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
-
         from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase
 
         from paths.dataset_permission_policy import DatasetSchemaPermissionPolicy
+
+        from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
 
         type DatasetScopeType = InstanceConfig
         type DimensionScopeType = InstanceConfig
@@ -686,7 +685,7 @@ class DatasetSchemaScope(models.Model):
         return retval
 
 
-class DataPointBase(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel, ABC, metaclass=AbstractModelMeta):
+class DataPointBase(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel, metaclass=AbstractModelMeta):
     """
     Abstract base for tabular data cells.
 

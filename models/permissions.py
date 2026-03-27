@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from enum import Enum
 from typing import TYPE_CHECKING, Any, ClassVar, Self, cast
 
@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 
 from kausal_common.const import IS_WATCH
 
-from .types import AbstractModelMeta, ModelManager
+from .types import AbstractModelMeta, ModelABC, ModelManager
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from .permission_policy import ObjectSpecificAction
 
 
-class PermissionedModel(models.Model, ABC, metaclass=AbstractModelMeta):
+class PermissionedModel(models.Model, ModelABC, metaclass=AbstractModelMeta):
     child_models: ClassVar[list[type[PermissionedModel]]] = []
 
     if TYPE_CHECKING:
