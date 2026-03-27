@@ -441,12 +441,24 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
 
 class DatasetMetricComputation(OrderedModel):
     """
-    Define a computed metric as a binary operation on two other metrics.
+    Define a computed metric as a binary operation on two operands.
 
     Computed metrics are never stored as DataPoints — they are calculated
-    on read. The ordering field provides a natural topological sort for
-    chained computations: earlier computations produce intermediate metrics
-    that later ones can reference.
+    on read by the computation service (``kausal_common.datasets.computation``).
+    The ordering field provides a natural topological sort for chained
+    computations: earlier computations produce intermediate metrics that
+    later ones can reference.
+
+    There are two kinds of operands:
+
+    * **Stored metric** — ``operand_a`` or ``operand_b`` points to a
+      ``DatasetMetric`` whose values come from ``DataPoint`` rows.
+    * **Virtual metric** — when ``operand_a`` is ``NULL``, the values are
+      resolved at read time from an external source via the project's
+      ``dataset_config.resolve_null_operand_values()`` hook. In Kausal Watch
+      this resolves to the indicator's legacy ``IndicatorValue`` rows,
+      allowing factors to be multiplied with the indicator's own time series
+      without migrating it to the dataset system.
     """
 
     class Operation(models.TextChoices):
