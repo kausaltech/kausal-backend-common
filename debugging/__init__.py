@@ -64,7 +64,9 @@ def post_mortem(exc: Exception) -> None:
         _maybe_debugpy_postmortem(exc)
         return
 
-    get_debugger().interaction(None, exc)
+    dbg = get_debugger()
+    dbg.reset()
+    dbg.interaction(None, exc)
 
 
 __all__ = ['init_debugger', 'post_mortem', 'set_trace']
