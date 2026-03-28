@@ -52,7 +52,7 @@ class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
         super().__init__(*args, **kwargs)
         self._refresh_cache = False
 
-    def to_internal_value(self, data):
+    def to_internal_value(self, data):  # noqa: C901
         id_attr = self.update_lookup_field
         errors = []
         qs = self.instance

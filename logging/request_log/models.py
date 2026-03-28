@@ -21,17 +21,17 @@ class BaseLoggedRequest(models.Model):
         abstract = True
         ordering = ['created_at']
 
-    def save(self, *args, **kwargs):
-        result = super().save(*args, **kwargs)
-        date_cutoff = timezone.now() - timedelta(days=settings.REQUEST_LOG_MAX_DAYS)
-        self.__class__.objects.filter(created_at__lt=date_cutoff).delete()  # type: ignore
-        return result
-
     def __str__(self):
         date_str = self.created_at.strftime('%Y-%m-%d %H:%M:%S')
         result = f'{date_str} {self.method} {self.path}'
         if self.user:
             result += f' by {self.user}'
+        return result
+
+    def save(self, *args, **kwargs):
+        result = super().save(*args, **kwargs)
+        date_cutoff = timezone.now() - timedelta(days=settings.REQUEST_LOG_MAX_DAYS)
+        type(self)._default_manager.filter(created_at__lt=date_cutoff).delete()
         return result
 
     def deserialize_payload(self) -> dict[str, Any] | list[Any] | None:

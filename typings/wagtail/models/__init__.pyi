@@ -563,7 +563,7 @@ class Page(
         pages from historic revisions (which might not necessarily reflect the current
         model state). This validation step can be bypassed by calling the method with
         ``clean=False``.
-        """
+        """  # noqa: E501 type stubs
     def delete(self, *args, **kwargs): ...
     @classmethod
     def check(cls, **kwargs) -> list[CheckMessage]: ...
@@ -762,7 +762,7 @@ class Page(
         Copies a given page
 
         :param log_action: flag for logging the action. Pass None to skip logging. Can be passed an action string. Defaults to 'wagtail.copy'
-        """
+        """  # noqa: E501 type stubs
     def create_alias(
         self,
         *,
@@ -1075,7 +1075,7 @@ class Task[StateT: TaskState = TaskState](SpecificMixin['Task'], models.Model):
         """Performs an action on a task state determined by the ``action_name`` string passed"""
     def user_can_access_editor(self, obj, user):
         """Returns True if a user who would not normally be able to access the editor for the object should be able to if the object is currently on this task.
-        Note that returning False does not remove permissions from users who would otherwise have them."""
+        Note that returning False does not remove permissions from users who would otherwise have them."""  # noqa: E501 type stubs
     def locked_for_user(self, obj, user):
         """
         Returns True if the object should be locked to a given user's edits.
@@ -1083,10 +1083,10 @@ class Task[StateT: TaskState = TaskState](SpecificMixin['Task'], models.Model):
         """
     def user_can_lock(self, obj, user):
         """Returns True if a user who would not normally be able to lock the object should be able to if the object is currently on this task.
-        Note that returning False does not remove permissions from users who would otherwise have them."""
+        Note that returning False does not remove permissions from users who would otherwise have them."""  # noqa: E501 type stubs
     def user_can_unlock(self, obj, user):
         """Returns True if a user who would not normally be able to unlock the object should be able to if the object is currently on this task.
-        Note that returning False does not remove permissions from users who would otherwise have them."""
+        Note that returning False does not remove permissions from users who would otherwise have them."""  # noqa: E501 type stubs
     def get_actions(self, obj, user) -> Sequence[tuple[str, StrOrPromise, bool]]:
         """
         Get the list of action strings (name, verbose_name, whether the action requires additional data - see
@@ -1183,7 +1183,7 @@ class WorkflowState(models.Model):
     def user_can_cancel(self, user): ...
     def update(self, user: Incomplete | None = None, next_task: Incomplete | None = None) -> None:
         """Checks the status of the current task, and progresses (or ends) the workflow if appropriate. If the workflow progresses,
-        next_task will be used to start a specific task next if provided."""
+        next_task will be used to start a specific task next if provided."""  # noqa: E501 type stubs
     @property
     def successful_task_states(self): ...
     def get_next_task(self):
@@ -1263,7 +1263,7 @@ class TaskState(SpecificMixin['TaskState'], models.Model):
         """Reject the task state and update the workflow state"""
     @cached_property
     def task_type_started_at(self):
-        """Finds the first chronological started_at for successive TaskStates - ie started_at if the task had not been restarted"""
+        """Finds the first chronological started_at for successive TaskStates - ie started_at if the task had not been restarted"""  # noqa: E501 type stubs
     def cancel(self, user: Incomplete | None = None, resume: bool = False, comment: str = ''):
         """Cancel the task state and update the workflow state. If ``resume`` is set to True, then upon update the workflow state
         is passed the current task as ``next_task``, causing it to start a new task state on the current task if possible"""

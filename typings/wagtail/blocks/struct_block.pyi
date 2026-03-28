@@ -40,7 +40,7 @@ class BaseStructBlock[M: BlockMeta = BlockMeta](Block[M]):
         self, local_blocks: Sequence[tuple[str, Block[Any] | BaseBlock]] | None = None, search_index: bool = True, **kwargs
     ) -> None: ...
     @classmethod
-    def construct_from_lookup(cls, lookup, child_blocks, **kwargs): ...
+    def construct_from_lookup(cls, lookup, child_blocks, **kwargs): ...  # noqa: ANN206 type stubs
     def get_default(self):
         """
         Any default value passed in the constructor or self.meta is going to be a dict

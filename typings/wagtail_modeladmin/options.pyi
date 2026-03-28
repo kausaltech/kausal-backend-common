@@ -408,7 +408,7 @@ class ModelAdmin[M: Model](WagtailRegisterable):
 
     def get_admin_urls_for_registration(
         self,
-    ):  # -> tuple[URLPattern, ...] | tuple[URLPattern, URLPattern, URLPattern, URLPattern, URLPattern] | tuple[URLPattern, URLPattern, URLPattern, URLPattern]:
+    ):  # -> tuple[URLPattern, ...] | tuple[URLPattern, URLPattern, URLPattern, URLPattern, URLPattern] | tuple[URLPattern, URLPattern, URLPattern, URLPattern]:  # noqa: E501 type stubs
         """
         Utilised by Wagtail's 'register_admin_urls' hook to register urls for
         our the views that class offers.

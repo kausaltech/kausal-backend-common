@@ -1,3 +1,5 @@
+# ruff: noqa: ANN202 N802 N803 PLR0206
+
 from collections import UserDict
 from functools import cached_property
 

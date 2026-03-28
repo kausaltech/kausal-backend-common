@@ -64,7 +64,7 @@ class ReferenceIndex(models.Model):
     indexed_models: Incomplete
 
     @classmethod
-    def model_is_indexable(cls, model, allow_child_models: bool = False):
+    def model_is_indexable(cls, model, allow_child_models: bool = False):  # noqa: ANN206 type stubs
         """
         Returns True if the given model may have outbound references that we would be interested in recording in the index.
 
@@ -81,7 +81,7 @@ class ReferenceIndex(models.Model):
         Registers the model for indexing.
         """
     @classmethod
-    def is_indexed(cls, model): ...
+    def is_indexed(cls, model): ...  # noqa: ANN206 type stubs
     @classmethod
     def create_or_update_for_object(cls, object) -> None:
         """
@@ -106,7 +106,7 @@ class ReferenceIndex(models.Model):
             object (Model): The model instance to delete ReferenceIndex records for
         """
     @classmethod
-    def get_references_for_object(cls, object):
+    def get_references_for_object(cls, object):  # noqa: ANN206 type stubs
         """
         Returns all outbound references for the given object.
 
@@ -117,7 +117,7 @@ class ReferenceIndex(models.Model):
             A QuerySet of ReferenceIndex records
         """
     @classmethod
-    def get_references_to(cls, object):
+    def get_references_to(cls, object):  # noqa: ANN206 type stubs
         """
         Returns all inbound references for the given object.
 
@@ -128,7 +128,7 @@ class ReferenceIndex(models.Model):
             A QuerySet of ReferenceIndex records
         """
     @classmethod
-    def get_grouped_references_to(cls, object):
+    def get_grouped_references_to(cls, object):  # noqa: ANN206 type stubs
         """
         Returns all inbound references for the given object, grouped by the object
         they are found on.

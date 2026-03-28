@@ -1,5 +1,6 @@
-import os
+from pathlib import Path
 
+from django.db.models import Model
 from django.http import Http404
 from django.views.decorators.cache import cache_control
 from rest_framework import serializers
@@ -7,7 +8,7 @@ from rest_framework.decorators import action
 
 
 def image_upload_path(instance, filename):
-    file_extension = os.path.splitext(filename)[1]
+    file_extension = Path(filename).suffix
     return 'images/%s/%s%s' % (instance._meta.model_name, instance.id, file_extension)
 
 
@@ -39,7 +40,7 @@ def determine_image_dim(image, width, height):
     return (width, height)
 
 
-class ModelWithImageSerializerMixin(serializers.Serializer):
+class ModelWithImageSerializerMixin[M: Model](serializers.Serializer[M]):
     image_url = serializers.SerializerMethodField()
     main_image = serializers.SerializerMethodField()
 
@@ -51,11 +52,11 @@ class ModelWithImageSerializerMixin(serializers.Serializer):
                 continue
             del self.fields[field]
 
-    def get_image_url(self, obj):
+    def get_image_url(self, obj: M) -> str | None:
         # Disable functionality for now
         return None
 
-    def get_main_image(self, obj):
+    def get_main_image(self, obj: M) -> str | None:
         # Disable functionality for now
         return None
 

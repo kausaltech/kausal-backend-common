@@ -70,7 +70,7 @@ class Panel(Generic[_Model, _Panel_Form]):
     :param base_form_class: The base form class to use for the panel. Defaults to the model's ``base_form_class``, before falling back to :class:`~wagtail.admin.forms.WagtailAdminModelForm`. This is only relevant for the top-level panel.
     :param icon: The name of the icon to display next to the panel heading.
     :param attrs: A dictionary of HTML attributes to add to the panel's HTML element.
-    """
+    """  # noqa: E501 type stubs
 
     BASE_ATTRS: ClassVar[dict[str, str]]
     heading: StrOrPromise
@@ -120,7 +120,7 @@ class Panel(Generic[_Model, _Panel_Form]):
         """
         Return a ``BoundPanel`` instance that can be rendered onto the template as a component. By default, this creates an instance
         of the panel class's inner ``BoundPanel`` class, which must inherit from ``Panel.BoundPanel``.
-        """
+        """  # noqa: E501 type stubs
     def on_model_bound(self) -> None:
         """
         Called after the panel has been associated with a model class and the ``self.model`` attribute is available;

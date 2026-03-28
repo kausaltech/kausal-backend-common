@@ -55,7 +55,7 @@ class EntityHandler:
     and embeds (represented as <embed embedtype="..." />).
     """
     @staticmethod
-    def get_model():
+    def get_model():  # noqa: ANN205 type stubs
         """
         If supported, returns the type of model able to be handled by this handler, e.g. Page.
         """
@@ -82,7 +82,7 @@ class EntityHandler:
         ...
 
     @classmethod
-    def extract_references(cls, attrs):  # -> list[Any]:
+    def extract_references(cls, attrs):  # -> list[Any]:  # noqa: ANN206 type stubs
         """
         Yields a sequence of (content_type_id, object_id, model_path, content_path) tuples for the
         database objects referenced by this entity, as per

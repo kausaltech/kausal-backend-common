@@ -3,9 +3,9 @@ from typing import Any, TypeVar
 
 from django.db.models import Prefetch
 
-class noop: ...
+class noop: ...  # noqa: N801 type stubs
 
-F = TypeVar('F', bound=Callable)
+F = TypeVar('F', bound=Callable)  # noqa: PYI001 type stubs
 
 type SelectRelatedVal = str
 type SelectRelated = SelectRelatedVal | Callable[[Any], str]

@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 
 def _monkeypatch_one_class(kls: type) -> None:
-    kls.__class_getitem__ = classmethod(lambda cls, *args, **kwargs: cls)  # type: ignore
+    kls.__class_getitem__ = classmethod(lambda cls, *_args, **_kwargs: cls)  # type: ignore[attr-defined]
 
 
 def monkeypatch_initial() -> None:

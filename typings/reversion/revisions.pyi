@@ -26,7 +26,7 @@ class _ContextWrapper:
         self,
         exc_type: type[BaseException] | None,
         exc_value: BaseException | None,
-        traceback: Any | None,
+        traceback: Any | None,  # noqa: PYI036 type stubs
     ) -> bool | None: ...
     def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]: ...
 

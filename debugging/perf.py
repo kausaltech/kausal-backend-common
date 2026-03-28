@@ -22,7 +22,7 @@ class PerfCounterContext:
     depth = 0
 
 
-_pc_context = ContextVar[PerfCounterContext]('PerfCounterContext', default=PerfCounterContext())
+_pc_context = ContextVar[PerfCounterContext]('PerfCounterContext', default=PerfCounterContext())  # noqa: B039
 
 
 @dataclass

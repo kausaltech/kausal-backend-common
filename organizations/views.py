@@ -42,7 +42,7 @@ class OrganizationViewMixin:
         return kwargs
 
 
-class CreateChildNodeView(OrganizationViewMixin, CreateView):
+class CreateChildNodeView(OrganizationViewMixin, CreateView[Organization]):
     """
     View class that can take an additional URL param for parent id.
 
@@ -80,16 +80,16 @@ class CreateChildNodeView(OrganizationViewMixin, CreateView):
         return {'parent': self.parent_pk}
 
 
-class OrganizationCreateView(OrganizationViewMixin, CreateView):
+class OrganizationCreateView(OrganizationViewMixin, CreateView[Organization]):
     pass
 
 
-class OrganizationEditView(OrganizationViewMixin, EditView):
+class OrganizationEditView(OrganizationViewMixin, EditView[Organization]):
     def user_has_permission(self, permission: str) -> bool:
         return self.permission_policy.user_has_permission_for_instance(admin_req(self.request).user, permission, self.object)
 
 
-class Rollback(Exception):
+class Rollback(Exception):  # noqa: N818
     pass
 
 
@@ -103,7 +103,7 @@ def do_rollback():
     raise Rollback()
 
 
-class OrganizationDeleteView(DeleteView):
+class OrganizationDeleteView(DeleteView[Organization]):
     def user_has_permission(self, permission: str) -> bool:
         return self.permission_policy.user_has_permission_for_instance(admin_req(self.request).user, permission, self.object)
 

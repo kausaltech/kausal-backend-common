@@ -22,7 +22,7 @@ class BaseStreamBlock(Block):
     child_blocks: OrderedDict[str, Block]
     def __init__(self, local_blocks: Sequence[tuple[str, Block]] | None = None, search_index: bool = True, **kwargs) -> None: ...
     @classmethod
-    def construct_from_lookup(cls, lookup, child_blocks, **kwargs): ...
+    def construct_from_lookup(cls, lookup, child_blocks, **kwargs): ...  # noqa: ANN206 type stubs
     def empty_value(self, raw_text: Incomplete | None = None): ...
     def sorted_child_blocks(self):
         """Child blocks, sorted in to their groups."""
@@ -173,6 +173,6 @@ class StreamValue(MutableSequence):
 
 class StreamBlockAdapter(Adapter):
     js_constructor: str
-    def js_args(self, block): ...
+    def js_args(self, block): ...  # noqa: ANN202 type stubs
     @cached_property
-    def media(self): ...
+    def media(self): ...  # noqa: ANN202 type stubs

@@ -209,7 +209,7 @@ class PageQuerySet[PageT: Page = Page](
         support). If ``strict`` is False (the default), then the first root
         node is returned in these cases. If ``strict`` is True, then a
         ``ObjectDoesNotExist`` is raised.
-        """
+        """  # noqa: E501 type stubs
     def unpublish(self) -> None:
         """
         This unpublishes all live pages in the QuerySet.

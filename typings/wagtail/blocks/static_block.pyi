@@ -20,6 +20,6 @@ class StaticBlock(Block):
 
 class StaticBlockAdapter(Adapter):
     js_constructor: str
-    def js_args(self, block): ...
+    def js_args(self, block): ...  # noqa: ANN202 type stubs
     @cached_property
-    def media(self): ...
+    def media(self): ...  # noqa: ANN202 type stubs

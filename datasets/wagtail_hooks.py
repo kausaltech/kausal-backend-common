@@ -65,22 +65,22 @@ class DataSourceCreateView(CreateView[DataSource, DataSourceForm]):
 class DataSourceUsageView(UsageView[DataSource]):
     """Custom usage view that links DatasetSourceReference to their parent Datasets."""
 
-    def get_table(self, object_list, **kwargs):
+    def get_table(self, object_list, **kwargs):  # noqa: PLR0912
         """Override to provide Dataset edit URLs for DatasetSourceReference objects."""
         url_finder = AdminURLFinder(self.request.user)
         results = []
 
-        for object, references in object_list:
+        for obj, references in object_list:
             from kausal_common.datasets.models import DatasetSourceReference
 
-            row = {'object': object, 'references': references}
+            row = {'object': obj, 'references': references}
 
-            if isinstance(object, DatasetSourceReference):
+            if isinstance(obj, DatasetSourceReference):
                 dataset = None
-                if object.data_point:
-                    dataset = object.data_point.dataset
-                elif object.dataset:
-                    dataset = object.dataset
+                if obj.data_point:
+                    dataset = obj.data_point.dataset
+                elif obj.dataset:
+                    dataset = obj.dataset
 
                 # Get the edit URL for the dataset
                 if dataset:
@@ -88,10 +88,10 @@ class DataSourceUsageView(UsageView[DataSource]):
                 else:
                     row['edit_url'] = None
 
-                if hasattr(object, 'get_admin_display_title'):
-                    row['label'] = object.get_admin_display_title()
+                if hasattr(obj, 'get_admin_display_title'):
+                    row['label'] = obj.get_admin_display_title()
                 else:
-                    row['label'] = str(object)
+                    row['label'] = str(obj)
 
                 if row['edit_url']:
                     row['edit_link_title'] = _('Edit dataset')
@@ -99,17 +99,17 @@ class DataSourceUsageView(UsageView[DataSource]):
                     row['edit_link_title'] = None
             else:
                 # Default behavior for other objects
-                row['edit_url'] = url_finder.get_edit_url(object)
+                row['edit_url'] = url_finder.get_edit_url(obj)
                 if row['edit_url'] is None:
                     row['label'] = pgettext_lazy(
                         'label to show for a private instance of the given model', '(Private %(model)s)'
-                    ) % {'model': object._meta.verbose_name}
+                    ) % {'model': obj._meta.verbose_name}
                     row['edit_link_title'] = None
                 else:
-                    row['label'] = str(object)
+                    row['label'] = str(obj)
                     row['edit_link_title'] = pgettext_lazy(
                         'title of a link to edit an instance of the given model', 'Edit this %(model)s'
-                    ) % {'model': object._meta.verbose_name}
+                    ) % {'model': obj._meta.verbose_name}
 
             results.append(row)
 

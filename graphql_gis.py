@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from typing import Any, ClassVar
 
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.geos import GEOSGeometry
@@ -12,25 +13,20 @@ from graphql.language import ast
 
 
 class GISScalar(Scalar):
-    @property
-    def geom_typeid(self):
-        raise NotImplementedError(
-            "GEOSScalar is an abstract class and doesn't have a 'geom_typeid'. \
-            Instantiate a concrete subtype instead.",
-        )
+    geom_typeid: ClassVar[int]
 
     @staticmethod
-    def serialize(geometry):
+    def serialize(geometry) -> dict[str, Any]:
         return json.loads(geometry.geojson)
 
     @classmethod
-    def parse_literal(cls, node):
+    def parse_literal(cls, node) -> dict[str, Any]:
         assert isinstance(node, ast.StringValueNode)
         geometry = GEOSGeometry(node.value)
         return json.loads(geometry.geojson)
 
     @classmethod
-    def parse_value(cls, node):
+    def parse_value(cls, node) -> dict[str, Any]:
         geometry = GEOSGeometry(node.value)
         return json.loads(geometry.geojson)
 
@@ -68,7 +64,7 @@ GIS_FIELD_SCALAR = {
 @convert_django_field.register(gis_models.LineStringField)
 @convert_django_field.register(gis_models.PointField)
 @convert_django_field.register(gis_models.PolygonField)
-def gis_converter(field, registry=None):
+def gis_converter(field, registry=None):  # pyright: ignore[reportUnusedParameter]
     class_name = field.__class__.__name__
     return GIS_FIELD_SCALAR[class_name](
         required=not field.null,

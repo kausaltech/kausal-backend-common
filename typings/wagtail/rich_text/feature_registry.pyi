@@ -33,6 +33,6 @@ class FeatureRegistry:
     def get_converter_rule(self, converter_name, feature_name):  # -> None:
         ...
     @staticmethod
-    def function_as_entity_handler(identifier, fn):  # -> type[EntityHandlerRegisteredAsFunction]:
+    def function_as_entity_handler(identifier, fn):  # -> type[EntityHandlerRegisteredAsFunction]:  # noqa: ANN205 type stubs
         """Supports legacy registering of entity handlers as functions."""
         ...

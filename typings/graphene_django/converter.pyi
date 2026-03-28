@@ -44,7 +44,7 @@ def convert_field_to_string(field, registry=...):  # -> String:
 def convert_field_to_id(field, registry=...):  # -> ID:
     ...
 
-if hasattr(models, 'SmallAutoField'):
+if hasattr(models, 'SmallAutoField'):  # noqa: PYI002 type stubs
     @convert_django_field.register(models.SmallAutoField)
     def convert_field_small_to_id(field, registry=...): ...
 

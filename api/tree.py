@@ -106,7 +106,7 @@ class TreebeardModelSerializerMixin[M: MP_Node[Any]](ModelSerializerMixinBase[M]
         model = cast('type[M]', self.Meta.model)
         return model._default_manager.get(uuid=uuid)  # type: ignore[misc, return-value]
 
-    def _get_validated_instance_data(self, uuid: UUID):
+    def _get_validated_instance_data(self, uuid: UUID) -> dict[str, Any]:
         for child_data in getattr(self.parent, '_children_validated_so_far', []):
             assert child_data['uuid'] is None or isinstance(child_data['uuid'], UUID)
             if child_data['uuid'] == uuid:
@@ -140,8 +140,8 @@ class TreebeardModelSerializerMixin[M: MP_Node[Any]](ModelSerializerMixinBase[M]
                     left_sibling = self._get_instance_from_uuid(data['left_sibling'])
                 except ObjectDoesNotExist:
                     # Maybe the instance is not created yet because it is about to be created in the same request
-                    left_sibling = self._get_validated_instance_data(data['left_sibling'])
-                    left_sibling_parent_uuid = left_sibling['parent']
+                    left_sibling_data = self._get_validated_instance_data(data['left_sibling'])
+                    left_sibling_parent_uuid = left_sibling_data['parent']
                     assert left_sibling_parent_uuid is None or isinstance(left_sibling_parent_uuid, UUID)
                 else:
                     assert left_sibling is not None

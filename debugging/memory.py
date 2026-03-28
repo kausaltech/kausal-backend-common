@@ -19,7 +19,7 @@ previous_snap: Snapshot | None = None
 @api_view(['GET'])
 @permission_classes([])
 def memory_trace(request):
-    global previous_snap
+    global previous_snap  # noqa: PLW0603
 
     if not settings.DEBUG:
         raise PermissionDenied()
