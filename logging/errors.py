@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Any
 from loguru import logger
 from sentry_sdk import capture_exception, capture_message
 
+from kausal_common.logging.init import is_pretty_terminal
+
 if TYPE_CHECKING:
     from sentry_sdk._types import LogLevelStr
 
@@ -42,6 +44,20 @@ def capture_error(
     if contexts:
         kwargs.update(contexts)
     log_msg(msg, **kwargs)
+
+
+def print_exception(exc: BaseException) -> None:
+    if is_pretty_terminal():
+        from rich.console import Console
+        from rich.traceback import Traceback
+
+        tb = Traceback.from_exception(type(exc), exc, exc.__traceback__)
+        console = Console()
+        console.print(tb)
+    else:
+        import sys
+
+        sys.excepthook(type(exc), exc, exc.__traceback__)
 
 
 __all__ = ['capture_error']

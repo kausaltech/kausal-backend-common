@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import logging
+import os
+import sys
 import warnings
 from dataclasses import dataclass
 from importlib.util import find_spec
@@ -184,6 +186,9 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
 
     from loguru._colorama import should_colorize
 
+    # Strawberry installs its own exception handler unless this is set
+    os.environ['STRAWBERRY_DISABLE_RICH_ERRORS'] = '1'
+
     if 'pytest' in sys.modules:
         # If running tests, we don't want to see the full debug output
         log_level = 'WARNING'
@@ -239,23 +244,28 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
     return level
 
 
-def _should_use_logfmt() -> bool:
-    import sys
-
-    if env_bool('KUBERNETES_LOGGING', default=False) or env_bool('KUBERNETES_MODE', default=False):
-        return True
-
+def is_pretty_terminal() -> bool:
     if not sys.stdout.isatty() or not sys.stderr.isatty():
-        return True
+        return False
 
     console = get_rich_log_console()
     if (not console.is_terminal and not console.is_jupyter) or console.is_dumb_terminal:
+        return False
+    return True
+
+
+def should_use_logfmt() -> bool:
+    if env_bool('KUBERNETES_LOGGING', default=False) or env_bool('KUBERNETES_MODE', default=False):
         return True
+
+    if not is_pretty_terminal():
+        return True
+
     return False
 
 
-def _autodetect_log_format() -> LogFormat:
-    return 'logfmt' if _should_use_logfmt() else 'rich'
+def autodetect_log_format() -> LogFormat:
+    return 'logfmt' if should_use_logfmt() else 'rich'
 
 
 def init_logging_django(
@@ -264,7 +274,7 @@ def init_logging_django(
     options: UserLoggingOptions | None = None,
 ):
     if log_format is None:
-        log_format = _autodetect_log_format()
+        log_format = autodetect_log_format()
     level: GetHandler = _init_logging(log_format)
     if options is None:
         options = UserLoggingOptions()
@@ -289,7 +299,7 @@ def init_logging(
 ):
     fmt: LogFormat
     if log_format is None:
-        fmt = 'logfmt' if _should_use_logfmt() else 'rich'
+        fmt = 'logfmt' if should_use_logfmt() else 'rich'
     else:
         fmt = log_format
     level: GetHandler = _init_logging(fmt)
