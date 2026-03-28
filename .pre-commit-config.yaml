@@ -16,4 +16,4 @@ repos:
         stages: [pre-commit, manual]
         language: script
         require_serial: true
-        entry: development/git-hooks/ruff-pre-commit.sh
+        entry: ruff check --force-exclude --output-format concise
