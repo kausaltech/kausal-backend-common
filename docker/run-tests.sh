@@ -7,7 +7,7 @@ fi
 COVERAGE_XML_PATH=$TEST_RESULTS_DIR/pytest-coverage.xml
 JUNIT_XML_PATH=$TEST_RESULTS_DIR/pytest-junit.xml
 
-PYTEST_ARGS="--junitxml=$JUNIT_XML_PATH -o junit_family=legacy --cov=. --cov-branch --cov-report=xml:$COVERAGE_XML_PATH --cov-report=term-missing $@"
+PYTEST_ARGS="--maxfail=20 --junitxml=$JUNIT_XML_PATH -o junit_family=legacy --cov=. --cov-branch --cov-report=xml:$COVERAGE_XML_PATH --cov-report=term-missing $@"
 SHOULD_CREATE_DB=1
 
 function import_test_db() {
