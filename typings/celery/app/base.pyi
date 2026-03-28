@@ -1,8 +1,8 @@
 from collections import UserDict
+from functools import cached_property
 
 from _typeshed import Incomplete
 from celery.utils.collections import AttributeDictMixin
-from kombu.utils.objects import cached_property
 
 from .utils import AppPickler
 
@@ -17,8 +17,6 @@ class PendingConfiguration(UserDict, AttributeDictMixin):
     def setdefault(self, *args, **kwargs): ...
     def __contains__(self, key) -> bool: ...
     def __len__(self) -> int: ...
-    @cached_property
-    def data(self): ...
 
 class Celery:
     Pickler = AppPickler
