@@ -38,9 +38,12 @@ def get_language_from_default_language_field(
     return default_language
 
 
+type LanguageCodeFormat = Literal['kausal', 'django', 'modeltrans', 'next.js', 'wagtail', 'iso']
+
+
 def convert_language_code(
     language_code: str,
-    output_format: Literal['kausal', 'django', 'modeltrans', 'next.js', 'wagtail'],
+    output_format: LanguageCodeFormat,
 ) -> str:
     """
     Convert given language code to wanted output format.
@@ -48,7 +51,8 @@ def convert_language_code(
     Args:
         language_code (str): The language code to convert.
         output_format (str): The output format to which to convert the language code to. The formats are:
-            'kausal': The format to use internally. (e.g. 'es-US')
+            'iso': The format specified in RFC 5646 (e.g. 'es-US')
+            'kausal': The format to use internally. Alias to 'iso'
             'django': The format used by Django, e.g. django.utils.translation.get_language. ('es-us')
             'modeltrans': The format used by django-modeltrans. ('es_us')
             'next.js': The format used by next.js. ('es-US')
@@ -68,7 +72,7 @@ def convert_language_code(
 
     language, region = regex_match.groups()
     match output_format:
-        case 'kausal' | 'next.js' | 'wagtail':
+        case 'kausal' | 'next.js' | 'wagtail' | 'iso':
             result = language.lower()
             result += f'-{region.upper()}' if region else ''
             return result
