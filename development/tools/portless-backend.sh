@@ -14,4 +14,4 @@ export ADMIN_BASE_URL=$PORTLESS_URL
 ALLOWED_HOSTS="$(echo "$PORTLESS_URL" | sed -e 's|^https://||' -e 's|^http://||' -e 's|:.*||')"
 export ALLOWED_HOSTS
 
-exec python manage.py "$@" runserver 127.0.0.1:"$PORT"
+exec python manage.py runserver "$@" 127.0.0.1:"$PORT"
