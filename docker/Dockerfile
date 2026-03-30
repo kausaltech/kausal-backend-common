@@ -305,5 +305,5 @@ RUN \
 # We need to have the default user as root to be able to run tests etc.
 USER root
 
-EXPOSE 8000/tcp ${CADDY_PORT}/tcp
+EXPOSE 8000/tcp 9091/tcp ${CADDY_PORT}/tcp
 ENTRYPOINT ["/scripts/docker-entrypoint.sh"]
