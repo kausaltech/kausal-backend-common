@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import uuid as uuid_lib
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -16,21 +15,8 @@ if TYPE_CHECKING:
 
     from .models import Dataset
 
-# Sentinel metric ID used for NULL operand_a (indicator's own values)
+# Sentinel metric ID used for NULL operand_a (externally resolved values)
 _NULL_OPERAND_SENTINEL: int | None = None
-
-# Namespace for generating deterministic UUIDs for virtual metrics
-_VIRTUAL_METRIC_NAMESPACE = uuid_lib.UUID('a1b2c3d4-e5f6-7890-abcd-ef1234567890')
-
-
-def get_indicator_virtual_metric_uuid(indicator_id: int) -> uuid_lib.UUID:
-    """Return a deterministic UUID for an indicator's virtual metric in the dataset editor."""
-    return uuid_lib.uuid5(_VIRTUAL_METRIC_NAMESPACE, f'indicator-values-{indicator_id}')
-
-
-def get_indicator_virtual_datapoint_uuid(indicator_id: int, date_str: str, dim_cat_uuids: str) -> uuid_lib.UUID:
-    """Return a deterministic UUID for a synthetic data point from indicator values."""
-    return uuid_lib.uuid5(_VIRTUAL_METRIC_NAMESPACE, f'indicator-dp-{indicator_id}-{date_str}-{dim_cat_uuids}')
 
 
 @dataclass
@@ -67,15 +53,15 @@ def _compute_metric_values(
     Apply computation definitions and return raw computed tuples.
 
     ``values`` is a lookup of (date, dimension_category_ids, metric_id) -> value,
-    built by the caller from DataPoints, IndicatorGoalDataPoints, or any source.
-    A metric_id of ``None`` represents the indicator's own values (NULL operand_a).
+    built by the caller from DataPoints or any source.
+    A metric_id of ``None`` represents externally resolved values (NULL operand_a).
 
     Computations are applied in order, so earlier results can feed later ones.
     """
     results: list[tuple[date, frozenset[int], int, Decimal | None]] = []
 
     for comp in computations:
-        a_id = comp.operand_a_id  # None for virtual indicator values
+        a_id = comp.operand_a_id  # None for externally resolved values
         b_id = comp.operand_b_id
         keys = {(d, dims) for d, dims, m in values if m in (a_id, b_id)}
         for d, dims in sorted(keys):
@@ -109,9 +95,9 @@ def _inject_null_operand_values(
     computations: Sequence[DatasetMetricComputation],
 ) -> None:
     """
-    If any computation has operand_a=NULL, resolve indicator values and inject them.
+    If any computation has operand_a=NULL, resolve external values and inject them.
 
-    Indicator values are keyed with metric_id=None (the sentinel for NULL operand_a).
+    External values are keyed with metric_id=None (the sentinel for NULL operand_a).
     """
     has_null_operand = any(comp.operand_a_id is None for comp in computations)
     if not has_null_operand:
