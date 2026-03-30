@@ -3,12 +3,13 @@ from __future__ import annotations
 import gc
 import os
 import time
-from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
 
 from django.core.cache import caches
 from django.db import connections
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_GET
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 import psutil
@@ -17,12 +18,14 @@ from loguru import logger
 
 from .limits import MemoryLimit
 
-if TYPE_CHECKING:
-    from django.http import HttpRequest
+HEALTH_CHECK_VIEW_NAMES = ('liveness', 'readiness', 'healthcheck')
 
-
-HEALTH_CHECK_VIEW_NAME = 'healthcheck'
-HEALTH_CHECK_PATH = 'healthz/'
+TRUSTED_CIDRS = [
+    '10.0.0.0/8',
+    '172.16.0.0/12',
+    '192.168.0.0/16',
+    '127.0.0.1/32',
+]
 
 
 def check_database():
@@ -106,34 +109,47 @@ def check_ram_usage(pre_gc: MemoryLimit | None = None) -> dict:
     return out
 
 
-type HealthCheckFunction = Callable[[], dict[str, Any] | None]
+@require_GET
+def liveness_view(request):
+    """Liveness: just prove the worker can respond. No DB, no cache, no GC."""
+    return HttpResponse(b'ok', content_type='text/plain')
 
 
-health_check_hooks: list[HealthCheckFunction] = []
+@require_GET
+def readiness_view(request):
+    """Readiness: check dependencies, but skip expensive introspection."""
+    checks = {}
+    checks['database'] = check_database()
+    checks['cache'] = check_cache()
+
+    status = 'pass' if all(c.get('status') == 'pass' for c in checks.values()) else 'fail'
+    http_status = 200 if status == 'pass' else 503
+
+    return JsonResponse(
+        {'status': status, 'checks': checks, 'pid': os.getpid()},
+        status=http_status,
+    )
 
 
-def add_health_check_hook(func: HealthCheckFunction):
-    if func in health_check_hooks:
-        return
-    health_check_hooks.append(func)
+def is_internal_ip(ip: str) -> bool:
+    from ipaddress import ip_address, ip_network
+
+    addr = ip_address(ip)
+    return any(addr in ip_network(cidr) for cidr in TRUSTED_CIDRS)
 
 
 @api_view(['GET'])
 @permission_classes([])
-def health_view(request: HttpRequest):
-    # TODO: Implement checks
-    # https://tools.ietf.org/id/draft-inadarei-api-health-check-05.html
-
-    checks: dict[str, Any] = {}
-
-    checks['database'] = check_database()
-    checks['cache'] = check_cache()
-    checks['gc'] = check_garbage_collection()
-    checks['memory'] = check_ram_usage()
-    resp = {
-        'status': 'pass',
-        'checks': checks,
-        'pid': os.getpid(),
-    }
-
-    return Response(resp)
+def diagnostics_view(request):
+    if not is_internal_ip(request.META.get('REMOTE_ADDR', '')):
+        raise PermissionDenied('Not accessible externally')
+    checks = {}
+    with sentry_sdk.start_span(op='diagnostics.check', name='database'):
+        checks['database'] = check_database()
+    with sentry_sdk.start_span(op='diagnostics.check', name='cache'):
+        checks['cache'] = check_cache()
+    with sentry_sdk.start_span(op='diagnostics.check', name='gc.collect'):
+        checks['gc'] = check_garbage_collection()
+    with sentry_sdk.start_span(op='diagnostics.check', name='ram_usage'):
+        checks['memory'] = check_ram_usage()
+    return Response(checks)

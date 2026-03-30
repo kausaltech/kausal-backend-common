@@ -67,7 +67,7 @@ def is_in_interactive_mode():
 
 
 def before_send_transaction(event: Event, hint: Hint):
-    from kausal_common.deployment.health_check_view import HEALTH_CHECK_VIEW_NAME
+    from kausal_common.deployment.health_check_view import HEALTH_CHECK_VIEW_NAMES
 
     if is_in_interactive_mode():
         return None
@@ -78,8 +78,9 @@ def before_send_transaction(event: Event, hint: Hint):
 
     exclude_paths: list[str] = []
 
-    with contextlib.suppress(Exception):
-        exclude_paths.append(reverse(HEALTH_CHECK_VIEW_NAME))
+    for view_name in HEALTH_CHECK_VIEW_NAMES:
+        with contextlib.suppress(Exception):
+            exclude_paths.append(reverse(view_name))
 
     url_string = req.get('url')
     if url_string:
