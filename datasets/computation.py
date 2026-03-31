@@ -15,6 +15,9 @@ if TYPE_CHECKING:
 
     from .models import Dataset
 
+# Sentinel metric ID used for NULL operand_a (externally resolved values)
+_NULL_OPERAND_SENTINEL: int | None = None
+
 
 @dataclass
 class ComputedValue:
@@ -43,24 +46,27 @@ def _apply_op(op: str, a: Decimal | None, b: Decimal | None) -> Decimal | None:
 
 
 def _compute_metric_values(
-    values: dict[tuple[date, frozenset[int], int], Decimal | None],
+    values: dict[tuple[date, frozenset[int], int | None], Decimal | None],
     computations: Sequence[DatasetMetricComputation],
 ) -> list[tuple[date, frozenset[int], int, Decimal | None]]:
     """
     Apply computation definitions and return raw computed tuples.
 
     ``values`` is a lookup of (date, dimension_category_ids, metric_id) -> value,
-    built by the caller from DataPoints, IndicatorGoalDataPoints, or any source.
+    built by the caller from DataPoints or any source.
+    A metric_id of ``None`` represents externally resolved values (NULL operand_a).
 
     Computations are applied in order, so earlier results can feed later ones.
     """
     results: list[tuple[date, frozenset[int], int, Decimal | None]] = []
 
     for comp in computations:
-        keys = {(d, dims) for d, dims, m in values if m in (comp.operand_a_id, comp.operand_b_id)}
+        a_id = comp.operand_a_id  # None for externally resolved values
+        b_id = comp.operand_b_id
+        keys = {(d, dims) for d, dims, m in values if m in (a_id, b_id)}
         for d, dims in sorted(keys):
-            key_a = (d, dims, comp.operand_a_id)
-            key_b = (d, dims, comp.operand_b_id)
+            key_a = (d, dims, a_id)
+            key_b = (d, dims, b_id)
             if key_a not in values or key_b not in values:
                 continue
             a = values[key_a]
@@ -74,13 +80,33 @@ def _compute_metric_values(
 
 def _build_values_lookup(
     data_points: QuerySet[Any],
-) -> dict[tuple[date, frozenset[int], int], Decimal | None]:
+) -> dict[tuple[date, frozenset[int], int | None], Decimal | None]:
     """Build a lookup dict from data points keyed by (date, dim_cat_ids, metric_id)."""
-    values: dict[tuple[date, frozenset[int], int], Decimal | None] = {}
+    values: dict[tuple[date, frozenset[int], int | None], Decimal | None] = {}
     for dp in data_points:
         dim_cat_ids = frozenset(dc.id for dc in dp.dimension_categories.all())
         values[(dp.date, dim_cat_ids, dp.metric_id)] = dp.value
     return values
+
+
+def _inject_null_operand_values(
+    values: dict[tuple[date, frozenset[int], int | None], Decimal | None],
+    dataset: Dataset,
+    computations: Sequence[DatasetMetricComputation],
+) -> None:
+    """
+    If any computation has operand_a=NULL, resolve external values and inject them.
+
+    External values are keyed with metric_id=None (the sentinel for NULL operand_a).
+    """
+    has_null_operand = any(comp.operand_a_id is None for comp in computations)
+    if not has_null_operand:
+        return
+
+    from .config import dataset_config
+    null_values = dataset_config.resolve_null_operand_values(dataset)
+    for (d, dims), val in null_values.items():
+        values[(d, dims, _NULL_OPERAND_SENTINEL)] = val
 
 
 def _resolve_computed_values(
@@ -125,6 +151,7 @@ def compute_for_queryset(
         return []
 
     values = _build_values_lookup(data_points.prefetch_related('dimension_categories'))
+    _inject_null_operand_values(values, dataset, computations)
     raw = _compute_metric_values(values, computations)
     return _resolve_computed_values(raw)
 

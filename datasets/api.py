@@ -267,21 +267,26 @@ class DatasetMetricSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
     label = serializers.CharField(source='label_i18n')  # type: ignore[assignment]
     unit = serializers.CharField(source='unit_i18n', required=False)
     is_computed = serializers.SerializerMethodField()
+    is_virtual = serializers.SerializerMethodField()
     computed_by = serializers.SerializerMethodField()
 
     class Meta:
         model = DatasetMetric
-        fields = ['uuid', 'schema', 'label', 'unit', 'order', 'is_computed', 'computed_by']
+        fields = ['uuid', 'schema', 'label', 'unit', 'order', 'is_computed', 'is_virtual', 'computed_by']
 
     def get_is_computed(self, obj: DatasetMetric) -> bool:
         return obj.is_computed
 
-    def get_computed_by(self, obj: DatasetMetric) -> dict[str, list[str] | str] | None:
+    def get_is_virtual(self, obj: DatasetMetric) -> bool:
+        return False
+
+    def get_computed_by(self, obj: DatasetMetric) -> dict[str, list[str | None] | str] | None:
         if not obj.is_computed:
             return None
         computation: DatasetMetricComputation = obj.computed_by  # type: ignore[attr-defined]
+        operand_a_uuid = str(computation.operand_a.uuid) if computation.operand_a else None
         return {
-            'operand_uuids': [str(computation.operand_a.uuid), str(computation.operand_b.uuid)],
+            'operand_uuids': [operand_a_uuid, str(computation.operand_b.uuid)],
             'operation': computation.operation,
         }
 
@@ -321,6 +326,36 @@ class DatasetSchemaSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
         model = DatasetSchema
         fields = ['uuid', 'time_resolution', 'name', 'dimensions', 'metrics', 'start_date']
 
+    def to_representation(self, instance: DatasetSchema) -> dict:
+        data = super().to_representation(instance)
+        dataset = self.context.get('dataset')
+        if dataset is None:
+            return data
+        from .config import dataset_config
+        get_virtual = getattr(dataset_config, 'get_virtual_metrics_for_schema', None)
+        if get_virtual is None:
+            return data
+        virtual_metrics = get_virtual(dataset)
+        if not virtual_metrics:
+            return data
+        # Build a map of null operand_a replacements (virtual metric UUID keyed by dataset)
+        virtual_uuid_map: dict[str, str] = {}
+        for vm in virtual_metrics:
+            virtual_uuid_map[str(dataset.uuid)] = vm['uuid']
+        # Prepend virtual metrics
+        data['metrics'] = virtual_metrics + data['metrics']
+        # Replace null operand_uuids with the virtual metric UUID
+        virtual_uuid = virtual_uuid_map.get(str(dataset.uuid))
+        if virtual_uuid:
+            for metric_data in data['metrics']:
+                computed_by = metric_data.get('computed_by')
+                if computed_by and computed_by.get('operand_uuids'):
+                    computed_by['operand_uuids'] = [
+                        virtual_uuid if op is None else op
+                        for op in computed_by['operand_uuids']
+                    ]
+        return data
+
 
 class DatasetSchemaViewSet(viewsets.ModelViewSet[DatasetSchema]):
     lookup_field = 'uuid'
@@ -340,6 +375,55 @@ class DatasetSchemaViewSet(viewsets.ModelViewSet[DatasetSchema]):
                 'metrics__computed_by__operand_b',
             )
         )
+
+    def get_serializer_context(self):
+        import contextlib
+
+        ctx = super().get_serializer_context()
+        dataset_uuid = self.request.query_params.get('dataset')
+        if dataset_uuid:
+            with contextlib.suppress(Dataset.DoesNotExist):
+                ctx['dataset'] = Dataset.objects.get(uuid=dataset_uuid)
+        elif (
+            self.kwargs.get(self.lookup_field)
+            and self.request.query_params.get('scope_content_type_id')
+            and self.request.query_params.get('scope_id')
+        ):
+            # For new (unsaved) datasets, build a lightweight stand-in
+            # so the serializer can resolve virtual metrics from scope params.
+            from types import SimpleNamespace
+            schema = self.get_object()
+            ctx['dataset'] = SimpleNamespace(
+                schema=schema,
+                scope_content_type_id=int(self.request.query_params['scope_content_type_id']),
+                scope_id=int(self.request.query_params['scope_id']),
+                uuid=None,
+            )
+        return ctx
+
+    @action(detail=True, methods=['get'], url_path='virtual_data')
+    def virtual_data(self, request, uuid=None):
+        """Return data points for virtual metrics, resolved via dataset_config."""
+        from .config import dataset_config
+
+        scope_ct_id = request.query_params.get('scope_content_type_id')
+        scope_id = request.query_params.get('scope_id')
+        if not scope_ct_id or not scope_id:
+            return Response([])
+
+        from types import SimpleNamespace
+        schema = self.get_object()
+        fake_dataset = SimpleNamespace(
+            schema=schema,
+            scope_content_type_id=int(scope_ct_id),
+            scope_id=int(scope_id),
+            uuid=None,
+        )
+        get_values = getattr(dataset_config, 'get_virtual_metric_data', None)
+        if get_values is None:
+            return Response([])
+        data = get_values(fake_dataset)
+        return Response(data)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -401,6 +485,18 @@ class DatasetViewSet(viewsets.ModelViewSet[Dataset]):
         dataset = self.get_object()
         computed = compute_dataset_values(dataset)
         data = ComputedDataPointSerializer(computed, many=True).data
+        return Response(data)
+
+    @action(detail=True, methods=['get'], url_path='virtual_data')
+    def virtual_data(self, request, uuid=None):
+        """Return data points for virtual metrics, resolved via dataset_config."""
+        from .config import dataset_config
+
+        dataset = self.get_object()
+        get_values = getattr(dataset_config, 'get_virtual_metric_data', None)
+        if get_values is None:
+            return Response([])
+        data = get_values(dataset)
         return Response(data)
 
 
