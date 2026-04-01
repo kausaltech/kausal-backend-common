@@ -101,6 +101,10 @@ case "$1" in
         exec uwsgi --ini /uwsgi.ini
         ;;
     gunicorn|"")
+        if [ -n "$PROMETHEUS_MULTIPROC_DIR" ] ; then
+            mkdir -p "$PROMETHEUS_MULTIPROC_DIR"
+            rm -rf "${PROMETHEUS_MULTIPROC_DIR:?}"/*
+        fi
         exec gunicorn -c /code/kausal_common/docker/gunicorn.conf.py
         ;;
     celery)
