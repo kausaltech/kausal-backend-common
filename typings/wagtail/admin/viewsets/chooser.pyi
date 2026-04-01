@@ -13,6 +13,7 @@ class ChooserViewSet[M: Model](ViewSet):
     model: type[M]
     choose_one_text: StrOrPromise
     choose_another_text: StrOrPromise
+    page_title: str | None
     edit_item_text: StrOrPromise
     per_page: object | int
     preserve_url_parameters: Incomplete
