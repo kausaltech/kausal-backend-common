@@ -147,12 +147,23 @@ def _make_post_fork(prom_post_fork: Callable | None) -> Callable:
     return post_fork
 
 
+def _child_exit(server: Arbiter, worker: Worker) -> None:
+    """Mark a dead worker's metrics so prometheus_client excludes them from 'live*' aggregations."""
+    try:
+        from prometheus_client import multiprocess
+
+        multiprocess.mark_process_dead(worker.pid)
+    except Exception:
+        gunicorn_log.opt(exception=True).warning('Failed to mark worker %d as dead in prometheus multiproc' % worker.pid)
+
+
 def get_gunicorn_hooks():
     prom_hooks = _get_prometheus_hooks() or {}
     hooks = dict(
         when_ready=_make_when_ready(prom_hooks.get('when_ready')),
         post_fork=_make_post_fork(prom_hooks.get('post_fork')),
         post_worker_init=post_worker_init,
+        child_exit=_child_exit,
     )
     # Wrap pass-through prometheus hooks so they degrade gracefully.
     # Gunicorn validates hook arity via inspect, so wrappers must match
