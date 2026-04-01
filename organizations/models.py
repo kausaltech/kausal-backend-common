@@ -188,7 +188,7 @@ class BaseOrganization(index.Indexed, TreeModel, ModelWithPrimaryLanguage, gis_m
 
     i18n = TranslationField(fields=('name', 'abbreviation'), default_language_field='primary_language_lowercase')
 
-    public_fields: ClassVar[list[str]] = ['id', 'uuid', 'name', 'abbreviation', 'parent']
+    public_fields: ClassVar[list[str]] = ['id', 'uuid', 'name', 'abbreviation', 'parent', 'primary_language']
 
     search_fields = [
         index.AutocompleteField('name'),
