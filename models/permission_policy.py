@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from abc import ABC, ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Any, Literal, TypeGuard, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, Literal, TypeGuard, TypeVar, cast, overload, override
 
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
@@ -9,14 +7,16 @@ from wagtail.permission_policies.base import ModelPermissionPolicy as WagtailMod
 
 from loguru import logger
 
-from users.models import User
+from kausal_common.deployment import is_test_or_dev
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
-    from kausal_common.graphene import GQLInfo
     from kausal_common.models.permissions import PermissionedQuerySet
+    from kausal_common.strawberry.helpers import InfoType
     from kausal_common.users import UserOrAnon
+
+    from users.models import User
 
     from .permissions import PermissionedModel
 
@@ -34,10 +34,10 @@ def is_base_action(action: str) -> TypeGuard[ObjectSpecificAction]:
 
 
 class ModelPermissionPolicy[
-    M: PermissionedModel,
+    M: PermissionedModel[Any] = PermissionedModel[Any],
     CreateContext: Any = Any,
-    QS: PermissionedQuerySet[Any] = PermissionedQuerySet[M],  # type: ignore[type-var]
-](ABC, WagtailModelPermissionPolicy[M, User, QS]):
+    QS: PermissionedQuerySet[Any] = PermissionedQuerySet[Any],
+](ABC, WagtailModelPermissionPolicy[M, 'User', QS]):
     public_fields: list[str]
     """List of fields that are public."""
 
@@ -96,7 +96,7 @@ class ModelPermissionPolicy[
         The child models are typically associated with the current model via a ForeignKey or OneToOneField.
         """
         creatable_child_models: list[type[PermissionedModel]] = []
-        for child_model in self.model.child_models:
+        for child_model in self.model.permissioned_child_models():
             pp = child_model.permission_policy()
             if isinstance(pp, ParentInheritedPolicy):
                 if self.user_is_authenticated(user):
@@ -117,7 +117,7 @@ class ModelPermissionPolicy[
     @overload
     def gql_action_allowed(
         self,
-        info: GQLInfo,
+        info: InfoType,
         action: Literal['add'],
         obj: None = ...,
         context: CreateContext = ...,
@@ -126,7 +126,7 @@ class ModelPermissionPolicy[
     @overload
     def gql_action_allowed(
         self,
-        info: GQLInfo,
+        info: InfoType,
         action: ObjectSpecificAction,
         obj: M = ...,
         context: None = ...,
@@ -134,7 +134,7 @@ class ModelPermissionPolicy[
 
     def gql_action_allowed(
         self,
-        info: GQLInfo,
+        info: InfoType,
         action: BaseObjectAction,
         obj: M | None = None,
         context: CreateContext | None = None,
@@ -187,7 +187,11 @@ class ModelPermissionPolicy[
             return qs
         filters = None
         for action in actions:
+            if action == 'add':
+                continue
             if not is_base_action(action):
+                if is_test_or_dev():
+                    raise ValueError('Unknown action: %s' % action)
                 logger.error('Unknown action: %s' % action)
                 return qs.none()
             q = self._construct_q(user, action)
@@ -202,7 +206,14 @@ class ModelPermissionPolicy[
         return qs.filter(filters).distinct()
 
     def user_has_permission_for_instance(self, user: UserOrAnon, action: str, instance: M) -> bool:
+        # FIXME: Wagtail uses instance-specific 'add' to check for copy permission
+        # Copy up with a better solution for this.
+        if action == 'add':
+            action = 'change'
+
         if not is_base_action(action):
+            if is_test_or_dev():
+                raise ValueError('Unknown action: %s' % action)
             logger.error('Unknown action: %s' % action)
             return False
         if not self.user_is_authenticated(user):
@@ -224,27 +235,33 @@ class ModelReadOnlyPolicy[
     CreateContext: Any = Any,
     QS: PermissionedQuerySet[Any] = PermissionedQuerySet[M],
 ](ModelPermissionPolicy[M, CreateContext, QS]):
-    def construct_perm_q(self, user: User, action: BaseObjectAction) -> Q | None:
+    @override
+    def construct_perm_q(self, user: User, action: ObjectSpecificAction) -> Q | None:
         if user.is_superuser or action == 'view':
             return Q()
         return None
 
-    def construct_perm_q_anon(self, action: BaseObjectAction) -> Q | None:
+    @override
+    def construct_perm_q_anon(self, action: ObjectSpecificAction) -> Q | None:
         if action == 'view':
             return Q()
         return None
 
+    @override
     def user_has_perm(self, user: User, action: ObjectSpecificAction, obj: M) -> bool:
         return user.is_superuser or action == 'view'
 
+    @override
     def anon_has_perm(self, action: ObjectSpecificAction, obj: M) -> bool:
         return action == 'view'
 
+    @override
     def user_can_create(self, user: User, context: CreateContext) -> bool:
         if user.is_superuser:
             return True
         return False
 
+    @override
     def user_has_permission(self, user: UserOrAnon, action: str) -> bool:
         if user.is_superuser:
             return True
@@ -252,13 +269,15 @@ class ModelReadOnlyPolicy[
 
 
 class ParentInheritedPolicy[
-    M: PermissionedModel,
-    ParentM: PermissionedModel,
+    M: PermissionedModel[Any],
+    ParentM: PermissionedModel[Any],
     QS: PermissionedQuerySet[Any] = PermissionedQuerySet[M],
+    CreateContext: Any = None,
 ](ModelPermissionPolicy[M, ParentM, QS], metaclass=ABCMeta):
     parent_model: type[ParentM]
     parent_policy: ModelPermissionPolicy[ParentM, Any, PermissionedQuerySet[ParentM]]
     disallowed_actions: set[BaseObjectAction]
+    create_context_type: type[CreateContext] | None
 
     def __init__(
         self,
@@ -266,14 +285,15 @@ class ParentInheritedPolicy[
         parent_model: type[ParentM],
         parent_field: str,
         disallowed_actions: Iterable[BaseObjectAction] = (),
+        create_context_type: type[CreateContext] | None = None,
     ):
         super().__init__(model)
         self.parent_model = parent_model
         self.parent_policy = parent_model.permission_policy()
         self.parent_field = parent_field
-        if model not in self.parent_model.child_models:
-            self.parent_model.child_models.append(model)
+        parent_model.register_permissioned_child_model(model)
         self.disallowed_actions = set(disallowed_actions)
+        self.create_context_type = create_context_type
 
     def parent_in_q(self, val: PermissionedQuerySet[ParentM]) -> Q:
         key = '%s__in' % self.parent_field
@@ -313,3 +333,8 @@ class ParentInheritedPolicy[
 
     def user_has_any_permission(self, user: User | AnonymousUser, actions: Sequence[str]) -> bool:
         return self.parent_policy.user_has_any_permission(user, actions)
+
+    def is_create_context_valid(self, context: Any) -> TypeGuard[CreateContext]:
+        if self.create_context_type is None:
+            return False
+        return isinstance(context, self.create_context_type)

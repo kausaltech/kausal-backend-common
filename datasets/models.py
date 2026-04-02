@@ -27,7 +27,7 @@ from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonP
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
 from ..models.permissions import PermissionedManager, PermissionedModel, PermissionedQuerySet
-from ..models.types import AbstractModelMeta, ModelManager, RevMany
+from ..models.types import AbstractModel, ModelManager, RevMany
 from .config import dataset_config
 
 if TYPE_CHECKING:
@@ -339,7 +339,8 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
                 InlinePanel(
                     'group_permissions',
                     heading=pgettext_lazy(
-                        'list of person groups and their respective permissions on a dataset schema', 'Group permissions'
+                        'list of person groups and their respective permissions on a dataset schema',
+                        'Group permissions',
                     ),
                     help_text=_('Grants permissions on datasets of this schema to certain person groups'),
                     panels=[
@@ -410,6 +411,9 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
 
     objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
     _default_manager: ClassVar[PermissionedManager[Self]]
+
+    label_i18n: str
+    unit_i18n: str
 
     class Meta:
         verbose_name = _('dataset metric')
@@ -494,12 +498,14 @@ class DatasetMetricComputation(OrderedModel):
         blank=True,
         help_text=_("If empty, uses the indicator's own values as input"),
     )
+    operand_a_id: int | None
     operand_b: FK[DatasetMetric] = models.ForeignKey(
         DatasetMetric,
         on_delete=models.CASCADE,
         related_name='+',
         verbose_name=_('operand B'),
     )
+    operand_b_id: int
 
     objects: ClassVar[models.Manager[Self]] = models.Manager()
 
@@ -701,7 +707,7 @@ class DatasetSchemaScope(models.Model):
         return retval
 
 
-class DataPointBase(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel, metaclass=AbstractModelMeta):
+class DataPointBase(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel, AbstractModel):  # pyright: ignore[reportImplicitAbstractClass]
     """
     Abstract base for tabular data cells.
 

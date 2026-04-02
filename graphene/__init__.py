@@ -37,17 +37,9 @@ if TYPE_CHECKING:
         user: UserOrAnon  # type: ignore[override]
         graphql_query_language: str
 
-    if IS_PATHS:
-
-        @type_check_only
-        class GQLInfo(GraphQLResolveInfo):
-            context: GraphQLContext
-
-    else:
-
-        @type_check_only
-        class GQLInfo(GraphQLResolveInfo):
-            context: GraphQLContext
+    @type_check_only
+    class GQLInfo[CtxT: GraphQLContext = GraphQLContext](GraphQLResolveInfo):
+        context: CtxT
 
 
 class ModelWithI18n(Model):

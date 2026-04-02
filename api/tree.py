@@ -179,7 +179,7 @@ class TreebeardModelSerializerMixin[M: MP_Node[Any]](ModelSerializerMixinBase[M]
             left_sibling.add_sibling('right', instance=instance)
         return instance
 
-    def update(self, instance, validated_data):
+    def update(self, instance: M, validated_data):
         # FIXME: Since left_sibling has allow_null=True, we should distinguish whether left_sibling is None because it
         # is not in validated_data or because validated_data['left_sibling'] is None. Similarly for parent. Sending a
         # PUT request and omitting one of these fields might inadvertently move the node.
@@ -202,5 +202,5 @@ class TreebeardModelSerializerMixin[M: MP_Node[Any]](ModelSerializerMixinBase[M]
         else:
             instance.move(left_sibling, 'right')
         # Reload because object is stale after move
-        instance = instance._meta.model.objects.get(pk=instance.pk)
+        instance = type(instance).objects.get(pk=instance.pk)
         return instance

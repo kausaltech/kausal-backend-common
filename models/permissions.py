@@ -6,16 +6,15 @@ from typing import TYPE_CHECKING, Any, ClassVar, Self, cast
 
 from django.apps import apps
 from django.core.checks import Error as CheckError, Warning as CheckWarning, register as register_check
-from django.db import models
 from django.db.models import QuerySet
-from graphql import GraphQLError
 from modeltrans.manager import MultilingualManager
 from modeltrans.translator import get_i18n_field
 from pydantic import BaseModel, Field
 
 from kausal_common.const import IS_WATCH
+from kausal_common.strawberry.errors import PermissionDeniedError
 
-from .types import AbstractModelMeta, ModelABC, ModelManager
+from .types import AbstractModel, ModelManager
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -26,43 +25,65 @@ if TYPE_CHECKING:
 
     from rich.repr import RichReprResult
 
-    from kausal_common.graphene import GQLInfo
     from kausal_common.models.permission_policy import ModelPermissionPolicy
+    from kausal_common.strawberry.helpers import InfoType
     from kausal_common.users import UserOrAnon
 
     from .permission_policy import ObjectSpecificAction
 
 
-class PermissionedModel(models.Model, ModelABC, metaclass=AbstractModelMeta):
-    child_models: ClassVar[list[type[PermissionedModel]]] = []
-
+class PermissionedModel[CreateContext: Any = None](AbstractModel):  # pyright: ignore[reportImplicitAbstractClass]
     if TYPE_CHECKING:
         Meta: Any
+
+        def __rich_repr__(self) -> RichReprResult: ...
+
     else:
 
         class Meta:
             abstract = True
 
+    _registered_permissioned_child_models: ClassVar[list[type[PermissionedModel]]]
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+        cls._registered_permissioned_child_models = []
+
     @abstractmethod
     def __str__(self) -> str: ...
 
-    if TYPE_CHECKING:
+    @classmethod
+    def permissioned_child_models(cls) -> tuple[type[PermissionedModel], ...]:
+        return tuple[type[PermissionedModel], ...](cls._registered_permissioned_child_models)
 
-        def __rich_repr__(self) -> RichReprResult: ...
+    @classmethod
+    def register_permissioned_child_model(cls, child_model: type[PermissionedModel]) -> None:
+        if child_model not in cls._registered_permissioned_child_models:
+            cls._registered_permissioned_child_models.append(child_model)
 
     @classmethod
     @abstractmethod
-    def permission_policy(cls) -> ModelPermissionPolicy[Self, Any, Any]: ...
+    def permission_policy(cls) -> ModelPermissionPolicy[Any, Any, Any]: ...
 
-    def gql_action_allowed(self, info: GQLInfo, action: ObjectSpecificAction) -> bool:
-        return self.permission_policy().gql_action_allowed(info, action, self)
+    def gql_action_allowed(self, info: InfoType, action: ObjectSpecificAction, raise_on_denied: bool = True) -> bool:
+        is_allowed = self.permission_policy().gql_action_allowed(info, action, self)
+        if raise_on_denied and not is_allowed:
+            raise PermissionDeniedError(info, "Permission denied for action '%s'" % action)
+        return is_allowed
 
-    def ensure_gql_action_allowed(self, info: GQLInfo, action: ObjectSpecificAction) -> None:
-        if not self.gql_action_allowed(info, action):
-            raise GraphQLError("Permission denied for action '%s'" % action, nodes=info.field_nodes)
+    def ensure_gql_action_allowed(self, info: InfoType, action: ObjectSpecificAction) -> None:
+        self.gql_action_allowed(info, action, raise_on_denied=True)
+
+    @classmethod
+    def gql_create_allowed(cls, info: InfoType, ctx: CreateContext, raise_on_denied: bool = True) -> bool:
+        is_allowed = cls.permission_policy().gql_action_allowed(info, 'add', context=ctx)
+        if raise_on_denied and not is_allowed:
+            raise PermissionDeniedError(info, 'Permission denied for create')
+        return is_allowed
 
 
-class PermissionedQuerySet[M: PermissionedModel](QuerySet[M, M]):
+class PermissionedQuerySet[M: PermissionedModel[Any]](QuerySet[M, M]):
     if TYPE_CHECKING:
 
         @classmethod
@@ -104,7 +125,7 @@ class PermissionedManager[M: PermissionedModel, QS: PermissionedQuerySet[Any] = 
 
     if TYPE_CHECKING:
 
-        def _patch_queryset[Q: QuerySet[Any]](self, qs: Q) -> Q: ...
+        def _patch_queryset[Q: QuerySet[Any]](self, _qs: Q) -> Q: ...
 
     def get_queryset(self) -> QS:
         qs = super(ModelManager, self).get_queryset()

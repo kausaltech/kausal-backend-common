@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import os
 import re
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, overload
 
@@ -148,3 +149,9 @@ def test_mode_enabled() -> bool:
         raise ImproperlyConfigured('Test mode cannot be enabled in this environment')
 
     return True
+
+
+def is_test_or_dev() -> bool:
+    if env_bool('DEBUG', default=False):
+        return True
+    return 'pytest' in sys.modules

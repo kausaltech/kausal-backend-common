@@ -48,13 +48,14 @@ all_routers: list[SimpleRouter] = []
 
 
 def get_item_with_deprecated_fallback(
-    mapping: dict, key: str, deprecated_key: str, fail_if_not_exists: bool = True, default=None
+    mapping: dict[str, typing.Any], key: str, deprecated_key: str, fail_if_not_exists: bool = True, default=None
 ):
     if key in mapping:
         return mapping[key]
     if deprecated_key in mapping:
+        msg = f"The key '{deprecated_key}' is deprecated and will be removed in a future version. Please use '{key}' instead."
         warnings.warn(
-            f"The key '{deprecated_key}' is deprecated and will be removed in a future version. Please use '{key}' instead.",
+            msg,
             DeprecationWarning,
             stacklevel=2,
         )
@@ -149,7 +150,11 @@ class DataPointSerializer(serializers.ModelSerializer[DataPoint]):
         list_serializer_class = UuidBasedBulkListSerializer
 
     def validate(self, data):
-        """Validate that no duplicate data point exists with the same date, dimension category, and metric combination."""
+        """
+        Validate that no duplicate data point exists.
+
+        Conditions are: the same date, dimension category, and metric combination.
+        """
         date = data.get('date')
         dimension_categories = data.get('dimension_categories')
         metric = data.get('metric')
@@ -332,6 +337,7 @@ class DatasetSchemaSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
         if dataset is None:
             return data
         from .config import dataset_config
+
         get_virtual = getattr(dataset_config, 'get_virtual_metrics_for_schema', None)
         if get_virtual is None:
             return data
@@ -350,10 +356,7 @@ class DatasetSchemaSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
             for metric_data in data['metrics']:
                 computed_by = metric_data.get('computed_by')
                 if computed_by and computed_by.get('operand_uuids'):
-                    computed_by['operand_uuids'] = [
-                        virtual_uuid if op is None else op
-                        for op in computed_by['operand_uuids']
-                    ]
+                    computed_by['operand_uuids'] = [virtual_uuid if op is None else op for op in computed_by['operand_uuids']]
         return data
 
 
@@ -392,6 +395,7 @@ class DatasetSchemaViewSet(viewsets.ModelViewSet[DatasetSchema]):
             # For new (unsaved) datasets, build a lightweight stand-in
             # so the serializer can resolve virtual metrics from scope params.
             from types import SimpleNamespace
+
             schema = self.get_object()
             ctx['dataset'] = SimpleNamespace(
                 schema=schema,
@@ -412,6 +416,7 @@ class DatasetSchemaViewSet(viewsets.ModelViewSet[DatasetSchema]):
             return Response([])
 
         from types import SimpleNamespace
+
         schema = self.get_object()
         fake_dataset = SimpleNamespace(
             schema=schema,
@@ -648,7 +653,7 @@ class DataPointSourceReferenceViewSet(viewsets.ModelViewSet):
         return context
 
 
-class DatasetSourceReferenceViewSet(viewsets.ModelViewSet):
+class DatasetSourceReferenceViewSet(viewsets.ModelViewSet[DatasetSourceReference]):
     pagination_class = None
     lookup_field = 'uuid'
     serializer_class = BaseSourceReferenceSerializer
@@ -778,7 +783,7 @@ router.register(r'datasets', DatasetViewSet, basename='dataset')
 router.register(r'dimensions', DimensionViewSet, basename='dimension')
 
 dataset_router = NestedSimpleRouter(router, r'datasets', lookup='dataset')
-dimension_router = NestedSimpleRouter(router, r'dimensions', lookup='dimension')
+dimension_router = NestedSimpleRouter(router, parent_prefix=r'dimensions', lookup='dimension')
 
 dataset_router.register(r'data_points', DataPointViewSet, basename='datapoint')
 dimension_router.register(r'categories', DimensionCategoryViewSet, basename='category')

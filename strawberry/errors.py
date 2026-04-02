@@ -1,17 +1,23 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from graphql import GraphQLError
-from graphql.type import GraphQLResolveInfo
 from strawberry.types import Info
 
-type AnyInfo = Info | GraphQLResolveInfo
+if TYPE_CHECKING:
+    from kausal_common.strawberry.helpers import InfoType
 
 
 class ExecutionError(GraphQLError):
     message: str = 'An unexpected error occurred'
 
     def __init__(
-        self, info: AnyInfo, message: str | None = None, code: str | None = None, original_error: Exception | None = None
+        self,
+        info: InfoType,
+        message: str | None = None,
+        code: str | None = None,
+        original_error: Exception | None = None,
     ):
         extensions = {}
         if code:
@@ -19,8 +25,14 @@ class ExecutionError(GraphQLError):
         if message:
             self.message = message
         if isinstance(info, Info):
-            info = info._raw_info
-        super().__init__(self.message, nodes=info.field_nodes, original_error=original_error, extensions=extensions)
+            resolve_info = info._raw_info
+        else:
+            resolve_info = info
+        super().__init__(self.message, nodes=resolve_info.field_nodes, original_error=original_error, extensions=extensions)
+
+
+class GraphQLValidationError(ExecutionError):
+    message: str = 'Validation error'
 
 
 class PermissionDeniedError(ExecutionError):

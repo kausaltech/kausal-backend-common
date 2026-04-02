@@ -14,12 +14,15 @@ from kausal_common.strawberry.errors import NotFoundError
 if TYPE_CHECKING:
     import strawberry as sb
 
+    from kausal_common.graphene import GQLInfo
     from kausal_common.models.permission_policy import ObjectSpecificAction
 
 
 logger = logger.bind(markup=True, name='graphql')
 
 type LogLevel = Literal['DEBUG', 'INFO', 'SUCCESS', 'WARNING', 'ERROR', 'CRITICAL']
+
+type InfoType = sb.Info[Any, Any] | GQLInfo
 
 
 def graphql_log(level: LogLevel, operation_name: str | None, msg, *args, depth: int = 0, **kwargs):

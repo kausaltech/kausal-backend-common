@@ -203,14 +203,20 @@ type QS[M: Model] = QuerySet[M, M]
 # Django migrations do not like the real ABC base, so we have the real
 # ABC only for type checkers.
 if TYPE_CHECKING:
-    ModelABC = ABC
+
+    class AbstractModelMeta(ABCMeta, ModelBase):
+        pass
+
+    class AbstractModel(Model, ABC, metaclass=AbstractModelMeta):
+        class Meta:
+            abstract = True
+
 else:
-    ModelABC = object
 
+    class AbstractModelMeta(ABCMeta, ModelBase):
+        pass
 
-class AbstractModelMeta(ABCMeta, ModelBase):
-    pass
-
+    AbstractModel = Model
 
 if not TYPE_CHECKING:
     monkeypatch_generic_support(JSONField)

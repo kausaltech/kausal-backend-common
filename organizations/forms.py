@@ -27,7 +27,7 @@ class NodeChoiceField[M: Node[MP_NodeQuerySet[Any]]](ModelChoiceField[M]):
         return f'{depth_line} {label}'
 
 
-class NodeForm[M: Node[MP_NodeQuerySet[Any]]](ModelForm[M]):
+class NodeForm[M: Node[Any]](ModelForm[M]):
     parent: NodeChoiceField[M] = NodeChoiceField[M](required=False, queryset=None)
 
     def __init__(self, *args, **kwargs):
