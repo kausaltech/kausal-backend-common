@@ -7,7 +7,9 @@ from functools import cache
 from django.core.validators import MaxLengthValidator
 from django.db.models import Model
 
-features = ...
+from .feature_registry import FeatureRegistry
+
+features: FeatureRegistry
 
 @cache
 def get_rewriter():  # -> MultiRuleRewriter:

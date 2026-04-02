@@ -35,7 +35,7 @@ def _patch_prometheus_master() -> None:
     import queue
     import signal
 
-    from gunicorn_prometheus_exporter.master import PrometheusMaster
+    from gunicorn_prometheus_exporter.master import PrometheusMaster  # type: ignore[import-not-found]
 
     _orig_init_signals = PrometheusMaster.init_signals
 
@@ -59,7 +59,7 @@ def _patch_prometheus_master() -> None:
 
 def _get_prometheus_hooks() -> dict | None:
     try:
-        from gunicorn_prometheus_exporter.hooks import (
+        from gunicorn_prometheus_exporter.hooks import (  # type: ignore[import-not-found]
             default_on_exit,
             default_on_starting,
             default_post_fork,
