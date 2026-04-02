@@ -6,8 +6,9 @@ from functools import cache
 
 from django.core.validators import MaxLengthValidator
 from django.db.models import Model
+from wagtail.rich_text.feature_registry import FeatureRegistry
 
-features = ...
+features: FeatureRegistry
 
 @cache
 def get_rewriter():  # -> MultiRuleRewriter:
