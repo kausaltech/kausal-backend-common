@@ -130,24 +130,30 @@ builtins-ignorelist = ["id", "format", "print", "input", "next", "type"]
 [lint.flake8-type-checking]
 runtime-evaluated-decorators = [
   "aplans.gql.mutation",
+  "kausal_common.strawberry.grapple.grapple_field",
+  "kausal_common.strawberry.pydantic.pydantic_input",
+  "kausal_common.strawberry.pydantic.pydantic_type",
   "mcp_server.tools.helpers.register_tool",
   "paths.gql.mutation",
   "strawberry_django.field",
   "strawberry_django.fields.field",
-  "strawberry_django.type.input",
   "strawberry_django.input",
+  "strawberry_django.type.input",
   "strawberry.directive",
+  "strawberry.experimental.pydantic.input",
   "strawberry.experimental.pydantic.type",
-  "strawberry.types.object_type.type",
-  "strawberry.type",
   "strawberry.field",
   "strawberry.input",
+  "strawberry.interface",
   "strawberry.mutation",
   "strawberry.subscription",
+  "strawberry.type",
   "strawberry.types.field",
-  "kausal_common.strawberry.grapple.grapple_field",
+  "strawberry.types.object_type.type",
 ]
 runtime-evaluated-base-classes = [
-  "pydantic.BaseModel", "mcp_server.generated_base.ObjectBaseModel", "kausal_common.i18n.pydantic.I18nBaseModel",
-  "params.base.Parameter"
+  "pydantic.BaseModel",
+  "mcp_server.generated_base.ObjectBaseModel",
+  "kausal_common.i18n.pydantic.I18nBaseModel",
+  "params.base.Parameter",
 ]

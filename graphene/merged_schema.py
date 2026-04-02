@@ -261,11 +261,6 @@ class UnifiedGraphQLConverter(GraphQLCoreConverter):
         return super().from_union(union)
 
     def from_type(self, type_: StrawberryType | type) -> GraphQLNullableType:
-        from kausal_common.i18n.pydantic import I18nString, I18nStringInstance, TranslatedString
-
-        if type_ in (I18nString, I18nStringInstance, TranslatedString):
-            return self.from_scalar(str)
-
         if _is_graphene_named_type(type_):
             return cast('GraphQLNullableType', self.add_graphene_type(type_))
         try:

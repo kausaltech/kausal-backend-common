@@ -19,7 +19,10 @@ from django_stubs_ext import StrPromise
 from pydantic import BaseModel, ConfigDict
 from pydantic_core import core_schema
 
+from loguru import logger
+
 from kausal_common.i18n.helpers import convert_language_code
+from kausal_common.strawberry.pydantic import register_type_conversion
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -274,9 +277,7 @@ class TranslatedString:
 
 
 def get_modeltrans_attrs_from_str(
-    s: str | TranslatedString,
-    field_name: str,
-    default_lang: str,
+    s: str | TranslatedString, field_name: str, default_lang: str, strict: bool = True
 ) -> tuple[str, dict[str, str]]:
     i18n = {}
     default_lang = convert_language_code(default_lang, 'iso')
@@ -296,7 +297,10 @@ def get_modeltrans_attrs_from_str(
                     i18n[key] = s.i18n[lang_iso]
                     break
             else:
-                raise Exception("Field '%s' does not have a value in language %s (%s)" % (field_name, default_lang, s.i18n))
+                if strict:
+                    raise Exception("Field '%s' does not have a value in language %s (%s)" % (field_name, default_lang, s.i18n))
+                logger.warning("Field '%s' does not have a value in language %s (%s)", field_name, default_lang)
+                s.i18n[default_lang] = ''
 
         field_val = s.i18n[default_lang]
     else:
@@ -515,3 +519,7 @@ class I18nBaseModel(BaseModel, ABC):
             if isinstance(val, list):
                 config[fn] = [model_cls.from_yaml_config(item) if isinstance(item, dict) else item for item in val]
         return cls.model_validate(config)
+
+
+for cls in (I18nString, I18nStringInstance, TranslatedString):
+    register_type_conversion(cls, str)
