@@ -11,6 +11,10 @@ if TYPE_CHECKING:
 
 LANGUAGE_CODE_REGEXP = re.compile(r'^([a-zA-Z]{2})(?:[_-]{1}([a-zA-Z]{2}))?$')
 
+# ISO 639-3 three-letter codes that we need to support.
+# These bypass the regex which only handles two-letter language codes.
+THREE_LETTER_LANGUAGE_CODES = frozenset({'mww'})
+
 
 def get_language_from_default_language_field(
     instance: models.Model,
@@ -65,12 +69,15 @@ def convert_language_code(
         ValueError: If language_code or output_format are invalid.
 
     """
-    regex_match = LANGUAGE_CODE_REGEXP.match(language_code)
-    if not regex_match:
-        error_message = f"'{language_code}' is not a valid language code."
-        raise ValueError(error_message)
-
-    language, region = regex_match.groups()
+    if language_code.lower() in THREE_LETTER_LANGUAGE_CODES:
+        language = language_code
+        region = None
+    else:
+        regex_match = LANGUAGE_CODE_REGEXP.match(language_code)
+        if not regex_match:
+            error_message = f"'{language_code}' is not a valid language code."
+            raise ValueError(error_message)
+        language, region = regex_match.groups()
     match output_format:
         case 'kausal' | 'next.js' | 'wagtail' | 'iso':
             result = language.lower()

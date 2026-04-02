@@ -29,6 +29,8 @@ pytestmark = pytest.mark.django_db
         ('EN-US', True),
         ('EN_us', True),
         ('EN_US', True),
+        ('mww', True),
+        ('MWW', True),
     ],
 )
 def test_convert_language_code_input_validation(language_code, is_valid):
@@ -78,6 +80,9 @@ def test_convert_language_code_format_validation(output_format, is_valid):
         ('EN_us', 'next.js', 'en-US'),
         ('EN', 'wagtail', 'en'),
         ('EN_us', 'wagtail', 'en-US'),
+        ('mww', 'kausal', 'mww'),
+        ('MWW', 'django', 'mww'),
+        ('MWW', 'modeltrans', 'mww'),
     ],
 )
 def test_convert_language_code(language_code, output_format, wanted_result):
