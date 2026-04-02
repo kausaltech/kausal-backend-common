@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from annotationlib import get_annotations
 from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast, overload
 
 import strawberry_django
@@ -7,6 +8,7 @@ from django.db import transaction
 from django.db.models import Model
 from django.utils import translation
 from strawberry.extensions import FieldExtension
+from strawberry.types.base import StrawberryOptional
 from strawberry.types.fields.resolver import StrawberryResolver
 from strawberry_django.fields.types import OperationInfo
 from strawberry_django.mutations.fields import resolvers
@@ -69,30 +71,49 @@ fragment OpInfo on OperationInfo {
 type ResolverFunc = StrawberryResolver[Any] | Callable[..., Any] | staticmethod[Any, Any] | classmethod[Any, Any, Any]
 
 
-@overload
-def mutation(*, extensions: list[FieldExtension] | None = None, **kwargs: Unpack[MutationArgs]) -> DjangoMutationBase: ...
+type MutationField = DjangoMutationBase
 
 
 @overload
-def mutation(resolver: ResolverFunc, **kwargs: Unpack[MutationArgs]) -> DjangoMutationBase: ...
+def mutation[T: ResolverFunc](
+    *, extensions: list[FieldExtension] | None = None, **kwargs: Unpack[MutationArgs]
+) -> Callable[[T], MutationField]: ...
 
 
-def mutation(
-    resolver: ResolverFunc | None = None,
+@overload
+def mutation[T: ResolverFunc](
+    resolver: T,  # pyright: ignore[reportInvalidTypeVarUse]
     *,
     extensions: list[FieldExtension] | None = None,
     **kwargs: Unpack[MutationArgs],
-) -> DjangoMutationBase:
+) -> MutationField: ...
+
+
+def mutation[T: ResolverFunc](
+    resolver: T | None = None,
+    *,
+    extensions: list[FieldExtension] | None = None,
+    **kwargs: Unpack[MutationArgs],
+) -> DjangoMutationBase | Callable[[T], MutationField]:
     extensions = list(extensions or ())
     for ext in extensions:
         if isinstance(ext, MutationExtension):
             break
     else:
         extensions.append(MutationExtension())
-    ret = strawberry_django.mutation(handle_django_errors=True, extensions=extensions, **kwargs)
+    field = strawberry_django.mutation(handle_django_errors=True, extensions=extensions, **kwargs)
+
+    def wrap(resolver: T) -> MutationField:
+        # if gql_type is None and resolver is not None:
+        fixed_type = kwargs.get('graphql_type')
+        annotations = get_annotations(resolver)
+        if fixed_type is None and annotations.get('return') is None:
+            field.type = StrawberryOptional(OperationInfo)
+        return field(resolver)
+
     if resolver is not None:
-        return ret(resolver)
-    return ret
+        return wrap(resolver)
+    return wrap
 
 
 def parse_input(info: Info, data: Any) -> dict[str, Any]:

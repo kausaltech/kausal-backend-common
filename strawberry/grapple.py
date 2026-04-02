@@ -7,6 +7,7 @@ import strawberry
 from strawberry.extensions import FieldExtension
 
 from kausal_common.models.types import copy_signature
+from kausal_common.strawberry.fields import field
 
 if TYPE_CHECKING:
     from strawberry import Info
@@ -61,8 +62,8 @@ class GrappleRegistryType(FieldExtension):
 
 
 @copy_signature(strawberry.field)
-def grapple_field(*args, **kwargs):
+def grapple_field(*args, custom_field_class: type[StrawberryField] | None = None, **kwargs):
     extensions = list(kwargs.pop('extensions', []))
     extensions.append(GrappleRegistryType())
 
-    return strawberry.field(*args, extensions=extensions, **kwargs)
+    return field(*args, extensions=extensions, custom_field_class=custom_field_class, **kwargs)
