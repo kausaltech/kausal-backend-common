@@ -233,7 +233,8 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
         from .traceback import patch_traceback
 
         patch_traceback()
-        install(show_locals=env_bool('TRACEBACK_SHOW_LOCALS', default=False))
+        if not env_bool('DEBUG_EXCEPTIONS', default=False):
+            install(show_locals=env_bool('TRACEBACK_SHOW_LOCALS', default=False))
 
     # gunicorn and uvicorn walk their own path with logging, so they need special treatment
     for logger_name in ('gunicorn.access', 'gunicorn.error', 'uvicorn.access', 'uvicorn.error'):

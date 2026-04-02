@@ -46,12 +46,22 @@ def capture_error(
     log_msg(msg, **kwargs)
 
 
-def print_exception(exc: BaseException) -> None:
+def print_exception(exc: BaseException, max_frames: int = 10) -> None:
     if is_pretty_terminal():
         from rich.console import Console
         from rich.traceback import Traceback
 
-        tb = Traceback.from_exception(type(exc), exc, exc.__traceback__)
+        tb = Traceback.from_exception(
+            type(exc),
+            exc,
+            exc.__traceback__,
+            show_locals=True,
+            locals_max_depth=1,
+            locals_max_length=5,
+            locals_overflow='ellipsis',
+            locals_max_string=30,
+            max_frames=max_frames,
+        )
         console = Console()
         console.print(tb)
     else:
