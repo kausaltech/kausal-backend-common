@@ -611,6 +611,17 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
         verbose_name=_('identifier'),
         help_text=_("Optional identifier that, if set, must be unique in the dataset's scope"),
     )
+    external_ref = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name=_('external reference'),
+        help_text=_('Optional source reference for externally backed datasets.'),
+    )
+    is_external_placeholder = models.BooleanField(
+        default=False,
+        verbose_name=_('is external placeholder'),
+        help_text=_('Marks datasets that exist only as placeholder references to externally stored datasets.'),
+    )
 
     # The "scope" generic foreign key links this dataset to an action or category
     # or instance
