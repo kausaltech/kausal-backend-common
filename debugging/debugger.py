@@ -21,6 +21,9 @@ else:
     class PdbMixinBase: ...
 
 
+_user_interrupt_received = False
+
+
 class PdbMixin(PdbMixinBase):
     def print_stack_trace(self, count: int | None = None):
         return super().print_stack_trace(count)
@@ -40,6 +43,10 @@ class PdbMixin(PdbMixinBase):
 
     def precmd(self, line: str | None) -> str:
         if line is None or line == 'EOF':
+            global _user_interrupt_received  # noqa: PLW0603
+            if _user_interrupt_received:
+                exit(1)
+            _user_interrupt_received = True
             raise BdbQuit
         return super().precmd(line)
 
