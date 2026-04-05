@@ -14,6 +14,7 @@ from loguru import logger
 from rich.text import Text
 
 from kausal_common.deployment import env_bool
+from kausal_common.logging.init import should_use_plain_logs
 from kausal_common.logging.warnings import warning_traceback_enabled
 
 if TYPE_CHECKING:
@@ -31,7 +32,10 @@ class LogFmtFormatter(Logfmter):
             'thread.name': 'threadName',
             'process.pid': 'process',
         }
-        keys = ['time', 'level', 'name', 'process.pid', 'thread.id', 'thread.name']
+        if should_use_plain_logs():
+            keys = ['time', 'level', 'name']
+        else:
+            keys = ['time', 'level', 'name', 'process.pid', 'thread.id', 'thread.name']
         super().__init__(keys=keys, mapping=mapping, datefmt=ISO_FORMAT)
 
     def format(self, record: LogRecord) -> str:
@@ -50,7 +54,7 @@ class LogFmtFormatter(Logfmter):
         return super().format(record)
 
     @classmethod
-    def get_extra(cls, record: logging.LogRecord) -> dict:
+    def get_extra(cls, record: logging.LogRecord) -> dict[str, Any]:
         ret = super().get_extra(record)
         if 'taskName' in ret:
             del ret['taskName']
@@ -59,7 +63,12 @@ class LogFmtFormatter(Logfmter):
         return ret
 
     def formatTime(self, record: logging.LogRecord, datefmt=None) -> str:  # noqa: N802
-        return datetime.fromtimestamp(record.created, UTC).strftime(ISO_FORMAT)
+        if should_use_plain_logs():
+            # Use only the time part in local TZ
+            ret = datetime.fromtimestamp(record.created, tz=UTC).astimezone().strftime(ISO_FORMAT)
+            return ret.split('T')[1]
+        time_str = datetime.fromtimestamp(record.created, UTC).strftime(ISO_FORMAT)
+        return f'[{time_str}]'
 
 
 class UwsgiReqLogHandler(StreamHandler):

@@ -5,6 +5,7 @@ import os
 import sys
 import warnings
 from dataclasses import dataclass
+from functools import cache
 from importlib.util import find_spec
 from logging.config import dictConfig
 from typing import TYPE_CHECKING, Any, Literal, Protocol
@@ -12,12 +13,10 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol
 from django.conf import settings
 
 from loguru import logger
+from loguru._colorama import should_colorize
 
 from kausal_common.deployment import env_bool
 from kausal_common.logging.warnings import configure_warning_filters, register_warning_handler, warning_traceback_enabled
-
-from .handler import LoguruLogger, loguru_logfmt_sink
-from .rich_logger import get_rich_log_console, loguru_rich_sink
 
 if TYPE_CHECKING:
     from logging.config import _DictConfigArgs, _LoggerConfiguration
@@ -124,7 +123,6 @@ def get_logging_conf(
             'git': level('INFO'),
             'pint': level('INFO'),
             'matplotlib': level('INFO'),
-            'numba': level('INFO'),
             'botocore': level('INFO'),
             'filelock': level('INFO'),
             'sentry_sdk.errors': level('DEBUG' if sentry_debug else 'INFO'),
@@ -184,7 +182,8 @@ def _get_filters(options: UserLoggingOptions) -> dict[str, Any]:
 def _init_logging(log_format: LogFormat) -> GetHandler:
     import sys
 
-    from loguru._colorama import should_colorize
+    from .handler import LoguruLogger, loguru_logfmt_sink
+    from .rich_logger import loguru_rich_sink
 
     # Strawberry installs its own exception handler unless this is set
     os.environ['STRAWBERRY_DISABLE_RICH_ERRORS'] = '1'
@@ -193,7 +192,7 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
         # If running tests, we don't want to see the full debug output
         log_level = 'WARNING'
     else:
-        log_level = 'DEBUG'
+        log_level = os.getenv('LOG_LEVEL', default='DEBUG').upper()
 
     loguru_handlers: list[BasicHandlerConfig]
     if log_format == 'logfmt':
@@ -246,6 +245,8 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
 
 
 def is_pretty_terminal() -> bool:
+    from kausal_common.logging.rich_logger import get_rich_log_console
+
     if not sys.stdout.isatty() or not sys.stderr.isatty():
         return False
 
@@ -255,14 +256,33 @@ def is_pretty_terminal() -> bool:
     return True
 
 
-def should_use_logfmt() -> bool:
+def _is_prod_logging() -> bool:
     if env_bool('KUBERNETES_LOGGING', default=False) or env_bool('KUBERNETES_MODE', default=False):
         return True
+    return False
 
+
+def should_use_logfmt() -> bool:
+    if _is_prod_logging():
+        return True
     if not is_pretty_terminal():
         return True
 
     return False
+
+
+@cache
+def should_use_plain_logs() -> bool:
+    try:
+        from django.conf import settings
+
+        if settings.DEBUG:
+            return True
+    except Exception:
+        return False
+    if _is_prod_logging():
+        return False
+    return True
 
 
 def autodetect_log_format() -> LogFormat:

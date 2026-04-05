@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from loguru import logger
 from sentry_sdk import capture_exception, capture_message
 
-from kausal_common.logging.init import is_pretty_terminal
+from kausal_common.logging.init import is_pretty_terminal, should_use_logfmt
 
 if TYPE_CHECKING:
     from sentry_sdk._types import LogLevelStr
@@ -47,7 +47,7 @@ def capture_error(
 
 
 def print_exception(exc: BaseException, max_frames: int = 10) -> None:
-    if is_pretty_terminal():
+    if is_pretty_terminal() and not should_use_logfmt():
         from rich.console import Console
         from rich.traceback import Traceback
 
