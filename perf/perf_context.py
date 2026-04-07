@@ -11,6 +11,8 @@ from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 
+from kausal_common.const import IS_WATCH
+
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator
     from types import TracebackType
@@ -22,7 +24,6 @@ type PerfAttrs = dict[str, PerfAttrValue]
 
 
 def estimate_size_bytes(obj: object) -> int | None:
-    from pandas import DataFrame as PandasDataFrame
     from polars import DataFrame as PolarsDataFrame
 
     if isinstance(obj, PolarsDataFrame):
@@ -32,13 +33,16 @@ def estimate_size_bytes(obj: object) -> int | None:
             return None
         return int(size)
 
-    if isinstance(obj, PandasDataFrame):
-        try:
-            usage = obj.memory_usage(deep=True)
-        except TypeError:
-            return None
-        total = usage.sum()
-        return int(total)
+    if not IS_WATCH:
+        from pandas import DataFrame as PandasDataFrame
+
+        if isinstance(obj, PandasDataFrame):
+            try:
+                usage = obj.memory_usage(deep=True)
+            except TypeError:
+                return None
+            total = usage.sum()
+            return int(total)
 
     if hasattr(obj, '__sizeof__'):
         return int(obj.__sizeof__())
