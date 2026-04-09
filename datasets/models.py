@@ -282,6 +282,9 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
 
     datasets: RevMany[Dataset]
     scopes: RevMany[DatasetSchemaScope]
+    dimensions: RevMany[DatasetSchemaDimension]
+    metrics: RevMany[DatasetMetric]
+
     if IS_PATHS:
         # FIXME: Remove the condition when PersonPermission and GroupPermission are implemented in KW
         person_permissions: RevMany[ObjectPersonPermissionBase[DatasetSchema]]
