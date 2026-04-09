@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING, cast
 
 from channels.auth import AuthMiddlewareStack
@@ -9,7 +10,7 @@ from channels.security.websocket import AllowedHostsOriginValidator
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-from kausal_common.auth.tokens import authenticate_from_authorization_header
+from kausal_common.auth.tokens import authenticate_from_authorization_header, dangerously_force_authenticated_user
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -32,6 +33,12 @@ class GeneralRequestMiddleware(BaseMiddleware):
         from kausal_common.logging.request import RequestCommonMeta
 
         headers = dict(scope['headers'])
+        forced_auth = os.getenv('DANGEROUSLY_FORCE_AUTHENTICATED_USER')
+        if forced_auth:
+            ret = await sync_to_async(dangerously_force_authenticated_user)(forced_auth)
+            scope['token_auth'] = ret
+            if ret.user:
+                scope['user'] = ret.user
         auth_header = headers.get(b'authorization')
         if auth_header:
             token = auth_header.decode('utf-8')

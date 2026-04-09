@@ -7,6 +7,9 @@ from typing import TYPE_CHECKING, Literal, cast
 from loguru import logger
 
 from kausal_common.const import IS_PATHS, IS_WATCH
+from kausal_common.deployment.types import is_development_environment
+
+from users.models import User
 
 if TYPE_CHECKING:
     from typing import type_check_only
@@ -19,8 +22,6 @@ if TYPE_CHECKING:
     from oauth2_provider.models import AccessToken, IDToken
 
     from kausal_common.deployment.types import LoggedHttpRequest
-
-    from users.models import User
 
 
 type TokenType = IDToken | AccessToken
@@ -103,6 +104,16 @@ class TokenAuthResult:
         return 'access_token'
 
 
+def dangerously_force_authenticated_user(email: str) -> TokenAuthResult:
+    """Force authentication for a user with the given email address. Only works in development environment."""
+    from django.conf import settings
+
+    if not is_development_environment() or not settings.DEBUG:
+        raise ValueError('Nope, not today')
+    user = User.objects.get(email=email.lower())
+    return TokenAuthResult(user=user, token=None)
+
+
 def authenticate_from_authorization_header(authorization: str, api_type: Literal['graphql', 'rest-api']) -> TokenAuthResult:
     from oauth2_provider.oauth2_backends import get_oauthlib_core
 
@@ -110,7 +121,7 @@ def authenticate_from_authorization_header(authorization: str, api_type: Literal
         from oauth2_provider.oauth2_backends import OAuthLibCore
         from oauthlib.oauth2 import Server
 
-    oauthlib_core: OAuthLibCore = get_oauthlib_core()
+    oauthlib_core = cast('OAuthLibCore', get_oauthlib_core())
     server = cast('Server', oauthlib_core.server)
     valid, r = server.verify_request(
         '',
@@ -136,7 +147,7 @@ def authenticate_from_authorization_header(authorization: str, api_type: Literal
         return TokenAuthResult(error=error)
 
     token = cast('TokenType | None', r.access_token)
-    return TokenAuthResult(user=cast('User', r.user), token=token)  # pyright: ignore[reportInvalidCast]
+    return TokenAuthResult(user=cast('User', r.user), token=token)
 
 
 def authenticate_api_request(request: HttpRequest, api_type: Literal['graphql', 'rest-api']) -> TokenAuthResult | None:
