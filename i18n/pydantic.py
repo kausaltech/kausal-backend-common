@@ -16,7 +16,7 @@ from django.utils.translation import (
     gettext_lazy as gettext_lazy,  # noqa: PLC0414
 )
 from django_stubs_ext import StrPromise
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 from pydantic_core import core_schema
 
 from loguru import logger
@@ -206,6 +206,13 @@ class TranslatedString:
 
     def __repr__(self):
         return "[i18n]'%s'" % str(self)
+
+    def __rich_repr__(self):
+        if self.default_language:
+            yield self.i18n[self.default_language]
+            yield 'language', self.default_language
+        else:
+            yield self.i18n
 
     @classmethod
     def __get_validators__(cls):  # noqa: ANN206
@@ -404,17 +411,17 @@ def validate_translated_string(cls: type[BaseModel], field_name: str, obj: dict[
         return field_val
 
     if isinstance(field_val, str):
-        assert default_language is not None
+        if default_language is None:
+            raise Exception('default_language is None')
         langs[default_language] = field_val
     elif isinstance(field_val, dict):
         return TranslatedString(**field_val)
-    else:
-        if default_language is None:
-            raise Exception('default_language is None')
-        if field_val is not None:
-            raise TypeError('%s: Invalid type: %s' % (field_name, type(field_val)))
+    elif isinstance(field_val, Promise):
+        return TranslatedString.from_lazy_string(field_val)
+    elif field_val is not None:
+        raise TypeError('%s: Invalid type: %s' % (field_name, type(field_val)))
 
-    base_default = default_language.split('-')[0]
+    # field_val is None or plain str, check for the other languages
 
     # FIXME: how to get default language?
     for key, val in list(obj.items()):
@@ -428,14 +435,24 @@ def validate_translated_string(cls: type[BaseModel], field_name: str, obj: dict[
         if not isinstance(val, str):
             raise TypeError('%s: Expecting str, got %s' % (key, type(val)))
         obj.pop(key)
-        if lang == base_default:
-            lang = default_language
         langs[lang] = val
 
     if not langs:
         if not f.is_required():
             return None
         raise KeyError('%s: Value missing' % field_name)
+
+    if default_language is None:
+        raise DefaultLanguageNotProvidedError('default_language is None but language variants are present')
+
+    base_default = default_language.split('-')[0]
+
+    for lang in list(langs.keys()):
+        if lang != base_default:
+            continue
+        langs[default_language] = langs.pop(lang)
+        break
+
     ts = TranslatedString(default_language=default_language, **langs)
     return ts
 
@@ -504,21 +521,23 @@ class I18nBaseModel(BaseModel, ABC):
             if list_nested is not None:
                 cls.__i18n_nested_list_fields__[fn] = list_nested
 
+    @model_validator(mode='before')
     @classmethod
-    def from_yaml_config(cls, config: dict[str, Any]) -> Self:
+    def convert_i18n_fields(cls, data: Any) -> Any:
         """Validate from a YAML-style dict where translated fields use ``name_en`` suffixes."""
-        config = config.copy()
+        if not isinstance(data, dict):
+            return data
+
+        data = data.copy()
         for fn in cls.__i18n_fields__:
-            config[fn] = validate_translated_string(cls, fn, config)
-        for fn, model_cls in cls.__i18n_nested_fields__.items():
-            val = config.get(fn)
-            if isinstance(val, dict):
-                config[fn] = model_cls.from_yaml_config(val)
-        for fn, model_cls in cls.__i18n_nested_list_fields__.items():
-            val = config.get(fn)
-            if isinstance(val, list):
-                config[fn] = [model_cls.from_yaml_config(item) if isinstance(item, dict) else item for item in val]
-        return cls.model_validate(config)
+            ret = validate_translated_string(cls, fn, data)
+            if ret is not None:
+                data[fn] = ret
+        return data
+
+    @classmethod
+    def from_yaml_config(cls, data: dict[str, Any]) -> Self:
+        return cls.model_validate(data)
 
 
 for cls in (I18nString, I18nStringInstance, TranslatedString):
