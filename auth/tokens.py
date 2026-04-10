@@ -7,9 +7,6 @@ from typing import TYPE_CHECKING, Literal, cast
 from loguru import logger
 
 from kausal_common.const import IS_PATHS, IS_WATCH
-from kausal_common.deployment.types import is_development_environment
-
-from users.models import User
 
 if TYPE_CHECKING:
     from typing import type_check_only
@@ -22,6 +19,8 @@ if TYPE_CHECKING:
     from oauth2_provider.models import AccessToken, IDToken
 
     from kausal_common.deployment.types import LoggedHttpRequest
+
+    from users.models import User
 
 
 type TokenType = IDToken | AccessToken
@@ -107,6 +106,10 @@ class TokenAuthResult:
 def dangerously_force_authenticated_user(email: str) -> TokenAuthResult:
     """Force authentication for a user with the given email address. Only works in development environment."""
     from django.conf import settings
+
+    from kausal_common.deployment.types import is_development_environment
+
+    from users.models import User
 
     if not is_development_environment() or not settings.DEBUG:
         raise ValueError('Nope, not today')
