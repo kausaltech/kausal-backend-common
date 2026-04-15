@@ -170,6 +170,8 @@ class TranslatedString:
             lang, _ = dl.split('-')
             if lang in self.i18n:
                 return self.i18n[lang]
+        if 'en' in self.i18n:
+            return self.i18n['en']
         raise Exception('Default translation not available for: %s' % self.default_language)
 
     def t(self, lang: str) -> str | None:
