@@ -7,6 +7,7 @@ from graphene_django import DjangoObjectType
 
 if TYPE_CHECKING:
     from kausal_common.datasets.models import (
+        DataPoint,
         Dataset,
         DatasetSchemaScope,
         DatasetScopeType,
@@ -47,10 +48,15 @@ class DimensionScopeTypeNode(graphene.Union):
 
 
 class DataPointNode(DjangoObjectType):
+    id = graphene.ID(required=True)
     value = graphene.Float()
 
     class Meta:
         abstract = True
+
+    @staticmethod
+    def resolve_id(root: DataPoint, info) -> str:
+        return str(root.uuid)
 
 
 class DatasetSchemaScopeNode(DjangoObjectType):
