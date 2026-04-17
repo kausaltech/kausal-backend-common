@@ -97,7 +97,8 @@ class OrderedModel(models.Model):  # noqa: DJ008
 
         Call this inside a transaction after all creates/updates are done.
         Instances in `hinted` may have `previous_sibling` or `next_sibling`
-        set (as UUIDs). The method:
+        set (as UUIDs). If both are set, the item must end up between those
+        siblings after all hints have been applied. The method:
 
         1. Fetches all siblings from the DB (baseline order).
         2. For each hinted instance (in list order), removes it from its
@@ -153,28 +154,63 @@ def _apply_hints(
     by_uuid: dict[UUID, _SiblingInfo],
 ) -> None:
     """Apply sibling-relative hints to mutate order_list in place."""
+    hinted_uuids = {_get_uuid(h) for h in hinted}
     for item in hinted:
-        if item.previous_sibling is not None and item.next_sibling is not None:
-            raise ValueError(f'Item {_get_uuid(item)} has both previous_sibling and next_sibling set')
-        if item.previous_sibling is None and item.next_sibling is None:
+        prev_uuid = item.previous_sibling
+        next_uuid = item.next_sibling
+        if prev_uuid is None and next_uuid is None:
             continue
 
         item_uuid = _get_uuid(item)
         if item_uuid in order_list:
             order_list.remove(item_uuid)
 
-        ref_uuid = item.previous_sibling if item.previous_sibling is not None else item.next_sibling
-        assert ref_uuid is not None
-        if ref_uuid not in by_uuid and ref_uuid not in {_get_uuid(h) for h in hinted}:
-            raise ValueError(f'Sibling {ref_uuid} not found')
+        prev_idx: int | None = None
+        next_idx: int | None = None
+        if prev_uuid is not None:
+            _check_sibling_exists(prev_uuid, by_uuid, hinted_uuids)
+            prev_idx = _find_sibling_index(prev_uuid, order_list)
+        if next_uuid is not None:
+            _check_sibling_exists(next_uuid, by_uuid, hinted_uuids)
+            next_idx = _find_sibling_index(next_uuid, order_list)
 
-        try:
-            ref_idx = order_list.index(ref_uuid)
-        except ValueError:
-            raise ValueError(f'Sibling {ref_uuid} not found in current ordering') from None
-
-        insert_idx = ref_idx + 1 if item.previous_sibling is not None else ref_idx
+        if prev_idx is not None:
+            insert_idx = prev_idx + 1
+        else:
+            assert next_idx is not None
+            insert_idx = next_idx
         order_list.insert(insert_idx, item_uuid)
+
+    _check_consistent_sibling_pairs(order_list, hinted)
+
+
+def _check_sibling_exists(ref_uuid: UUID, by_uuid: dict[UUID, _SiblingInfo], hinted_uuids: set[UUID]) -> None:
+    if ref_uuid not in by_uuid and ref_uuid not in hinted_uuids:
+        raise ValueError(f'Sibling {ref_uuid} not found')
+
+
+def _find_sibling_index(ref_uuid: UUID, order_list: list[UUID]) -> int:
+    try:
+        return order_list.index(ref_uuid)
+    except ValueError:
+        raise ValueError(f'Sibling {ref_uuid} not found in current ordering') from None
+
+
+def _check_consistent_sibling_pairs(order_list: list[UUID], hinted: Sequence[OrderedModel]) -> None:
+    order_idx = {uuid: idx for idx, uuid in enumerate(order_list)}
+    for item in hinted:
+        prev_uuid = item.previous_sibling
+        next_uuid = item.next_sibling
+        if prev_uuid is None or next_uuid is None:
+            continue
+
+        item_uuid = _get_uuid(item)
+        item_idx = order_idx[item_uuid]
+        if order_idx[prev_uuid] + 1 != item_idx or item_idx + 1 != order_idx[next_uuid]:
+            raise ValueError(
+                f'Item {item_uuid} has inconsistent sibling hints: it is not between '
+                f'previous_sibling {prev_uuid} and next_sibling {next_uuid}'
+            )
 
 
 def _bulk_update_order(
