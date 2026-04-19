@@ -25,7 +25,7 @@ from kausal_common.i18n.helpers import convert_language_code
 from kausal_common.strawberry.pydantic import register_type_conversion
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping
     from contextvars import Token
 
     from django.db.models import Model
@@ -500,11 +500,19 @@ def _get_list_item_i18n_model(annotation: FieldAnnotation) -> type[I18nBaseModel
 
 
 class I18nBaseModel(BaseModel, ABC):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, validate_assignment=True)
 
     __i18n_fields__: ClassVar[set[str]]
     __i18n_nested_fields__: ClassVar[dict[str, type[I18nBaseModel]]]
     __i18n_nested_list_fields__: ClassVar[dict[str, type[I18nBaseModel]]]
+
+    def model_copy(self, *, update: Mapping[str, Any] | None = None, deep: bool = False) -> Self:
+        copied = super().model_copy(deep=deep)
+        if update is None:
+            return copied
+        for key, value in update.items():
+            setattr(copied, key, value)
+        return copied
 
     @classmethod
     def __pydantic_on_complete__(cls) -> None:
