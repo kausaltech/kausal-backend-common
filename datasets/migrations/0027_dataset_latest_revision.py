@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('datasets', '0026_dataset_external_ref_dataset_is_external_placeholder'),
-        ('wagtailcore', '0096_referenceindex_referenceindex_source_object_and_more'),
+        ('wagtailcore', '0075_populate_latest_revision_and_revision_object_str'),
     ]
 
     operations = [
