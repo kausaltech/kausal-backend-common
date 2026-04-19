@@ -139,6 +139,7 @@ class RevisionMixin(models.Model):
     """A mixin that allows a model to have revisions."""
 
     latest_revision: models.ForeignKey[Revision[Self] | None, Revision[Self] | None]
+    latest_revision_id: int | None
     default_exclude_fields_in_copy: ClassVar[Iterable[str]]
 
     @property

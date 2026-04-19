@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING, ClassVar, Self, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 from warnings import deprecated
 
 from django.conf import settings
@@ -17,6 +17,7 @@ from modeltrans.fields import TranslationField
 from wagtail.admin.panels.field_panel import FieldPanel
 from wagtail.admin.panels.group import MultiFieldPanel
 from wagtail.admin.panels.inline_panel import InlinePanel
+from wagtail.models import RevisionMixin
 
 from kausal_common.const import IS_PATHS, IS_WATCH
 from kausal_common.datasets.permission_policy import get_permission_policy
@@ -40,7 +41,7 @@ if TYPE_CHECKING:
 
     from users.models import User
 
-    from ..models.types import FK, M2M, RevMany, RevManyToManyQS
+    from ..models.types import FK, M2M, RevMany, RevManyQS, RevManyToManyQS
 
     if IS_PATHS:
         from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase
@@ -174,14 +175,19 @@ class DimensionScopeQuerySet(QuerySet['DimensionScope']):
         )
 
 
-_DimensionScopeManager = cast('models.Manager[DimensionScope]', models.Manager.from_queryset(DimensionScopeQuerySet))
+if TYPE_CHECKING:
 
+    class DimensionScopeManager(ModelManager['DimensionScope', DimensionScopeQuerySet]):
+        def for_scope(self, scope: DimensionScopeType) -> DimensionScopeQuerySet: ...  # pyright: ignore[reportUnusedParameter]
 
-class DimensionScopeManager(ModelManager['DimensionScope', DimensionScopeQuerySet], _DimensionScopeManager):  # type: ignore[valid-type, misc]
-    """Model manager for DimensionScope."""
+        if IS_PATHS:
 
+            def for_instance_config(self, instance_config: InstanceConfig) -> DimensionScopeQuerySet: ...  # pyright: ignore[reportUnusedParameter]
 
-del _DimensionScopeManager
+else:
+
+    class DimensionScopeManager(ModelManager.from_queryset(DimensionScopeQuerySet)):
+        pass
 
 
 class DimensionScope(OrderedModel):
@@ -598,7 +604,7 @@ class DatasetManager(ModelManager['Dataset', DatasetQuerySet], _DatasetManager):
 del _DatasetManager
 
 
-class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
+class Dataset(RevisionMixin, UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     schema: FK[DatasetSchema | None] = models.ForeignKey(
         DatasetSchema,
         null=True,
@@ -648,6 +654,8 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
     mgr: ClassVar[DatasetManager] = DatasetManager()
     _default_manager: ClassVar[DatasetManager]
 
+    data_points: RevManyQS[DataPoint, DataPointQuerySet]
+
     class Meta:
         verbose_name = _('dataset')
         verbose_name_plural = _('datasets')
@@ -677,6 +685,22 @@ class Dataset(UserModifiableModel, UUIDIdentifiedModel, PermissionedModel):
         if self.schema is None:
             self.schema = DatasetSchema.objects.create()
         super().save(*args, **kwargs)
+
+    def serializable_data(self) -> dict[str, Any]:
+        """
+        Produce the dict that Wagtail's ``RevisionMixin`` stores in revisions.
+
+        The Pydantic snapshot shape is project-specific: Paths defines
+        ``DatasetSnapshot`` in ``paths.dataset_pydantic``; Watch does not
+        currently revision datasets. Bridging here keeps the Dataset model
+        shared while the snapshot schema stays in the downstream project.
+        """
+        if IS_PATHS:
+            from paths.dataset_pydantic import dataset_serializable_data
+
+            return dataset_serializable_data(self)
+        msg = 'Dataset.serializable_data is not implemented for this project'
+        raise NotImplementedError(msg)
 
     @classmethod
     def permission_policy(cls) -> ModelPermissionPolicy[Self, QS[Self]]:
