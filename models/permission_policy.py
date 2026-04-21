@@ -1,4 +1,4 @@
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Literal, TypeGuard, TypeVar, cast, overload, override
 
 from django.contrib.auth.models import AnonymousUser
@@ -273,7 +273,7 @@ class ParentInheritedPolicy[
     ParentM: PermissionedModel[Any],
     QS: PermissionedQuerySet[Any] = PermissionedQuerySet[M],
     CreateContext: Any = None,
-](ModelPermissionPolicy[M, ParentM, QS], metaclass=ABCMeta):
+](ModelPermissionPolicy[M, ParentM, QS]):
     parent_model: type[ParentM]
     parent_policy: ModelPermissionPolicy[ParentM, Any, PermissionedQuerySet[ParentM]]
     disallowed_actions: set[BaseObjectAction]

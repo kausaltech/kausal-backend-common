@@ -20,6 +20,7 @@ class Node:
     (e.g. for small primitive values where the reference representation adds unwanted overhead),
     set self.use_id = False.
     """
+
     id: Incomplete
     seen: bool
     use_id: bool
@@ -28,6 +29,7 @@ class Node:
 
 class ValueNode(Node):
     """Represents a primitive value; int, bool etc"""
+
     value: Incomplete
     use_id: bool
     def __init__(self, value) -> None: ...
@@ -111,6 +113,7 @@ class JSContextBase:
     JSContext.pack will return the packed representation and also update the JSContext's media
     property to include all JS needed to unpack the values seen so far.
     """
+
     media: Incomplete
     media_fragments: Incomplete
     def __init__(self) -> None: ...
@@ -123,6 +126,7 @@ class AdapterRegistry:
     """
     Manages the mapping of Python types to their corresponding adapter implementations.
     """
+
     js_context_base_class = JSContextBase
     telepath_js_path: Incomplete
     adapters: Incomplete
@@ -141,6 +145,7 @@ class ValueContext:
     to add_media are passed back to the parent context so that multiple calls to pack() will have
     their media combined in a single bundle.
     """
+
     parent_context: Incomplete
     registry: Incomplete
     raw_values: Incomplete

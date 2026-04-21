@@ -41,7 +41,7 @@ class LanguageAwareAdminModelForm[ModelT: Model](WagtailAdminModelForm[ModelT]):
         if i18n_field.default_language_field:
             try:
                 original_field_language = get_language_from_default_language_field(self.instance, i18n_field)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 # We might expect to get a value error for newly created objects which might
                 # not have the related model that the default language field references.
                 # In that case display only the primary field

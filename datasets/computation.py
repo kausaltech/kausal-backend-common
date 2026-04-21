@@ -104,6 +104,7 @@ def _inject_null_operand_values(
         return
 
     from .config import dataset_config
+
     null_values = dataset_config.resolve_null_operand_values(dataset)
     for (d, dims), val in null_values.items():
         values[(d, dims, _NULL_OPERAND_SENTINEL)] = val
