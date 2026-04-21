@@ -84,6 +84,7 @@ del _DimensionManager
 class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=100, verbose_name=_('name'))
+    spec = models.JSONField(default=dict, blank=True)
 
     i18n = TranslationField(fields=['name'])
     name_i18n: str
@@ -128,6 +129,7 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel):
     dimension = ParentalKey(Dimension, blank=False, on_delete=models.CASCADE, related_name='categories')
     dimension_id: int
     label = models.CharField(max_length=100, verbose_name=_('label'))
+    spec = models.JSONField(default=dict, blank=True)
 
     i18n = TranslationField(fields=['label'])
     label_i18n: str
@@ -648,6 +650,7 @@ class Dataset(RevisionMixin, UserModifiableModel, UUIDIdentifiedModel, Permissio
         null=True,
         blank=True,
     )
+    scope_content_type_id: int
     scope_id = models.PositiveIntegerField(null=True, blank=True)
     scope = GenericForeignKey(
         'scope_content_type',
