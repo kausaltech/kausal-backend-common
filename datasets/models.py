@@ -538,6 +538,13 @@ class DatasetSchemaDimensionManager(ModelManager['DatasetSchemaDimension', model
 class DatasetSchemaDimension(OrderedModel):
     schema = ParentalKey(DatasetSchema, on_delete=models.CASCADE, related_name='dimensions', null=False, blank=False)
     dimension = models.ForeignKey(Dimension, on_delete=models.CASCADE, related_name='schemas', null=False, blank=False)
+    column_name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name=_('column name'),
+        help_text=_('Optional dataset-local column name for this dimension.'),
+    )
 
     objects: ClassVar[DatasetSchemaDimensionManager] = DatasetSchemaDimensionManager()
 
