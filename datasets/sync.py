@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypedDict
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from django.contrib.postgres.expressions import ArraySubquery
 from django.db import models, transaction
@@ -25,8 +25,6 @@ from .models import (
 )
 
 if TYPE_CHECKING:
-    from uuid import UUID
-
     from django.db.models import QuerySet
 
     from .models import (
