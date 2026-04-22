@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal, TypeGuard, TypeVar, cast, overload, override
 
 from django.contrib.auth.models import AnonymousUser
@@ -27,6 +28,12 @@ type BaseObjectAction = Literal['view', 'add', 'change', 'delete']
 type ObjectSpecificAction = Literal['view', 'change', 'delete']
 
 ALL_OBJECT_SPECIFIC_ACTIONS: tuple[ObjectSpecificAction, ...] = ('view', 'change', 'delete')
+
+
+@dataclass(frozen=True)
+class PermissionBlock:
+    message: str
+    code: str | None = None
 
 
 def is_base_action(action: str) -> TypeGuard[ObjectSpecificAction]:
@@ -89,6 +96,27 @@ class ModelPermissionPolicy[
     def user_can_create(self, user: User, context: CreateContext) -> bool:
         """Check if user can create a new object."""
 
+    def get_permission_block(
+        self,
+        action: BaseObjectAction,
+        *,
+        obj: M | None = None,
+        context: CreateContext | None = None,
+    ) -> PermissionBlock | None:
+        """
+        Return a state-level block for an action, if one applies.
+
+        This is intentionally checked before superuser shortcuts so model state
+        such as an immutable/locked parent can remove mutating permissions from
+        all normal editing surfaces while still allowing explicit bypass actions
+        to be implemented separately.
+        """
+        return None
+
+    def construct_state_perm_q(self, action: ObjectSpecificAction) -> Q:
+        """Construct the object-state filter that applies in addition to role permissions."""
+        return Q()
+
     def creatable_child_models(self, user: UserOrAnon, obj: M) -> Sequence[type[PermissionedModel]]:
         """
         Return a list of related models that the user can create.
@@ -149,11 +177,15 @@ class ModelPermissionPolicy[
                         context,
                     )
                 )
+            if self.get_permission_block(action, context=context) is not None:
+                return False
             if not self.user_is_authenticated(user):
                 return self.anon_can_create(context)
             return self.user_can_create(user, context)
 
         if obj is None:
+            return False
+        if self.get_permission_block(action, obj=obj) is not None:
             return False
         if not self.user_is_authenticated(user):
             return self.anon_has_perm(action, obj)
@@ -167,10 +199,14 @@ class ModelPermissionPolicy[
 
     def _construct_q(self, user: UserOrAnon, action: ObjectSpecificAction) -> Q | None:
         if not self.user_is_authenticated(user):
-            return self.construct_perm_q_anon(action)
-        if user.is_superuser:
-            return Q()
-        return self.construct_perm_q(user, action)
+            q = self.construct_perm_q_anon(action)
+        elif user.is_superuser:
+            q = Q()
+        else:
+            q = self.construct_perm_q(user, action)
+        if q is None:
+            return None
+        return q & self.construct_state_perm_q(action)
 
     def filter_by_perm(self, qs: QS, user: UserOrAnon, action: ObjectSpecificAction) -> QS:
         q = self._construct_q(user, action)
@@ -183,8 +219,6 @@ class ModelPermissionPolicy[
 
     def instances_user_has_any_permission_for(self, user: UserOrAnon, actions: Sequence[str]) -> QS:
         qs = self.get_queryset()
-        if self.user_is_authenticated(user) and user.is_superuser:
-            return qs
         filters = None
         for action in actions:
             if action == 'add':
@@ -215,6 +249,8 @@ class ModelPermissionPolicy[
             if is_test_or_dev():
                 raise ValueError('Unknown action: %s' % action)
             logger.error('Unknown action: %s' % action)
+            return False
+        if self.get_permission_block(action, obj=instance) is not None:
             return False
         if not self.user_is_authenticated(user):
             return self.anon_has_perm(action, instance)
@@ -315,10 +351,20 @@ class ParentInheritedPolicy[
             return None
         return self.parent_in_q(self.get_parent_qs(AnonymousUser(), action))
 
+    def construct_state_perm_q(self, action: ObjectSpecificAction) -> Q:
+        parent_state_q = self.parent_policy.construct_state_perm_q(action)
+        if not parent_state_q:
+            return Q()
+        parent_qs = self.parent_policy.get_queryset().filter(parent_state_q)
+        return self.parent_in_q(parent_qs)
+
     def user_has_perm(self, user: User, action: ObjectSpecificAction, obj: M) -> bool:
         if action in self.disallowed_actions:
             return False
-        return self.parent_policy.user_has_perm(user, action, getattr(obj, self.parent_field))
+        parent = self.get_parent_obj(obj)
+        if self.parent_policy.get_permission_block(action, obj=parent) is not None:
+            return False
+        return self.parent_policy.user_has_perm(user, action, parent)
 
     def anon_has_perm(self, action: ObjectSpecificAction, obj: M) -> bool:
         if action in self.disallowed_actions:
@@ -328,8 +374,26 @@ class ParentInheritedPolicy[
     def user_can_create(self, user: User, context: ParentM) -> bool:
         if 'add' in self.disallowed_actions:
             return False
+        if self.get_permission_block('add', context=context) is not None:
+            return False
         # Default to the permission to edit the parent object
         return self.parent_policy.user_has_perm(user, 'change', context)
+
+    def get_permission_block(
+        self,
+        action: BaseObjectAction,
+        *,
+        obj: M | None = None,
+        context: ParentM | None = None,
+    ) -> PermissionBlock | None:
+        if action == 'add':
+            if context is None:
+                return None
+            return self.parent_policy.get_permission_block('change', obj=context)
+        if obj is None:
+            return None
+        parent = self.get_parent_obj(obj)
+        return self.parent_policy.get_permission_block(action, obj=parent)
 
     def user_has_any_permission(self, user: User | AnonymousUser, actions: Sequence[str]) -> bool:
         return self.parent_policy.user_has_any_permission(user, actions)

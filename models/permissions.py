@@ -67,9 +67,13 @@ class PermissionedModel[CreateContext: Any = None](AbstractModel):  # pyright: i
     def permission_policy(cls) -> ModelPermissionPolicy[Any, Any, Any]: ...
 
     def gql_action_allowed(self, info: InfoType, action: ObjectSpecificAction, raise_on_denied: bool = True) -> bool:
-        is_allowed = self.permission_policy().gql_action_allowed(info, action, self)
+        pp = self.permission_policy()
+        is_allowed = pp.gql_action_allowed(info, action, self)
         if raise_on_denied and not is_allowed:
-            raise PermissionDeniedError(info, "Permission denied for action '%s'" % action)
+            block = pp.get_permission_block(action, obj=self)
+            message = block.message if block is not None else "Permission denied for action '%s'" % action
+            code = block.code if block is not None else None
+            raise PermissionDeniedError(info, message, code=code)
         return is_allowed
 
     def ensure_gql_action_allowed(self, info: InfoType, action: ObjectSpecificAction) -> None:
@@ -77,9 +81,13 @@ class PermissionedModel[CreateContext: Any = None](AbstractModel):  # pyright: i
 
     @classmethod
     def gql_create_allowed(cls, info: InfoType, ctx: CreateContext, raise_on_denied: bool = True) -> bool:
-        is_allowed = cls.permission_policy().gql_action_allowed(info, 'add', context=ctx)
+        pp = cls.permission_policy()
+        is_allowed = pp.gql_action_allowed(info, 'add', context=ctx)
         if raise_on_denied and not is_allowed:
-            raise PermissionDeniedError(info, 'Permission denied for create')
+            block = pp.get_permission_block('add', context=ctx)
+            message = block.message if block is not None else 'Permission denied for create'
+            code = block.code if block is not None else None
+            raise PermissionDeniedError(info, message, code=code)
         return is_allowed
 
 
