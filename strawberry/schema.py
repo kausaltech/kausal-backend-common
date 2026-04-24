@@ -73,9 +73,11 @@ class Schema(ABC, GrapheneStrawberrySchema):
         errors_printed = 0
         for error in errors:
             path_str = '.'.join(str(part) for part in error.path) if error.path else 'unknown'
-            if not isinstance(error.original_error, (GraphQLError, PermissionDenied)):
-                logger.opt(exception=error.original_error).bind(graphql_path=path_str).error(error)
-                errors_printed += 1
+            if isinstance(error.original_error, (GraphQLError, PermissionDenied)):
+                logger.bind(graphql_path=path_str).warning('Client-side GraphQL error: {}', error.message)
+                continue
+            logger.opt(exception=error.original_error).bind(graphql_path=path_str).error(error)
+            errors_printed += 1
             if error.original_error and errors_sent < 5:
                 sentry_sdk.capture_exception(error.original_error)
                 errors_sent += 1
