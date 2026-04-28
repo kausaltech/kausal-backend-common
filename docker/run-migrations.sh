@@ -7,9 +7,9 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 
 function restore_from_backup() {
-    if [ -z "$DB_RESTORE_FROM_BACKUP" ] ; then
-        return
-    fi
+    case "${DB_RESTORE_FROM_BACKUP:-}" in
+        ''|0|false|no) return ;;
+    esac
     # Check we already have tables in the database
     tmpf=$(mktemp)
     echo "select count(*) from information_schema.tables where table_schema = 'public';" | ./manage.py dbshell -- -qtAX -o $tmpf
