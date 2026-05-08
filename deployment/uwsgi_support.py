@@ -28,4 +28,4 @@ def register_prometheus_cleanup() -> None:
         with contextlib.suppress(Exception):
             multiprocess.mark_process_dead(pid)
 
-    uwsgi.atexit = _mark_dead
+    uwsgi.atexit = _mark_dead  # pyright: ignore[reportAttributeAccessIssue]
