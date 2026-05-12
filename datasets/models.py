@@ -19,6 +19,8 @@ from wagtail.admin.panels.group import MultiFieldPanel
 from wagtail.admin.panels.inline_panel import InlinePanel
 from wagtail.models import RevisionMixin
 
+from django_choices_field import TextChoicesField
+
 from kausal_common.const import IS_PATHS, IS_WATCH
 from kausal_common.datasets.permission_policy import get_permission_policy
 from kausal_common.models.fields import IdentifierField
@@ -869,6 +871,11 @@ class DataPointDimensionCategory(models.Model):
         yield 'dimension_category', self.dimension_category
 
 
+class DataPointCommentReviewState(models.TextChoices):
+    RESOLVED = 'resolved', pgettext_lazy('review state of data point comment', 'Resolved')
+    UNRESOLVED = 'unresolved', pgettext_lazy('review state of data point comment', 'Unresolved')
+
+
 class PermissionedSoftDeleteManager(PermissionedManager['DataPointComment']):
     """
     Manager combining PermissionedManager and soft deletion manager.
@@ -896,9 +903,9 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
     sure 'soft_delete' is called whenever you only want to do a soft delete.
     """
 
-    class ReviewState(models.TextChoices):
-        RESOLVED = 'resolved', pgettext_lazy('review state of data point comment', 'Resolved')
-        UNRESOLVED = 'unresolved', pgettext_lazy('review state of data point comment', 'Unresolved')
+    # Kept as a class attribute for backwards compatibility; prefer
+    # importing ``DataPointCommentReviewState`` directly at module level.
+    ReviewState = DataPointCommentReviewState
 
     data_point = models.ForeignKey(DataPoint, null=True, blank=True, on_delete=models.CASCADE, related_name='comments')
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -912,10 +919,10 @@ class DataPointComment(UserModifiableModel, PermissionedModel):
         verbose_name=pgettext_lazy('Boolean to indicate if this comment is a review', 'Review comment'),
     )
 
-    review_state = models.CharField(
+    review_state = TextChoicesField(
+        choices_enum=DataPointCommentReviewState,  # pyright: ignore[reportCallIssue]
+        null=True,
         blank=True,
-        max_length=20,
-        choices=ReviewState.choices,
     )
     resolved_at = models.DateTimeField(
         verbose_name=pgettext_lazy('date and time when a data point comment was resolved', 'resolved at'),
