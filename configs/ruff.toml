@@ -138,6 +138,7 @@ runtime-evaluated-decorators = [
   "strawberry_django.field",
   "strawberry_django.fields.field",
   "strawberry_django.input",
+  "strawberry_django.type",
   "strawberry_django.type.input",
   "strawberry.directive",
   "strawberry.experimental.pydantic.input",
