@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from rest_framework.exceptions import ValidationError
 from rest_framework.test import APIRequestFactory
 
 import pytest
@@ -117,3 +118,27 @@ def test_data_point_bulk_serializer_create(
         for serialized_data_point in serialized_data_points_after_save
     ]
     assert data_to_compare == initial_data
+
+
+def test_data_point_bulk_serializer_create_rejects_duplicate_coordinates_in_payload(
+    dataset, dataset_metric, dimension_categories, serializer_context, dataset_schema_dimension
+):
+    category1, _ = dimension_categories
+    initial_data = [
+        {
+            'date': '2023-01-01',
+            'dimension_categories': [str(category1.uuid)],
+            'metric': str(dataset_metric.uuid),
+            'value': Decimal('1.0'),
+        },
+        {
+            'date': '2023-01-01',
+            'dimension_categories': [str(category1.uuid)],
+            'metric': str(dataset_metric.uuid),
+            'value': Decimal('2.0'),
+        },
+    ]
+    bulk_serializer = DataPointSerializer(many=True, data=initial_data, context=serializer_context)
+
+    with pytest.raises(ValidationError):
+        bulk_serializer.is_valid(raise_exception=True)

@@ -6,7 +6,9 @@ from uuid import UUID
 
 # from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from django.db.models import Model, Q
+from django.db.models.query import prefetch_related_objects
 from modeltrans.conf import get_available_languages
 from modeltrans.translator import get_i18n_field
 from modeltrans.utils import build_localized_fieldname
@@ -134,7 +136,32 @@ class DimensionCategorySerializer(I18nFieldSerializerMixin, serializers.ModelSer
         fields = ['uuid', 'label', 'dimension']
 
 
+class DataPointBulkListSerializer(UuidBasedBulkListSerializer[DataPoint]):
+    def validate(self, attrs: list[dict[str, typing.Any]]) -> list[dict[str, typing.Any]]:
+        attrs = super().validate(attrs)
+        dataset_uuid = self.context['view'].kwargs.get('dataset_uuid')
+        if dataset_uuid is None:
+            return attrs
+
+        instances = [self.objs_by_id[obj_id] for obj_id in self.obj_ids] if self.instance is not None else [None] * len(attrs)
+        concrete_instances = [instance for instance in instances if instance is not None]
+        if concrete_instances:
+            prefetch_related_objects(concrete_instances, 'dimension_categories')
+        dataset = Dataset.objects.select_related('schema').get(uuid=dataset_uuid)
+        schema = dataset.schema
+        assert schema is not None
+        seen: set[tuple[UUID, object, tuple[UUID, ...]]] = set()
+        for item, instance in zip(attrs, instances, strict=True):
+            key = self.child.coordinate_key_for_validated_data(item, schema=schema, instance=instance)
+            if key in seen:
+                raise serializers.ValidationError(DataPointSerializer.duplicate_error_message)
+            seen.add(key)
+        return attrs
+
+
 class DataPointSerializer(serializers.ModelSerializer[DataPoint]):
+    duplicate_error_message = 'A data point with this date, dimension category, and metric combination already exists.'
+
     dataset = UuidSlugRelatedField[Dataset](read_only=True)
     dimension_categories = UuidSlugRelatedField[DimensionCategory](
         # FIXME: Restrict queryset to dimension categories available to the dataset
@@ -147,7 +174,34 @@ class DataPointSerializer(serializers.ModelSerializer[DataPoint]):
     class Meta:
         model = DataPoint
         fields = ['uuid', 'dataset', 'dimension_categories', 'date', 'value', 'metric']
-        list_serializer_class = UuidBasedBulkListSerializer
+        list_serializer_class = DataPointBulkListSerializer
+
+    def coordinate_key_for_validated_data(
+        self,
+        data: dict[str, typing.Any],
+        *,
+        schema: DatasetSchema,
+        instance: DataPoint | None = None,
+    ) -> tuple[UUID, object, tuple[UUID, ...]]:
+        instance = instance or typing.cast('DataPoint | None', self.instance)
+        date = data.get('date') if 'date' in data else (instance.date if instance is not None else None)
+        metric = data.get('metric') if 'metric' in data else (instance.metric if instance is not None else None)
+        dimension_categories = (
+            data.get('dimension_categories')
+            if 'dimension_categories' in data
+            else list(instance.dimension_categories.all())
+            if instance is not None
+            else None
+        )
+
+        if date is None or metric is None or dimension_categories is None:
+            raise serializers.ValidationError(self.duplicate_error_message)
+
+        normalized_date: object = date.year
+        if schema.time_resolution == schema.TimeResolution.MONTHLY:
+            normalized_date = (date.year, date.month)
+        category_uuids = tuple(sorted(dc.uuid for dc in dimension_categories))
+        return metric.uuid, normalized_date, category_uuids
 
     def validate(self, data):
         """
@@ -155,16 +209,22 @@ class DataPointSerializer(serializers.ModelSerializer[DataPoint]):
 
         Conditions are: the same date, dimension category, and metric combination.
         """
-        date = data.get('date')
-        dimension_categories = data.get('dimension_categories')
-        metric = data.get('metric')
         dataset = self.context['view'].kwargs.get('dataset_uuid')
-
-        if not all([date, dimension_categories, metric, dataset]):
+        if dataset is None:
             return data
 
-        # Skip validation on update (when we have an instance)
-        if self.instance:
+        instance = self.instance if isinstance(self.instance, DataPoint) else None
+        date = data.get('date') if 'date' in data else (instance.date if instance is not None else None)
+        dimension_categories = (
+            data.get('dimension_categories')
+            if 'dimension_categories' in data
+            else list(instance.dimension_categories.all())
+            if instance is not None
+            else None
+        )
+        metric = data.get('metric') if 'metric' in data else (instance.metric if instance is not None else None)
+
+        if date is None or dimension_categories is None or metric is None:
             return data
 
         # For each data point, find all points in the same dataset with the same date
@@ -180,6 +240,8 @@ class DataPointSerializer(serializers.ModelSerializer[DataPoint]):
         if schema.time_resolution == schema.TimeResolution.MONTHLY:
             filter_kwargs['date__month'] = date.month
         existing_points = DataPoint.objects.filter(**filter_kwargs).prefetch_related('dimension_categories')
+        if instance is not None:
+            existing_points = existing_points.exclude(pk=instance.pk)
 
         if not existing_points.exists():
             return data
@@ -189,9 +251,7 @@ class DataPointSerializer(serializers.ModelSerializer[DataPoint]):
         for point in existing_points:
             point_categories = set(dc.uuid for dc in point.dimension_categories.all())
             if point_categories == dimension_category_uuids:
-                raise serializers.ValidationError(
-                    'A data point with this date, dimension category, and metric combination already exists.'
-                )
+                raise serializers.ValidationError(self.duplicate_error_message)
 
         return data
 
@@ -221,11 +281,43 @@ class DataPointViewSet(BulkModelViewSet[DataPoint]):
     serializer_class = DataPointSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
 
+    def _lock_dataset_for_write(self) -> Dataset:
+        locked_dataset = getattr(self, '_locked_dataset', None)
+        if locked_dataset is not None:
+            return typing.cast('Dataset', locked_dataset)
+        dataset_uuid = self.kwargs['dataset_uuid']
+        return Dataset.objects.select_for_update().get(uuid=dataset_uuid)
+
+    def _with_locked_dataset(self, callback: typing.Callable[[], Response]) -> Response:
+        if hasattr(self, '_locked_dataset'):
+            return callback()
+        with transaction.atomic():
+            self._locked_dataset = self._lock_dataset_for_write()
+            try:
+                return callback()
+            finally:
+                del self._locked_dataset
+
+    def create(self, request, *args, **kwargs):
+        return self._with_locked_dataset(lambda: super(DataPointViewSet, self).create(request, *args, **kwargs))
+
+    def update(self, request, *args, **kwargs):
+        return self._with_locked_dataset(lambda: super(DataPointViewSet, self).update(request, *args, **kwargs))
+
+    def partial_update(self, request, *args, **kwargs):
+        return self._with_locked_dataset(lambda: super(DataPointViewSet, self).partial_update(request, *args, **kwargs))
+
     def patch(self, request, *args, **kwargs):
         return self.partial_bulk_update(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
         return self.bulk_update(request, *args, **kwargs)
+
+    def bulk_update(self, request, *args, **kwargs):
+        return self._with_locked_dataset(lambda: super(DataPointViewSet, self).bulk_update(request, *args, **kwargs))
+
+    def partial_bulk_update(self, request, *args, **kwargs):
+        return self._with_locked_dataset(lambda: super(DataPointViewSet, self).partial_bulk_update(request, *args, **kwargs))
 
     def get_queryset(self):
         # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
@@ -235,8 +327,7 @@ class DataPointViewSet(BulkModelViewSet[DataPoint]):
         return qs.filter(dataset__uuid=self.kwargs['dataset_uuid'])
 
     def perform_create(self, serializer):
-        dataset_uuid = self.kwargs['dataset_uuid']
-        dataset = Dataset.objects.get(uuid=dataset_uuid)
+        dataset = self._lock_dataset_for_write()
         user = user_or_bust(self.request.user)
         serializer.save(dataset=dataset, last_modified_by=user)
         dataset.last_modified_by = user

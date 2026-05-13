@@ -86,6 +86,37 @@ def test_duplicate_data_point_validation(existing_data_point, metric, dimension_
     assert 'A data point with this date, dimension category, and metric combination already exists.' in str(exc_info.value)
 
 
+def test_duplicate_data_point_validation_with_no_dimension_categories(dataset, metric, serializer_context):
+    """An empty dimension category set is still a coordinate and must be unique."""
+    DataPointFactory.create(dataset=dataset, date=datetime.date(2023, 1, 1), metric=metric, value=Decimal(100))
+
+    data = {'date': '2023-01-01', 'dimension_categories': [], 'metric': str(metric.uuid), 'value': '200'}
+
+    serializer = DataPointSerializer(data=data, context=serializer_context)
+    with pytest.raises(ValidationError) as exc_info:
+        serializer.is_valid(raise_exception=True)
+
+    assert 'A data point with this date, dimension category, and metric combination already exists.' in str(exc_info.value)
+
+
+def test_update_data_point_validation_prevents_duplicate_coordinates(dataset, metric, dimension_categories, serializer_context):
+    """Updating a point must not allow moving it onto another point's coordinates."""
+    category1, category2 = dimension_categories
+    DataPointFactory.create(
+        dataset=dataset, date=datetime.date(2023, 1, 1), metric=metric, value=Decimal(100), dimension_categories=[category1]
+    )
+    data_point = DataPointFactory.create(
+        dataset=dataset, date=datetime.date(2024, 1, 1), metric=metric, value=Decimal(200), dimension_categories=[category2]
+    )
+    data = {'date': '2023-01-01', 'dimension_categories': [str(category1.uuid)]}
+
+    serializer = DataPointSerializer(data_point, data=data, partial=True, context=serializer_context)
+    with pytest.raises(ValidationError) as exc_info:
+        serializer.is_valid(raise_exception=True)
+
+    assert 'A data point with this date, dimension category, and metric combination already exists.' in str(exc_info.value)
+
+
 def test_different_dimension_categories_passes(existing_data_point, metric, dimension_categories, serializer_context):
     """Test that creating data points with different dimension categories passes."""
     _, category2 = dimension_categories
