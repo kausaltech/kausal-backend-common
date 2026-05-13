@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import strawberry_django
+from strawberry import auto
 
 from users.models import User
-
-if TYPE_CHECKING:
-    from strawberry import auto
 
 
 @strawberry_django.type(User, name='User', description='A user of the system')

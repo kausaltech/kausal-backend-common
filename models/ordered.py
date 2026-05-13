@@ -65,7 +65,7 @@ class OrderedModel(models.Model):  # noqa: DJ008
         return self.order
 
     @abc.abstractmethod
-    def filter_siblings(self, qs: models.QuerySet[Self]) -> models.QuerySet[Self]:
+    def filter_siblings(self, qs: models.QuerySet[Self]) -> models.QuerySet[Self]:  # pyright: ignore[reportInvalidAbstractMethod]
         raise NotImplementedError('Implement in subclass')
 
     def get_sort_order_max(self):
@@ -209,7 +209,7 @@ def _check_consistent_sibling_pairs(order_list: list[UUID], hinted: Sequence[Ord
         if order_idx[prev_uuid] + 1 != item_idx or item_idx + 1 != order_idx[next_uuid]:
             raise ValueError(
                 f'Item {item_uuid} has inconsistent sibling hints: it is not between '
-                f'previous_sibling {prev_uuid} and next_sibling {next_uuid}'
+                + f'previous_sibling {prev_uuid} and next_sibling {next_uuid}'
             )
 
 
