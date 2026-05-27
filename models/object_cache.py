@@ -17,20 +17,38 @@ if TYPE_CHECKING:
     from kausal_common.users import UserOrAnon
 
 
+CACHE_ATTRIBUTE = '_cache'
+
+
 class CacheableModel[CacheT](Model):
     class Meta:
         abstract = True
 
+    def model_cache_from_global(self) -> CacheT | None:
+        """Fetch the cache from the global (or request-specific) cache."""
+        return None
+
     @property
     def cache(self) -> CacheT:
-        return getattr(self, '_cache')  # noqa: B009
+        """Get the cache for this object."""
+        if not hasattr(self, CACHE_ATTRIBUTE):
+            cache = self.model_cache_from_global()
+            if cache is not None:
+                setattr(self, CACHE_ATTRIBUTE, cache)
+        if not hasattr(self, CACHE_ATTRIBUTE):
+            raise ValueError('Cache not found for object: %s' % self)
+        return getattr(self, CACHE_ATTRIBUTE)
 
     @cache.setter
     def cache(self, value: CacheT) -> None:
-        setattr(self, '_cache', value)  # noqa: B010
+        setattr(self, CACHE_ATTRIBUTE, value)
+
+    @cache.deleter
+    def cache(self) -> None:
+        delattr(self, CACHE_ATTRIBUTE)
 
     def has_cache(self) -> bool:
-        return hasattr(self, '_cache')
+        return hasattr(self, CACHE_ATTRIBUTE)
 
 
 @dataclass
