@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -40,7 +40,7 @@ class SingleValueContext[ValueT]:
 
 
 @dataclass
-class SubclassableContext(SingleValueContext):
+class SubclassableContext[BaseValueT: Any](SingleValueContext[BaseValueT]):
     def get_as_type[SubClassT](self, klass: type[SubClassT]) -> SubClassT:
         val = self.get()
         if not isinstance(val, klass):
