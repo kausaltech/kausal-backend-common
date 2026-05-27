@@ -44,6 +44,23 @@ except ImproperlyConfigured:
     DEFAULT_LANGUAGE = None
 
 
+_supported_languages: set[str] | None = None
+
+
+def get_supported_languages() -> set[str] | None:
+    global _supported_languages  # noqa: PLW0603
+    if _supported_languages is not None:
+        return _supported_languages
+
+    from django.conf import settings
+
+    try:
+        _supported_languages = {x[0] for x in settings.LANGUAGES}
+    except ImproperlyConfigured:
+        _supported_languages = None
+    return _supported_languages
+
+
 NO_DEFAULT_LANGUAGE_MSG = 'No default language found'
 I18N_CONTEXT_MISSING_MSG = 'I18n context not set. Did you remember to set_i18n_context()?'
 
@@ -65,6 +82,12 @@ class DefaultLanguageNotProvidedError(Exception):
 
 
 type LazyStrArgs = tuple[tuple[Any, ...], dict[str, Any]]
+
+
+def i18n_context_missing():
+    import warnings
+
+    warnings.warn(I18N_CONTEXT_MISSING_MSG, stacklevel=3)
 
 
 class TranslatedString:
@@ -137,10 +160,12 @@ class TranslatedString:
         from django.utils import translation
 
         assert self._lazy_source is not None
-        if SUPPORTED_LANGUAGES is None:
-            raise I18nContextMissingError()
+        supported_languages = get_supported_languages()
+        if supported_languages is None:
+            i18n_context_missing()
+            supported_languages = ['en']
         ret: dict[str, str] = {}
-        for lang in SUPPORTED_LANGUAGES:
+        for lang in supported_languages:
             with translation.override(convert_language_code(lang, 'django')):
                 ret[lang] = str(self._lazy_source)
         return ret
