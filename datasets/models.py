@@ -9,6 +9,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import QuerySet
+from django.db.models.expressions import F
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from modelcluster.fields import ParentalKey
@@ -164,6 +165,10 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel):
     def filter_siblings(self, qs: models.QuerySet[DimensionCategory]) -> models.QuerySet[DimensionCategory]:
         return qs.filter(dimension=self.dimension)
 
+    @classmethod
+    def get_sibling_partition_by(cls) -> F:
+        return F('dimension_id')
+
 
 class DimensionScopeQuerySet(QuerySet['DimensionScope']):
     if IS_PATHS:
@@ -197,7 +202,7 @@ else:
 class DimensionScope(OrderedModel):
     """Link a dimension to a context in which it can be used, such as a plan or a category type."""
 
-    dimension = models.ForeignKey(Dimension, on_delete=models.CASCADE, related_name='scopes')
+    dimension: FK[Dimension] = models.ForeignKey(Dimension, on_delete=models.CASCADE, related_name='scopes')
     scope_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='+')
     scope_id = models.PositiveIntegerField()
     scope = GenericForeignKey(

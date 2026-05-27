@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Any, Self
 
 from django.core import checks
 from django.db import models
+from django.db.models.expressions import Window
+from django.db.models.functions.window import Lag, Lead
 from django.utils.translation import pgettext_lazy
 
 if TYPE_CHECKING:
@@ -12,6 +14,7 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from django.core.checks import CheckMessage
+    from django.db.models.expressions import BaseExpression, F
 
 
 class OrderedModel(models.Model):  # noqa: DJ008
@@ -64,6 +67,11 @@ class OrderedModel(models.Model):  # noqa: DJ008
     def sort_order(self):
         return self.order
 
+    @classmethod
+    def get_sibling_partition_by(cls) -> BaseExpression | F | Sequence[BaseExpression | F] | None:
+        """Return a partition_by expression for the siblings queryset."""
+        return None
+
     @abc.abstractmethod
     def filter_siblings(self, qs: models.QuerySet[Self]) -> models.QuerySet[Self]:  # pyright: ignore[reportInvalidAbstractMethod]
         raise NotImplementedError('Implement in subclass')
@@ -80,7 +88,7 @@ class OrderedModel(models.Model):  # noqa: DJ008
             return qs.aggregate(Max(self.sort_order_field))['sort_order__max'] or 0
         ```
         """
-        qs = self.__class__.objects.all()  # type: ignore
+        qs = self.__class__._default_manager.all()
         if not getattr(self.filter_siblings, '__isabstractmethod__', False):
             qs = self.filter_siblings(qs)
 
@@ -232,4 +240,18 @@ def _bulk_update_order(
     pks = [pk for pk, _ in to_update]
     siblings_qs.filter(pk__in=pks).update(
         order=models.Case(*whens, output_field=models.PositiveIntegerField()),
+    )
+
+
+def annotate_sibling_ids[QS: models.QuerySet[OrderedModel]](qs: QS) -> QS:
+    """Annotate a queryset with previous_sibling and next_sibling UUIDs."""
+
+    partition_by = qs.model.get_sibling_partition_by()
+    return qs.annotate(
+        previous_sibling=Window(
+            expression=Lag('uuid'), order_by='order', partition_by=partition_by, output_field=models.UUIDField()
+        ),
+        next_sibling=Window(
+            expression=Lead(expression='uuid'), order_by='order', partition_by=partition_by, output_field=models.UUIDField()
+        ),
     )
