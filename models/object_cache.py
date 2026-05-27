@@ -45,7 +45,8 @@ class CacheableModel[CacheT](Model):
 
     @cache.deleter
     def cache(self) -> None:
-        delattr(self, CACHE_ATTRIBUTE)
+        if hasattr(self, CACHE_ATTRIBUTE):
+            delattr(self, CACHE_ATTRIBUTE)
 
     def has_cache(self) -> bool:
         return hasattr(self, CACHE_ATTRIBUTE)
