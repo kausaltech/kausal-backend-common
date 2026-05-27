@@ -103,6 +103,7 @@ def get_logging_conf(
         },
         'loggers': {
             'django.db': level('DEBUG' if options.sql_queries else 'INFO'),
+            'django.db.backends': level('DEBUG' if options.sql_queries else 'INFO'),
             'django.template': level('WARNING'),
             'django.utils.autoreload': level('INFO'),
             'django': level('DEBUG'),
@@ -179,11 +180,24 @@ def _get_filters(options: UserLoggingOptions) -> dict[str, Any]:
     return filters
 
 
-def _init_logging(log_format: LogFormat) -> GetHandler:
+def _init_logging_rich() -> None:
+    from rich.traceback import install
+
+    from .traceback import patch_traceback
+
+    patch_traceback()
+    if not env_bool('DEBUG_EXCEPTIONS', default=False):
+        install(show_locals=env_bool('TRACEBACK_SHOW_LOCALS', default=False))
+
+
+def _init_logging(log_format: LogFormat, options: UserLoggingOptions | None = None) -> GetHandler:
     import sys
 
     from .handler import LoguruLogger, loguru_logfmt_sink
     from .rich_logger import loguru_rich_sink
+
+    if options is None:
+        options = UserLoggingOptions()
 
     # Strawberry installs its own exception handler unless this is set
     os.environ['STRAWBERRY_DISABLE_RICH_ERRORS'] = '1'
@@ -193,6 +207,8 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
         log_level = 'WARNING'
     else:
         log_level = os.getenv('LOG_LEVEL', default='DEBUG').upper()
+        if options.sql_queries:
+            log_level = 'DEBUG'
 
     loguru_handlers: list[BasicHandlerConfig]
     if log_format == 'logfmt':
@@ -227,13 +243,7 @@ def _init_logging(log_format: LogFormat) -> GetHandler:
     logging.setLoggerClass(LoguruLogger)
 
     if log_format == 'rich':
-        from rich.traceback import install
-
-        from .traceback import patch_traceback
-
-        patch_traceback()
-        if not env_bool('DEBUG_EXCEPTIONS', default=False):
-            install(show_locals=env_bool('TRACEBACK_SHOW_LOCALS', default=False))
+        _init_logging_rich()
 
     # gunicorn and uvicorn walk their own path with logging, so they need special treatment
     for logger_name in ('gunicorn.access', 'gunicorn.error', 'uvicorn.access', 'uvicorn.error'):
@@ -296,7 +306,7 @@ def init_logging_django(
 ):
     if log_format is None:
         log_format = autodetect_log_format()
-    level: GetHandler = _init_logging(log_format)
+    level: GetHandler = _init_logging(log_format, options=options)
     if options is None:
         options = UserLoggingOptions()
     if log_sql_queries is not None:
