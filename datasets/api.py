@@ -137,6 +137,8 @@ class DimensionCategorySerializer(I18nFieldSerializerMixin, serializers.ModelSer
 
 
 class DataPointBulkListSerializer(UuidBasedBulkListSerializer[DataPoint]):
+    child: DataPointSerializer  # type: ignore[assignment]
+
     def validate(self, attrs: list[dict[str, typing.Any]]) -> list[dict[str, typing.Any]]:
         attrs = super().validate(attrs)
         dataset_uuid = self.context['view'].kwargs.get('dataset_uuid')
