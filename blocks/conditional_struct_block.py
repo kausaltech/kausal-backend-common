@@ -12,6 +12,7 @@ class ConditionalFieldRule:
     trigger: str
     target: str
     show_for: list[str] = field(default_factory=list)
+    target_path: list[str] = field(default_factory=list)
 
 
 _REGISTRY: list[type[ConditionalStructBlock]] = []
@@ -46,7 +47,12 @@ def get_conditional_rules_config() -> str:
     for cls in _REGISTRY:
         fingerprint = json.dumps(sorted(cls.declared_blocks.keys()), separators=(',', ':'))
         config[fingerprint] = [
-            {'trigger': r.trigger, 'target': r.target, 'showFor': r.show_for}
+            {
+                'trigger': r.trigger,
+                'target': r.target,
+                'showFor': r.show_for,
+                **(({'targetPath': r.target_path}) if r.target_path else {}),
+            }
             for r in cls.conditional_rules
         ]
     return json.dumps(config, separators=(',', ':'))

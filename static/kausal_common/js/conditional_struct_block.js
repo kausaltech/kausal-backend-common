@@ -43,9 +43,13 @@
         continue;
       }
 
-      const targetEl = structBlock.querySelector(
-        `[data-contentpath="${rule.target}"]`,
-      );
+      const targetEl = rule.targetPath
+        ? rule.targetPath.reduce(
+            (el, part) =>
+              el && el.querySelector(`[data-contentpath="${part}"]`),
+            structBlock,
+          )
+        : structBlock.querySelector(`[data-contentpath="${rule.target}"]`);
 
       if (!targetEl) {
         continue;
