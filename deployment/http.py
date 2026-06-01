@@ -10,6 +10,8 @@ from kausal_common.const import WILDCARD_DOMAINS_HEADER
 if TYPE_CHECKING:
     from re import Pattern
 
+    from django.http import HttpRequest
+
 
 def get_allowed_cors_headers() -> list[str]:
     return [
@@ -22,6 +24,19 @@ def get_allowed_cors_headers() -> list[str]:
         'forwarded',
         'x-forwarded-for',
     ]
+
+
+def get_request_wildcard_domains(request: HttpRequest | None = None, include_django_settings: bool = True) -> set[str]:
+    """Return a normalized list of wildcard domains from the request and/or Django settings."""
+
+    wildcard_domains: list[str] = []
+    if include_django_settings:
+        from django.conf import settings
+
+        wildcard_domains.extend(getattr(settings, 'HOSTNAME_INSTANCE_DOMAINS', []))
+    if request is not None:
+        request.headers.get(WILDCARD_DOMAINS_HEADER, '').split(',')
+    return {domain.strip().lower() for domain in wildcard_domains}
 
 
 @dataclass
