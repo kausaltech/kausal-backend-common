@@ -570,9 +570,18 @@ class DatasetQuerySet(PermissionedQuerySet['Dataset']):
     if IS_PATHS:
 
         def for_instance_config(self, instance_config: InstanceConfig) -> Self:
-            return self.filter(
+            direct_scope = models.Q(
                 scope_content_type=ContentType.objects.get_for_model(instance_config),
                 scope_id=instance_config.pk,
+            )
+            schema_scopes = DatasetSchemaScope.objects.filter(direct_scope)
+            return (
+                self
+                .filter(
+                    direct_scope | models.Q(schema__scopes__in=schema_scopes),
+                )
+                .order_by('id')
+                .distinct()
             )
 
         def with_viewable_schema(self, user: User) -> Self:
