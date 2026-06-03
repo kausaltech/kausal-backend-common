@@ -1,91 +1,72 @@
-(function () {
-  "use strict";
+class ConditionalStructBlockDefinition extends window.wagtailStreamField.blocks
+  .StructBlockDefinition {
+  render(placeholder, prefix, initialState, initialError) {
+    const block = super.render(placeholder, prefix, initialState, initialError);
+    const container = block.container[0];
+    const StructBlockDef =
+      window.wagtailStreamField.blocks.StructBlockDefinition;
 
-  const RULES = window.KAUSAL_CONDITIONAL_RULES || {};
-
-  function getFingerprint(structBlock) {
-    const paths = [];
-
-    for (const el of structBlock.children) {
-      if (el.dataset && el.dataset.contentpath)
-        paths.push(el.dataset.contentpath);
-    }
-
-    return JSON.stringify(paths.sort());
-  }
-
-  function initBlock(structBlock) {
-    console.log("initBlock", structBlock);
-    if (structBlock.dataset.kausalConditionalInitialized) {
-      return;
-    }
-
-    const rules = RULES[getFingerprint(structBlock)];
-
-    if (!rules || !rules.length) {
-      return;
-    }
-
-    structBlock.dataset.kausalConditionalInitialized = "1";
-
-    for (const rule of rules) {
-      const triggerContainer = structBlock.querySelector(
-        `[data-contentpath="${rule.trigger}"]`,
-      );
-
-      if (!triggerContainer) {
-        continue;
-      }
-
-      const select = triggerContainer.querySelector("select");
-
-      if (!select) {
-        continue;
-      }
-
-      const targetEl = rule.targetPath
-        ? rule.targetPath.reduce(
-            (el, part) =>
-              el && el.querySelector(`[data-contentpath="${part}"]`),
-            structBlock,
-          )
-        : structBlock.querySelector(`[data-contentpath="${rule.target}"]`);
-
-      if (!targetEl) {
-        continue;
-      }
-
-      const update = () => {
-        targetEl.style.display = rule.showFor.includes(select.value)
-          ? ""
-          : "none";
-      };
-
-      update();
-
-      select.addEventListener("change", update);
-    }
-  }
-
-  function initAll(root) {
-    root.querySelectorAll(".struct-block").forEach(initBlock);
-
-    if (root.classList && root.classList.contains("struct-block")) {
-      initBlock(root);
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", function () {
-    initAll(document);
-
-    new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            initAll(node);
-          }
+    // Wagtail's StructBlock constructor uses
+    //   `childDef instanceof this.blockDef.constructor`
+    // to decide whether a child is a nested StructBlock (and thus already has
+    // its own collapsible panel header, making an extra label redundant).
+    // Because our constructor is ConditionalStructBlockDefinition rather than
+    // StructBlockDefinition, plain StructBlock children fail this instanceof
+    // check and get a spurious <label>. Remove it.
+    for (const childDef of this.childBlockDefs) {
+      if (childDef instanceof StructBlockDef) {
+        const wrapper = container.querySelector(
+          `:scope > [data-contentpath="${childDef.name}"]`,
+        );
+        if (wrapper) {
+          const label = wrapper.querySelector(":scope > .w-field__label");
+          if (label) label.remove();
         }
       }
-    }).observe(document.body, { childList: true, subtree: true });
-  });
-})();
+    }
+
+    const rules = this.meta.conditionalRules;
+
+    if (!rules || !rules.length) {
+      return block;
+    }
+
+    let hasRules = false;
+
+    for (const rule of rules) {
+      const targetEl = rule.targetPath.reduce(
+        (el, part) =>
+          el && el.querySelector(`[data-contentpath="${part}"]`),
+        container,
+      );
+      if (!targetEl) continue;
+
+      const wRules = {};
+      for (const [trigger, values] of Object.entries(rule.triggers)) {
+        wRules[`${prefix}-${trigger}`] = values;
+      }
+      targetEl.setAttribute("data-w-rules-target", "show");
+      targetEl.setAttribute("data-w-rules", JSON.stringify(wRules));
+      hasRules = true;
+    }
+
+    if (hasRules) {
+      const existing = container.getAttribute("data-controller") || "";
+      const controllers = existing ? `${existing} w-rules` : "w-rules";
+      container.setAttribute("data-controller", controllers);
+
+      const existingAction = container.getAttribute("data-action") || "";
+      const action = existingAction
+        ? `${existingAction} change->w-rules#resolve`
+        : "change->w-rules#resolve";
+      container.setAttribute("data-action", action);
+    }
+
+    return block;
+  }
+}
+
+window.telepath.register(
+  "kausal_common.blocks.ConditionalStructBlock",
+  ConditionalStructBlockDefinition,
+);
