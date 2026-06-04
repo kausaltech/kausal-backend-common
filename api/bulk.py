@@ -3,7 +3,6 @@ from __future__ import annotations
 import typing
 from typing import Any
 
-from django.db import models
 from django.db.models.base import Model
 from django.db.models.query import QuerySet
 from rest_framework import response, serializers, status, viewsets
@@ -30,9 +29,9 @@ class BulkSerializerValidationInstanceMixin[M: Model](ModelSerializerMixinBase[M
     _instance: M | None
 
     def run_validation(self, data: Any = serializers.empty) -> Any:
-        if self.parent and self.instance is not None:
-            assert isinstance(self.instance, models.query.QuerySet)
-            self._instance = self.parent.objs_by_id.get(data['id'])
+        if self.parent and self.parent.instance is not None:
+            obj_id = data.get(self.parent.update_lookup_field)
+            self._instance = self.parent.objs_by_id.get(obj_id)
         else:
             self._instance = self.instance
         return super().run_validation(data)
@@ -103,6 +102,16 @@ class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
             raise ValidationError(errors)
 
         return super().to_internal_value(data)
+
+    def run_child_validation(self, data: Any) -> Any:
+        old_instance = self.child.instance
+        if self.instance is not None:
+            obj_id = data.get(self.update_lookup_field)
+            self.child.instance = self.objs_by_id.get(obj_id)
+        try:
+            return super().run_child_validation(data)
+        finally:
+            self.child.instance = old_instance
 
     def _handle_updates(self, update_ops: Mapping[type[M], Sequence[tuple[M, Sequence[str]]]]) -> None:
         for model, ops in update_ops.items():
