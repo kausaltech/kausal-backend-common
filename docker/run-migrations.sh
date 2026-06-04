@@ -29,5 +29,5 @@ function restore_from_backup() {
 
 
 restore_from_backup
-
+python manage.py check --deploy
 exec python manage.py migrate --noinput
