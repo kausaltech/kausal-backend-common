@@ -48,8 +48,14 @@ def serializer_context(dataset, api_factory):
     return {'view': type('obj', (object,), {'kwargs': {'dataset_uuid': str(dataset.uuid)}}), 'request': request}
 
 
-def test_data_point_bulk_serializer_save_without_changes_keeps_data(serializer_context):
+def get_serializer_context(dataset, api_factory):
+    request = api_factory.put(f'/datasets/{dataset.uuid}/data_points/')
+    return {'view': type('obj', (object,), {'kwargs': {'dataset_uuid': str(dataset.uuid)}}), 'request': request}
+
+
+def test_data_point_bulk_serializer_save_without_changes_keeps_data(api_factory):
     ds = DatasetFactory.create()
+    serializer_context = get_serializer_context(ds, api_factory)
     data_points = [DataPointFactory.create(dataset=ds) for _ in range(2)]
     serialized_data_points = [
         DataPointSerializer(instance=data_point, context=serializer_context).data for data_point in data_points
@@ -65,8 +71,9 @@ def test_data_point_bulk_serializer_save_without_changes_keeps_data(serializer_c
     assert serialized_data_points_after_save == serialized_data_points
 
 
-def test_data_point_bulk_serializer_save_with_changes_updates_data(serializer_context):
+def test_data_point_bulk_serializer_save_with_changes_updates_data(api_factory):
     ds = DatasetFactory.create()
+    serializer_context = get_serializer_context(ds, api_factory)
     data_points = [DataPointFactory.create(dataset=ds) for _ in range(2)]
     serialized_data_points = [
         DataPointSerializer(instance=data_point, context=serializer_context).data for data_point in data_points
