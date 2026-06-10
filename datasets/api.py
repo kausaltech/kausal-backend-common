@@ -153,8 +153,9 @@ class DataPointBulkListSerializer(UuidBasedBulkListSerializer[DataPoint]):
         schema = dataset.schema
         assert schema is not None
         seen: set[tuple[UUID, object, tuple[UUID, ...]]] = set()
+        child = typing.cast('DataPointSerializer', self.child)
         for item, instance in zip(attrs, instances, strict=True):
-            key = self.child.coordinate_key_for_validated_data(item, schema=schema, instance=instance)
+            key = child.coordinate_key_for_validated_data(item, schema=schema, instance=instance)
             if key in seen:
                 raise serializers.ValidationError(DataPointSerializer.duplicate_error_message)
             seen.add(key)
