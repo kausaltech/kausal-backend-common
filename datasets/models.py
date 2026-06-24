@@ -656,6 +656,7 @@ class Dataset(RevisionMixin, UserModifiableModel, UUIDIdentifiedModel, Permissio
         verbose_name=_('is external placeholder'),
         help_text=_('Marks datasets that exist only as placeholder references to externally stored datasets.'),
     )
+    spec = models.JSONField(default=dict, blank=True)
 
     # The "scope" generic foreign key links this dataset to an action or category
     # or instance
