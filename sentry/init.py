@@ -189,6 +189,25 @@ def _get_integrations() -> list[Integration]:
     return integrations
 
 
+def _get_traces_sample_rate(spotlight_enabled: bool) -> float:
+    """
+    Return the transaction trace sample rate.
+
+    Explicitly overridable via the ``SENTRY_TRACES_SAMPLE_RATE`` env var. With no
+    override we trace everything locally (spotlight/development) so developers see
+    all traces, but sample conservatively elsewhere: tracing every request produces
+    one transaction per request, and at full volume this floods the self-hosted
+    Sentry ingestion pipeline (Redis event-processing store, taskworker queue).
+    """
+    raw = os.getenv('SENTRY_TRACES_SAMPLE_RATE')
+    if raw is not None and raw.strip():
+        with contextlib.suppress(ValueError):
+            return float(raw)
+    if spotlight_enabled or is_development_environment():
+        return 1.0
+    return 0.1
+
+
 def init_sentry(dsn: str | None, deployment_type: str | None = None):
     from kausal_common.telemetry import init_telemetry
 
@@ -225,7 +244,7 @@ def init_sentry(dsn: str | None, deployment_type: str | None = None):
         spotlight=spotlight_url,
         transport=transport,
         send_default_pii=True,
-        traces_sample_rate=1.0,
+        traces_sample_rate=_get_traces_sample_rate(spotlight_url is not None),
         profiles_sample_rate=1.0 if env_bool('SENTRY_PROFILING', default=False) else 0.0,
         instrumenter='otel' if otel_traces_enabled() else None,
         release=release,
