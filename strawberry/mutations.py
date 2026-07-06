@@ -77,7 +77,7 @@ type MutationField = DjangoMutationBase
 @overload
 def mutation[T: ResolverFunc](
     *, extensions: list[FieldExtension] | None = None, **kwargs: Unpack[MutationArgs]
-) -> Callable[[T], T]: ...
+) -> Callable[[T], MutationField]: ...
 
 
 @overload
@@ -86,7 +86,7 @@ def mutation[T: ResolverFunc](
     *,
     extensions: list[FieldExtension] | None = None,
     **kwargs: Unpack[MutationArgs],
-) -> T: ...
+) -> MutationField: ...
 
 
 def mutation[T: ResolverFunc](
@@ -94,7 +94,7 @@ def mutation[T: ResolverFunc](
     *,
     extensions: list[FieldExtension] | None = None,
     **kwargs: Unpack[MutationArgs],
-) -> Any:
+) -> Callable[[T], MutationField] | MutationField:
     extensions = list(extensions or ())
     for ext in extensions:
         if isinstance(ext, MutationExtension):
