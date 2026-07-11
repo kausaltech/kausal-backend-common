@@ -556,7 +556,16 @@ class DatasetSerializer(I18nFieldSerializerMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Dataset
-        fields = ['uuid', 'schema', 'data_points', 'scope_id', 'scope_content_type', 'scope_content_type_id']
+        fields = [
+            'uuid',
+            'identifier',
+            'schema',
+            'data_points',
+            'scope_id',
+            'scope_content_type',
+            'scope_content_type_id',
+        ]
+        read_only_fields = ['identifier']
 
 
 class ComputedDataPointSerializer(serializers.Serializer):
@@ -575,7 +584,11 @@ class DatasetViewSet(viewsets.ModelViewSet[Dataset]):
         # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
         # TODO: check that we don't allow editing instances for which we only have view permissions
         user = user_or_anon(self.request.user)
-        return Dataset.permission_policy().instances_user_has_permission_for(user, 'view')
+        qs = Dataset.permission_policy().instances_user_has_permission_for(user, 'view')
+        identifier = self.request.query_params.get('identifier')
+        if identifier:
+            qs = qs.filter(identifier=identifier)
+        return qs
 
     @action(detail=True, methods=['get'], url_path='computed_data_points')
     def computed_data_points(self, request, uuid=None):
