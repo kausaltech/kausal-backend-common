@@ -1030,7 +1030,7 @@ class DataSource(UserModifiableModel, PermissionedModel):
         blank=True,
     )
     description = models.TextField(null=True, blank=True, verbose_name=_('description'))
-    url = models.URLField(verbose_name=_('URL'), null=True, blank=True)
+    url = models.URLField(max_length=1000, verbose_name=_('URL'), null=True, blank=True)
 
     objects: ClassVar[PermissionedManager[Self]] = PermissionedManager()
     _default_manager: ClassVar[PermissionedManager[Self]]
