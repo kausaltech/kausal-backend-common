@@ -184,6 +184,13 @@ class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
             deferred = True
         except AttributeError:
             deferred = False
+        # Optimistic concurrency: give the child serializer a chance to lock the
+        # target rows and reject stale writes *before* we mutate anything. This
+        # is opt-in — child serializers that don't implement the hook are
+        # unaffected.
+        lock_rows = getattr(self.child, 'lock_rows_for_optimistic_update', None)
+        if lock_rows is not None:
+            lock_rows([(self.objs_by_id[obj_id], data) for obj_id, data in zip(self.obj_ids, all_validated_data, strict=True)])
         for obj_id, obj_data in zip(self.obj_ids, all_validated_data, strict=True):
             obj = self.objs_by_id[obj_id]
             updated_data.append(self.child.update(obj, obj_data))
@@ -227,13 +234,33 @@ class BulkListSerializer[M: Model](serializers.ListSerializer[QuerySet[M]]):
 
 
 class BulkModelViewSet[M: Model](viewsets.ModelViewSet[M]):
+    @staticmethod
+    def _with_extra_response_rows(serializer, data) -> Any:
+        """
+        Append any rows the child serializer wants added beyond the submitted set.
+
+        A write can bump server-managed fields (e.g. an optimistic-concurrency
+        token) on rows that weren't in the request body — e.g. siblings shifted by
+        a reorder. Returning those rows lets the client refresh its baseline for
+        them instead of 409-ing against its own successful save. Opt-in: child
+        serializers without the hook are unaffected.
+        """
+        child = getattr(serializer, 'child', None)
+        get_extra = getattr(child, 'get_extra_response_rows', None)
+        if get_extra is None:
+            return data
+        extra_rows = get_extra()
+        if not extra_rows:
+            return data
+        return [*data, *extra_rows]
+
     def bulk_create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return response.Response(
-            serializer.data,
+            self._with_extra_response_rows(serializer, serializer.data),
             status=status.HTTP_201_CREATED,
             headers=headers,
         )
@@ -250,7 +277,7 @@ class BulkModelViewSet[M: Model](viewsets.ModelViewSet[M]):
         if isinstance(serializer, BulkListSerializer):
             serializer.check_object_permissions(request, self)
         self.perform_update(serializer)
-        return response.Response(serializer.data)
+        return response.Response(self._with_extra_response_rows(serializer, serializer.data))
 
     def partial_bulk_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
