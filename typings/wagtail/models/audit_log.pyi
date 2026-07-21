@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any, ClassVar, Self, TypedDict, Unpack
 from uuid import UUID
 
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.functional import cached_property as cached_property
@@ -12,7 +12,7 @@ from wagtail.log_actions import LogFormatter
 from wagtail.models import Revision
 from wagtail.users.utils import get_deleted_user_display_name as get_deleted_user_display_name
 
-class LogEntryQuerySet[M: BaseLogEntry[Any] = BaseLogEntry[AbstractUser], UserModel: AbstractUser = AbstractUser](
+class LogEntryQuerySet[M: BaseLogEntry[Any] = BaseLogEntry[AbstractBaseUser], UserModel: AbstractBaseUser = AbstractBaseUser](
     models.QuerySet[M, M]
 ):
     def get_actions(self) -> set[str]:
@@ -36,7 +36,7 @@ class LogEntryQuerySet[M: BaseLogEntry[Any] = BaseLogEntry[AbstractUser], UserMo
     def filter_on_content_type(self, content_type: ContentType) -> Self: ...
     def with_instances(self) -> Generator[tuple[M, models.Model | None]]: ...
 
-class LogActionArgs[UserModel: AbstractUser = AbstractUser](TypedDict, total=False):
+class LogActionArgs[UserModel: AbstractBaseUser = AbstractBaseUser](TypedDict, total=False):
     user: UserModel
     uuid: UUID
     title: str
@@ -46,10 +46,10 @@ class LogActionArgs[UserModel: AbstractUser = AbstractUser](TypedDict, total=Fal
     timestamp: datetime
 
 class BaseLogEntryManager[
-    M: BaseLogEntry[Any] = BaseLogEntry[AbstractUser],
-    QS: LogEntryQuerySet[Any, Any] = LogEntryQuerySet[M, AbstractUser],
+    M: BaseLogEntry[Any] = BaseLogEntry[AbstractBaseUser],
+    QS: LogEntryQuerySet[Any, Any] = LogEntryQuerySet[M, AbstractBaseUser],
     BaseModel: models.Model = models.Model,
-    UserModel: AbstractUser = AbstractUser,
+    UserModel: AbstractBaseUser = AbstractBaseUser,
 ](models.Manager[M]):
     def get_queryset(self) -> QS: ...
     def get_instance_title(self, instance: BaseModel) -> str: ...
@@ -73,7 +73,9 @@ class BaseLogEntryManager[
         Return a queryset of log entries from this log model that relate to the given object instance
         """
 
-class BaseLogEntry[UserModel: AbstractUser = AbstractUser](models.Model):
+UserModel = AbstractBaseUser
+
+class BaseLogEntry[M](models.Model):
     content_type: models.ForeignKey[ContentType]
     label: models.TextField[str, str]
     action: models.CharField[str, str]

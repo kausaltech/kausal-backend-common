@@ -170,6 +170,7 @@ class ModelFieldProperties:
             return cfg.block_class
 
         assert callable(cfg.block_class)
+        assert not isclass(cfg.block_class)
         block_class = cfg.block_class()
         assert not isinstance(block_class, blocks.Block)
         assert issubclass(block_class, blocks.Block)

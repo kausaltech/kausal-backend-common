@@ -1284,6 +1284,9 @@ class TaskState(SpecificMixin['TaskState'], models.Model):
 class PageLogEntryQuerySet[LogEntryModel: BaseLogEntry[Any] = BaseLogEntry[AbstractUser], UserModel: AbstractUser = AbstractUser](
     LogEntryQuerySet[LogEntryModel, UserModel]
 ):
+    @classmethod
+    def as_manager(cls) -> models.Manager[LogEntryModel]: ...  # type: ignore[override]
+
     def get_content_type_ids(self): ...
     def filter_on_content_type(self, content_type): ...
 

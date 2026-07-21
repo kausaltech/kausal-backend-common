@@ -26,6 +26,8 @@ class Locale(models.Model):
     objects: ClassVar[LocaleManager]
     all_objects: ClassVar[models.Manager[Locale]]
 
+    id: int
+
     @classmethod
     def get_default(cls) -> Locale:
         """
@@ -96,6 +98,7 @@ _QS = TypeVar('_QS', bound=models.QuerySet[Any], default=models.QuerySet[Model],
 class TranslatableMixin(models.Model, Generic[_QS]):
     translation_key: models.UUIDField
     locale: models.ForeignKey[Locale, Locale]
+    locale_id: int
 
     @classmethod
     def check(cls, **kwargs) -> list[CheckMessage]: ...

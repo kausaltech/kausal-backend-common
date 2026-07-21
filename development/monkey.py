@@ -13,7 +13,7 @@ def _monkeypatch_one_class(kls: type) -> None:
 def monkeypatch_initial() -> None:
     import django_stubs_ext
 
-    django_stubs_ext.monkeypatch(include_builtins=True)
+    django_stubs_ext.monkeypatch()
 
 
 def _monkeypatch_second() -> None:

@@ -1,20 +1,17 @@
 from collections.abc import Generator
-from typing import Any, Self, TypeVar
+from typing import Any, Self
 
-from django.db import models
 from django.db.models import Model, Q, QuerySet
 from django.db.models.query import BaseIterable, ModelIterable
 from wagtail.models import Page
 from wagtail.models.sites import Site as Site
 from wagtail.search.queryset import SearchableQuerySetMixin as SearchableQuerySetMixin
 
-_NodeT = TypeVar('_NodeT', bound=Model)
-
-class TreeQuerySet(QuerySet[_NodeT, _NodeT]):
+class TreeQuerySet[NodeT: Model](QuerySet[NodeT, NodeT]):
     """
     Extends Treebeard's MP_NodeQuerySet with additional useful tree-related operations.
     """
-    def delete(self) -> None:  # type: ignore
+    def delete(self) -> None:  # type: ignore[override]
         """Redefine the delete method unbound, so we can set the queryset_only parameter."""
 
     def descendant_of_q(self, other, inclusive: bool = False) -> Q: ...
@@ -52,17 +49,17 @@ class TreeQuerySet(QuerySet[_NodeT, _NodeT]):
 
         If inclusive is set to True, it will also exclude the specified page.
         """
-    def parent_of_q(self, other: _NodeT) -> Q: ...
-    def parent_of(self, other: _NodeT) -> Self:
+    def parent_of_q(self, other: NodeT) -> Q: ...
+    def parent_of(self, other: NodeT) -> Self:
         """
         This filters the QuerySet to only contain the parent of the specified page.
         """
-    def not_parent_of(self, other: _NodeT) -> Self:
+    def not_parent_of(self, other: NodeT) -> Self:
         """
         This filters the QuerySet to exclude the parent of the specified page.
         """
-    def sibling_of_q(self, other: _NodeT, inclusive: bool = True) -> Q: ...
-    def sibling_of(self, other: _NodeT, inclusive: bool = True) -> Self:
+    def sibling_of_q(self, other: NodeT, inclusive: bool = True) -> Q: ...
+    def sibling_of(self, other: NodeT, inclusive: bool = True) -> Self:
         """
         This filters the QuerySet to only contain pages that are siblings of the specified page.
 
@@ -70,7 +67,7 @@ class TreeQuerySet(QuerySet[_NodeT, _NodeT]):
 
         If inclusive is set to False, the page will be excluded from the results.
         """
-    def not_sibling_of(self, other: _NodeT, inclusive: bool = True) -> Self:
+    def not_sibling_of(self, other: NodeT, inclusive: bool = True) -> Self:
         """
         This filters the QuerySet to not contain any pages that are siblings of the specified page.
 
@@ -78,8 +75,6 @@ class TreeQuerySet(QuerySet[_NodeT, _NodeT]):
 
         If inclusive is set to False, the page will be included in the results.
         """
-    @classmethod
-    def as_manager(cls) -> models.Manager[_NodeT]: ...
 
 class SpecificQuerySetMixin[BaseModelQS: QuerySet[Any]]:
     def __init__(self, *args, **kwargs) -> None:

@@ -11,7 +11,7 @@ class MP_NodeQuerySet[M: Model](QuerySet[M, M]):
 
 class MP_NodeManager[M: Model](Manager[M]): ...
 
-class MP_Node[QS: QuerySet[Any] = QuerySet[Any]](Node[QS]):
+class MP_Node[QS: QuerySet[Any, Any] = QuerySet[Any, Any]](Node[QS]):
     steplen: int
     alphabet: str
     node_order_by: list[str]
@@ -21,6 +21,7 @@ class MP_Node[QS: QuerySet[Any] = QuerySet[Any]](Node[QS]):
     gap: int
 
     _default_manager: ClassVar[MP_NodeManager[Any]]
+    objects: ClassVar[MP_NodeManager[Any]]
 
     @classmethod
     def _get_basepath(cls, path: str, depth: int) -> str: ...

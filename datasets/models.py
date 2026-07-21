@@ -44,10 +44,10 @@ if TYPE_CHECKING:
 
     from users.models import User
 
-    from ..models.types import FK, M2M, RevMany, RevManyQS, RevManyToManyQS
+    from ..models.types import FK, M2M, RevMany, RevManyQS, RevManyToManyQS, RevOne
 
     if IS_PATHS:
-        from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase
+        from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase  # noqa: I001
 
         from paths.dataset_permission_policy import DatasetSchemaPermissionPolicy
 
@@ -74,14 +74,16 @@ class DimensionQuerySet(models.QuerySet['Dimension']):
         )
 
 
-_DimensionManager = models.Manager.from_queryset(DimensionQuerySet)
+if TYPE_CHECKING:
+
+    class _DimensionManager(ModelManager['Dimension', DimensionQuerySet]): ...
+
+else:
+    _DimensionManager = ModelManager.from_queryset(DimensionQuerySet)
 
 
-class DimensionManager(ModelManager['Dimension', DimensionQuerySet], _DimensionManager):  # pyright: ignore
+class DimensionManager(_DimensionManager):
     """Model manager for Dimension."""
-
-
-del _DimensionManager
 
 
 class Dimension(ClusterableModel, UUIDIdentifiedModel, UserModifiableModel):
@@ -432,6 +434,8 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
 
     label_i18n: str
     unit_i18n: str
+    computed_by: RevOne[DatasetMetric, DatasetMetricComputation]
+    id: int
 
     class Meta:
         verbose_name = _('dataset metric')
@@ -754,7 +758,7 @@ class DatasetSchemaScope(models.Model):
         'scope_id',
     )
 
-    objects: ClassVar[ModelManager[DatasetSchemaScope]] = ModelManager()
+    objects: ClassVar = ModelManager['DatasetSchemaScope']()
 
     class Meta:
         verbose_name = _('dataset schema scope')
