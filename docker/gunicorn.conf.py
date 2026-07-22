@@ -25,12 +25,15 @@ if not workers_env:
         workers = 1
     else:
         workers = 2
+        # Restart workers every 1000 + 0-500 requests to mitigate memory leaks in long-running processes
+        max_requests = 1000
+        max_requests_jitter = 500
 
 threads = multiprocessing.cpu_count() * 2 + 1
 wsgi_app = '%s:application' % os.getenv('UWSGI_MODULE', f'{get_django_project_name()}.wsgi')
 
 try:
-    import uvicorn  # noqa: F401
+    import uvicorn  # noqa: F401  # pyright: ignore[reportUnusedImport]
 except ImportError:
     pass
 else:
