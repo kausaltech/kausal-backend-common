@@ -1,10 +1,7 @@
 from pathlib import Path
 
 from django.db.models import Model
-from django.http import Http404
-from django.views.decorators.cache import cache_control
 from rest_framework import serializers
-from rest_framework.decorators import action
 
 
 def image_upload_path(instance, filename):
@@ -59,10 +56,3 @@ class ModelWithImageSerializerMixin[M: Model](serializers.Serializer[M]):
     def get_main_image(self, obj: M) -> str | None:
         # Disable functionality for now
         return None
-
-
-class ModelWithImageViewMixin:
-    @cache_control(max_age=3600)
-    @action(detail=True)
-    def image(self, request, pk=None):
-        raise Http404
