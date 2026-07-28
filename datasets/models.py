@@ -47,7 +47,7 @@ if TYPE_CHECKING:
     from ..models.types import FK, M2M, RevMany, RevManyQS, RevManyToManyQS, RevOne
 
     if IS_PATHS:
-        from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase  # noqa: I001
+        from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase  # noqa: I001, RUF100
 
         from paths.dataset_permission_policy import DatasetSchemaPermissionPolicy
 
@@ -716,6 +716,12 @@ class Dataset(RevisionMixin, UserModifiableModel, UUIDIdentifiedModel, Permissio
         if self.schema is None:
             self.schema = DatasetSchema.objects.create()
         super().save(*args, **kwargs)
+
+    def notify_change(self, user: User | None = None, save: bool = True):
+        self.last_modified_by = user
+        self.last_modified_at = timezone.now()
+        if save:
+            self.save(update_fields=['last_modified_by', 'last_modified_at'])
 
     def serializable_data(self) -> dict[str, Any]:
         """
