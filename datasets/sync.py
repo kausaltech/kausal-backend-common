@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypedDict
-from uuid import UUID, uuid4  # noqa: TC003
+from uuid import UUID, uuid4
 
 from django.contrib.postgres.expressions import ArraySubquery
 from django.db import models, transaction
