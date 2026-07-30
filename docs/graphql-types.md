@@ -74,6 +74,7 @@ generally it should be avoided.
 def me(info: gql.Info) -> User | None:
     return user_or_none(info.context.user)
 
+
 # Bad: `Any` throws away type information for no reason.
 @sb.field(graphql_type=UserType | None)
 @staticmethod
@@ -157,6 +158,7 @@ When the migration is the right move, follow this recipe:
    def empty_string_to_null(apps, schema_editor):
        Model = apps.get_model('app', 'Model')
        Model.objects.filter(field='').update(field=None)
+
 
    operations = [
        migrations.AlterField(...),

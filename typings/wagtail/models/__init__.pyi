@@ -1286,7 +1286,6 @@ class PageLogEntryQuerySet[LogEntryModel: BaseLogEntry[Any] = BaseLogEntry[Abstr
 ):
     @classmethod
     def as_manager(cls) -> models.Manager[LogEntryModel]: ...  # type: ignore[override]
-
     def get_content_type_ids(self): ...
     def filter_on_content_type(self, content_type): ...
 

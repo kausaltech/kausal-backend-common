@@ -17,7 +17,6 @@ class StructBlockValidationError(ValidationError):
     def __init__(self, block_errors: Incomplete | None = None, non_block_errors: Incomplete | None = None) -> None: ...
     def as_json_data(self): ...
 
-
 class BlockGroup:
     """
     A grouping of blocks within a :class:`StructBlock`'s form layout in the
@@ -82,7 +81,6 @@ class BlockGroup:
 
     @cached_property
     def unique_children_and_settings(self) -> tuple[list[tuple[Block, str]], list[tuple[Block, str]]]: ...
-
     def get_sorted_block_names(self) -> list[str]:
         """
         Return a flat list of all block names in this ``BlockGroup`` and any
@@ -90,9 +88,7 @@ class BlockGroup:
         """
 
     def js_opts(self) -> dict[str, Any]: ...
-
     def telepath_pack(self, context: dict[str, Any] | None = None) -> tuple[str, list[dict[str, Any]]]: ...
-
 
 class StructValue[B: StructBlock = StructBlock](collections.OrderedDict[str, Block]):
     """A class that generates a StructBlock value from provided sub-blocks"""
