@@ -8,6 +8,8 @@ import strawberry
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from graphql import DirectiveLocation, GraphQLError
+from strawberry.extensions.context import ExecutingContextManager
+from strawberry.extensions.runner import SchemaExtensionsRunner
 
 import sentry_sdk
 from loguru import logger
@@ -23,6 +25,32 @@ if TYPE_CHECKING:
 
 
 logger = logger.bind(name='graphql', markup=True)
+
+
+class ExceptionSafeExecutingContextManager(ExecutingContextManager):
+    """Unwind entered execution hooks if a later hook fails during setup."""
+
+    @override
+    def __enter__(self) -> None:
+        try:
+            super().__enter__()
+        except BaseException as error:
+            self.exit_stack.__exit__(type(error), error, error.__traceback__)
+            raise
+
+    @override
+    async def __aenter__(self) -> None:
+        try:
+            await super().__aenter__()
+        except BaseException as error:
+            await self.async_exit_stack.__aexit__(type(error), error, error.__traceback__)
+            raise
+
+
+class ExceptionSafeSchemaExtensionsRunner(SchemaExtensionsRunner):
+    @override
+    def executing(self) -> ExceptionSafeExecutingContextManager:
+        return ExceptionSafeExecutingContextManager(self.extensions)
 
 
 @strawberry.directive(
@@ -66,6 +94,17 @@ class Schema(ABC, GrapheneStrawberrySchema):
             ValidationCache(maxsize=100),
         ])
         return extensions
+
+    @override
+    def create_extensions_runner(
+        self,
+        execution_context: ExecutionContext,
+        extensions: list[StrawberrySchemaExtension],
+    ) -> SchemaExtensionsRunner:
+        return ExceptionSafeSchemaExtensionsRunner(
+            execution_context=execution_context,
+            extensions=extensions,
+        )
 
     @override
     def process_errors(self, errors: list[GraphQLError], execution_context: ExecutionContext | None = None) -> None:
