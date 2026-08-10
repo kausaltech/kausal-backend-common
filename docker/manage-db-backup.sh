@@ -5,28 +5,36 @@ set -o pipefail
 
 secret_path="${DB_BACKUP_SECRET_PATH:-/run/secrets/db-backup}"
 required_vars="AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY RESTIC_PASSWORD S3_BUCKET S3_ENDPOINT"
+if [ ! -d "${secret_path}" ] && [ -d "$(pwd)/.secrets/db-backup" ] && [ "$DEPLOYMENT_TYPE" != "production" ]; then
+  secret_path="$(pwd)/.secrets/db-backup"
+fi
 
-if [ ! -d ${secret_path} ] ; then
+if [ ! -d "${secret_path}" ] ; then
     echo "Secrets not mounted at ${secret_path}, backups disabled."
     exit 0
 fi
 
 
 for fn in ${required_vars} ; do
-  if [ ! -f ${secret_path}/${fn} ] ; then
+  if [ ! -f "${secret_path}"/"${fn}" ] ; then
     echo "Missing secret ${secret_path}/${fn}, aborting."
     exit 1
   fi
 done
 
 function get_secret() {
-  cat ${secret_path}/$1
+  cat "${secret_path}"/"$1"
 }
 
-export AWS_ACCESS_KEY_ID=$(get_secret AWS_ACCESS_KEY_ID)
-export AWS_SECRET_ACCESS_KEY=$(get_secret AWS_SECRET_ACCESS_KEY)
-export RESTIC_PASSWORD_FILE=${secret_path}/RESTIC_PASSWORD
-export RESTIC_REPOSITORY="s3:https://$(get_secret S3_ENDPOINT)/$(get_secret S3_BUCKET)"
+AWS_ACCESS_KEY_ID=$(get_secret AWS_ACCESS_KEY_ID)
+AWS_SECRET_ACCESS_KEY=$(get_secret AWS_SECRET_ACCESS_KEY)
+RESTIC_PASSWORD_FILE=${secret_path}/RESTIC_PASSWORD
+RESTIC_REPOSITORY="s3:https://$(get_secret S3_ENDPOINT)/$(get_secret S3_BUCKET)"
+
+export AWS_ACCESS_KEY_ID
+export AWS_SECRET_ACCESS_KEY
+export RESTIC_PASSWORD_FILE
+export RESTIC_REPOSITORY
 
 if [ -z "$1" ] ; then
     echo "Usage: $0 {init|backup|restore|save|snapshots|export-config}"
@@ -93,10 +101,17 @@ function do_backup() {
 }
 
 function do_restore() {
+    if [ "$1" == "--drop-schema" ] ; then
+      if [ "$DEPLOYMENT_TYPE" == "production" ] ; then
+        echo "ERROR: Refusing to drop the DB schema in production."
+        exit 1
+      fi
+      echo 'DROP SCHEMA public CASCADE ; CREATE SCHEMA public' | python manage.py dbshell
+    fi
+
     echo "Checking database status..."
 
     nr_tables=$(check_database_populated)
-
     # If we have 10 or more tables, consider the database populated
     if [ "$nr_tables" -ge 10 ] ; then
         echo "ERROR: Database appears to be populated (found $nr_tables tables)."
@@ -128,7 +143,7 @@ if [ "$1" == "backup" ] ; then
 fi
 
 if [ "$1" == "restore" ] ; then
-    do_restore
+    do_restore "$2"
     exit 0
 fi
 
