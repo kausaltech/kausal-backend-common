@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import inspect
 from typing import TYPE_CHECKING, cast
 
 from django.utils.deprecation import MiddlewareMixin
+
+from asgiref.sync import sync_to_async
 
 from kausal_common.logging.request import RequestCommonMeta
 
@@ -21,6 +22,9 @@ class RequestStartMiddleware(MiddlewareMixin):
         super().__init__(get_response)
 
     def __call__(self, request: HttpRequest) -> Awaitable[HttpResponseBase] | HttpResponseBase:
+        if self.async_mode:
+            return self.__acall__(request)
+
         request = cast('LoggedHttpRequest', request)
         common_meta = RequestCommonMeta.from_request(request)
         request.token_auth = None
@@ -29,7 +33,10 @@ class RequestStartMiddleware(MiddlewareMixin):
             return self.get_response(request)
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
-        response = self.__call__(request)
-        if inspect.isawaitable(response):
+        request = cast('LoggedHttpRequest', request)
+        common_meta = await sync_to_async(RequestCommonMeta.from_request, thread_sensitive=True)(request)
+        request.token_auth = None
+        with common_meta.start_request(request=request) as sentry_scope:
+            request.sentry_scope = sentry_scope
+            response = cast('Awaitable[HttpResponseBase]', self.get_response(request))
             return await response
-        return response

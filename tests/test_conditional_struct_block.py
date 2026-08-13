@@ -68,7 +68,7 @@ class TestConditionalStructBlockAdapter:
 
     def test_media_includes_js(self, adapter):
         js_files = adapter.media._js
-        assert any('conditional_struct_block.js' in path for path in js_files)
+        assert any('conditional_struct_block.js' in repr(path) for path in js_files)
 
     def test_js_args_includes_rules_with_target_path_and_triggers(self, adapter):
         block = MyConditionalBlock()

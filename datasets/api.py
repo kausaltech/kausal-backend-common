@@ -50,7 +50,11 @@ all_routers: list[SimpleRouter] = []
 
 
 def get_item_with_deprecated_fallback(
-    mapping: dict[str, typing.Any], key: str, deprecated_key: str, fail_if_not_exists: bool = True, default=None
+    mapping: typing.Mapping[str, typing.Any],
+    key: str,
+    deprecated_key: str,
+    fail_if_not_exists: bool = True,
+    default=None,
 ):
     if key in mapping:
         return mapping[key]
@@ -476,7 +480,7 @@ class DatasetSchemaViewSet(viewsets.ModelViewSet[DatasetSchema]):
     def get_serializer_context(self):
         import contextlib
 
-        ctx = super().get_serializer_context()
+        ctx = dict(super().get_serializer_context())
         dataset_uuid = self.request.query_params.get('dataset')
         if dataset_uuid:
             with contextlib.suppress(Dataset.DoesNotExist):
@@ -713,6 +717,7 @@ class BaseSourceReferenceSerializer(serializers.ModelSerializer[DatasetSourceRef
     data_source = UuidSlugRelatedField[DataSource](queryset=DataSource.objects.all())
 
     def to_internal_value(self, data: dict[str, typing.Any]) -> DatasetSourceReference:
+        data = dict(data)
         # The parameters in the context come from the API endpoint URL
         dataset_uuid = self.context.get('dataset_uuid')
         data_point_uuid = get_item_with_deprecated_fallback(
@@ -753,7 +758,7 @@ class DataPointSourceReferenceViewSet(viewsets.ModelViewSet):
         return DatasetSourceReference.objects.filter(data_point__uuid=data_point_uuid).select_related('data_source')
 
     def get_serializer_context(self) -> dict[str, str]:
-        context = super().get_serializer_context()
+        context = dict(super().get_serializer_context())
         context['dataset_uuid'] = self.kwargs['dataset_uuid']
         data_point_uuid = get_item_with_deprecated_fallback(self.kwargs, 'data_point_uuid', 'datapoint_uuid')
         context['data_point_uuid'] = data_point_uuid
@@ -799,7 +804,7 @@ class DatasetSourceReferenceViewSet(viewsets.ModelViewSet[DatasetSourceReference
         return DatasetSourceReference.objects.filter(dataset__uuid=dataset_uuid)
 
     def get_serializer_context(self) -> dict[str, str]:
-        context = super().get_serializer_context()
+        context = dict(super().get_serializer_context())
         context['dataset_uuid'] = self.kwargs.get('dataset_uuid')
         data_point_uuid = get_item_with_deprecated_fallback(
             self.kwargs,
