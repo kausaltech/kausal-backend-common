@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 
     from django.apps import AppConfig
     from django.core.checks import CheckMessage
-    from django.db.models import Manager
 
     from rich.repr import RichReprResult
 
@@ -92,11 +91,6 @@ class PermissionedModel[CreateContext: Any = None](AbstractModel):  # pyright: i
 
 
 class PermissionedQuerySet[M: PermissionedModel[Any]](QuerySet[M, M]):
-    if TYPE_CHECKING:
-
-        @classmethod
-        def as_manager(cls) -> Manager[M]: ...
-
     @property
     def _pp(self) -> ModelPermissionPolicy[M, Self, Any]:
         return self.model.permission_policy()

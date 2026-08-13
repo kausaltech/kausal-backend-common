@@ -529,8 +529,6 @@ class DatasetMetricComputation(OrderedModel):
     )
     operand_b_id: int
 
-    objects: ClassVar[models.Manager[Self]] = models.Manager()
-
     class Meta:
         verbose_name = _('dataset metric computation')
         verbose_name_plural = _('dataset metric computations')
