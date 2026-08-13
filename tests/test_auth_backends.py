@@ -1,6 +1,10 @@
 from unittest.mock import Mock
 
+import pytest
+
 from kausal_common.auth.backends import AzureADAuth
+
+pytestmark = pytest.mark.django_db
 
 
 def get_social_auth_strategy(settings_by_name: dict[str, str], request_data: dict[str, str] | None = None) -> Mock:
