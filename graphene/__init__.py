@@ -12,12 +12,12 @@ from graphene_django import DjangoObjectType
 from modeltrans.translator import get_i18n_field
 
 import graphene_django_optimizer as gql_optimizer
-from graphene_pydantic import PydanticObjectType
 
 from kausal_common.const import IS_PATHS
 from kausal_common.i18n.helpers import get_language_from_default_language_field
 from kausal_common.models.permissions import PermissionedModel, UserPermissions, get_user_permissions_for_instance
 from kausal_common.strawberry.context import GraphQLContext
+from kausal_common.strawberry.permissions import UserPermissionsType
 from kausal_common.users import is_authenticated
 
 if TYPE_CHECKING:
@@ -111,12 +111,6 @@ if IS_PATHS:
         if roles is None:
             return []
         return [role.id for role in roles]
-
-
-class UserPermissionsType(PydanticObjectType):
-    class Meta:
-        model = UserPermissions
-        name = 'UserPermissions'
 
 
 def resolve_user_permissions(obj: PermissionedModel, info: GQLInfo) -> UserPermissions:

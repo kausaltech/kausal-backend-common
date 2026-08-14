@@ -22,6 +22,7 @@ from wagtail.models import RevisionMixin
 
 from django_choices_field import TextChoicesField
 
+from kausal_common.admin_site.panels import SuperuserOnlyFieldPanel
 from kausal_common.const import IS_PATHS, IS_WATCH
 from kausal_common.datasets.permission_policy import get_permission_policy
 from kausal_common.models.fields import IdentifierField
@@ -287,6 +288,10 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     )
     name = models.CharField(max_length=100, blank=False, verbose_name=_('name'))
     description = models.TextField(blank=True)
+    is_editable = models.BooleanField(
+        default=True,
+        help_text=_('Whether non-superusers may modify this schema and its datasets'),
+    )
     start_date = models.DateField(
         verbose_name=_('start date'),
         blank=True,
@@ -329,6 +334,7 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
             'start_date',
             heading=_('Initial date'),
         ),
+        SuperuserOnlyFieldPanel('is_editable'),
         InlinePanel(
             'metrics',
             heading=_('Metrics'),
