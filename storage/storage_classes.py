@@ -21,6 +21,12 @@ class MediaFilesS3Storage(S3Boto3Storage):
 
     def get_default_settings(self):
         defaults = super().get_default_settings()
+        # django-storages defaults `file_overwrite` to True, which turns off the filename
+        # de-duplication that Django and Wagtail rely on: `get_available_name` then hands back the
+        # requested key even when it is taken, so two uploads of the same filename end up sharing a
+        # single object and deleting either one destroys the other's file. Note that a plain class
+        # attribute would not do: `BaseStorage.__init__` applies these defaults over the instance.
+        defaults['file_overwrite'] = False
         # Rename some settings to avoid conflicts with other S3 backends
         defaults['access_key'] = setting('MEDIA_FILES_S3_ACCESS_KEY')
         defaults['secret_key'] = setting('MEDIA_FILES_S3_SECRET_ACCESS_KEY')
