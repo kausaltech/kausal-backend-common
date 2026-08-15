@@ -441,6 +441,7 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
     label_i18n: str
     unit_i18n: str
     computed_by: RevOne[DatasetMetric, DatasetMetricComputation]
+    validation_rules: RevMany[DatasetMetricValidationRule]
     id: int
 
     class Meta:
@@ -546,6 +547,38 @@ class DatasetMetricComputation(OrderedModel):
 
     def filter_siblings(self, qs: QS[Self]) -> QS[Self]:
         return qs.filter(schema=self.schema)
+
+
+class DatasetMetricValidationRule(OrderedModel, UUIDIdentifiedModel):
+    """
+    A declarative validation rule bound to one metric.
+
+    The rule payload is an opaque JSON blob at this layer; its schema is
+    defined, validated and evaluated by the project (in Paths,
+    ``datasets.validation_rules.ValidationRule``). kausal_common only stores
+    and orders the rules.
+    """
+
+    metric: FK[DatasetMetric] = models.ForeignKey(
+        DatasetMetric,
+        on_delete=models.CASCADE,
+        related_name='validation_rules',
+        verbose_name=_('metric'),
+    )
+    metric_id: int
+    rule = models.JSONField(verbose_name=_('rule'))
+
+    class Meta:
+        verbose_name = _('dataset metric validation rule')
+        verbose_name_plural = _('dataset metric validation rules')
+        ordering = ['metric', 'order']
+
+    def __str__(self):
+        kind = self.rule.get('kind', '?') if isinstance(self.rule, dict) else '?'
+        return f'{kind} on {self.metric}'
+
+    def filter_siblings(self, qs: QS[Self]) -> QS[Self]:
+        return qs.filter(metric=self.metric)
 
 
 class DatasetSchemaDimensionManager(ModelManager['DatasetSchemaDimension', models.QuerySet['DatasetSchemaDimension']]):

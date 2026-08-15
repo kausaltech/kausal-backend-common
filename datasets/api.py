@@ -326,6 +326,9 @@ class DataPointViewSet(BulkModelViewSet[DataPoint]):
     def partial_bulk_update(self, request, *args, **kwargs):
         return self._with_locked_dataset(lambda: super(DataPointViewSet, self).partial_bulk_update(request, *args, **kwargs))
 
+    def destroy(self, request, *args, **kwargs):
+        return self._with_locked_dataset(lambda: super(DataPointViewSet, self).destroy(request, *args, **kwargs))
+
     def get_queryset(self):
         # assert isinstance(self.request.user, User | AnonymousUser)  # to satisfy type checker
         # TODO: check that we don't allow editing instances for which we only have view permissions

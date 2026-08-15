@@ -219,3 +219,59 @@ Strawberry will raise `UnresolvedFieldTypeError`.
 If you need the future-import for some other reason, audit every
 `sb.Private[...]` and lazy annotation in the file to make sure the
 referenced names are importable at runtime.
+
+## Pydantic-backed types: collocate projections with `@graphql_types`
+
+For GraphQL types that project a Pydantic model (not an ORM model), use
+`kausal_common.strawberry.pydantic`. The `@graphql_types` decorator builds
+GraphQL projections declared as classes *nested inside the model*, so the
+projection lives next to the fields it projects:
+
+```python
+from kausal_common.strawberry.pydantic import (
+    StrawberryPydanticType, graphql_types, pydantic_type, register_type_conversion,
+)
+
+@pydantic_type(_RuleBase, is_interface=True, name='ValidationRule')
+class ValidationRuleGQLInterface(StrawberryPydanticType[_RuleBase]):
+    enforcement: auto
+
+@graphql_types
+class ValueRangeRule(_RuleBase):
+    min: float | None = None
+    max: float | None = None
+
+    class ObjectType(ValidationRuleGQLInterface):  # becomes type ValueRangeRule
+        min: auto
+        max: auto
+
+    class InputType(StrawberryPydanticType['ValueRangeRule']):  # becomes input ValueRangeRuleInput
+        min: auto
+        max: auto
+```
+
+Notes:
+
+- The nested stubs cannot name the model themselves (the outer class does
+  not exist yet while its body executes); `@graphql_types` supplies it and
+  rebinds the built types in place, so callers reference
+  `ValueRangeRule.ObjectType` / `ValueRangeRule.InputType`.
+- Interface membership comes from subclassing the strawberry interface
+  type, never from a typing parameter — strawberry derives `implements`
+  from actual bases.
+- An `ObjectType` stub must not also subclass
+  `StrawberryPydanticType[Model]` when its interface base already binds a
+  different model: the invariant type parameter makes the bases
+  incompatible. The interface base's `from_pydantic` typing suffices.
+- Fields whose Pydantic type has no GraphQL mapping (e.g. `Literal`
+  aliases) are swapped via `register_type_conversion(<annotation>, <enum>)`;
+  registration must run before the projections are built (put it above the
+  class definitions in the same module).
+- Concrete types reachable only through an interface field must be
+  registered as extra schema types (`register_strawberry_type`).
+- Discriminated unions map to one pydantic-derived input per variant plus a
+  hand-written `@sb.input(one_of=True)` wrapper; the discriminator becomes
+  structural on the wire (field name in, `__typename` out).
+
+See `datasets/validation_rules.py` (Paths) for a complete example, including
+input round-tripping via `to_pydantic()`.

@@ -42,10 +42,13 @@ class StrawberryPydanticType[BaseM: BaseModel]:
 
 type ValidConversionType = type | TypeAliasType
 
-type_conversion_registry: dict[ValidConversionType, type] = {}
+# Keyed by annotation objects: classes, PEP 695 type aliases, or typing
+# special forms such as ``Literal[...]`` (which have no expressible static
+# type of their own).
+type_conversion_registry: dict[Any, type] = {}
 
 
-def register_type_conversion(from_type: ValidConversionType, to_type: type) -> None:
+def register_type_conversion(from_type: Any, to_type: type) -> None:
     type_conversion_registry[from_type] = to_type
 
 
@@ -162,3 +165,33 @@ def pydantic_type[T: type](
 def pydantic_input[T: type](model: type[BaseModel], **kwargs: Unpack[PydanticTypeKwargs]) -> Callable[[T], T]:
     kwargs['is_input'] = True
     return pydantic_type(model, **kwargs)
+
+
+def graphql_types[M: BaseModel](model_cls: type[M]) -> type[M]:
+    """
+    Build the GraphQL projections declared as classes nested in a Pydantic model.
+
+    A nested ``ObjectType`` stub becomes the strawberry object type for the
+    model (named after the model) and a nested ``InputType`` stub the input
+    type (named ``<Model>Input``); both are rebuilt in place, so callers
+    reference ``Model.ObjectType`` / ``Model.InputType``. The stubs live in
+    the model body, where the model name is not yet bound — this outer
+    decorator supplies the model to ``pydantic_type`` once it exists.
+    """
+
+    def build(stub: type, name: str, builder: Callable[..., Callable[[type], type]]) -> type:
+        built = builder(model_cls, name=name)(stub)
+        built.__name__ = name
+        built.__qualname__ = f'{model_cls.__qualname__}.{name}'
+        return built
+
+    object_stub = model_cls.__dict__.get('ObjectType')
+    if object_stub is not None:
+        model_cls.ObjectType = build(object_stub, model_cls.__name__, pydantic_type)  # type: ignore[attr-defined]
+    input_stub = model_cls.__dict__.get('InputType')
+    if input_stub is not None:
+        model_cls.InputType = build(input_stub, f'{model_cls.__name__}Input', pydantic_input)  # type: ignore[attr-defined]
+    if object_stub is None and input_stub is None:
+        msg = f'{model_cls.__module__}.{model_cls.__name__} declares no nested ObjectType or InputType stub'
+        raise TypeError(msg)
+    return model_cls
