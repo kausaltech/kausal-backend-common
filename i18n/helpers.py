@@ -42,7 +42,7 @@ def get_language_from_default_language_field(
     return default_language
 
 
-type LanguageCodeFormat = Literal['kausal', 'django', 'modeltrans', 'next.js', 'wagtail', 'iso']
+type LanguageCodeFormat = Literal['kausal', 'django', 'modeltrans', 'next.js', 'wagtail', 'weblate', 'iso']
 
 
 def convert_language_code(
@@ -61,6 +61,8 @@ def convert_language_code(
             'modeltrans': The format used by django-modeltrans. ('es_us')
             'next.js': The format used by next.js. ('es-US')
             'wagtail': The format used by Wagtail, in particular its Locale objects. ('es-US')
+            'weblate': The POSIX-style spelling Weblate's 'linux' language_code_style expects
+                of a translation filename. ('es_US')
 
     Returns:
         Given language code converted to wanted format as a string.
@@ -91,8 +93,12 @@ def convert_language_code(
             result = language.lower()
             result += f'_{region.lower()}' if region else ''
             return result
+        case 'weblate':
+            result = language.lower()
+            result += f'_{region.upper()}' if region else ''
+            return result
         case _:
-            format_options = ['kausal', 'django', 'modeltrans', 'next.js', 'wagtail']
+            format_options = ['kausal', 'django', 'modeltrans', 'next.js', 'wagtail', 'weblate']
             error_message = f"'{output_format}' is not a valid language code format. Valid formats are {format_options}"
             raise ValueError(error_message)
 

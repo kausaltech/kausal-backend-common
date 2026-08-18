@@ -54,6 +54,7 @@ def test_convert_language_code_input_validation(language_code, is_valid):
         ('modeltrans', True),
         ('next.js', True),
         ('wagtail', True),
+        ('weblate', True),
     ],
 )
 def test_convert_language_code_format_validation(output_format, is_valid):
@@ -83,6 +84,15 @@ def test_convert_language_code_format_validation(output_format, is_valid):
         ('mww', 'kausal', 'mww'),
         ('MWW', 'django', 'mww'),
         ('MWW', 'modeltrans', 'mww'),
+        # Weblate spells a locale the way a POSIX locale directory does, which is what its
+        # `language_code_style = 'linux'` expects of a filename.
+        ('en', 'weblate', 'en'),
+        ('EN', 'weblate', 'en'),
+        ('es-us', 'weblate', 'es_US'),
+        ('es_US', 'weblate', 'es_US'),
+        ('sv-fi', 'weblate', 'sv_FI'),
+        ('de-CH', 'weblate', 'de_CH'),
+        ('MWW', 'weblate', 'mww'),
     ],
 )
 def test_convert_language_code(language_code, output_format, wanted_result):
