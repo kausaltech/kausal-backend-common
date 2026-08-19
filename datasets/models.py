@@ -21,6 +21,7 @@ from wagtail.admin.panels.inline_panel import InlinePanel
 from wagtail.models import RevisionMixin
 
 from django_choices_field import TextChoicesField
+from django_pydantic_field import SchemaField
 
 from kausal_common.admin_site.panels import SuperuserOnlyFieldPanel
 from kausal_common.const import IS_PATHS, IS_WATCH
@@ -33,6 +34,7 @@ from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
 from ..models.permissions import PermissionedManager, PermissionedModel, PermissionedQuerySet
 from ..models.types import AbstractModel, ModelManager, RevMany
+from .category_domain import DatasetCategoryDomain, empty_category_domain
 from .config import dataset_config
 
 if TYPE_CHECKING:
@@ -297,6 +299,12 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         blank=True,
         null=True,
         help_text=_('For a newly created dataset, start entering values from this year'),
+    )
+    category_domain = SchemaField(
+        schema=DatasetCategoryDomain,
+        default=empty_category_domain,
+        blank=True,
+        help_text=_('The meaningful category combinations for datasets using this schema'),
     )
 
     i18n = TranslationField(fields=['name'])

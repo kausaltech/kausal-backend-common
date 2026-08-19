@@ -427,10 +427,14 @@ class DatasetSchemaSerializer(I18nFieldSerializerMixin, serializers.ModelSeriali
         required=False,
     )
     metrics = DatasetMetricSerializer(many=True, required=False, read_only=True)
+    category_domain = serializers.SerializerMethodField()
 
     class Meta:
         model = DatasetSchema
-        fields = ['uuid', 'time_resolution', 'name', 'dimensions', 'metrics', 'start_date']
+        fields = ['uuid', 'time_resolution', 'name', 'dimensions', 'metrics', 'start_date', 'category_domain']
+
+    def get_category_domain(self, instance: DatasetSchema) -> dict:
+        return instance.category_domain.model_dump(mode='json')
 
     def to_representation(self, instance: DatasetSchema) -> dict:
         data = super().to_representation(instance)
