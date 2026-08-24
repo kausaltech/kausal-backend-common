@@ -6,6 +6,7 @@ import re
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, overload
+from warnings import warn
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -111,6 +112,36 @@ def env_bool(env_var: str, default: bool | None = None) -> bool | None:
     if ret is not None:
         return ret
     return default
+
+
+def env_int(env_var: str, default: int) -> int:
+    """
+    Determine an integer value from an environment variable.
+
+    Mirrors env_bool: an unset, empty or unparseable value falls back to the
+    default rather than raising. These helpers are for values read before Django
+    settings are loaded, where there is no environ.Env to consult and where
+    refusing to start over a malformed tuning knob is worse than running with the
+    default. For anything declared in the settings schema, use environ.Env.int().
+
+    Args:
+    ----
+        env_var (str): The name of the environment variable to check.
+        default (int): The value to return if the variable is unset or invalid.
+
+    Returns:
+    -------
+        int: The integer interpretation of the variable's value, or the default.
+
+    """
+    val = os.getenv(env_var, None)
+    if val is None or not val.strip():
+        return default
+    try:
+        return int(val)
+    except ValueError:
+        warn(f'{env_var} is not an integer: {val!r}; defaulting to {default}', stacklevel=1)
+        return default
 
 
 def set_secret_file_vars(env: environ.Env, directory: str | Path) -> None:
