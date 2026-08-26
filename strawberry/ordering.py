@@ -19,10 +19,10 @@ class SiblingPositionInputMixin:
     next_sibling: Maybe[sb.ID]
 
 
-def with_sibling_ids[T](
+def with_sibling_ids[T, SiblingID](
     items: Sequence[T],
-    get_id: Callable[[T], sb.ID],
-) -> Iterator[tuple[T, sb.ID | None, sb.ID | None]]:
+    get_id: Callable[[T], SiblingID],
+) -> Iterator[tuple[T, SiblingID | None, SiblingID | None]]:
     """
     Yield (item, previous_sibling_id, next_sibling_id) for each item in an ordered sequence.
 

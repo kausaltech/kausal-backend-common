@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import abc
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, cast
 
 from django.core import checks
 from django.db import models
 from django.db.models.expressions import Window
 from django.db.models.functions.window import Lag, Lead
 from django.utils.translation import pgettext_lazy
+
+from kausal_common.ordering import SiblingOrderHint, reorder_siblings
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -120,9 +122,8 @@ class OrderedModel(models.Model):  # noqa: DJ008
 
         all_siblings = _load_siblings(siblings_qs)
         by_uuid: dict[UUID, _SiblingInfo] = {s.uuid: s for s in all_siblings}
-        order_list: list[UUID] = [s.uuid for s in all_siblings]
-
-        _apply_hints(order_list, hinted, by_uuid)
+        hints = cast('Sequence[SiblingOrderHint]', hinted)
+        order_list = [s.uuid for s in reorder_siblings(all_siblings, hints)]
         _bulk_update_order(siblings_qs, order_list, by_uuid)
 
 
@@ -137,11 +138,6 @@ class _SiblingInfo:
         self.order = order
 
 
-def _get_uuid(instance: OrderedModel) -> UUID:
-    """Get UUID from an instance, assuming it also inherits UUIDIdentifiedModel."""
-    return instance.uuid  # type: ignore[attr-defined]
-
-
 def _check_has_uuid(cls: type) -> None:
     from kausal_common.models.uuid import UUIDIdentifiedModel
 
@@ -154,71 +150,6 @@ def _load_siblings[T: OrderedModel](siblings_qs: models.QuerySet[T]) -> list[_Si
         _SiblingInfo(pk=pk, uuid=uuid, order=order)
         for pk, uuid, order in siblings_qs.order_by('order', 'pk').values_list('pk', 'uuid', 'order')
     ]
-
-
-def _apply_hints(
-    order_list: list[UUID],
-    hinted: Sequence[OrderedModel],
-    by_uuid: dict[UUID, _SiblingInfo],
-) -> None:
-    """Apply sibling-relative hints to mutate order_list in place."""
-    hinted_uuids = {_get_uuid(h) for h in hinted}
-    for item in hinted:
-        prev_uuid = item.previous_sibling
-        next_uuid = item.next_sibling
-        if prev_uuid is None and next_uuid is None:
-            continue
-
-        item_uuid = _get_uuid(item)
-        if item_uuid in order_list:
-            order_list.remove(item_uuid)
-
-        prev_idx: int | None = None
-        next_idx: int | None = None
-        if prev_uuid is not None:
-            _check_sibling_exists(prev_uuid, by_uuid, hinted_uuids)
-            prev_idx = _find_sibling_index(prev_uuid, order_list)
-        if next_uuid is not None:
-            _check_sibling_exists(next_uuid, by_uuid, hinted_uuids)
-            next_idx = _find_sibling_index(next_uuid, order_list)
-
-        if prev_idx is not None:
-            insert_idx = prev_idx + 1
-        else:
-            assert next_idx is not None
-            insert_idx = next_idx
-        order_list.insert(insert_idx, item_uuid)
-
-    _check_consistent_sibling_pairs(order_list, hinted)
-
-
-def _check_sibling_exists(ref_uuid: UUID, by_uuid: dict[UUID, _SiblingInfo], hinted_uuids: set[UUID]) -> None:
-    if ref_uuid not in by_uuid and ref_uuid not in hinted_uuids:
-        raise ValueError(f'Sibling {ref_uuid} not found')
-
-
-def _find_sibling_index(ref_uuid: UUID, order_list: list[UUID]) -> int:
-    try:
-        return order_list.index(ref_uuid)
-    except ValueError:
-        raise ValueError(f'Sibling {ref_uuid} not found in current ordering') from None
-
-
-def _check_consistent_sibling_pairs(order_list: list[UUID], hinted: Sequence[OrderedModel]) -> None:
-    order_idx = {uuid: idx for idx, uuid in enumerate(order_list)}
-    for item in hinted:
-        prev_uuid = item.previous_sibling
-        next_uuid = item.next_sibling
-        if prev_uuid is None or next_uuid is None:
-            continue
-
-        item_uuid = _get_uuid(item)
-        item_idx = order_idx[item_uuid]
-        if order_idx[prev_uuid] + 1 != item_idx or item_idx + 1 != order_idx[next_uuid]:
-            raise ValueError(
-                f'Item {item_uuid} has inconsistent sibling hints: it is not between '
-                + f'previous_sibling {prev_uuid} and next_sibling {next_uuid}'
-            )
 
 
 def _bulk_update_order(
