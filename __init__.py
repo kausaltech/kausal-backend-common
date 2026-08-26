@@ -31,6 +31,7 @@ def _early_init() -> None:
             raise RuntimeError(f'Invalid jemalloc configuration. Found: `{old_val}`)')
     else:
         os.environ['_RJEM_MALLOC_CONF'] = _JEMALLOC_CONF
+    os.environ['ARROW_DEFAULT_MEMORY_POOL'] = 'system'
 
 
 IS_MYPY: Literal[False] = False
