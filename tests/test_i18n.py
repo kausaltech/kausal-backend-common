@@ -1,11 +1,59 @@
 from __future__ import annotations
 
+from pydantic import ConfigDict, PrivateAttr
+
 import pytest
 
 from kausal_common.i18n import helpers
+from kausal_common.i18n.pydantic import I18nBaseModel, TranslatedString, set_i18n_context
 
 # FIXME: This is useless for these tests, but is needed for the moment so that these tests can be run in Paths environment
 pytestmark = pytest.mark.django_db
+
+
+class CopyModel(I18nBaseModel):
+    label: TranslatedString
+    description: TranslatedString
+    count: int
+    _state: list[str] = PrivateAttr(default_factory=list)
+
+
+class FrozenCopyModel(CopyModel):
+    model_config = ConfigDict(frozen=True)
+
+
+@pytest.mark.parametrize('model_class', [CopyModel, FrozenCopyModel])
+def test_model_copy_normalizes_only_updated_i18n_fields(model_class):
+    with set_i18n_context('en', ['de']):
+        original = model_class(label='Original', description='Untouched', count=1)
+        copied = original.model_copy(update={'label': {'en': 'Updated', 'de': 'Aktualisiert'}, 'count': 'trusted'})
+
+    assert copied.label.i18n == {'en': 'Updated', 'de': 'Aktualisiert'}
+    assert copied.description is original.description
+    assert copied.count == 'trusted'
+    assert original.label.i18n == {'en': 'Original'}
+    assert original.count == 1
+
+
+def test_model_copy_preserves_deep_copy_and_private_attribute_semantics():
+    with set_i18n_context('en', []):
+        original = FrozenCopyModel(label='Original', description='Untouched', count=1)
+    original._state.append('private')
+
+    copied = original.model_copy(update={'label': 'Updated'}, deep=True)
+
+    assert copied.label.i18n == {'en': 'Updated'}
+    assert copied._state == ['private']
+    assert copied._state is not original._state
+
+
+def test_model_copy_accepts_language_suffixed_i18n_updates():
+    with set_i18n_context('en', ['de']):
+        original = FrozenCopyModel(label='Original', description='Untouched', count=1)
+        copied = original.model_copy(update={'label_en': 'Updated', 'label_de': 'Aktualisiert'})
+
+    assert copied.label.i18n == {'en': 'Updated', 'de': 'Aktualisiert'}
+    assert not hasattr(copied, 'label_en')
 
 
 @pytest.mark.parametrize(

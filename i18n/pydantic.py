@@ -531,13 +531,19 @@ class I18nBaseModel(BaseModel, ABC):
     __i18n_nested_fields__: ClassVar[dict[str, type[I18nBaseModel]]]
     __i18n_nested_list_fields__: ClassVar[dict[str, type[I18nBaseModel]]]
 
+    @classmethod
+    def _convert_i18n_update(cls, update: Mapping[str, Any]) -> dict[str, Any]:
+        data = dict(update)
+        for field_name in cls.__i18n_fields__:
+            if field_name not in data and not any(key.rpartition('_')[0] == field_name for key in data):
+                continue
+            data[field_name] = validate_translated_string(cls, field_name, data)
+        return data
+
     def model_copy(self, *, update: Mapping[str, Any] | None = None, deep: bool = False) -> Self:
-        copied = super().model_copy(deep=deep)
-        if update is None:
-            return copied
-        for key, value in update.items():
-            setattr(copied, key, value)
-        return copied
+        if update is not None:
+            update = type(self)._convert_i18n_update(update)
+        return super().model_copy(update=update, deep=deep)
 
     @classmethod
     def __pydantic_on_complete__(cls) -> None:
