@@ -37,7 +37,11 @@ def test_model_copy_normalizes_only_updated_i18n_fields(model_class):
 
 def test_model_copy_preserves_deep_copy_and_private_attribute_semantics():
     with set_i18n_context('en', []):
-        original = FrozenCopyModel(label='Original', description='Untouched', count=1)
+        original = FrozenCopyModel(
+            label=TranslatedString('Original'),
+            description=TranslatedString('Untouched'),
+            count=1,
+        )
     original._state.append('private')
 
     copied = original.model_copy(update={'label': 'Updated'}, deep=True)
@@ -49,7 +53,11 @@ def test_model_copy_preserves_deep_copy_and_private_attribute_semantics():
 
 def test_model_copy_accepts_language_suffixed_i18n_updates():
     with set_i18n_context('en', ['de']):
-        original = FrozenCopyModel(label='Original', description='Untouched', count=1)
+        original = FrozenCopyModel(
+            label=TranslatedString('Original'),
+            description=TranslatedString('Untouched'),
+            count=1,
+        )
         copied = original.model_copy(update={'label_en': 'Updated', 'label_de': 'Aktualisiert'})
 
     assert copied.label.i18n == {'en': 'Updated', 'de': 'Aktualisiert'}
