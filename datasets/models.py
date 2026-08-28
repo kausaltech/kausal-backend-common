@@ -54,7 +54,15 @@ if TYPE_CHECKING:
 
         from paths.dataset_permission_policy import DatasetSchemaPermissionPolicy
 
-        from nodes.models import InstanceConfig, NodeConfig, NodeConfigQuerySet, NodeDataset
+        from nodes.models import (
+            DatasetPort,
+            InstanceConfig,
+            InstanceRevisionDatasetPin,
+            NodeConfig,
+            NodeConfigQuerySet,
+            NodeDataset,
+            NodeInputPortBinding,
+        )
 
         type DatasetScopeType = InstanceConfig
         type DimensionScopeType = InstanceConfig
@@ -440,6 +448,8 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
     """Maps to the DataFrame column name."""
     label = models.CharField(verbose_name=_('label'), max_length=100)
     unit = models.CharField(verbose_name=_('unit'), blank=True, max_length=50)
+    spec = models.JSONField(default=dict, blank=True)
+    """Project-specific metric payload; the schema is defined by ``dataset_config`` (in Paths, ``DatasetMetricSpec``)."""
 
     i18n = TranslationField(fields=('label', 'unit'))
 
@@ -450,7 +460,12 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
     unit_i18n: str
     computed_by: RevOne[DatasetMetric, DatasetMetricComputation]
     validation_rules: RevMany[DatasetMetricValidationRule]
+    data_points: RevMany[DataPoint]
     id: int
+
+    if IS_PATHS:
+        node_input_bindings: RevMany[NodeInputPortBinding]
+        node_ports: RevMany[DatasetPort]
 
     class Meta:
         verbose_name = _('dataset metric')
@@ -467,6 +482,11 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
     def clean(self):
         # Remember that this is not called automatically by save()
         dataset_config.validate_unit(self.unit)
+        # Optional hook: the spec payload schema is project-defined and
+        # projects that keep the default empty spec need not define it.
+        validate_spec = getattr(dataset_config, 'validate_metric_spec', None)
+        if validate_spec is not None:
+            validate_spec(self.spec)
 
     def filter_siblings(self, qs: QS[DatasetMetric]) -> QS[DatasetMetric]:
         return qs.filter(schema=self.schema)
@@ -725,6 +745,10 @@ class Dataset(RevisionMixin, UserModifiableModel, UUIDIdentifiedModel, Permissio
 
     if IS_PATHS:
         nodes: RevManyToManyQS[NodeConfig, NodeDataset, NodeConfigQuerySet]
+        nodes_edges: RevMany[NodeDataset]
+        node_ports: RevMany[DatasetPort]
+        node_input_bindings: RevMany[NodeInputPortBinding]
+        instance_revision_pins: RevMany[InstanceRevisionDatasetPin]
 
     objects: ClassVar[DatasetManager] = DatasetManager()
     mgr: ClassVar[DatasetManager] = DatasetManager()
