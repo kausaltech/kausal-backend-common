@@ -348,15 +348,25 @@ def get_translated_string_from_modeltrans(
     field_name: str,
     primary_language: str,
 ) -> TranslatedString:
-    val = getattr(obj, field_name)
+    """
+    Read a modeltrans ``i18n`` mapping back into a ``TranslatedString``.
+
+    The inverse of ``get_modeltrans_attrs_from_str``, and it has to stay that way: keys are matched
+    by stripping the field prefix, never by splitting on the last underscore, because a locale with
+    a region subtag spells its key with two of them (``name_es_us``) and the region is not the
+    language. Fields whose names share a suffix (``name`` and ``short_name``) are kept apart by the
+    prefix; a remainder that is not a language code belongs to some other field and is skipped.
+    """
     langs = {}
-    langs[primary_language] = val
+    langs[convert_language_code(primary_language, 'iso')] = getattr(obj, field_name)
     i18n: dict[str, str] = obj.i18n or {}  # type: ignore
+    prefix = f'{field_name}_'
     for key, val in i18n.items():
-        parts = key.split('_')
-        lang = parts.pop(-1)
-        field = '_'.join(parts)
-        if field != field_name:
+        if not key.startswith(prefix):
+            continue
+        try:
+            lang = convert_language_code(key.removeprefix(prefix), 'iso')
+        except ValueError:
             continue
         langs[lang] = val
     return TranslatedString(default_language=primary_language, **langs)

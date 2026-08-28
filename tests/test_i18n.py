@@ -4,7 +4,7 @@ from pydantic import ConfigDict, PrivateAttr
 
 import pytest
 
-from kausal_common.i18n import helpers
+from kausal_common.i18n import helpers, pydantic
 from kausal_common.i18n.pydantic import I18nBaseModel, TranslatedString, set_i18n_context
 
 # FIXME: This is useless for these tests, but is needed for the moment so that these tests can be run in Paths environment
@@ -155,3 +155,68 @@ def test_convert_language_code(language_code, output_format, wanted_result):
     """Test converting language code to wanted format."""
     result = helpers.convert_language_code(language_code, output_format)
     assert result == wanted_result
+
+
+class ModeltransRow:
+    """
+    Duck-types the two attributes the modeltrans readers take off a model row.
+
+    A real `TranslationField` model would drag a product's app registry into a
+    shared test, and the readers only ever touch the plain field and `i18n`.
+    """
+
+    def __init__(self, i18n: dict[str, str], **fields: str) -> None:
+        self.i18n = i18n
+        for name, value in fields.items():
+            setattr(self, name, value)
+
+
+@pytest.mark.parametrize(
+    ('language', 'modeltrans_suffix'),
+    [
+        ('fi', 'fi'),
+        # A locale with a region subtag spells its modeltrans key with two underscores, so a
+        # reader that splits on the last one mistakes the region for the whole language.
+        ('es-US', 'es_us'),
+        ('sv-FI', 'sv_fi'),
+    ],
+)
+def test_translated_string_from_modeltrans_reads_every_stored_language(language, modeltrans_suffix):
+    row = ModeltransRow(
+        name='Avoided emissions',
+        i18n={f'name_{modeltrans_suffix}': 'Emisiones evitadas'},
+    )
+
+    ts = pydantic.get_translated_string_from_modeltrans(row, 'name', 'en')
+
+    assert ts.i18n == {'en': 'Avoided emissions', language: 'Emisiones evitadas'}
+
+
+@pytest.mark.parametrize('language', ['fi', 'es-US'])
+def test_modeltrans_attrs_and_translated_string_round_trip(language):
+    """The writer's key spelling is the only thing the reader is allowed to expect."""
+    with set_i18n_context('en', [language]):
+        original = TranslatedString(**{'en': 'Avoided emissions', language: 'Emisiones evitadas'})
+
+    field_val, i18n = pydantic.get_modeltrans_attrs_from_str(original, 'name', 'en')
+    row = ModeltransRow(name=field_val, i18n=i18n)
+
+    assert pydantic.get_translated_string_from_modeltrans(row, 'name', 'en').i18n == original.i18n
+
+
+def test_translated_string_from_modeltrans_ignores_another_fields_keys():
+    """`name` and `short_name` share a suffix, so neither may pick up the other's translations."""
+    row = ModeltransRow(
+        name='Avoided emissions',
+        short_name='Avoided',
+        i18n={'name_es_us': 'Emisiones evitadas', 'short_name_es_us': 'Evitadas'},
+    )
+
+    assert pydantic.get_translated_string_from_modeltrans(row, 'name', 'en').i18n == {
+        'en': 'Avoided emissions',
+        'es-US': 'Emisiones evitadas',
+    }
+    assert pydantic.get_translated_string_from_modeltrans(row, 'short_name', 'en').i18n == {
+        'en': 'Avoided',
+        'es-US': 'Evitadas',
+    }
