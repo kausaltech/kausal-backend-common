@@ -1115,8 +1115,13 @@ class DataSource(UserModifiableModel, PermissionedModel):
     _default_manager: ClassVar[PermissionedManager[Self]]
 
     def get_label(self):
-        name, *rest = [p for p in (self.name, self.authority, self.edition) if p is not None]
-        return f'{name}, {" ".join(rest)}'
+        # A source with neither authority nor edition is ordinary -- a dataset-level source
+        # is often just a title -- and used to render with a trailing ', '. Blank strings
+        # count as absent here too; the fields are `blank=True`, so the admin stores ''.
+        rest = [p for p in (self.authority, self.edition) if p]
+        if not rest:
+            return self.name
+        return f'{self.name}, {" ".join(rest)}'
 
     def __str__(self):
         return self.get_label()
@@ -1140,7 +1145,16 @@ class DataSource(UserModifiableModel, PermissionedModel):
 
 
 class DatasetSourceReference(UserModifiableModel, PermissionedModel):
-    """Link a data source to a data point or dataset."""
+    """
+    Link a data source to a data point or dataset.
+
+    Exactly one of the two is set, and which one says what the citation claims. A
+    ``data_point`` reference says this value came from that source, and is what a 'Source'
+    cell in an imported CSV produces. A ``dataset`` reference says the dataset as a whole
+    came from that source -- the right shape when one publication, in one update, produced
+    every value in it, and there is nothing per-row to distinguish. A dataset may carry
+    several: co-equal sources for the same body of data are common.
+    """
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     data_point: FK[DataPoint | None] = models.ForeignKey(
@@ -1195,3 +1209,13 @@ class DatasetSourceReference(UserModifiableModel, PermissionedModel):
         ordering = ('data_point__dataset', 'data_point')
         verbose_name = _('data source reference')
         verbose_name_plural = _('data source references')
+        constraints = [
+            # Both columns are nullable because either may be the one in use, which left
+            # "neither" reachable -- a reference attached to nothing, invisible to both the
+            # data-point and the dataset query paths, and impossible to see in the admin.
+            models.CheckConstraint(
+                condition=models.Q(data_point__isnull=False, dataset__isnull=True)
+                | models.Q(data_point__isnull=True, dataset__isnull=False),
+                name='source_reference_targets_exactly_one',
+            ),
+        ]

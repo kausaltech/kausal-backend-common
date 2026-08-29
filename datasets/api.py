@@ -738,10 +738,16 @@ class BaseSourceReferenceSerializer(serializers.ModelSerializer[DatasetSourceRef
         ):
             raise serializers.ValidationError('DataPoint UUID in payload different from that in the URL path')
 
-        if dataset_uuid:
-            data['dataset'] = dataset_uuid
+        # Exactly one of the two, which is what `validate` below has always said and what
+        # `DatasetSourceReference` now enforces. The data-point endpoint is nested under a
+        # dataset, so `dataset_uuid` is always in context there -- setting it as well would
+        # write the URL's shape into the row, and the reference would then also read as a
+        # dataset-level one, claiming the whole dataset came from that source.
         if data_point_uuid:
             data['data_point'] = data_point_uuid
+            data.pop('dataset', None)
+        elif dataset_uuid:
+            data['dataset'] = dataset_uuid
         return super().to_internal_value(data)
 
     def validate(self, data):
