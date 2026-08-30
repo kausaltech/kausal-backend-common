@@ -229,12 +229,17 @@ projection lives next to the fields it projects:
 
 ```python
 from kausal_common.strawberry.pydantic import (
-    StrawberryPydanticType, graphql_types, pydantic_type, register_type_conversion,
+    StrawberryPydanticType,
+    graphql_types,
+    pydantic_type,
+    register_type_conversion,
 )
+
 
 @pydantic_type(_RuleBase, is_interface=True, name='ValidationRule')
 class ValidationRuleGQLInterface(StrawberryPydanticType[_RuleBase]):
     enforcement: auto
+
 
 @graphql_types
 class ValueRangeRule(_RuleBase):
