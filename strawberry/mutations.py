@@ -32,15 +32,18 @@ class MutationExtension(FieldExtension):
         pass
 
     def resolve(self, next_: SyncExtensionResolver, source: Any, info: Info, **kwargs: Any) -> Any:
-        # Ensure that every mutation is atomic and that the language is always
-        # set to English (for error messages).
-        with translation.override('en'), transaction.atomic():
+        # Every mutation runs in a single transaction, under the request
+        # locale — locale-sensitive writes (modeltrans fields, TranslatedString
+        # slots) depend on it.
+        with transaction.atomic():
             ret = next_(source, info, **kwargs)
-            if isinstance(ret, OperationInfo):
+        if isinstance(ret, OperationInfo):
+            # Render lazy strings into English so error messages stay stable
+            # and machine-comparable regardless of the request locale.
+            with translation.override('en'):
                 for msg in ret.messages:
-                    # Convert lazy strings to regular strings
                     msg.message = str(msg.message)
-            return ret
+        return ret
 
 
 class MutationArgs(TypedDict, total=False):
