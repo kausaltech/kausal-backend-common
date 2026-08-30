@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import ConfigDict, PrivateAttr
 
 import pytest
 
 from kausal_common.i18n import helpers, pydantic
 from kausal_common.i18n.pydantic import I18nBaseModel, TranslatedString, set_i18n_context
+
+if TYPE_CHECKING:
+    from modeltrans.fields import TranslationField
 
 # FIXME: This is useless for these tests, but is needed for the moment so that these tests can be run in Paths environment
 pytestmark = pytest.mark.django_db
@@ -164,6 +169,8 @@ class ModeltransRow:
     A real `TranslationField` model would drag a product's app registry into a
     shared test, and the readers only ever touch the plain field and `i18n`.
     """
+
+    i18n: dict[str, str] | TranslationField
 
     def __init__(self, i18n: dict[str, str], **fields: str) -> None:
         self.i18n = i18n

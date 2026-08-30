@@ -5,7 +5,7 @@ from abc import ABC
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeAliasType, cast, get_args, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeAliasType, cast, get_args, overload
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -29,6 +29,8 @@ if TYPE_CHECKING:
     from contextvars import Token
 
     from django.db.models import Model
+    from django.utils.translation.trans_real import TranslationCatalog
+    from modeltrans.fields import TranslationField
     from pydantic import GetCoreSchemaHandler
     from pydantic_core import CoreSchema
 
@@ -142,7 +144,7 @@ class TranslatedString:
         assert len(lazy_kwargs) == 1
         lang = convert_language_code(lang, 'django')
         with translation.override(lang):
-            real_catalog = cast('Any', trans_real.catalog())
+            real_catalog = cast('TranslationCatalog', trans_real.catalog())
             key = lazy_args[0]
             s = real_catalog.get(key)
             if s is None and lang.startswith('en'):
@@ -343,8 +345,12 @@ def get_modeltrans_attrs_from_str(
     return field_val, i18n
 
 
+class ModeltransModelProtocol(Protocol):
+    i18n: dict[str, str] | TranslationField
+
+
 def get_translated_string_from_modeltrans(
-    obj: Model,
+    obj: ModeltransModelProtocol,
     field_name: str,
     primary_language: str,
 ) -> TranslatedString:
