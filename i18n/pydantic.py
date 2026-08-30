@@ -210,6 +210,19 @@ class TranslatedString:
         unique_vals = set(self.i18n.values())
         return list(unique_vals)
 
+    def with_translation(self, lang: str, value: str) -> TranslatedString:
+        """
+        Return a copy with ``value`` stored as the translation for ``lang``.
+
+        The other languages' translations are preserved; a lazy source is
+        materialized first. The default language is kept, or becomes ``lang``
+        when the string had none.
+        """
+        lang = convert_language_code(lang, 'iso')
+        i18n = dict(self.i18n)
+        i18n[lang] = value
+        return TranslatedString(default_language=self.default_language or lang, **i18n)
+
     def set_modeltrans_field(self, obj: Model, field_name: str, default_language: str):
         field_val, i18n = get_modeltrans_attrs_from_str(self, field_name, default_lang=default_language)
         setattr(obj, field_name, field_val)

@@ -227,3 +227,34 @@ def test_translated_string_from_modeltrans_ignores_another_fields_keys():
         'en': 'Avoided',
         'es-US': 'Evitadas',
     }
+
+
+def test_with_translation_preserves_other_languages():
+    with set_i18n_context('en', ['de']):
+        original = TranslatedString('Energy', de='Energie')
+
+    updated = original.with_translation('de', 'Strom')
+
+    assert updated.i18n == {'en': 'Energy', 'de': 'Strom'}
+    assert updated.default_language == 'en'
+    # The original is untouched.
+    assert original.i18n == {'en': 'Energy', 'de': 'Energie'}
+
+
+def test_with_translation_normalizes_language_code():
+    with set_i18n_context('en', []):
+        original = TranslatedString('Energy')
+
+    updated = original.with_translation('de-ch', 'Strom')
+
+    assert updated.i18n == {'en': 'Energy', 'de-CH': 'Strom'}
+
+
+def test_with_translation_without_default_language_adopts_the_language():
+    original = TranslatedString(de='Energie')
+    assert original.default_language == 'de'
+
+    updated = original.with_translation('en', 'Energy')
+
+    assert updated.i18n == {'de': 'Energie', 'en': 'Energy'}
+    assert updated.default_language == 'de'
