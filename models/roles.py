@@ -12,7 +12,7 @@ from django.core.checks import Error
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models import Model, Q, QuerySet
 from django.db.models.fields.related import ForeignKey
-from wagtail.models import PAGE_PERMISSION_CODENAMES
+from wagtail.models import PAGE_PERMISSION_TYPES
 
 from loguru import logger
 
@@ -335,7 +335,7 @@ class AdminRole[M: Model](InstanceSpecificRole[M], abc.ABC):
         ('wagtailimages', 'image', ALL_MODEL_PERMS),
     ]
 
-    page_perms = set(PAGE_PERMISSION_CODENAMES)
+    page_perms = set(x[0] for x in PAGE_PERMISSION_TYPES)
 
 
 class RoleRegistry:

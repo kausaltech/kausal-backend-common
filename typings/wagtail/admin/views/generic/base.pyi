@@ -3,7 +3,7 @@ from typing import Any, ClassVar, NamedTuple, NotRequired, TypedDict
 
 from django.db.models import Model, QuerySet
 from django.db.models.options import Options
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.utils.functional import cached_property
 from django.views import View
 from django.views.generic.base import ContextMixin, TemplateResponseMixin
@@ -48,7 +48,7 @@ class BaseObjectMixin[M: Model, QS: QuerySet[Any] = QuerySet[Model], PKT: Any = 
     def get_base_object_queryset(self) -> QS: ...
     def get_object(self) -> M: ...
 
-class BaseOperationView[M: Model, QS: QuerySet[Any] = QuerySet[Model]](BaseObjectMixin[M, QS], View):
+class BaseOperationView[M: Model, QS: QuerySet[Any] = QuerySet[Model]](BaseObjectMixin[M, QS], View[HttpResponse]):
     success_message: str | None
     success_message_extra_tags: str
     success_url_name: str | None
