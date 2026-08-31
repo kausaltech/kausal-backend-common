@@ -55,7 +55,6 @@ if TYPE_CHECKING:
         from paths.dataset_permission_policy import DatasetSchemaPermissionPolicy
 
         from nodes.models import (
-            DatasetPort,
             InstanceConfig,
             InstanceRevisionDatasetPin,
             NodeConfig,
@@ -465,7 +464,6 @@ class DatasetMetric(OrderedModel, UUIDIdentifiedModel, PermissionedModel):
 
     if IS_PATHS:
         node_input_bindings: RevMany[NodeInputPortBinding]
-        node_ports: RevMany[DatasetPort]
 
     class Meta:
         verbose_name = _('dataset metric')
@@ -746,7 +744,6 @@ class Dataset(RevisionMixin, UserModifiableModel, UUIDIdentifiedModel, Permissio
     if IS_PATHS:
         nodes: RevManyToManyQS[NodeConfig, NodeDataset, NodeConfigQuerySet]
         nodes_edges: RevMany[NodeDataset]
-        node_ports: RevMany[DatasetPort]
         node_input_bindings: RevMany[NodeInputPortBinding]
         instance_revision_pins: RevMany[InstanceRevisionDatasetPin]
 
