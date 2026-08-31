@@ -26,6 +26,32 @@ if TYPE_CHECKING:
     type ASGIApplication = UvicornASGIApplication | _ASGIApplicationProtocol | StarletteASGIApp | ASGIAppCallable
 
 
+DEFAULT_PORTS = {'http': 80, 'https': 443, 'ws': 80, 'wss': 443}
+
+
+def build_request_uri(scope: ASGICommonScope) -> str:
+    """
+    Reconstruct the absolute URI of an ASGI request.
+
+    Access tokens carrying an RFC 8707 resource indicator are only accepted for the
+    resource they were issued for, so token authentication needs the externally visible
+    URL rather than just the path. Returns an empty string if the host is unknown.
+    """
+    scheme = scope.get('scheme') or 'http'
+    headers = dict(scope.get('headers') or [])
+    host_header = headers.get(b'host')
+    if host_header:
+        host = host_header.decode('latin-1')
+    else:
+        server = scope.get('server')
+        if not server:
+            return ''
+        hostname, port = server
+        host = hostname if port is None or port == DEFAULT_PORTS.get(scheme) else f'{hostname}:{port}'
+    path = f'{scope.get("root_path") or ""}{scope.get("path") or ""}'
+    return f'{scheme}://{host}{path}'
+
+
 class GeneralRequestMiddleware(BaseMiddleware):
     """General request middleware that performs token auth and log context setup."""
 
@@ -42,7 +68,11 @@ class GeneralRequestMiddleware(BaseMiddleware):
         auth_header = headers.get(b'authorization')
         if auth_header:
             token = auth_header.decode('utf-8')
-            ret = await sync_to_async(authenticate_from_authorization_header)(token, 'graphql')
+            ret = await sync_to_async(authenticate_from_authorization_header)(
+                token,
+                'graphql',
+                build_request_uri(scope),
+            )
             scope['token_auth'] = ret
             if ret.user:
                 scope['user'] = ret.user
