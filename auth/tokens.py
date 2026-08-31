@@ -117,6 +117,73 @@ def dangerously_force_authenticated_user(email: str) -> TokenAuthResult:
     return TokenAuthResult(user=user, token=None)
 
 
+def authenticate_devtool_id_token(authorization: str) -> TokenAuthResult | None:
+    """
+    Validate a Kausal SSO devtool ID token presented as an API bearer token.
+
+    Returns ``None`` whenever this authenticator does not apply — no devtool
+    client configured, the bearer is not a JWT, or the issuer is some other
+    AS — so the caller falls through to the other token authenticators. A
+    token that claims our issuer is handled fully here: either a user or an
+    error, never a fall-through.
+
+    Users are never created on this path. The token's ``sub`` must already be
+    associated with a user (``UserSocialAuth`` row created by a web login
+    through the Kausal SSO backend); ``sub`` is realm-scoped in Keycloak, so
+    the association matches regardless of which client minted the token.
+    """
+    from django.conf import settings
+
+    import jwt as pyjwt
+
+    endpoint = cast('str', getattr(settings, 'SOCIAL_AUTH_KAUSAL_DEVTOOL_OIDC_ENDPOINT', '') or '')
+    client_id = getattr(settings, 'SOCIAL_AUTH_KAUSAL_DEVTOOL_KEY', '') or ''
+    if not endpoint or not client_id:
+        return None
+
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != 'bearer':
+        return None
+    token = parts[1]
+    try:
+        unverified_claims = pyjwt.decode(token, options={'verify_signature': False})
+    except pyjwt.exceptions.PyJWTError:
+        # Not a JWT (e.g. an opaque oauth2_provider access token).
+        return None
+    issuer = str(unverified_claims.get('iss', ''))
+    if issuer.rstrip('/') != endpoint.rstrip('/'):
+        return None
+
+    from social_core.exceptions import AuthTokenError
+    from social_django.models import UserSocialAuth
+    from social_django.utils import load_strategy
+
+    from kausal_common.auth.backends import KausalAuth, KausalDevtoolAuth
+
+    backend = KausalDevtoolAuth(load_strategy())
+    try:
+        claims = backend.decode_and_validate_id_token(token, None)
+        backend.validate_temporal_claims(claims)
+    except AuthTokenError as e:
+        error = TokenAuthError(id='invalid_token', description=str(e))
+        logger.warning(f'Devtool token rejected: {error}')
+        return TokenAuthResult(error=error)
+
+    sub = claims.get('sub')
+    if not sub:
+        return TokenAuthResult(error=TokenAuthError(id='invalid_token', description='Token has no sub claim'))
+    social = UserSocialAuth.objects.filter(provider=KausalAuth.name, uid=sub).select_related('user').first()
+    user = cast('User | None', social.user if social is not None else None)
+    if user is None or not user.is_active:
+        return TokenAuthResult(
+            error=TokenAuthError(
+                id='unknown_user',
+                description='No active user is associated with this identity. Sign in to the admin site first.',
+            ),
+        )
+    return TokenAuthResult(user=user)
+
+
 def authenticate_from_authorization_header(
     authorization: str,
     api_type: Literal['graphql', 'rest-api'],
@@ -134,6 +201,10 @@ def authenticate_from_authorization_header(
     if TYPE_CHECKING:
         from oauth2_provider.oauth2_backends import OAuthLibCore
         from oauthlib.oauth2 import Server
+
+    devtool_result = authenticate_devtool_id_token(authorization)
+    if devtool_result is not None:
+        return devtool_result
 
     oauthlib_core = cast('OAuthLibCore', get_oauthlib_core())
     server = cast('Server', oauthlib_core.server)

@@ -3,6 +3,43 @@ from __future__ import annotations
 from typing import override
 
 from social_core.backends.azuread_tenant import AzureADTenantOAuth2
+from social_core.backends.open_id_connect import OpenIdConnectAuth
+
+
+class KausalAuth(OpenIdConnectAuth):
+    """
+    Kausal's internal Keycloak, for team-member sign-in.
+
+    Configured entirely through ``SOCIAL_AUTH_KAUSAL_*`` settings
+    (``OIDC_ENDPOINT``, ``KEY``, ``SECRET``); OIDC discovery handles the rest.
+    """
+
+    name = 'kausal'
+    DEFAULT_USE_PKCE = True
+
+    @override
+    def auth_extra_arguments(self):
+        extra_arguments = super().auth_extra_arguments()
+        email = self.strategy.request_data().get('email')
+        if email:
+            extra_arguments['login_hint'] = email
+        return extra_arguments
+
+
+class KausalDevtoolAuth(KausalAuth):
+    """
+    Validation-only counterpart of :class:`KausalAuth` for devtool clients.
+
+    Never appears in ``AUTHENTICATION_BACKENDS``; ``kausal_common.auth.tokens``
+    instantiates it directly to validate devtool-minted ID tokens presented as
+    API bearer tokens. Uses its own ``SOCIAL_AUTH_KAUSAL_DEVTOOL_*`` settings,
+    so the trusted client id is the devtool client's, not the login client's.
+    """
+
+    name = 'kausal-devtool'
+    # The bearer *is* the ID token; the access token of the same grant never
+    # reaches the API, so the at_hash binding cannot be checked server-side.
+    VALIDATE_AT_HASH = False
 
 
 class AzureADAuth(AzureADTenantOAuth2):
