@@ -117,7 +117,18 @@ def dangerously_force_authenticated_user(email: str) -> TokenAuthResult:
     return TokenAuthResult(user=user, token=None)
 
 
-def authenticate_from_authorization_header(authorization: str, api_type: Literal['graphql', 'rest-api']) -> TokenAuthResult:
+def authenticate_from_authorization_header(
+    authorization: str,
+    api_type: Literal['graphql', 'rest-api'],
+    request_uri: str = '',
+) -> TokenAuthResult:
+    """
+    Authenticate a request from its `Authorization` header.
+
+    `request_uri` must be the absolute URI of the resource being accessed. Access tokens
+    carrying an RFC 8707 resource indicator are only valid for the resource they were
+    issued for, and such a token is rejected when the URI is missing.
+    """
     from oauth2_provider.oauth2_backends import get_oauthlib_core
 
     if TYPE_CHECKING:
@@ -127,7 +138,7 @@ def authenticate_from_authorization_header(authorization: str, api_type: Literal
     oauthlib_core = cast('OAuthLibCore', get_oauthlib_core())
     server = cast('Server', oauthlib_core.server)
     valid, r = server.verify_request(
-        '',
+        request_uri,
         'GET',
         body=None,
         headers=dict(
