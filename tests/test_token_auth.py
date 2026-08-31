@@ -4,7 +4,6 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, cast
 from uuid import uuid4
 
-from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 import pytest
@@ -27,7 +26,9 @@ OTHER_RESOURCE_URI = 'https://example.com/some-other-api'
 
 @pytest.fixture
 def token_user() -> User:
-    return get_user_model().objects.create_user(email='token-auth@example.com')
+    from users.models import User
+
+    return User.objects.create_user(email='token-auth@example.com', username='token-auth-test')
 
 
 def create_access_token(user: User, resource: list[str]) -> str:
