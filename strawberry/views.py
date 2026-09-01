@@ -108,6 +108,9 @@ class GraphQLWSConsumer[Context: GraphQLContext = GraphQLContext](StrawberryGrap
 
 class SyncGraphQLHTTPConsumer[Context: GraphQLContext = GraphQLContext](StrawberrySyncGraphQLHTTPConsumer[Context, None], ABC):
     context_class: type[Context]
+    # HTTP operations do not receive channel-layer messages. Subscriptions use
+    # GraphQLWSConsumer and retain the default channel layer.
+    channel_layer_alias = 'graphql_http_disabled'
 
     async def run(  # type: ignore[override]
         self,
