@@ -259,7 +259,7 @@ RUN ./manage.py compilemessages
 # Run the system checks to import more code and pre-generate the .pyc files
 RUN ./manage.py check
 
-RUN if [ -d notifications ] ; then pybabel compile -D notifications -d locale ; fi
+RUN if [ -d notifications ] || [ -d src/notifications ] ; then pybabel compile -D notifications -d locale ; fi
 
 RUN <<EOT
   if which dvc 2>&1 > /dev/null ; then
