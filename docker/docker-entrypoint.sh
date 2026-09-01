@@ -74,9 +74,9 @@ if [ $needs_db -eq 1 ]; then
         python manage.py migrate --no-input
 
         if [ "$TEST_MODE" == "1" ] && [ "$DEPLOYMENT_TYPE" == "ci" ]; then
-            if [ -f '/code/paths/settings.py' ]; then
+            if [ -f '/code/paths/settings.py' ] || [ -f '/code/src/paths/settings.py' ]; then
                 populate_paths_test_instances
-            elif [ ! -f '/code/aplans/settings.py' ]; then
+            elif [ -f '/code/aplans/settings.py' ] || [ -f '/code/src/aplans/settings.py' ]; then
                 echo "No Django settings file recognized for Kausal Paths or Watch." >&2
                 exit 2
             fi
