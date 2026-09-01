@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.21-labs
 
-ARG base_image=ubuntu:24.04
+ARG base_image=ubuntu:26.04
 
 FROM caddy:2 AS caddy
 
@@ -10,19 +10,19 @@ FROM caddy:2 AS caddy
 FROM ${base_image} AS base
 
 ARG POSTGRESQL_MAJOR_VERSION=18
-ARG UV_VERSION=0.10.12
-ARG NVM_VERSION=0.40.4
-ARG ubuntu_codename="noble"
+ARG UV_VERSION=0.12.8
+ARG NVM_VERSION=0.40.7
+ARG ubuntu_codename="resolute"
 
 ARG runtime_deps="libpq5 gettext \
-    libproj25 ^libgdal3[2-9]$ libjpeg6[2345]-turbo$ libtiff6 libxml2 libffi8 libxslt1.1 \
-    libwebp7 libvoikko1 voikko-fi curl \
-    iputils-ping inetutils-telnet redis-tools restic procps git \
-    ca-certificates media-types nano less gnupg"
+  libproj25 ^libgdal3[2-9]$ ^libjpeg(6*)?-turbo[8]?$ libtiff6 ^libxml[23]$ libffi8 libxslt1.1 \
+  libwebp7 libvoikko1 voikko-fi curl \
+  iputils-ping inetutils-telnet redis-tools restic procps git \
+  ca-certificates media-types nano less gnupg"
 ARG build_time_deps="libpq-dev build-essential \
-    zlib1g-dev libjpeg-dev libtiff-dev libopenjp2-7-dev libwebp-dev \
-    binutils libproj-dev libgdal-dev \
-    libxml2-dev libxslt1-dev libffi-dev"
+  zlib1g-dev libjpeg-dev libtiff-dev libopenjp2-7-dev libwebp-dev \
+  binutils libproj-dev libgdal-dev \
+  libxml2-dev libxslt1-dev libffi-dev"
 
 ARG app_path=/code
 ARG app_user_uid=1000
@@ -51,19 +51,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked <<EOT
   echo Upgrading apt packages
   apt-get upgrade -qq -y
   echo Installing runtime deps
-  apt-get install -qq --no-install-recommends -y \
-    ${runtime_deps}
-EOT
-
-RUN <<EOT
-  set -e
+  apt-get install -qq --no-install-recommends -y ${runtime_deps}
   echo "deb https://apt.postgresql.org/pub/repos/apt ${ubuntu_codename}-pgdg main" > /etc/apt/sources.list.d/pgdg.list
   curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
-EOT
-
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked <<EOT
-  set -e
-  echo Updating apt repositories
   apt-get update -qq
   echo Installing PostgreSQL client libraries
   apt-get install -qq --no-install-recommends -y \
@@ -100,15 +90,17 @@ FOE
   chmod a+x /usr/local/bin/install-uv.sh
 EOT
 
+# Include in the buildkit cache key
+RUN : ${build_time_deps}
+
 #
 # Builder stage
 #
 FROM base AS builder
 
-
 # Install build-time deps, and clean the cache from stale packages.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked <<EOF
+  --mount=type=cache,target=/var/lib/apt,sharing=locked <<EOF
   set -e
   echo Updating apt repositories
   apt-get update -qq
@@ -128,11 +120,24 @@ ENV \
 
 WORKDIR ${app_path}
 
-COPY --chown=${app_user_uid}:${app_user_gid} \
-  .python-version pyproject.toml ${app_path}/
+# Install node
+COPY package.json package-lock.json* pnpm-lock.yaml* ${app_path}/
+ENV NPM_CONFIG_CACHE=${XDG_CACHE_HOME}/npm
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
+  set -e
+  pnpm config set store-dir ${XDG_CACHE_HOME}/pnpm-store
+  echo "Installing Node.js dependencies..."
+  pnpm install --prod --frozen-lockfile
+  echo "Generating Node.js SBOM..."
+  mkdir -p /sbom
+  pnpm sbom --sbom-format cyclonedx > /sbom/node-js.sbom.cdx.json
+EOT
 
 RUN --mount=type=cache,target=/cache \
   /usr/local/bin/install-uv.sh
+
+COPY --chown=${app_user_uid}:${app_user_gid} \
+  .python-version* pyproject.toml ${app_path}/
 
 RUN --mount=type=cache,target=/cache \
   ${UV_BIN} python install
@@ -148,7 +153,7 @@ COPY uv.lock* ${app_path}/
 ENV CC=gcc
 # TODO: Should '--compile-bytecode' be included below?
 RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
-    --mount=type=secret,id=EXTRA_PYPI_INDEX <<EOF
+  --mount=type=secret,id=EXTRA_PYPI_INDEX <<EOF
   set -e
   export LIBRARY_PATH=$(cat /etc/ld.so.conf.d/uv-python.conf)
   . ${VIRTUAL_ENV}/bin/activate
@@ -172,19 +177,6 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
   fi
   ${UV_BIN} sync --active $DEV_DEPS --group prod $EXTRAS --locked --no-install-project
 EOF
-
-# Install node
-COPY package.json package-lock.json* pnpm-lock.yaml* ${app_path}/
-ENV NPM_CONFIG_CACHE=${XDG_CACHE_HOME}/npm
-RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
-  set -e
-  pnpm config set store-dir ${XDG_CACHE_HOME}/pnpm-store
-  echo "Installing Node.js dependencies..."
-  pnpm install --prod --frozen-lockfile
-  echo "Generating Node.js SBOM..."
-  mkdir -p /sbom
-  pnpm sbom --sbom-format cyclonedx > /sbom/node-js.sbom.cdx.json
-EOT
 
 # Install the project only after copying its source. Keeping this separate from
 # the dependency sync above preserves that layer when application code changes
@@ -269,10 +261,11 @@ RUN ./manage.py check
 
 RUN if [ -d notifications ] ; then pybabel compile -D notifications -d locale ; fi
 
-RUN \
-  if which dvc 2>&1 > /dev/null ; then \
-    dvc cache dir --global ${DVC_CACHE_DIR} ; \
+RUN <<EOT
+  if which dvc 2>&1 > /dev/null ; then
+    dvc cache dir --global ${DVC_CACHE_DIR}
   fi
+EOT
 
 COPY --from=caddy /usr/bin/caddy /usr/bin/caddy
 COPY ${docker_dir}/Caddyfile /etc/caddy/
@@ -300,14 +293,16 @@ ENV \
   GIT_REV=${GIT_REV}
 
 # Store the Sentry release information in .env conditionally, because BUILD_ID and SENTRY_PROJECT might be unset.
-RUN \
-  if [ ! -z "${SENTRY_RELEASE}" ] ; then \
-    echo "SENTRY_RELEASE=${SENTRY_RELEASE}" >> ${app_path}/.env ; \
-  else \
-    if [ ! -z "$BUILD_ID" ] && [ ! -z "$SENTRY_PROJECT" ] ; then \
-      echo "SENTRY_RELEASE=${SENTRY_PROJECT}@${BUILD_ID}" >> ${app_path}/.env ; \
-    fi \
+RUN <<EOT
+  set -e
+  if [ ! -z "${SENTRY_RELEASE}" ] ; then
+    echo "SENTRY_RELEASE=${SENTRY_RELEASE}" >> ${app_path}/.env
+  else
+    if [ ! -z "$BUILD_ID" ] && [ ! -z "$SENTRY_PROJECT" ] ; then
+      echo "SENTRY_RELEASE=${SENTRY_PROJECT}@${BUILD_ID}" >> ${app_path}/.env
+    fi
   fi
+EOT
 
 # We need to have the default user as root to be able to run tests etc.
 USER root
