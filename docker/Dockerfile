@@ -170,7 +170,7 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
   else
     DEV_DEPS="--no-dev"
   fi
-  ${UV_BIN} sync --active $DEV_DEPS --group prod $EXTRAS --locked
+  ${UV_BIN} sync --active $DEV_DEPS --group prod $EXTRAS --locked --no-install-project
 EOF
 
 # Install node
@@ -185,6 +185,13 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
   mkdir -p /sbom
   pnpm sbom --sbom-format cyclonedx > /sbom/node-js.sbom.cdx.json
 EOT
+
+# Install the project only after copying its source. Keeping this separate from
+# the dependency sync above preserves that layer when application code changes
+# and supports both root-level and src-based project layouts.
+COPY --chown=${app_user_uid}:${app_user_gid} . ${app_path}/
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
+  ${UV_BIN} pip install --python ${VIRTUAL_ENV}/bin/python --no-deps --editable ${app_path}
 
 RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
   set -e
