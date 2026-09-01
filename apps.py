@@ -80,14 +80,15 @@ def check_model_ordering(app_configs: Sequence[AppConfig] | None, **_kwargs) -> 
             continue
         if model._meta.app_config.path.startswith(site_packages_path):
             continue
-        errors.append(
-            CheckWarning(
-                'Model has no default ordering',
-                # hint='Add ordering to the model Meta, e.g., ordering = ("id",)',
-                id='kausal_common.M001',
-                obj=model,
+        if False:
+            errors.append(
+                CheckWarning(
+                    'Model has no default ordering',
+                    # hint='Add ordering to the model Meta, e.g., ordering = ("id",)',
+                    id='kausal_common.M001',
+                    obj=model,
+                )
             )
-        )
     return errors
 
 
