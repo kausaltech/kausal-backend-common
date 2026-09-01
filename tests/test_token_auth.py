@@ -4,11 +4,11 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, cast
 from uuid import uuid4
 
+from django.apps import apps
 from django.utils import timezone
 
 import pytest
 from asgiref.sync import async_to_sync
-from oauth2_provider.models import get_access_token_model, get_application_model
 
 from kausal_common.asgi.middleware import GeneralRequestMiddleware, build_request_uri
 from kausal_common.auth.tokens import authenticate_from_authorization_header
@@ -26,6 +26,9 @@ OTHER_RESOURCE_URI = 'https://example.com/some-other-api'
 
 @pytest.fixture
 def token_user() -> User:
+    if not apps.is_installed('oauth2_provider'):
+        pytest.skip('requires a consumer-provided OAuth2 application')
+
     from users.models import User
 
     return User.objects.create_user(email='token-auth@example.com', username='token-auth-test')
@@ -33,6 +36,8 @@ def token_user() -> User:
 
 def create_access_token(user: User, resource: list[str]) -> str:
     """Issue an access token, optionally bound to RFC 8707 resource indicators."""
+    from oauth2_provider.models import get_access_token_model, get_application_model
+
     application_model = get_application_model()
     application = application_model.objects.create(
         name='Test client',
