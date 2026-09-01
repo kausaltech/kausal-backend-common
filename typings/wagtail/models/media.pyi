@@ -13,6 +13,9 @@ from treebeard.mp_tree import MP_Node
 from .view_restrictions import BaseViewRestriction as BaseViewRestriction
 
 class CollectionQuerySet(TreeQuerySet[Collection]):
+    @classmethod
+    def as_manager(cls) -> CollectionManager: ...  # type: ignore[override]
+
     def get_min_depth(self): ...
     def get_indented_choices(self):
         """

@@ -66,7 +66,13 @@ if [ $needs_db -eq 1 ]; then
     if [ $needs_migrations -eq 1 ] && [ "$KUBERNETES_MODE" != "1" ]; then
         # For Watch, restore the test DB dump before migrations so that
         # new migrations can be applied on top of the dump.
-        if [ "$TEST_MODE" == "1" ] && [ "$DEPLOYMENT_TYPE" == "ci" ] && [ -f '/code/aplans/settings.py' ]; then
+        if [ -d '/code/src' ] ; then
+          src_path=/code/src
+        else
+          src_path=/code
+        fi
+
+        if [ "$TEST_MODE" == "1" ] && [ "$DEPLOYMENT_TYPE" == "ci" ] && [ -f "$src_path/aplans/settings.py" ]; then
             populate_watch_test_data
         fi
 
@@ -74,9 +80,9 @@ if [ $needs_db -eq 1 ]; then
         python manage.py migrate --no-input
 
         if [ "$TEST_MODE" == "1" ] && [ "$DEPLOYMENT_TYPE" == "ci" ]; then
-            if [ -f '/code/paths/settings.py' ] || [ -f '/code/src/paths/settings.py' ]; then
+            if [ -f "$src_path/paths/settings.py" ]; then
                 populate_paths_test_instances
-            elif [ -f '/code/aplans/settings.py' ] || [ -f '/code/src/aplans/settings.py' ]; then
+            elif [ ! -f "$src_path/aplans/settings.py" ]; then
                 echo "No Django settings file recognized for Kausal Paths or Watch." >&2
                 exit 2
             fi
