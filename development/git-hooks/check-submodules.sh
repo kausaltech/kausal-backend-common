@@ -87,12 +87,17 @@ check_submodule_is_pushed() {
     fi
     local target_commit
     target_commit=$(find_submodule_commit_hash ${l_path} ${PRE_COMMIT_TO_REF})
+    if [[ -z ${target_commit} ]]; then
+      # The revision being pushed does not carry this submodule (e.g. it was added later).
+      print_success "  Submodule [$l_path] is not part of the pushed revision"
+      return 0
+    fi
 
-    pushd . > /dev/null
-    cd ${BASH_REMATCH[1]} || exit 1
-
-    remote_branches="$(git branch -r --contains ${target_commit})"
-    if [[ $? -eq 0 && -n ${remote_branches} ]] ; then
+    # Query the submodule's own repository with `git -C` rather than `cd`: the current directory must
+    # stay at the project root, because this function is called once per submodule with relative paths.
+    # An unknown commit makes `git branch` exit non-zero; treat that as "not on any remote branch".
+    remote_branches="$(git -C ${l_path} branch -r --contains ${target_commit} 2>/dev/null || true)"
+    if [[ -n ${remote_branches} ]] ; then
       # If pushing to the `main` branch, we need to check that the submodule is
       # also pushed to the `main` branch.
       if [[ $PRE_COMMIT_REMOTE_BRANCH == "refs/heads/main" ]]; then
