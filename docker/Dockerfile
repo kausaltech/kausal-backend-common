@@ -152,30 +152,17 @@ ARG INSTALL_DEV_DEPS
 COPY uv.lock* ${app_path}/
 ENV CC=gcc
 # TODO: Should '--compile-bytecode' be included below?
-RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
-  --mount=type=secret,id=EXTRA_PYPI_INDEX <<EOF
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOF
   set -e
   export LIBRARY_PATH=$(cat /etc/ld.so.conf.d/uv-python.conf)
   . ${VIRTUAL_ENV}/bin/activate
 
-  EXTRAS=""
-  if [ -f /run/secrets/EXTRA_PYPI_INDEX ] ; then
-    UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX)
-  else
-    UV_EXTRA_INDEX_URL=""
-  fi
-  if [ ! -z "$UV_EXTRA_INDEX_URL" ] ; then
-    export UV_EXTRA_INDEX_URL=$(cat /run/secrets/EXTRA_PYPI_INDEX)
-    EXTRAS="--extra kausal"
-  else
-    EXTRAS="--no-extra kausal"
-  fi
   if [ ! -z "${INSTALL_DEV_DEPS}" ] ; then
     DEV_DEPS="--group dev --group lint"
   else
     DEV_DEPS="--no-dev"
   fi
-  ${UV_BIN} sync --active $DEV_DEPS --group prod $EXTRAS --locked --no-install-project
+  ${UV_BIN} sync --active $DEV_DEPS --group prod --locked --no-install-project
 EOF
 
 # Install the project only after copying its source. Keeping this separate from
@@ -246,6 +233,26 @@ RUN <<EOT
     echo "PostgreSQL ${POSTGRESQL_MAJOR_VERSION} is not installed."
     exit 1
   fi
+EOT
+
+# Build the client bundles of the proprietary extensions when the private submodule is
+# checked out. The bundles are gitignored build outputs, so they never arrive with the source.
+# Both pnpm directories go into the cache mount: the content-addressable store, and the
+# registry-metadata cache, which is several hundred MB and would otherwise end up in the
+# image layer. The store path matches the one the builder stage uses, so the two stages
+# share it through the same cache volume.
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
+  set -e
+  if [ ! -d private/extensions/client ] ; then
+    echo "Private extensions not present, skipping client build."
+    exit 0
+  fi
+  cd private/extensions/client
+  export PNPM_CONFIG_STORE_DIR=${XDG_CACHE_HOME}/pnpm-store
+  export PNPM_CONFIG_CACHE_DIR=${XDG_CACHE_HOME}/pnpm
+  pnpm install --frozen-lockfile
+  pnpm run build
+  rm -rf node_modules
 EOT
 
 # Switch to the app user
