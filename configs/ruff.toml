@@ -116,7 +116,11 @@ django = [
   "wagtail",
 ]
 "django-init" = ["kausal_common.development.django"]
-"kausal-common" = ["kausal_common"]
+"kausal-common" = [
+  "kausal_common",
+  "kausal_paths_extensions",
+  "kausal_watch_extensions",
+]
 "django-project" = ["paths", "aplans"]
 
 [format]
