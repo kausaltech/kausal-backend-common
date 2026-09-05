@@ -63,7 +63,7 @@ EOT
 ENV PNPM_HOME=/pnpm
 ENV XDG_CACHE_HOME=/cache
 
-COPY --parents package.json mise.toml .miserc.toml mise/ ${app_path}/
+COPY --parents package.json mise.toml .miserc.toml mise/ kausal_common/mise/ ${app_path}/
 WORKDIR ${app_path}
 
 RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
