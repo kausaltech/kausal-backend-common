@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.21-labs
+# syntax=docker/dockerfile:1.27-labs
 
 ARG base_image=ubuntu:26.04
 
@@ -10,15 +10,13 @@ FROM caddy:2 AS caddy
 FROM ${base_image} AS base
 
 ARG POSTGRESQL_MAJOR_VERSION=18
-ARG UV_VERSION=0.12.8
-ARG NVM_VERSION=0.40.7
 ARG ubuntu_codename="resolute"
 
 ARG runtime_deps="libpq5 gettext \
   libproj25 ^libgdal3[2-9]$ ^libjpeg(6*)?-turbo[8]?$ libtiff6 ^libxml[23]$ libffi8 libxslt1.1 \
   libwebp7 libvoikko1 voikko-fi curl \
   iputils-ping inetutils-telnet redis-tools restic procps git \
-  ca-certificates media-types nano less gnupg"
+  ca-certificates media-types nano less gnupg jq"
 ARG build_time_deps="libpq-dev build-essential \
   zlib1g-dev libjpeg-dev libtiff-dev libopenjp2-7-dev libwebp-dev \
   binutils libproj-dev libgdal-dev \
@@ -28,6 +26,7 @@ ARG app_path=/code
 ARG app_user_uid=1000
 ARG app_user_gid=1000
 ARG docker_dir=./kausal_common/docker
+ARG static_root=/srv/static
 
 # Ubuntu nowadays adds a `ubuntu` user with id 1000, which conflicts
 # with our hard-coded uid. Remove the user if it exists.
@@ -61,33 +60,36 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked <<EOT
   rm -rf /var/lib/apt/lists/*
 EOT
 
-#
-# Install node with nvm
-#
-RUN \
-  mkdir -p $NVM_DIR && export METHOD=script ; export PROFILE=/dev/null ; \
-  curl -LsSf https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash
-COPY .nvmrc ${app_path}/
-RUN \
-  cd ${app_path} && \
-  . ${NVM_DIR}/nvm.sh ; \
-  nvm install --default && nvm cache clear && chown -R root:root /opt/nvm/versions
-RUN <<EOT
-  for cmd in in /opt/nvm/versions/node/*/bin/* ; do
-    ln -s $cmd /usr/local/bin
-  done
-  corepack enable pnpm
-EOT
+ENV PNPM_HOME=/pnpm
+ENV XDG_CACHE_HOME=/cache
 
-# Leave the uv install script in the image, because it's useful for debugging.
-RUN <<EOT
-  set -e
-  cat  > /usr/local/bin/install-uv.sh <<FOE
-#!/bin/bash
-export UV_VERSION=${UV_VERSION}
-curl -LsSf https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-installer.sh | bash -s -- --quiet
-FOE
-  chmod a+x /usr/local/bin/install-uv.sh
+COPY --parents package.json mise.toml .miserc.toml mise/ ${app_path}/
+WORKDIR ${app_path}
+
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
+  set -xe
+  export MISE_ENV=prod
+  export MISE_LOCKED=1
+  export MISE_CACHE_DIR=/tmp/mise-cache
+  export MISE_INSTALLS_DIR=/tools
+  export MISE_DATA_DIR="/mise"
+  export MISE="${XDG_CACHE_HOME}/mise-bin"
+  export MISE_SYSTEM_INSTALLS_DIR=/tools
+
+  if [ ! -x $MISE ] ; then
+    export MISE_INSTALL_PATH=$MISE
+    curl https://mise.run | sh
+  fi
+  $MISE trust
+  $MISE install --system node pnpm uv
+  # Lock validation not working with python
+  MISE_LOCKED=0 $MISE install python --system
+  MISE_LOCKED=0 $MISE use python
+
+  for d in $($MISE doctor paths) ; do
+    ln -s -t /usr/local/bin $(find $d -maxdepth 1 -executable -a ! -type d)
+  done
+  rm -rf /tmp/mise-cache
 EOT
 
 # Include in the buildkit cache key
@@ -107,15 +109,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   echo Installing build-time deps
   apt-get install -qq --no-install-recommends -y \
     ${build_time_deps}
+  rm -rf /var/lib/apt/lists/*
 EOF
 
 # Install uv
 ENV \
   XDG_CACHE_HOME=/cache \
-  UV_INSTALL_DIR=${UV_HOME} \
-  UV_BIN=${UV_HOME}/uv \
+  UV_BIN=uv \
   UV_LINK_MODE=copy \
-  UV_PYTHON_INSTALL_DIR=${UV_HOME} \
+  UV_PYTHON_INSTALL_DIR=/tools/python \
   UV_COMPILE_BYTECODE=1
 
 WORKDIR ${app_path}
@@ -133,16 +135,12 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
   pnpm sbom --sbom-format cyclonedx > /sbom/node-js.sbom.cdx.json
 EOT
 
-RUN --mount=type=cache,target=/cache \
-  /usr/local/bin/install-uv.sh
-
-COPY --chown=${app_user_uid}:${app_user_gid} \
-  .python-version* pyproject.toml ${app_path}/
+COPY --chown=${app_user_uid}:${app_user_gid} pyproject.toml ${app_path}/
 
 RUN --mount=type=cache,target=/cache \
   ${UV_BIN} python install
 RUN --mount=type=cache,target=/cache \
-  ${UV_BIN} venv --link-mode=copy --python-preference only-managed ${VIRTUAL_ENV}
+  ${UV_BIN} venv --link-mode=copy -p /usr/local/bin/python ${VIRTUAL_ENV}
 
 RUN \
   echo ${UV_HOME}/*/lib | tee /etc/ld.so.conf.d/uv-python.conf && \
@@ -162,23 +160,43 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOF
   else
     DEV_DEPS="--no-dev"
   fi
-  ${UV_BIN} sync --active $DEV_DEPS --group prod --locked --no-install-project
+  ${UV_BIN} sync --compile-bytecode --active $DEV_DEPS --group prod --locked --no-install-project
+  ${UV_BIN} cache prune --ci
 EOF
 
-# Install the project only after copying its source. Keeping this separate from
-# the dependency sync above preserves that layer when application code changes
-# and supports both root-level and src-based project layouts.
-COPY --chown=${app_user_uid}:${app_user_gid} . ${app_path}/
-RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
-  ${UV_BIN} pip install --python ${VIRTUAL_ENV}/bin/python --no-deps --editable ${app_path}
-
+# Build the client bundles of the proprietary extensions when the private submodule is
+# checked out. The bundles are gitignored build outputs, so they never arrive with the source.
+# Both pnpm directories go into the cache mount: the content-addressable store, and the
+# registry-metadata cache, which is several hundred MB and would otherwise end up in the
+# image layer. The store path matches the one the builder stage uses, so the two stages
+# share it through the same cache volume.
+COPY --parents private/extensions/client* ${app_path}/
 RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
   set -e
-  mkdir -p /sbom
-  echo "Generating Python SBOM..." ; \
-  ${UV_HOME}/uvx --from cyclonedx-bom cyclonedx-py environment --pyproject ${app_path}/pyproject.toml \
-    -o /sbom/python.sbom.cdx.json ${VIRTUAL_ENV} ; \
+  ext_path=${app_path}/private/extensions
+  cd ${app_path}
+  if [ ! -d ${ext_path}/client ] ; then
+    echo "Private extensions not present, skipping client build."
+    exit 0
+  fi
+  cd ${ext_path}/client
+  export PNPM_CONFIG_STORE_DIR=${XDG_CACHE_HOME}/pnpm-store
+  export PNPM_CONFIG_CACHE_DIR=${XDG_CACHE_HOME}/pnpm
+  pnpm install --frozen-lockfile
+  pnpm run build
+  rm -rf node_modules
+  cd ${app_path}
+  if uv version | grep -q kausal-watch ; then
+    other_path=paths/kausal_paths_extensions
+  elif uv version | grep -q kausal-paths ; then
+    other_path=watch/kausal_watch_extensions
+  else
+    echo "Unable to detect backend product"
+    exit 1
+  fi
+  rm -rf ${ext_path}/${other_path}
 EOT
+
 
 #
 # Final image
@@ -188,15 +206,31 @@ FROM base AS final
 ENV VIRTUAL_ENV=/venv
 ENV PATH=${VIRTUAL_ENV}/bin:${PATH}
 
-COPY --from=builder /opt/uv /opt/uv
 RUN \
   echo ${UV_HOME}/*/lib | tee /etc/ld.so.conf.d/uv-python.conf && \
   ldconfig
 COPY --from=builder --chown=${app_user_uid}:${app_user_gid} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 COPY --from=builder --chown=${app_user_uid}:${app_user_gid} ${app_path}/node_modules ${app_path}/node_modules
+COPY --from=builder --chown=${app_user_uid}:${app_user_gid} --parents \
+  ${app_path}/private/extensions/paths/kausal_paths_extensions/static* \
+  ${app_path}/private/extensions/watch/kausal_watch_extensions/static* \
+  /
 COPY --from=builder /sbom/ /sbom/
 
 COPY --chown=${app_user_uid}:${app_user_gid} . ${app_path}/
+
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} \
+  uv pip install --link-mode=copy --no-deps --editable ${app_path}
+
+RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
+  set -e
+  mkdir -p /sbom
+  echo "Generating Python SBOM..."
+  export XDG_DATA_HOME=${XDG_CACHE_HOME}/uv-data
+  uvx --from cyclonedx-bom cyclonedx-py environment --pyproject ${app_path}/pyproject.toml \
+    -o /sbom/python.sbom.cdx.json ${VIRTUAL_ENV} ; \
+EOT
+
 
 RUN mkdir /scripts
 COPY ${docker_dir}/*.sh /scripts/
@@ -205,8 +239,8 @@ RUN chmod a+x /scripts/*.sh
 
 WORKDIR ${app_path}
 
-ARG STATIC_ROOT=/srv/static
-ENV STATIC_ROOT=${STATIC_ROOT}
+ARG static_root=/srv/static
+ENV STATIC_ROOT=${static_root}
 
 ARG MEDIA_ROOT=/srv/media
 ENV MEDIA_ROOT=${MEDIA_ROOT}
@@ -218,11 +252,13 @@ ENV PINT_CACHE_DIR=${PINT_CACHE_DIR}
 ENV XDG_CACHE_HOME=/cache
 
 RUN groupadd -g ${app_user_gid} user && useradd --no-log-init -m -d /home/user -g ${app_user_gid} -u ${app_user_uid} user
-RUN chown ${app_user_uid}:${app_user_gid} ${app_path}
 
-RUN \
-  mkdir -p ${MEDIA_ROOT} ${STATIC_ROOT} /cache ${DVC_CACHE_DIR} ${PINT_CACHE_DIR} && \
+RUN <<EOT
+  set -e
+  mkdir -p ${MEDIA_ROOT} ${STATIC_ROOT} /cache ${DVC_CACHE_DIR} ${PINT_CACHE_DIR}
+  chown ${app_user_uid}:${app_user_gid} ${app_path}
   chown -R ${app_user_uid}:${app_user_gid} ${MEDIA_ROOT} ${STATIC_ROOT} /cache ${DVC_CACHE_DIR} ${PINT_CACHE_DIR}
+EOT
 
 # Compile bytecode for venv
 RUN cd ${VIRTUAL_ENV} && python -m compileall -q
@@ -235,31 +271,11 @@ RUN <<EOT
   fi
 EOT
 
-# Build the client bundles of the proprietary extensions when the private submodule is
-# checked out. The bundles are gitignored build outputs, so they never arrive with the source.
-# Both pnpm directories go into the cache mount: the content-addressable store, and the
-# registry-metadata cache, which is several hundred MB and would otherwise end up in the
-# image layer. The store path matches the one the builder stage uses, so the two stages
-# share it through the same cache volume.
-RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
-  set -e
-  if [ ! -d private/extensions/client ] ; then
-    echo "Private extensions not present, skipping client build."
-    exit 0
-  fi
-  cd private/extensions/client
-  export PNPM_CONFIG_STORE_DIR=${XDG_CACHE_HOME}/pnpm-store
-  export PNPM_CONFIG_CACHE_DIR=${XDG_CACHE_HOME}/pnpm
-  pnpm install --frozen-lockfile
-  pnpm run build
-  rm -rf node_modules
-EOT
-
 # Switch to the app user
 USER user
 
 # Pre-generate the .pyc bytecode files
-RUN python -m compileall -q
+RUN python -m compileall -q . src/
 
 RUN ./manage.py collectstatic --no-input
 RUN ./manage.py compilemessages
@@ -289,6 +305,9 @@ ENV UWSGI_MODULE=${DJANGO_PROJECT}.wsgi DJANGO_SETTINGS_MODULE=${DJANGO_PROJECT}
 ARG CADDY_PORT=6000
 ENV CADDY_PORT=${CADDY_PORT}
 ENV LC_CTYPE=C.UTF-8
+
+ENV PROMETHEUS_MULTIPROC_DIR=/tmp/django_prometheus_multiproc
+RUN mkdir -p ${PROMETHEUS_MULTIPROC_DIR}
 
 ARG SENTRY_PROJECT
 ARG SENTRY_RELEASE
