@@ -36,6 +36,14 @@ def storage_settings_from_s3_url(url: ParseResult, deployment_type: str | None =
 
     opts: dict[str, Any] = {
         'bucket_name': url.path.lstrip('/'),
+        # Presigned URLs have to be signed with SigV4. django-storages leaves `signature_version`
+        # unset, and botocore then resolves the legacy S3 global endpoint, whose metadata lists
+        # `s3` (SigV2) ahead of `s3v4`; `generate_presigned_url` picks that first entry. The
+        # result is that `Storage.url()` hands out a SigV2 URL (`AWSAccessKeyId`/`Signature`/
+        # `Expires`) while every other call on the same client is signed with SigV4 — so uploads,
+        # listings and copies all work and only public media 403s. Ceph RGW rejects SigV2, and
+        # SigV4 is what boto3 already uses against these endpoints for everything else, so pin it.
+        'signature_version': 's3v4',
     }
     if url.hostname:
         opts['endpoint_url'] = f'https://{url.hostname}'
@@ -43,6 +51,7 @@ def storage_settings_from_s3_url(url: ParseResult, deployment_type: str | None =
         opts['access_key'] = url.username
     if url.password:
         opts['secret_key'] = url.password
+    # After the defaults above, so that the URL can still override them.
     for key, val in parse_qs(url.query).items():
         assert len(val) == 1
         opts[key] = _parse_option_value(val[0])

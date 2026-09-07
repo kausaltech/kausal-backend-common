@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -40,3 +40,32 @@ def test_non_boolean_options_are_left_as_strings():
 
     assert settings['OPTIONS']['addressing_style'] == 'virtual'
     assert settings['OPTIONS']['bucket_name'] == 'bucket'
+
+
+def test_presigned_urls_are_signed_with_sigv4():
+    """
+    `Storage.url()` must hand out a SigV4 URL.
+
+    Left to itself, botocore resolves the legacy S3 global endpoint, whose metadata lists SigV2
+    ahead of SigV4, and signs presigned URLs with SigV2 — while signing every other call on the
+    same client with SigV4. Ceph RGW rejects SigV2, so public media 403s while uploads succeed.
+    """
+    url = urlparse(
+        's3://key:secret@fsn1.your-objectstorage.com/bucket?addressing_style=virtual',
+    )
+
+    settings = storage_settings_from_s3_url(url, deployment_type='production')
+    storage = MediaFilesS3Storage(**settings['OPTIONS'])
+
+    query = parse_qs(urlparse(storage.url('images/test.jpg')).query)
+    assert query['X-Amz-Algorithm'] == ['AWS4-HMAC-SHA256']
+    assert 'AWSAccessKeyId' not in query
+    assert settings['OPTIONS']['signature_version'] == 's3v4'
+
+
+def test_signature_version_can_be_overridden_from_the_query_string():
+    url = urlparse('s3://key:secret@s3.example.com/bucket?signature_version=s3')
+
+    settings = storage_settings_from_s3_url(url, deployment_type='production')
+
+    assert settings['OPTIONS']['signature_version'] == 's3'
