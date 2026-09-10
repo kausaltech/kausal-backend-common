@@ -36,6 +36,20 @@ export AWS_SECRET_ACCESS_KEY
 export RESTIC_PASSWORD_FILE
 export RESTIC_REPOSITORY
 
+# Snapshots are grouped and named by DB_BACKUP_TAG (e.g. paths-production-fi)
+# rather than by the pod hostname, which changes on every CronJob run and made
+# `restic forget` group each snapshot on its own. RESTIC_HOST is deliberately not
+# used: restic also applies it as a filter to `dump` and `forget`, which would
+# hide the production snapshots from a staging pod restoring from them.
+unset RESTIC_HOST
+
+function require_backup_tag() {
+  if [ -z "$DB_BACKUP_TAG" ] ; then
+    echo "DB_BACKUP_TAG must be set (e.g. paths-production-fi)."
+    exit 1
+  fi
+}
+
 if [ -z "$1" ] ; then
     echo "Usage: $0 {init|backup|restore|save|snapshots|export-config}"
     exit 2
@@ -55,7 +69,7 @@ if [ "$1" == "init" ] ; then
 fi
 
 if [ "$1" == "snapshots" ] ; then
-    restic snapshots --no-lock
+    restic snapshots --no-lock --host '' --group-by tags,paths
     exit 0
 fi
 
@@ -90,10 +104,14 @@ function do_backup() {
 
     echo "Generating dump..."
     pg_dump -c -O "$database" > "$datatmp"
-    echo "Uploading to restic..."
-    cat "$datatmp" | restic backup --no-cache --stdin-filename database.sql --stdin
+    echo "Uploading to restic (tag ${DB_BACKUP_TAG})..."
+    cat "$datatmp" | restic backup --no-cache --stdin-filename database.sql --stdin \
+        --host "$DB_BACKUP_TAG" --tag "$DB_BACKUP_TAG"
     echo "Pruning old backups..."
-    restic forget --prune --keep-within-hourly 48h --keep-within-daily 30d --keep-within-weekly 1y --keep-monthly unlimited
+    # No --tag filter here on purpose: legacy snapshots without tags form a single
+    # group and age out under the same policy instead of lingering forever.
+    restic forget --prune --host '' --group-by tags,paths \
+        --keep-within-hourly 48h --keep-within-daily 30d --keep-within-weekly 1y --keep-monthly unlimited
     rm "$datatmp"
     if [ -z "$DATABASE_URL" ] ; then
         rm "$pgpasstmp"
@@ -134,10 +152,18 @@ function do_restore() {
     fi
 
     echo "Restoring from backup..."
-    restic dump --no-lock latest database.sql | python manage.py dbshell
+    restic dump --no-lock "${restore_filter[@]}" latest database.sql | python manage.py dbshell
 }
 
+# Optional: restrict `latest` to snapshots carrying DB_RESTORE_TAG. Without it the
+# newest snapshot in the repository is used regardless of host or tag.
+restore_filter=(--host '')
+if [ -n "$DB_RESTORE_TAG" ] ; then
+    restore_filter+=(--tag "$DB_RESTORE_TAG")
+fi
+
 if [ "$1" == "backup" ] ; then
+    require_backup_tag
     do_backup
     exit 0
 fi
@@ -149,6 +175,6 @@ fi
 
 if [ "$1" == "save" ] ; then
     echo "Saving latest SQL dump to database.sql.bz2..."
-    restic dump --no-lock latest database.sql | bzip2 > database.sql.bz2
+    restic dump --no-lock "${restore_filter[@]}" latest database.sql | bzip2 > database.sql.bz2
     exit 0
 fi
