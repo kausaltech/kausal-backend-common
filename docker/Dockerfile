@@ -234,6 +234,7 @@ EOT
 
 RUN mkdir /scripts
 COPY ${docker_dir}/*.sh /scripts/
+COPY ${docker_dir}/*.sql /scripts/
 COPY ${docker_dir}/uwsgi.ini /
 RUN chmod a+x /scripts/*.sh
 
