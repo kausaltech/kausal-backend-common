@@ -24,13 +24,12 @@
 #   DB_TRIM_ARGS                 (staging) Extra arguments for destructively_trim_db,
 #                                e.g. "--exclude-plan sunnydale".
 #   DB_REFRESH_MAX_AGE_HOURS     (testing) Refuse dumps older than this. Default 12.
-#   DB_REFRESH_EXTENSIONS        Extensions re-created after dropping the schema.
-#                                Default "postgis".
 
 set -eo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 BACKUP_SCRIPT="$SCRIPT_DIR/manage-db-backup.sh"
+DROP_OBJECTS_SQL="$SCRIPT_DIR/drop-app-objects.sql"
 
 mode="$1"
 if [ "$mode" != "staging" ] && [ "$mode" != "testing" ] ; then
@@ -50,8 +49,6 @@ if [ -z "$DB_BACKUP_TAG" ] ; then
     exit 1
 fi
 
-extensions="${DB_REFRESH_EXTENSIONS-postgis}"
-
 log() {
     echo "[$(date -u +%FT%TZ)] $*"
 }
@@ -61,21 +58,18 @@ sql() {
 }
 
 terminate_other_sessions() {
-    # The app pods keep connections open, which would block DROP SCHEMA.
+    # The app pods keep connections open, which would block the DROP statements.
     echo "SELECT count(pg_terminate_backend(pid)) FROM pg_stat_activity
           WHERE datname = current_database() AND pid <> pg_backend_pid();" | sql -t
 }
 
 reset_schema() {
-    log "Dropping schema public..."
+    # The public schema is owned by the app role (via pg_database_owner), so dropping
+    # it or using DROP OWNED would also take the superuser-created PostGIS extension,
+    # which the app role cannot re-create. Drop the app's own objects instead.
+    log "Dropping application objects in schema public..."
     terminate_other_sessions
-    {
-        echo 'DROP SCHEMA public CASCADE;'
-        echo 'CREATE SCHEMA public;'
-        for ext in $extensions ; do
-            echo "CREATE EXTENSION IF NOT EXISTS ${ext};"
-        done
-    } | sql
+    sql < "$DROP_OBJECTS_SQL"
 }
 
 restore_and_migrate() {

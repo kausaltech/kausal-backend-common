@@ -124,7 +124,9 @@ function do_restore() {
         echo "ERROR: Refusing to drop the DB schema in production."
         exit 1
       fi
-      echo 'DROP SCHEMA public CASCADE ; CREATE SCHEMA public' | python manage.py dbshell
+      # Drops the app's objects but keeps the schema and superuser-owned extensions
+      # (PostGIS), which the app role could not re-create.
+      python manage.py dbshell -- -qAX -v ON_ERROR_STOP=1 < "$(dirname "$0")/drop-app-objects.sql"
     fi
 
     echo "Checking database status..."
@@ -155,9 +157,9 @@ function do_restore() {
     restic dump --no-lock "${restore_filter[@]}" latest database.sql | python manage.py dbshell
 }
 
+restore_filter=()
 # Optional: restrict `latest` to snapshots carrying DB_RESTORE_TAG. Without it the
 # newest snapshot in the repository is used regardless of host or tag.
-restore_filter=(--host '')
 if [ -n "$DB_RESTORE_TAG" ] ; then
     restore_filter+=(--tag "$DB_RESTORE_TAG")
 fi
