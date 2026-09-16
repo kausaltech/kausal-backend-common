@@ -40,7 +40,12 @@ export RESTIC_REPOSITORY
 # rather than by the pod hostname, which changes on every CronJob run and made
 # `restic forget` group each snapshot on its own. RESTIC_HOST is deliberately not
 # used: restic also applies it as a filter to `dump` and `forget`, which would
-# hide the production snapshots from a staging pod restoring from them.
+# hide the production snapshots from a staging pod restoring from them. Unsetting
+# it is the whole of that job -- do NOT add `--host ''` as a belt-and-braces
+# override: restic takes the empty string as a literal hostname to match, so the
+# filter excludes every snapshot instead of none, and reports it as
+# `snapshot filter (Paths:[] Tags:[] Hosts:[]): no snapshot found`, which reads
+# like an empty repository.
 unset RESTIC_HOST
 
 function require_backup_tag() {
@@ -69,7 +74,7 @@ if [ "$1" == "init" ] ; then
 fi
 
 if [ "$1" == "snapshots" ] ; then
-    restic snapshots --no-lock --host '' --group-by tags,paths
+    restic snapshots --no-lock --group-by tags,paths
     exit 0
 fi
 
@@ -110,7 +115,7 @@ function do_backup() {
     echo "Pruning old backups..."
     # No --tag filter here on purpose: legacy snapshots without tags form a single
     # group and age out under the same policy instead of lingering forever.
-    restic forget --prune --host '' --group-by tags,paths \
+    restic forget --prune --group-by tags,paths \
         --keep-within-hourly 48h --keep-within-daily 30d --keep-within-weekly 1y --keep-monthly unlimited
     rm "$datatmp"
     if [ -z "$DATABASE_URL" ] ; then
