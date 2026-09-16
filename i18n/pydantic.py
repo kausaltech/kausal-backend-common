@@ -309,16 +309,21 @@ class TranslatedString:
             core_schema.dict_schema(core_schema.str_schema(), core_schema.str_schema()),
             core_schema.no_info_plain_validator_function(validate_value),
         ])
-        return core_schema.json_or_python_schema(
-            json_schema=core_schema.union_schema([
-                from_str_schema,
-                from_dict_schema,
-            ]),
-            python_schema=core_schema.union_schema([
+        # One union for both validation modes, with the instance check first.
+        # ``I18nBaseModel.convert_i18n_fields`` (a ``mode='before'`` validator)
+        # builds ``TranslatedString`` instances before field validation runs,
+        # and in JSON mode (``model_validate_json``) Pydantic keeps using the
+        # JSON branch of a ``json_or_python_schema`` for those values. A JSON
+        # branch without ``is_instance`` therefore rejected every translated
+        # field of every ``I18nBaseModel`` loaded from JSON text. On a genuine
+        # JSON value the instance check fails softly and the str/dict chains
+        # take over, so nothing is lost by sharing the union.
+        return core_schema.union_schema(
+            [
                 core_schema.is_instance_schema(cls),
                 from_str_schema,
                 from_dict_schema,
-            ]),
+            ],
             serialization=core_schema.plain_serializer_function_ser_schema(
                 serialize,
             ),

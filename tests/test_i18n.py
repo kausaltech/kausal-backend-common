@@ -258,3 +258,27 @@ def test_with_translation_without_default_language_adopts_the_language():
 
     assert updated.i18n == {'de': 'Energie', 'en': 'Energy'}
     assert updated.default_language == 'de'
+
+
+class JsonModeModel(I18nBaseModel):
+    name: TranslatedString | str
+    label: TranslatedString | None = None
+
+
+@pytest.mark.parametrize('payload', ['{"name": {"fi": "Nimi"}, "label": {"fi": "Otsikko"}}', '{"name": "plain"}'])
+def test_i18n_model_validates_from_json_text(payload):
+    """
+    ``model_validate_json`` must accept what ``model_validate`` accepts.
+
+    ``I18nBaseModel.convert_i18n_fields`` builds ``TranslatedString`` instances
+    before field validation, and in JSON mode Pydantic kept using the JSON
+    branch of the old ``json_or_python_schema``, which had no instance check.
+    """
+    import json
+
+    with set_i18n_context('fi', []):
+        from_json = JsonModeModel.model_validate_json(payload)
+        from_dict = JsonModeModel.model_validate(json.loads(payload))
+
+    assert from_json.model_dump(mode='json') == from_dict.model_dump(mode='json')
+    assert isinstance(from_json.name, TranslatedString)
