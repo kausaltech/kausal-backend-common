@@ -102,6 +102,15 @@ if [ $needs_app -eq 1 ]; then
     fi
 fi
 
+# Run product startup work only before web servers, never migration jobs or workers.
+if [ "$needs_migrations" -eq 1 ]; then
+    for script in "${PRE_ENTRY_DIR:-/scripts/pre-entry}"/*; do
+        [ -f "$script" ] && [ -x "$script" ] || continue
+        echo "Running startup hook $script"
+        "$script"
+    done
+fi
+
 case "$1" in
     uwsgi)
         exec uwsgi --ini /uwsgi.ini
