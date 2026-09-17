@@ -171,6 +171,7 @@ class PerfSpanEntry[ObjType: Any, CacheResultType: Any = Any]:
     finished_at: int = field(init=False, default=0)
     cache_res: CacheResultType | None = field(init=False, default=None)
     depth: int = field(init=False)
+    completed_child_duration_ns: int = field(init=False, default=0)
     attrs: PerfAttrs = field(init=False, default_factory=dict)
 
     def __post_init__(self):
@@ -200,7 +201,7 @@ class PerfSpanEntry[ObjType: Any, CacheResultType: Any = Any]:
 
     @property
     def child_duration_ns(self) -> int:
-        return sum(child.duration_ns for child in self.children)
+        return self.completed_child_duration_ns + sum(child.duration_ns for child in self.children)
 
     @property
     def exclusive_duration_ns(self) -> int:
@@ -259,6 +260,7 @@ class PerfRunContext[ObjType: HasId, CacheResultType: Any = Any]:
     tip: PerfSpanEntry[ObjType, CacheResultType] | None = field(init=False, default=None)
     started_at: int = field(init=False, default_factory=time.perf_counter_ns)
     ended_at: int = field(init=False, default=0)
+    operation_summaries: dict[tuple[str, str], PerfSpanSummary] = field(init=False, default_factory=dict)
 
     def now(self) -> int:
         return time.perf_counter_ns() - self.started_at
@@ -278,10 +280,11 @@ class PerfRunContext[ObjType: HasId, CacheResultType: Any = Any]:
         )
         if attrs:
             entry.set_attrs(attrs)
-        if self.tip is None:
-            self.roots.append(entry)
-        else:
-            self.tip.children.append(entry)
+        if not self.ctx.aggregate_only:
+            if self.tip is None:
+                self.roots.append(entry)
+            else:
+                self.tip.children.append(entry)
         self.tip = entry
         return entry
 
@@ -297,7 +300,15 @@ class PerfRunContext[ObjType: HasId, CacheResultType: Any = Any]:
                 cur.time_ms(cur.exclusive_duration_ns),
             )
         )
-        if cur.parent is None:
+        if self.ctx.aggregate_only:
+            key = (cur.subject.kind, cur.subject.op)
+            summary = self.operation_summaries.get(key)
+            if summary is None:
+                summary = self.operation_summaries[key] = PerfSpanSummary(kind=key[0], op=key[1])
+            summary.add(cur)
+            if cur.parent is not None:
+                cur.parent.completed_child_duration_ns += cur.duration_ns
+        elif cur.parent is None:
             assert cur == self.roots[-1]
         self.tip = cur.parent
 
@@ -330,7 +341,36 @@ class PerfRunContext[ObjType: HasId, CacheResultType: Any = Any]:
         return sorted(summaries.values(), key=lambda item: (-item.total_exclusive_duration_ns, item.full_name))
 
     def summarize_non_compute_spans(self) -> list[PerfSpanSummary]:
+        if self.ctx.aggregate_only:
+            return sorted(
+                (summary for summary in self.operation_summaries.values() if summary.op != 'compute'),
+                key=lambda item: (-item.total_exclusive_duration_ns, item.full_name),
+            )
         return self.summarize_spans(include=lambda entry: entry.subject.op != 'compute')
+
+    def operation_breakdown(self, limit: int = 10) -> dict[str, Any]:
+        """Bounded operation summary for telemetry, using the CLI table's own-time semantics."""
+        if limit < 0:
+            raise ValueError('Operation limit must be non-negative')
+        summaries = self.summarize_non_compute_spans()
+        duration_ns = self._run_duration_ns()
+        return {
+            'duration_ms': duration_ns / 1_000_000,
+            'operation_group_count': len(summaries),
+            'omitted_own_total_ms': sum(s.total_exclusive_duration_ns for s in summaries[limit:]) / 1_000_000,
+            'top_operations': [
+                {
+                    'kind': s.kind,
+                    'operation': s.op,
+                    'count': s.count,
+                    'own_total_ms': s.total_exclusive_duration_ns / 1_000_000,
+                    'own_avg_ms': s.avg_exclusive_duration_ns / 1_000_000,
+                    'own_max_ms': s.max_exclusive_duration_ns / 1_000_000,
+                    'run_share_pct': 100 * s.total_exclusive_duration_ns / duration_ns if duration_ns > 0 else 0.0,
+                }
+                for s in summaries[:limit]
+            ],
+        }
 
     @staticmethod
     def _is_node_compute_span(entry: PerfSpanEntry[ObjType, CacheResultType]) -> bool:
@@ -533,7 +573,7 @@ class PerfRunContext[ObjType: HasId, CacheResultType: Any = Any]:
 
     def end(self, failed: bool) -> None:
         self.ended_at = self.now()
-        if not self.roots:
+        if self.ctx.aggregate_only or not self.roots:
             return
 
         console = Console()
@@ -558,6 +598,7 @@ class PerfContext[ObjType: HasId, CacheResultType: Any = Any](
 ):
     run: PerfRunContext[ObjType, CacheResultType] | None
     enabled: bool = False
+    aggregate_only: bool = False
     min_ms: float
     description: str | None
 
@@ -597,7 +638,7 @@ class PerfContext[ObjType: HasId, CacheResultType: Any = Any](
         obj: ObjType | None = None,
         attrs: PerfAttrs | None = None,
     ) -> Generator[PerfSpanEntry[ObjType, CacheResultType] | None]:
-        if not self.enabled:
+        if not (self.enabled or self.aggregate_only):
             yield None
             return
 

@@ -169,3 +169,36 @@ def test_node_class_operation_mix_uses_local_subtree_without_child_node_compute(
     assert slow_multiply.total_duration_ns == 10
     assert ('SlowNode', PerfKind.NODE, 'compute') in summaries
     assert ('FastNode', PerfKind.NODE, 'compute') in summaries
+
+
+@pytest.mark.parametrize('aggregate_only', [False, True])
+def test_operation_breakdown_modes(aggregate_only: bool, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]):
+    from kausal_common.perf.perf_context import PerfRunContext
+
+    ticks = iter([10, 20, 50, 80, 90, 110, 120])
+    monkeypatch.setattr(PerfRunContext, 'now', lambda _self: next(ticks))
+    perf = PerfContext[DummyNode](supports_cache=False)
+    perf.enabled = not aggregate_only
+    perf.aggregate_only = aggregate_only
+    with perf as run:
+        with perf.exec_named(kind='node', id='a', op='add'), perf.exec_named(kind='dataset', id='b', op='get'):
+            pass
+        with perf.exec_named(kind='dataset', id='c', op='get'):
+            pass
+    summary = run.operation_breakdown(limit=1)
+    assert summary['operation_group_count'] == 2
+    assert summary['duration_ms'] == 120 / 1_000_000
+    assert summary['omitted_own_total_ms'] == 40 / 1_000_000
+    top = summary['top_operations'][0]
+    assert top['operation'] == 'get'
+    assert top['count'] == 2
+    assert top['own_total_ms'] == 50 / 1_000_000
+    assert top['own_avg_ms'] == 25 / 1_000_000
+    assert top['own_max_ms'] == 30 / 1_000_000
+    assert top['run_share_pct'] == pytest.approx(100 * 50 / 120)
+    if aggregate_only:
+        assert run.roots == []
+        assert run.tip is None
+        assert capsys.readouterr().out == ''
+    else:
+        assert 'Operation Breakdown' in capsys.readouterr().out

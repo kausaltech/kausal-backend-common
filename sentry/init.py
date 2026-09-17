@@ -237,6 +237,7 @@ def init_sentry(dsn: str | None, deployment_type: str | None = None):
     experiments: Experiments = {'transport_http2': not bool(spotlight_url)}
     if is_spotlight_enabled():
         experiments['enable_logs'] = is_spotlight_enabled()
+        experiments['max_spans'] = 5000
 
     sentry_sdk.init(
         dsn=dsn,
