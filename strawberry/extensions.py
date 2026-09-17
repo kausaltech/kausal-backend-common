@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import asyncio
 import dataclasses
 import hashlib
 import json
+import time
 from abc import ABC, abstractmethod
+from contextlib import ExitStack, contextmanager
 from typing import TYPE_CHECKING, Any, override
 
 from django.core.cache import cache
+from django.db import connections
 from django.http.request import HttpRequest
 from strawberry.channels import ChannelsRequest, GraphQLWSConsumer
 from strawberry.exceptions import StrawberryGraphQLError
@@ -16,6 +20,7 @@ from strawberry.types.graphql import OperationType
 import orjson
 import sentry_sdk
 from loguru import logger
+from sentry_sdk import metrics
 from sentry_sdk.tracing import Span, TransactionSource
 
 from kausal_common.deployment import env_bool, get_deployment_build_id
@@ -23,7 +28,7 @@ from kausal_common.strawberry.context import GraphQLContext
 from kausal_common.users import user_or_none
 
 if TYPE_CHECKING:
-    from collections.abc import Generator, Mapping
+    from collections.abc import Callable, Generator, Mapping
 
     from django.contrib.sessions.backends.base import SessionBase
     from graphql import ExecutionResult
@@ -193,9 +198,63 @@ class LoggingTracingExtension(SchemaExtension[GraphQLContext]):
             console.print('Variables:')
             console.print(json.dumps(self.execution_context.variables, indent=2))
 
-        with start_span(op='graphql.execute', name=span_name), logger.contextualize(**self.get_log_context()):
-            _rich_traceback_omit = True
+        with (
+            start_span(op='graphql.execute', name=span_name),
+            logger.contextualize(**self.get_log_context()),
+            self.collect_execution_metrics(),
+        ):
             yield None
+
+    @contextmanager
+    def collect_execution_metrics(self) -> Generator[None]:
+        exec_ctx = self.execution_context
+        ctx = self.get_context()
+        sql_queries = 0
+
+        def count_query(execute: Callable[..., Any], sql: str, params: Any, many: bool, context: Any) -> Any:
+            nonlocal sql_queries
+            sql_queries += 1
+            return execute(sql, params, many, context)
+
+        # Django connections and their execute wrappers are thread-local. Async
+        # resolvers may dispatch ORM work to other threads, so don't report a
+        # misleading partial SQL count for async execution.
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            count_sql = True
+        else:
+            count_sql = False
+
+        with ExitStack() as stack:
+            _rich_traceback_omit = True
+            if count_sql:
+                for connection in connections.all():
+                    stack.enter_context(connection.execute_wrapper(count_query))
+            started_at = time.perf_counter_ns()
+            failed = False
+            try:
+                yield None
+            except BaseException:
+                failed = True
+                raise
+            finally:
+                duration_ms = (time.perf_counter_ns() - started_at) / 1_000_000
+                # Cache extensions run inside this hook and may short-circuit
+                # resolver execution by setting execution_context.result.
+                if not ctx.graphql_cache_hit and exec_ctx.operation_type != OperationType.SUBSCRIPTION:
+                    attributes = {
+                        **ctx.get_metric_attributes(),
+                        'graphql.operation.type': exec_ctx.operation_type.value,
+                        'graphql.operation.name': exec_ctx.operation_name or '<unnamed>',
+                        'graphql.operation.outcome': 'error'
+                        if failed or (exec_ctx.result and exec_ctx.result.errors)
+                        else 'success',
+                    }
+                    metrics.distribution('graphql.execute.duration', duration_ms, unit='millisecond', attributes=attributes)
+                    if count_sql:
+                        metrics.count('graphql.execute.sql_queries', sql_queries, attributes=attributes)
+                        metrics.distribution('graphql.execute.sql_queries_per_operation', sql_queries, attributes=attributes)
 
 
 class ExecutionCacheExtension[Ctx: GraphQLContext](SchemaExtension[Ctx], ABC):
@@ -293,6 +352,7 @@ class ExecutionCacheExtension[Ctx: GraphQLContext](SchemaExtension[Ctx], ABC):
 
         self.log('INFO', 'cache [%s]%s[/]%s' % (color, cache_res, cache_reason))
         if result is not None:
+            ctx.graphql_cache_hit = True
             exec_ctx.result = result
         else:
             ctx.graphql_cache_key = cache_key

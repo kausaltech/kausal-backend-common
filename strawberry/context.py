@@ -37,8 +37,13 @@ class GraphQLContext:
     graphql_perf: PerfContext[GraphQLPerfNode] = field(init=False)
     graphql_query_language: str | None = field(init=False)
     graphql_cache_key: str | None = field(init=False, default=None)
+    graphql_cache_hit: bool = field(init=False, default=False)
     graphql_no_cache_reason: str | None = field(init=False, default=None)
     op_started_at: float = field(default_factory=time.perf_counter_ns)
+
+    def get_metric_attributes(self) -> dict[str, str]:
+        """Product-specific attributes for GraphQL execution metrics, without loading resources."""
+        return {}
 
     def get_ws_consumer(self) -> GraphQLWSConsumer:
         assert isinstance(self.request, GraphQLWSConsumer)
