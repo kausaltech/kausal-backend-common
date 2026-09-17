@@ -35,6 +35,14 @@ class BasePermission(sb.BasePermission, ABC):
         raise NotImplementedError('Permission classes should override has_permission method')
 
 
+class AuthenticatedOnly(BasePermission):
+    message = 'You must be signed in to access this resource.'
+
+    def has_permission(self, source: Any, info: gql.Info, **kwargs: Any) -> bool | Awaitable[bool]:
+        user = info.context.get_user()
+        return bool(user.is_authenticated and user.is_active)
+
+
 class SuperuserOnly(BasePermission):
     message = 'You must be a superuser to access this resource.'
 
