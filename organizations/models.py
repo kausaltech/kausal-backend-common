@@ -185,6 +185,8 @@ class BaseOrganization(index.Indexed, TreeModel, ModelWithPrimaryLanguage, gis_m
         verbose_name=_('primary language'),
     )
     location = gis_models.PointField(verbose_name=_('location'), srid=4326, null=True, blank=True)
+    latitude = models.FloatField(verbose_name=_('latitude'), null=True, blank=True, editable=False)
+    longitude = models.FloatField(verbose_name=_('longitude'), null=True, blank=True, editable=False)
 
     i18n = TranslationField(fields=('name', 'abbreviation'), default_language_field='primary_language_lowercase')
 
@@ -216,6 +218,21 @@ class BaseOrganization(index.Indexed, TreeModel, ModelWithPrimaryLanguage, gis_m
     @override
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        location = self.location
+        if location is not None and location.srid not in (None, 4326):
+            location = location.clone()
+            location.transform(4326)
+
+        self.latitude = location.y if location is not None else None
+        self.longitude = location.x if location is not None else None
+
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None and 'location' in update_fields:
+            kwargs['update_fields'] = {*update_fields, 'latitude', 'longitude'}
+
+        return super().save(*args, **kwargs)
 
     def __rich_repr__(self):
         yield 'id', self.pk
