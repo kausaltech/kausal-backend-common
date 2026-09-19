@@ -30,4 +30,11 @@ function restore_from_backup() {
 
 restore_from_backup
 python manage.py check --deploy
-exec python manage.py migrate --noinput
+python manage.py migrate --noinput
+
+# Deployment-only product work: ordinary manage.py migrate does not run these hooks.
+for script in "${POST_MIGRATE_DIR:-/scripts/post-migrate}"/*; do
+    [ -f "$script" ] && [ -x "$script" ] || continue
+    echo "Running post-migration hook $script"
+    "$script"
+done

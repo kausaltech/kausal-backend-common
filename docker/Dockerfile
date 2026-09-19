@@ -238,10 +238,12 @@ COPY ${docker_dir}/*.sql /scripts/
 COPY ${docker_dir}/uwsgi.ini /
 RUN chmod a+x /scripts/*.sh
 # Product-owned startup hooks are optional; the source tree was copied above.
-RUN mkdir -p /scripts/pre-entry && \
-    if [ -d "${app_path}/docker/pre-entry" ]; then \
-      cp -a "${app_path}/docker/pre-entry/." /scripts/pre-entry/; \
-    fi
+RUN for phase in pre-entry post-migrate; do \
+      mkdir -p "/scripts/${phase}"; \
+      if [ -d "${app_path}/docker/${phase}" ]; then \
+        cp -a "${app_path}/docker/${phase}/." "/scripts/${phase}/"; \
+      fi; \
+    done
 
 WORKDIR ${app_path}
 
