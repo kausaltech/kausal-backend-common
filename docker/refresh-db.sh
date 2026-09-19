@@ -113,7 +113,7 @@ refresh_staging() {
 check_dump_freshness() {
     max_age_hours="${DB_REFRESH_MAX_AGE_HOURS:-12}"
     eval "$("$BACKUP_SCRIPT" export-config)"
-    restic snapshots --json --no-lock --host '' --tag "$DB_BACKUP_TAG" latest | python3 - "$max_age_hours" "$DB_BACKUP_TAG" <<'PY'
+    restic snapshots --json --no-lock --tag "$DB_BACKUP_TAG" latest | python3 - "$max_age_hours" "$DB_BACKUP_TAG" <<'PY'
 import json, re, sys
 from datetime import datetime, timedelta, timezone
 

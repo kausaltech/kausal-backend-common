@@ -36,18 +36,6 @@ export AWS_SECRET_ACCESS_KEY
 export RESTIC_PASSWORD_FILE
 export RESTIC_REPOSITORY
 
-# Snapshots are grouped and named by DB_BACKUP_TAG (e.g. paths-production-fi)
-# rather than by the pod hostname, which changes on every CronJob run and made
-# `restic forget` group each snapshot on its own. RESTIC_HOST is deliberately not
-# used: restic also applies it as a filter to `dump` and `forget`, which would
-# hide the production snapshots from a staging pod restoring from them. Unsetting
-# it is the whole of that job -- do NOT add `--host ''` as a belt-and-braces
-# override: restic takes the empty string as a literal hostname to match, so the
-# filter excludes every snapshot instead of none, and reports it as
-# `snapshot filter (Paths:[] Tags:[] Hosts:[]): no snapshot found`, which reads
-# like an empty repository.
-unset RESTIC_HOST
-
 function require_backup_tag() {
   if [ -z "$DB_BACKUP_TAG" ] ; then
     echo "DB_BACKUP_TAG must be set (e.g. paths-production-fi)."
@@ -111,8 +99,9 @@ function do_backup() {
     pg_dump -c -O "$database" > "$datatmp"
     echo "Uploading to restic (tag ${DB_BACKUP_TAG})..."
     cat "$datatmp" | restic backup --no-cache --stdin-filename database.sql --stdin \
-        --host "$DB_BACKUP_TAG" --tag "$DB_BACKUP_TAG"
+        --tag "$DB_BACKUP_TAG"
     echo "Pruning old backups..."
+
     # No --tag filter here on purpose: legacy snapshots without tags form a single
     # group and age out under the same policy instead of lingering forever.
     restic forget --prune --group-by tags,paths \
@@ -157,6 +146,18 @@ function do_restore() {
     else
         echo "Database appears empty or minimally populated (found $nr_tables tables). Safe to restore."
     fi
+
+    # Snapshots are grouped and named by DB_BACKUP_TAG (e.g. paths-production-fi)
+    # rather than by the pod hostname, which changes on every CronJob run and made
+    # `restic forget` group each snapshot on its own. RESTIC_HOST is deliberately not
+    # used: restic also applies it as a filter to `dump` and `forget`, which would
+    # hide the production snapshots from a staging pod restoring from them. Unsetting
+    # it is the whole of that job -- do NOT add `--host ''` as a belt-and-braces
+    # override: restic takes the empty string as a literal hostname to match, so the
+    # filter excludes every snapshot instead of none, and reports it as
+    # `snapshot filter (Paths:[] Tags:[] Hosts:[]): no snapshot found`, which reads
+    # like an empty repository.
+    unset RESTIC_HOST
 
     echo "Restoring from backup..."
     restic dump --no-lock "${restore_filter[@]}" latest database.sql | python manage.py dbshell
