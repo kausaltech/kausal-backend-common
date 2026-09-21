@@ -96,7 +96,7 @@ function do_backup() {
     datatmp=$(mktemp)
 
     echo "Generating dump..."
-    pg_dump -c -O "$database" > "$datatmp"
+    pg_dump -c -O --exclude-table-data='*.*__rebuildable' "$database" > "$datatmp"
     echo "Uploading to restic (tag ${DB_BACKUP_TAG})..."
     cat "$datatmp" | restic backup --no-cache --stdin-filename database.sql --stdin \
         --tag "$DB_BACKUP_TAG"
