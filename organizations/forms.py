@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import ModelChoiceField
 from django.utils.translation import gettext_lazy as _
 
 from treebeard.mp_tree import MP_NodeQuerySet
+from wagtailgeowidget.helpers import geosgeometry_str_to_struct
+from wagtailgeowidget.widgets import GoogleMapsField
 
 from kausal_common.const import IS_PATHS, IS_WATCH
 
@@ -25,6 +28,59 @@ class NodeChoiceField[M: Node[MP_NodeQuerySet[Any]]](ModelChoiceField[M]):
         depth_line = '-' * (obj.get_depth() - 1)
         label = obj.tree_label
         return f'{depth_line} {label}'
+
+
+class OrganizationLocationField(forms.CharField):
+    def __init__(self, **kwargs):
+        kwargs.setdefault('label', _('location'))
+        kwargs.setdefault('required', False)
+        kwargs.setdefault('widget', GoogleMapsField(srid=4326, id_prefix='id_'))
+        super().__init__(**kwargs)
+
+    def clean(self, value) -> tuple[float, float] | None:
+        value = super().clean(value)
+        if not value:
+            return None
+
+        coordinates = geosgeometry_str_to_struct(value)
+        if coordinates is None or int(coordinates['srid']) != 4326:
+            raise ValidationError(_('Enter a valid location.'), code='invalid')
+
+        longitude = float(coordinates['x'])
+        latitude = float(coordinates['y'])
+        if not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
+            raise ValidationError(_('Enter a valid location.'), code='invalid')
+        return longitude, latitude
+
+    def prepare_value(self, value):
+        if isinstance(value, tuple):
+            longitude, latitude = value
+            return f'SRID=4326;POINT({longitude} {latitude})'
+        return super().prepare_value(value)
+
+
+class OrganizationLocationFormMixin(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get('instance')
+        if instance is not None and instance.latitude is not None and instance.longitude is not None:
+            self.initial['coordinate_location'] = self.fields['coordinate_location'].prepare_value((
+                instance.longitude,
+                instance.latitude,
+            ))
+
+    def clean(self):
+        cleaned_data = super().clean() or {}
+        if 'coordinate_location' not in cleaned_data:
+            return cleaned_data
+
+        coordinates = cleaned_data['coordinate_location']
+        if coordinates is None:
+            self.instance.longitude = None
+            self.instance.latitude = None
+        else:
+            self.instance.longitude, self.instance.latitude = coordinates
+        return cleaned_data
 
 
 class NodeForm[M: Node[Any]](ModelForm[M]):

@@ -34,6 +34,13 @@ class GISScalar(Scalar):
 class PointScalar(GISScalar):
     geom_typeid = 0
 
+    @staticmethod
+    def serialize(point) -> dict[str, Any]:
+        if isinstance(point, tuple):
+            longitude, latitude = point
+            return {'type': 'Point', 'coordinates': [longitude, latitude]}
+        return GISScalar.serialize(point)
+
     class Meta:
         description = 'A GIS Point geojson'
 

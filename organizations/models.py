@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Any, ClassVar, Self, override
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.geos import Point
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from modelcluster.fields import ParentalKey
@@ -100,7 +102,7 @@ else:
     class TreeModel: ...
 
 
-class BaseOrganization(index.Indexed, TreeModel, ModelWithPrimaryLanguage, gis_models.Model):
+class BaseOrganization(index.Indexed, TreeModel, ModelWithPrimaryLanguage, models.Model):
     # Different identifiers, depending on origin (namespace), are stored in OrganizationIdentifier
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -184,9 +186,19 @@ class BaseOrganization(index.Indexed, TreeModel, ModelWithPrimaryLanguage, gis_m
         choices=get_supported_languages,
         verbose_name=_('primary language'),
     )
-    location = gis_models.PointField(verbose_name=_('location'), srid=4326, null=True, blank=True)
-    latitude = models.FloatField(verbose_name=_('latitude'), null=True, blank=True, editable=False)
-    longitude = models.FloatField(verbose_name=_('longitude'), null=True, blank=True, editable=False)
+    location = gis_models.PointField(verbose_name=_('location'), srid=4326, null=True, blank=True, editable=False)
+    latitude = models.FloatField(
+        verbose_name=_('latitude'),
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+    )
+    longitude = models.FloatField(
+        verbose_name=_('longitude'),
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+    )
 
     i18n = TranslationField(fields=('name', 'abbreviation'), default_language_field='primary_language_lowercase')
 
@@ -206,33 +218,24 @@ class BaseOrganization(index.Indexed, TreeModel, ModelWithPrimaryLanguage, gis_m
         verbose_name = _('organization')
         verbose_name_plural = _('organizations')
         abstract = True
-
-    @property
-    def parent(self) -> Self | None:
-        return self.get_parent()
-
-    @classmethod
-    def get_parent_choices(cls, user: User, obj: Self | None = None) -> models.QuerySet[Self]:
-        raise NotImplementedError('This method should be implemented by subclasses')
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(latitude__isnull=True, longitude__isnull=True)
+                | models.Q(
+                    latitude__isnull=False,
+                    latitude__gte=-90,
+                    latitude__lte=90,
+                    longitude__isnull=False,
+                    longitude__gte=-180,
+                    longitude__lte=180,
+                ),
+                name='%(app_label)s_%(class)s_valid_coordinates',
+            ),
+        ]
 
     @override
     def __str__(self):
         return self.name
-
-    def save(self, *args, **kwargs):
-        location = self.location
-        if location is not None and location.srid not in (None, 4326):
-            location = location.clone()
-            location.transform(4326)
-
-        self.latitude = location.y if location is not None else None
-        self.longitude = location.x if location is not None else None
-
-        update_fields = kwargs.get('update_fields')
-        if update_fields is not None and 'location' in update_fields:
-            kwargs['update_fields'] = {*update_fields, 'latitude', 'longitude'}
-
-        return super().save(*args, **kwargs)
 
     def __rich_repr__(self):
         yield 'id', self.pk
@@ -244,6 +247,26 @@ class BaseOrganization(index.Indexed, TreeModel, ModelWithPrimaryLanguage, gis_m
             yield 'parent', self.parent.name
         if self.classification:
             yield 'classification', self.classification.name
+
+    def save(self, *args, **kwargs):
+        if self.latitude is None or self.longitude is None:
+            self.location = None
+        else:
+            self.location = Point(self.longitude, self.latitude, srid=4326)
+
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None and {'latitude', 'longitude'} & set(update_fields):
+            kwargs['update_fields'] = {*update_fields, 'location'}
+
+        return super().save(*args, **kwargs)
+
+    @property
+    def parent(self) -> Self | None:
+        return self.get_parent()
+
+    @classmethod
+    def get_parent_choices(cls, user: User, obj: Self | None = None) -> models.QuerySet[Self]:
+        raise NotImplementedError('This method should be implemented by subclasses')
 
 
 class BaseNamespace(models.Model):
