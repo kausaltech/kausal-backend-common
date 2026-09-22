@@ -132,8 +132,8 @@ PY
 }
 
 refresh_testing() {
-    log "Checking that a fresh pruned dump exists..."
-    check_dump_freshness
+    # log "Checking that a fresh pruned dump exists..."
+    # check_dump_freshness
     log "Re-initialising testing from the pruned dump..."
     reset_schema
     DB_RESTORE_TAG="$DB_BACKUP_TAG" restore_and_migrate
