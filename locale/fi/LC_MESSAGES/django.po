@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-25 11:46+0100\n"
+"POT-Creation-Date: 2026-09-23 09:47+0000\n"
 "PO-Revision-Date: 2026-03-12 09:21+0000\n"
 "Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
 "Language-Team: Finnish <https://weblate.kausal.tech/projects/kausal-backend-common/django/fi/>\n"
@@ -22,693 +22,790 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Generator: Weblate 5.15.1\n"
 
-#: kausal_common/admin_site/tables.py
-#: kausal_common/models/modification_tracking.py
+#: admin_site/tables.py models/modification_tracking.py
 msgid "Last modified at"
 msgstr "Viimeksi muokattu"
 
-#: kausal_common/api/exceptions.py
+#: api/exceptions.py
 msgid "Cannot delete instance because other objects reference it."
 msgstr "Kohdetta ei voida poistaa koska muut oliot viittaavat siihen."
 
-#: kausal_common/api/exceptions.py
+#: api/exceptions.py
 #, python-format
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
 msgstr "Kohdetta \"%s\" ei voida poistaa, koska se liittyy muihin kohteisiin, kuten instansseihin, henkilöihin tai toimenpiteisiin."
 
-#: kausal_common/blocks/base.py
+#: blocks/base.py
 msgid "Label"
 msgstr "Selite"
 
-#: kausal_common/blocks/base.py
+#: blocks/base.py
 msgid "Label for the column to be used instead of the default"
 msgstr "Sarakkeen selite, jota käytetään oletusarvon sijasta"
 
-#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+#: blocks/base.py blocks/fields.py
 msgid "Help text"
 msgstr "Ohjeteksti"
 
-#: kausal_common/blocks/base.py
+#: blocks/base.py
 msgid "Help text for the column to be shown in the UI"
 msgstr "Käyttöliittymässä näytettävän sarakkeen ohjeteksti"
 
-#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+#: blocks/base.py blocks/fields.py
 msgid "Heading to show instead of the default"
 msgstr "Otsikko, joka näytetään oletusarvon sijasta"
 
-#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+#: blocks/base.py blocks/fields.py
 msgid "Field label"
 msgstr "Kentän nimi"
 
-#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+#: blocks/base.py blocks/fields.py
 msgid "Help text for the field to be shown in the UI"
 msgstr "Käyttöliittymässä näytettävän kentän ohjeteksti"
 
-#: kausal_common/blocks/base.py kausal_common/blocks/fields.py
+#: blocks/base.py blocks/fields.py
 #, python-format
 msgid "Content block: %(label)s"
 msgstr "Sisältölohko: %(label)s"
 
-#: kausal_common/blocks/base.py
+#: blocks/base.py
 msgid "Label for 'show all'"
 msgstr "Selite vaihtoehdolle 'näytä kaikki'"
 
-#: kausal_common/blocks/base.py
+#: blocks/base.py
 #, python-format
 msgid "Filter: %(filter_label)s"
 msgstr "Suodatin: %(filter_label)s"
 
-#: kausal_common/datasets/chooser.py
+#: datasets/chooser.py
 msgid "Choose a dataset"
 msgstr "Valitse tietoaineisto"
 
-#: kausal_common/datasets/chooser.py
+#: datasets/chooser.py
 msgid "Choose another dataset"
 msgstr "Valitse toinen tietoaineisto"
 
-#: kausal_common/datasets/models.py kausal_common/organizations/models.py
+#: datasets/models.py organizations/models.py
 msgid "name"
 msgstr "nimi"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "dimension"
 msgstr "dimensio"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "dimensions"
 msgstr "mittarin dimensiot"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Optional identifier that, if set, must be unique within the dimension"
 msgstr "Valinnainen tunniste, jonka on oltava uniikki dimension sisällä"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "label"
 msgstr "nimeke"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "dimension category"
 msgstr "dimension luokka"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "dimension categories"
 msgstr "dimension luokat"
 
-#: kausal_common/datasets/models.py kausal_common/models/fields.py
+#: datasets/models.py models/fields.py
 msgid "identifier"
 msgstr "tunniste"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the scope"
 msgstr "Valinnainen tunniste, jonka on oltava uniikki vaikutusalueen sisällä"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "dimension scope"
 msgstr "dimension vaikutusalue"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "dimension scopes"
 msgstr "dimensioiden vaikutusalueet"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Yearly"
 msgstr "Vuosittainen"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Monthly"
 msgstr ""
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Time resolution of the time stamps of data points in this dataset"
 msgstr "Tietoaineiston aikaleimojen resoluutio"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
+msgid "Whether non-superusers may modify this schema and its datasets"
+msgstr ""
+
+#: datasets/models.py
 msgid "start date"
 msgstr "alkupäivämäärä"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "For a newly created dataset, start entering values from this year"
 msgstr "Vuosi, josta alkaen uuden tietoaineiston arvojen syöttö alkaa"
 
-#: kausal_common/datasets/models.py
-#: kausal_common/templates/kausal_common/people/chooser_results.html
+#: datasets/models.py
+msgid "The meaningful category combinations for datasets using this schema"
+msgstr ""
+
+#: datasets/models.py templates/kausal_common/people/chooser_results.html
 msgid "Name"
 msgstr "Nimi"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Descriptive name of the dataset schema"
 msgstr "Kuvaava nimi tietoaineistomallille"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Description"
 msgstr "Kuvaus"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Description of the content and use of the dataset"
 msgstr "Tietoaineiston sisällön ja käyttötarkoituksen kuvaus"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Time resolution"
 msgstr "Aikaresoluutio"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Initial date"
 msgstr "Alkupäivämäärä"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Metrics"
 msgstr "Metriikat"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Defines the interpretation and units for the values of the dataset"
 msgstr "Määrittelee tietoaineiston arvojen tulkinnan ja mittayksiköt"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Dimensions"
 msgstr "Dimensiot"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Used when metrics are tracked for multiple categories"
 msgstr "Käyteään kun metriikat kattavat useampia kategorioita"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "Permissions"
 msgctxt "list of persons and their respective permissions on a dataset schema"
 msgid "Person permissions"
 msgstr "Käyttöoikeudet"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain persons"
 msgstr "Antaa tietyille henkilöille oikeudet tämän skeeman tietoaineistoihin"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "Permissions"
 msgctxt "list of person groups and their respective permissions on a dataset schema"
 msgid "Group permissions"
 msgstr "Käyttöoikeudet"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain person groups"
 msgstr "Antaa tietyille henkilöryhmille oikeudet tämän skeeman tietoaineistoihin"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Permissions"
 msgstr "Käyttöoikeudet"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "dataset schema"
 msgstr "tietoaineiston skeema"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "dataset schemas"
 msgstr "tietoaineistojen skeemat"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "unit"
 msgstr "yksikkö"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "dataset metric"
 msgstr "tietoaineiston metriikka"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "dataset metrics"
 msgstr "tietoaineistojen metriikat"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Multiply"
 msgstr ""
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Divide"
 msgstr ""
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Add"
 msgstr ""
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "Subtract"
 msgstr ""
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "schema"
 msgstr "skeema"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "dataset metric"
 msgid "target metric"
 msgstr "tietoaineiston metriikka"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "The metric whose values are computed by this operation"
 msgstr ""
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "location"
 msgid "operation"
 msgstr "sijainti"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "operand A"
 msgstr ""
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
+msgid "If empty, uses the indicator's own values as input"
+msgstr ""
+
+#: datasets/models.py
 msgid "operand B"
 msgstr ""
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "dataset metric"
 msgid "dataset metric computation"
 msgstr "tietoaineiston metriikka"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "dataset metrics"
 msgid "dataset metric computations"
 msgstr "tietoaineistojen metriikat"
 
-#: kausal_common/datasets/models.py
-msgid "dataset schema dimension"
-msgstr "tietoaineiston skeeman dimensio"
+#: datasets/models.py
+msgid "indicator values"
+msgstr ""
 
-#: kausal_common/datasets/models.py
-msgid "dataset schema dimensions"
-msgstr "tietoaineiston skeeman dimensiot"
-
-#: kausal_common/datasets/models.py
-msgid "Optional identifier that, if set, must be unique in the dataset's scope"
-msgstr "Valinnainen tunniste, jonka on oltava uniikki tietoaineiston vaikutusalueella"
-
-#: kausal_common/datasets/models.py
-msgid "dataset"
-msgstr "tietoaineisto"
-
-#: kausal_common/datasets/models.py
-msgid "datasets"
-msgstr "tietoaineistot"
-
-#: kausal_common/datasets/models.py
-msgid "dataset schema scope"
-msgstr "tietoaineiston skeeman vaikutusalue"
-
-#: kausal_common/datasets/models.py
-msgid "dataset schema scopes"
-msgstr "tietoaineiston skeemojen vaikutusalueet"
-
-#: kausal_common/datasets/models.py
-msgid "date"
-msgstr "päivämäärä"
-
-#: kausal_common/datasets/models.py
-msgid "Date of this data point in context of the dataset's time resolution"
-msgstr "Tämän datapisteen päivämäärä suhteessa tietoaineiston aikaresoluutioon"
-
-#: kausal_common/datasets/models.py
-msgid "value"
-msgstr "arvo"
-
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "metric"
 msgstr "metriikka"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
+msgid "rule"
+msgstr ""
+
+#: datasets/models.py
+#, fuzzy
+#| msgid "dataset metric"
+msgid "dataset metric validation rule"
+msgstr "tietoaineiston metriikka"
+
+#: datasets/models.py
+#, fuzzy
+#| msgid "dataset metrics"
+msgid "dataset metric validation rules"
+msgstr "tietoaineistojen metriikat"
+
+#: datasets/models.py
+#, fuzzy
+#| msgid "last name"
+msgid "column name"
+msgstr "sukunimi"
+
+#: datasets/models.py
+msgid "Optional dataset-local column name for this dimension."
+msgstr ""
+
+#: datasets/models.py
+msgid "dataset schema dimension"
+msgstr "tietoaineiston skeeman dimensio"
+
+#: datasets/models.py
+msgid "dataset schema dimensions"
+msgstr "tietoaineiston skeeman dimensiot"
+
+#: datasets/models.py
+msgid "Optional identifier that, if set, must be unique in the dataset's scope"
+msgstr "Valinnainen tunniste, jonka on oltava uniikki tietoaineiston vaikutusalueella"
+
+#: datasets/models.py
+#, fuzzy
+msgid "external reference"
+msgstr "Tietolähteet"
+
+#: datasets/models.py
+msgid "Optional source reference for externally backed datasets."
+msgstr ""
+
+#: datasets/models.py
+msgid "is external placeholder"
+msgstr ""
+
+#: datasets/models.py
+msgid "Marks datasets that exist only as placeholder references to externally stored datasets."
+msgstr ""
+
+#: datasets/models.py
+msgid "dataset"
+msgstr "tietoaineisto"
+
+#: datasets/models.py
+msgid "datasets"
+msgstr "tietoaineistot"
+
+#: datasets/models.py
+msgid "dataset schema scope"
+msgstr "tietoaineiston skeeman vaikutusalue"
+
+#: datasets/models.py
+msgid "dataset schema scopes"
+msgstr "tietoaineiston skeemojen vaikutusalueet"
+
+#: datasets/models.py
+msgid "date"
+msgstr "päivämäärä"
+
+#: datasets/models.py
+msgid "Date of this data point in context of the dataset's time resolution"
+msgstr "Tämän datapisteen päivämäärä suhteessa tietoaineiston aikaresoluutioon"
+
+#: datasets/models.py
+msgid "value"
+msgstr "arvo"
+
+#: datasets/models.py
 #, fuzzy
 msgid "data point"
 msgstr "Viimeisin datapiste"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 msgid "data points"
 msgstr "Viimeisin datapiste"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "dimension category"
 msgid "data point dimension category"
 msgstr "dimension luokka"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "dimension categories"
 msgid "data point dimension categories"
 msgstr "dimension luokat"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "created at"
 msgctxt "review state of data point comment"
 msgid "Resolved"
 msgstr "luomisaika"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "created at"
 msgctxt "review state of data point comment"
 msgid "Unresolved"
 msgstr "luomisaika"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "comment"
 msgid "Sticky comment"
 msgstr "kommentti"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "comment"
 msgctxt "Boolean to indicate if this comment is a review"
 msgid "Review comment"
 msgstr "kommentti"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "created at"
 msgctxt "date and time when a data point comment was resolved"
 msgid "resolved at"
 msgstr "luomisaika"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 msgid "comment"
 msgstr "kommentti"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "comment"
 msgid "comments"
 msgstr "kommentti"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "Section"
 msgctxt "data source"
 msgid "edition"
 msgstr "Osio"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "author"
 msgctxt "authority (responsible organization) for data source"
 msgid "authority"
 msgstr "tekijä"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 msgid "The organization responsible for the data source"
 msgstr "toimenpideohjelman pääorganisaatio"
 
-#: kausal_common/datasets/models.py kausal_common/organizations/models.py
+#: datasets/models.py organizations/models.py
 msgid "description"
 msgstr "kuvaus"
 
-#: kausal_common/datasets/models.py kausal_common/organizations/models.py
+#: datasets/models.py organizations/models.py
 msgid "URL"
 msgstr "URL"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 msgid "Data source"
 msgstr "Tietolähteet"
 
-#: kausal_common/datasets/models.py kausal_common/datasets/wagtail_hooks.py
+#: datasets/models.py datasets/wagtail_hooks.py
 #, fuzzy
 msgid "Data sources"
 msgstr "Tietolähteet"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 #| msgid "Unknown content"
 msgid "Unknown schema"
 msgstr "Tuntematon sisältö"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, python-format
 msgid "Data source reference in: %(schema)s"
 msgstr ""
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 msgid "Data source reference"
 msgstr "Tietolähteet"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 msgid "data source reference"
 msgstr "Tietolähteet"
 
-#: kausal_common/datasets/models.py
+#: datasets/models.py
 #, fuzzy
 msgid "data source references"
 msgstr "Tietolähteet"
 
-#: kausal_common/datasets/wagtail_hooks.py
+#: datasets/wagtail_hooks.py
 #, fuzzy
 #| msgid "Edit data"
 msgid "Edit dataset"
 msgstr "Muokkaa dataa"
 
-#: kausal_common/datasets/wagtail_hooks.py
+#: datasets/wagtail_hooks.py
 #, python-format
 msgctxt "label to show for a private instance of the given model"
 msgid "(Private %(model)s)"
 msgstr "(Yksityinen %(model)s)"
 
-#: kausal_common/datasets/wagtail_hooks.py
+#: datasets/wagtail_hooks.py
 #, fuzzy, python-format
 #| msgid "Edit this person"
 msgctxt "title of a link to edit an instance of the given model"
 msgid "Edit this %(model)s"
 msgstr "Muokkaa tätä: %(model)s"
 
-#: kausal_common/models/modification_tracking.py
+#: models/modification_tracking.py
 #, fuzzy
 msgid "Created at"
 msgstr "luomisaika"
 
-#: kausal_common/models/modification_tracking.py
+#: models/modification_tracking.py
 #, fuzzy
 msgid "Last modified by"
 msgstr "Viimeksi muokattu"
 
-#: kausal_common/models/ordered.py
+#: models/ordered.py
 #, fuzzy
 #| msgid "order"
 msgctxt "integer to specify the sorting order of model instances"
 msgid "order"
 msgstr "järjestys"
 
-#: kausal_common/models/uuid.py
+#: models/uuid.py
 msgid "UUID"
 msgstr "UUID"
 
-#: kausal_common/organizations/forms.py
+#: organizations/forms.py organizations/models.py
+msgid "location"
+msgstr "sijainti"
+
+#: organizations/forms.py
+msgid "Enter a valid location."
+msgstr ""
+
+#: organizations/forms.py
 msgid "A node cannot be moved under itself in the hierarchy."
 msgstr "Organisaatio ei voi olla itsensä yläorganisaatio."
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 #, fuzzy
 msgctxt "node"
 msgid "Parent"
 msgstr "Yläorganisaatio"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 msgid "The time at which the resource was created"
 msgstr "Aika jolloin organisaatio luotiin"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 msgid "The time at which the resource was updated"
 msgstr "Aika jolloin organisaatiota päivitettiin"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 #, fuzzy
 #| msgid "Classification"
 msgctxt "organization"
 msgid "Classification"
 msgstr "Luokittelu"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 #, fuzzy
 #| msgid "An organization category, e.g. committee"
 msgid "An organization category (e.g., committee)"
 msgstr "Organisaation luokka, esimerkiksi komitea"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 msgid "Full name of the organization"
 msgstr "Organisaation virallinen nimi"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 #, fuzzy
 #| msgid "Short name"
 msgctxt "organization"
 msgid "short name"
 msgstr "Lyhyt nimi"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
 msgstr "Organisaation nimen lyhyt versio tai lyhenne, jota käytetään kun koko nimeä ei tarvitse näyttää"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 #, fuzzy
 #| msgid "first name"
 msgctxt "organization"
 msgid "distinct name"
 msgstr "etunimi"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 msgid "A distinct name for this organization (generated automatically)"
 msgstr "Organisaation yksikäsitteinen nimi (luodaan automaattisesti)"
 
-#: kausal_common/organizations/models.py kausal_common/people/models.py
-#: kausal_common/users/models.py
+#: organizations/models.py people/models.py users/models.py
 msgid "email address"
 msgstr "sähköpostiosoite"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 msgctxt "organization"
 msgid "founding date"
 msgstr "perustamispäivä"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 msgctxt "organization"
 msgid "dissolution date"
 msgstr "lakkauttamispäivä"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 msgid "created at"
 msgstr "luomisaika"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 msgid "The time at which the object for this organization was created"
 msgstr "Aika jolloin organisaatio luotiin"
 
-#: kausal_common/organizations/models.py kausal_common/people/models.py
+#: organizations/models.py people/models.py
 msgid "created by"
 msgstr "luoja"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 msgid "updated at"
 msgstr "päivitysaika"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 msgid "The time at which the object for this organization was last updated"
 msgstr "Aika jolloin organisaatiota päivitettiin"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 msgid "updated by"
 msgstr "päivittänyt"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 #, fuzzy
 msgid "primary language"
 msgstr "Ensisijainen kieli"
 
-#: kausal_common/organizations/models.py
-msgid "location"
-msgstr "sijainti"
+#: organizations/models.py
+msgid "latitude"
+msgstr ""
 
-#: kausal_common/organizations/models.py kausal_common/people/models.py
+#: organizations/models.py
+msgid "longitude"
+msgstr ""
+
+#: organizations/models.py people/models.py
 msgid "organization"
 msgstr "organisaatio"
 
-#: kausal_common/organizations/models.py
+#: organizations/models.py
 msgid "organizations"
 msgstr "organisaatiot"
 
-#: kausal_common/organizations/views.py
+#: organizations/views.py
 #, python-format
 msgid "New child %(model)s for %(parent)s"
 msgstr "Uusi aliorganisaatio %(model)s kohteelle %(parent)s"
 
-#: kausal_common/organizations/views.py
+#: organizations/views.py
 #, fuzzy
 msgid "This will delete the following objects:"
 msgstr "Seuraavat toimenpiteet merkitään valmiiksi raporttia varten:"
 
-#: kausal_common/people/api.py kausal_common/people/models.py
+#: people/api.py people/models.py
 msgid "Person with this email already exists"
 msgstr "Tällä sähköpostiosoitteella on jo henkilö"
 
-#: kausal_common/people/api.py
+#: people/api.py
 msgid "Not all objects have an email address"
 msgstr "Kaikilla kohteilla ei ole sähköpostiosoitetta"
 
-#: kausal_common/people/api.py
+#: people/api.py
 #, python-format
 msgid "Duplicate email addresses: %s"
 msgstr "Sama sähköpostiosoite toistuu: %s"
 
-#: kausal_common/people/chooser.py
+#: people/chooser.py
 msgctxt "person chooser"
 msgid "Create new"
 msgstr "Luo uusi"
 
-#: kausal_common/people/chooser.py
+#: people/chooser.py
 msgid "Choose person"
 msgstr "Valitse henkilö"
 
-#: kausal_common/people/chooser.py
+#: people/chooser.py
 msgid "Choose a person"
 msgstr "Valitse henkilö"
 
-#: kausal_common/people/chooser.py
+#: people/chooser.py
 msgid "Choose another person"
 msgstr "Valitse toinen henkilö"
 
-#: kausal_common/people/chooser.py
+#: people/chooser.py
 msgid "Edit this person"
 msgstr "Muokkaa tätä henkilöä"
 
-#: kausal_common/people/models.py
+#: people/models.py
 msgid "first name"
 msgstr "etunimi"
 
-#: kausal_common/people/models.py
+#: people/models.py
 msgid "last name"
 msgstr "sukunimi"
 
-#: kausal_common/people/models.py
+#: people/models.py
 msgctxt "person's role"
 msgid "title"
 msgstr "titteli"
 
-#: kausal_common/people/models.py
+#: people/models.py
 msgid "Job title or role of this person"
 msgstr "Henkilön tehtävä tai rooli"
 
-#: kausal_common/people/models.py
+#: people/models.py
 msgid "postal address"
 msgstr "postiosoite"
 
-#: kausal_common/people/models.py
+#: people/models.py
 msgid "user"
 msgstr "käyttäjä"
 
-#: kausal_common/people/models.py
+#: people/models.py
 msgid "Set if the person has an user account"
 msgstr "Aseta jos henkilöllä on käyttäjätunnus palveluun"
 
-#: kausal_common/people/models.py
+#: people/models.py
 msgid "image"
 msgstr "kuva"
 
-#: kausal_common/people/models.py
+#: people/models.py
 msgid "image cropping"
 msgstr "kuvan rajaus"
 
-#: kausal_common/people/models.py
+#: people/models.py
 msgid "person"
 msgstr "henkilö"
 
-#: kausal_common/people/models.py
+#: people/models.py
 msgid "people"
 msgstr "henkilöt"
 
-#: kausal_common/templates/kausal_common/people/chooser_results.html
+#: templates/kausal_common/admin_site/login.html
+msgid "Sign in to Kausal admin"
+msgstr ""
+
+#: templates/kausal_common/admin_site/login.html
+msgid "Your Kausal admin portal has moved."
+msgstr ""
+
+#: templates/kausal_common/admin_site/login.html
+#, python-brace-format
+msgid "Redirecting to {url} in {count}&nbsp;seconds..."
+msgstr ""
+
+#: templates/kausal_common/admin_site/login.html
+msgid "Go Now"
+msgstr ""
+
+#: templates/kausal_common/admin_site/login.html
+msgid "You were successfully redirected"
+msgstr ""
+
+#: templates/kausal_common/admin_site/login.html
+msgid "Please bookmark this page for future use."
+msgstr ""
+
+#: templates/kausal_common/admin_site/login.html
+msgid "Our apologies, the server is temporarily experiencing difficulties."
+msgstr ""
+
+#: templates/kausal_common/people/chooser_results.html
 #, fuzzy
 #| msgid "organization"
 msgid "Organization"
