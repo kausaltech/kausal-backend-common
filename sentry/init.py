@@ -210,6 +210,7 @@ def _get_traces_sample_rate(spotlight_enabled: bool) -> float:
 
 def init_sentry(dsn: str | None, deployment_type: str | None = None):
     from kausal_common.telemetry import init_telemetry
+    from kausal_common.telemetry.metrics import init_django_metrics
 
     if sentry_sdk.is_initialized():
         return
@@ -263,4 +264,5 @@ def init_sentry(dsn: str | None, deployment_type: str | None = None):
         _patch_django_init()
 
     init_telemetry()
+    init_django_metrics()
     init_django_telemetry()
