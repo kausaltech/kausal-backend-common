@@ -27,15 +27,6 @@ if not workers_env:
     else:
         workers = 2
         # Recycle workers periodically to bound memory growth in long-running processes.
-        #
-        # Keep this generous. When PROMETHEUS_MULTIPROC_DIR is set, every worker that exits
-        # leaves behind counter_<pid>.db and histogram_<pid>.db, which prometheus_client
-        # retains on purpose so cumulative totals survive the recycle. Nothing reclaims them
-        # for the life of the pod, and MultiProcessCollector re-reads all of them on every
-        # scrape -- so aggressive recycling degrades the metrics endpoint over time. Measured
-        # on Watch production with max_requests=1000: ~69 dead workers/day, 1804 files and
-        # 132 MiB after 13 days, with collection time growing from 0.05s to 0.7-1.2s and the
-        # metrics sidecar being liveness-killed once it crossed 1s.
         max_requests = env_int('GUNICORN_MAX_REQUESTS', default=5000)
         max_requests_jitter = env_int('GUNICORN_MAX_REQUESTS_JITTER', default=1000)
 
