@@ -16,6 +16,8 @@ product_name = { required = "Set product_name in the product mise config" }
 backend_name = { required = "Set backend_name in the product mise config" }
 portless_backend_port = { required = "Set portless_backend_port in the product mise config" }
 graphql_schema = { required = "Set graphql_schema in the product mise config" }
+# The product's package in the optional extensions submodule; empty for none.
+extension_package = ""
 
 [env]
 SENTRY_ORG = "kausal"
@@ -55,4 +57,29 @@ run = [
   "mkdir -p __generated__",
   'python manage.py export_schema "{{ vars.graphql_schema }}" > __generated__/schema.graphql',
   'ENABLE_TEST_MODE=1 python manage.py export_schema "{{ vars.graphql_schema }}" > __generated__/schema-test-mode.graphql',
+]
+
+[tasks.messages-host]
+description = "Update the host project's own translation catalogues"
+run = "kausal_common/development/tools/makemessages.sh host"
+
+[tasks.messages-common]
+description = "Update the kausal_common translation catalogues"
+run = "kausal_common/development/tools/makemessages.sh package kausal_common"
+
+[tasks.messages-extensions]
+description = "Update the extensions translation catalogues, if the submodule is checked out"
+run = """
+d="{{ vars.extension_package }}"
+[ -n "$d" ] && [ -d "$d" ] || exit 0
+kausal_common/development/tools/makemessages.sh package "$d"
+"""
+
+[tasks.messages]
+description = "Update all translation catalogues owned by this project"
+# Run in sequence: the host extraction briefly deletes the templates of the shared packages.
+run = [
+  "mise run messages-host",
+  "mise run messages-common",
+  "mise run messages-extensions",
 ]
