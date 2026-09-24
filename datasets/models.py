@@ -16,7 +16,6 @@ from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from modeltrans.fields import TranslationField
 from wagtail.admin.panels.field_panel import FieldPanel
-from wagtail.admin.panels.group import MultiFieldPanel
 from wagtail.admin.panels.inline_panel import InlinePanel
 from wagtail.models import RevisionMixin
 
@@ -27,7 +26,7 @@ from kausal_common.const import IS_PATHS, IS_WATCH
 from kausal_common.datasets.permission_policy import get_permission_policy
 from kausal_common.models.fields import IdentifierField
 from kausal_common.models.uuid import UUIDIdentifiedModel
-from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase, ObjectRole
+from kausal_common.people.models import ObjectGroupPermissionBase, ObjectPersonPermissionBase
 
 from ..models.modification_tracking import UserModifiableModel
 from ..models.ordered import OrderedModel
@@ -302,6 +301,9 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     )
     name = models.CharField(max_length=100, blank=False, verbose_name=_('name'))
     description = models.TextField(blank=True)
+    # FIXME: Deprecated. A quick lock from a BISKO certification round that keeps the shared
+    # reference copies from being edited. Remove once those are injected from the framework
+    # template instead of copied into each instance.
     is_editable = models.BooleanField(
         default=True,
         help_text=_('Whether non-superusers may modify this schema and its datasets'),
@@ -326,11 +328,6 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
     scopes: RevMany[DatasetSchemaScope]
     dimensions: RevMany[DatasetSchemaDimension]
     metrics: RevMany[DatasetMetric]
-
-    if IS_PATHS:
-        # FIXME: Remove the condition when PersonPermission and GroupPermission are implemented in KW
-        person_permissions: RevMany[ObjectPersonPermissionBase[DatasetSchema]]
-        group_permissions: RevMany[ObjectGroupPermissionBase[DatasetSchema]]
 
     objects: ClassVar[DatasetSchemaManager] = DatasetSchemaManager()
     _default_manager: ClassVar[DatasetSchemaQuerySet]
@@ -369,36 +366,6 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
                 FieldPanel('dimension'),
             ],
         ),
-        MultiFieldPanel(
-            [
-                InlinePanel(
-                    'person_permissions',
-                    heading=pgettext_lazy(
-                        'list of persons and their respective permissions on a dataset schema', 'Person permissions'
-                    ),
-                    help_text=_('Grants permissions on datasets of this schema to certain persons'),
-                    panels=[
-                        FieldPanel('person'),
-                        FieldPanel('role'),
-                    ],
-                ),
-                InlinePanel(
-                    'group_permissions',
-                    heading=pgettext_lazy(
-                        'list of person groups and their respective permissions on a dataset schema',
-                        'Group permissions',
-                    ),
-                    help_text=_('Grants permissions on datasets of this schema to certain person groups'),
-                    panels=[
-                        FieldPanel('group'),
-                        FieldPanel('role'),
-                    ],
-                ),
-            ],
-            _('Permissions'),
-            # Only super admins or superusers have access
-            permission='people.change_person',
-        ),
     ]
 
     class Meta:
@@ -427,11 +394,6 @@ class DatasetSchema(ClusterableModel, PermissionedModel):
         elif IS_WATCH:
             from datasets.permission_policy import DatasetSchemaPermissionPolicy
         return DatasetSchemaPermissionPolicy()
-
-    @classmethod
-    def accessible_by_user_q(cls, user: User) -> models.Q | None:
-        pp = cls.permission_policy()
-        return pp._construct_q(user, 'view')
 
     @staticmethod
     @deprecated('Use DatasetSchema.objects.get_queryset().for_scope() instead')
@@ -653,46 +615,33 @@ class DatasetQuerySet(PermissionedQuerySet['Dataset']):
     if IS_PATHS:
 
         def for_instance_config(self, instance_config: InstanceConfig) -> Self:
-            """Return the instance's datasets, including those owned by its nodes."""
-            from nodes.models import NodeConfig
+            """
+            Return the instance's own datasets, without those owned by its nodes.
 
-            direct_scope = models.Q(
+            A node-owned dataset is internal to its node; use `for_node` or `governed_by_instance`.
+            """
+            return self.filter(
                 scope_content_type=ContentType.objects.get_for_model(instance_config),
                 scope_id=instance_config.pk,
-            )
+            ).order_by('id')
+
+        def for_node(self, node: NodeConfig) -> Self:
+            """Return the datasets owned by `node`."""
+            return self.filter(scope_content_type=ContentType.objects.get_for_model(node), scope_id=node.pk).order_by('id')
+
+        def governed_by_instance(self, instance_config: InstanceConfig) -> Self:
+            """Return the instance's own datasets and those owned by its nodes."""
+            from nodes.models import NodeConfig
+
             node_scope = models.Q(
                 scope_content_type=ContentType.objects.get_for_model(NodeConfig),
                 scope_id__in=NodeConfig.objects.filter(instance=instance_config).values('pk'),
             )
-            schema_scopes = DatasetSchemaScope.objects.filter(direct_scope)
-            return (
-                self
-                .filter(
-                    direct_scope | node_scope | models.Q(scope_content_type__isnull=True, schema__scopes__in=schema_scopes),
-                )
-                .order_by('id')
-                .distinct()
+            instance_scope = models.Q(
+                scope_content_type=ContentType.objects.get_for_model(instance_config),
+                scope_id=instance_config.pk,
             )
-
-        def with_viewable_schema(self, user: User) -> Self:
-            """
-            Restrict the queryset to those datasets whose schema is viewable.
-
-            For determining whether a schema is viewable, we check if the user has an explicit person or group
-            permission that allows them to view the particular instance of DatasetSchema. It does not matter whether the
-            user has view permissions on the schema model.
-            """
-            from people.models import DatasetSchemaGroupPermission, DatasetSchemaPersonPermission
-
-            viewable_schemas_for_user = DatasetSchemaPersonPermission.objects.filter(
-                role__in=[ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
-                person=user.person,
-            ).values_list('object')
-            viewable_schemas_for_group = DatasetSchemaGroupPermission.objects.filter(
-                role__in=[ObjectRole.VIEWER, ObjectRole.EDITOR, ObjectRole.ADMIN],
-                group__persons=user.person,
-            ).values_list('object')
-            return self.filter(models.Q(schema__in=viewable_schemas_for_user) | models.Q(schema__in=viewable_schemas_for_group))
+            return self.filter(instance_scope | node_scope).order_by('id')
 
     if IS_WATCH:
 
@@ -748,23 +697,24 @@ class Dataset(RevisionMixin, UserModifiableModel, UUIDIdentifiedModel, Permissio
     )
     spec = models.JSONField(default=dict, blank=True)
 
-    # The "scope" generic foreign key links this dataset to an action or category
-    # or instance
+    # The "scope" generic foreign key links this dataset to what owns it: an action,
+    # category or indicator in Watch, an instance or node in Paths. Always set.
     scope_content_type = models.ForeignKey(
         ContentType,
         on_delete=models.CASCADE,
         related_name='+',
-        null=True,
-        blank=True,
     )
-    scope_content_type_id: int | None
-    scope_id = models.PositiveIntegerField(null=True, blank=True)
+    scope_content_type_id: int
+    scope_id = models.PositiveIntegerField()
     scope = GenericForeignKey(
         'scope_content_type',
         'scope_id',
     )
 
     if IS_PATHS:
+        # Explicit grants on the dataset's data, on top of what its scope grants.
+        person_permissions: RevMany[ObjectPersonPermissionBase[Dataset]]
+        group_permissions: RevMany[ObjectGroupPermissionBase[Dataset]]
         nodes: RevManyToManyQS[NodeConfig, NodeDataset, NodeConfigQuerySet]
         nodes_edges: RevMany[NodeDataset]
         node_input_bindings: RevMany[NodeInputPortBinding]
@@ -840,8 +790,6 @@ class Dataset(RevisionMixin, UserModifiableModel, UUIDIdentifiedModel, Permissio
         return get_permission_policy('DATASET_PERMISSION_POLICY')
 
     def clear_scope_instance_cache(self):
-        if self.scope_content_type is None:
-            return
         if not IS_PATHS or self.scope_content_type.app_label != 'nodes':
             return
         self.scope_instance.invalidate_cache()
