@@ -757,7 +757,7 @@ class Dataset(RevisionMixin, UserModifiableModel, UUIDIdentifiedModel, Permissio
         null=True,
         blank=True,
     )
-    scope_content_type_id: int
+    scope_content_type_id: int | None
     scope_id = models.PositiveIntegerField(null=True, blank=True)
     scope = GenericForeignKey(
         'scope_content_type',
@@ -844,13 +844,57 @@ class Dataset(RevisionMixin, UserModifiableModel, UUIDIdentifiedModel, Permissio
             return
         if not IS_PATHS or self.scope_content_type.app_label != 'nodes':
             return
-        from nodes.models import InstanceConfig, NodeConfig
+        self.scope_instance.invalidate_cache()
 
-        scope = self.scope
-        if isinstance(scope, NodeConfig):
-            scope = scope.instance
-        if isinstance(scope, InstanceConfig):
-            scope.invalidate_cache()
+    if IS_PATHS:
+
+        @property
+        def scope_node(self) -> NodeConfig | None:
+            """Return the node that owns this dataset, or None for an instance dataset."""
+            from nodes.models import NodeConfig
+
+            if self.scope_content_type_id != ContentType.objects.get_for_model(NodeConfig).pk:
+                return None
+            scope = self.scope
+            assert isinstance(scope, NodeConfig)
+            return scope
+
+        @property
+        def scope_instance(self) -> InstanceConfig:
+            """Return the instance governing this dataset: its scope, or its owning node's instance."""
+            from nodes.models import InstanceConfig, NodeConfig
+
+            scope = self.scope
+            if isinstance(scope, NodeConfig):
+                return scope.instance
+            if isinstance(scope, InstanceConfig):
+                return scope
+            raise ValueError(f'Dataset {self.uuid} is not scoped to an instance or a node')
+
+        @staticmethod
+        def instance_scope_content_type_ids() -> tuple[int, int]:
+            """Return the content type ids of the instance and node scopes."""
+            from nodes.models import InstanceConfig, NodeConfig
+
+            get_ct = ContentType.objects.get_for_model
+            return (get_ct(InstanceConfig).pk, get_ct(NodeConfig).pk)
+
+        @staticmethod
+        def instance_scope_q(instances: QuerySet[InstanceConfig], *, prefix: str = '') -> models.Q:
+            """
+            Match objects scoped to one of `instances` or to one of their nodes.
+
+            `prefix` reaches the scope through a relation, e.g. `scopes__` for schemas.
+            """
+            from nodes.models import InstanceConfig, NodeConfig
+
+            get_ct = ContentType.objects.get_for_model
+            instance_ids = instances.values('pk')
+            node_ids = NodeConfig.objects.filter(instance__in=instance_ids).values('pk')
+            return models.Q(**{
+                f'{prefix}scope_content_type': get_ct(InstanceConfig),
+                f'{prefix}scope_id__in': instance_ids,
+            }) | models.Q(**{f'{prefix}scope_content_type': get_ct(NodeConfig), f'{prefix}scope_id__in': node_ids})
 
 
 class DatasetSchemaScope(models.Model):
