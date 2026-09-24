@@ -62,11 +62,12 @@ if TYPE_CHECKING:
             NodeInputPortBinding,
         )
 
-        type DatasetScopeType = InstanceConfig
         from frameworks.models import Framework
 
+        # A dataset or schema scoped to a node is owned by it; the node's instance governs it.
+        type DatasetScopeType = InstanceConfig | NodeConfig
         type DimensionScopeType = InstanceConfig | Framework
-        type DatasetSchemaScopeType = InstanceConfig | Framework
+        type DatasetSchemaScopeType = InstanceConfig | Framework | NodeConfig
     elif IS_WATCH:
         from actions.models import Action, Category, CategoryType, Plan
         from datasets.permission_policy import DatasetSchemaPermissionPolicy
@@ -652,15 +653,22 @@ class DatasetQuerySet(PermissionedQuerySet['Dataset']):
     if IS_PATHS:
 
         def for_instance_config(self, instance_config: InstanceConfig) -> Self:
+            """Return the instance's datasets, including those owned by its nodes."""
+            from nodes.models import NodeConfig
+
             direct_scope = models.Q(
                 scope_content_type=ContentType.objects.get_for_model(instance_config),
                 scope_id=instance_config.pk,
+            )
+            node_scope = models.Q(
+                scope_content_type=ContentType.objects.get_for_model(NodeConfig),
+                scope_id__in=NodeConfig.objects.filter(instance=instance_config).values('pk'),
             )
             schema_scopes = DatasetSchemaScope.objects.filter(direct_scope)
             return (
                 self
                 .filter(
-                    direct_scope | models.Q(scope_content_type__isnull=True, schema__scopes__in=schema_scopes),
+                    direct_scope | node_scope | models.Q(scope_content_type__isnull=True, schema__scopes__in=schema_scopes),
                 )
                 .order_by('id')
                 .distinct()
@@ -834,11 +842,15 @@ class Dataset(RevisionMixin, UserModifiableModel, UUIDIdentifiedModel, Permissio
     def clear_scope_instance_cache(self):
         if self.scope_content_type is None:
             return
-        if self.scope_content_type.app_label == 'nodes' and self.scope_content_type.model == 'instanceconfig':
-            if self.scope is None:
-                return
-            ic = self.scope
-            ic.invalidate_cache()
+        if not IS_PATHS or self.scope_content_type.app_label != 'nodes':
+            return
+        from nodes.models import InstanceConfig, NodeConfig
+
+        scope = self.scope
+        if isinstance(scope, NodeConfig):
+            scope = scope.instance
+        if isinstance(scope, InstanceConfig):
+            scope.invalidate_cache()
 
 
 class DatasetSchemaScope(models.Model):
