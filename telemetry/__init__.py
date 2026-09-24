@@ -4,6 +4,8 @@ _otel_initialized = False
 
 
 def init_telemetry() -> None:
+    from kausal_common.deployment import env_bool
+
     from .metrics import init_metrics
     from .traces import init_traces
 
@@ -13,6 +15,7 @@ def init_telemetry() -> None:
         return
 
     init_traces()
-    init_metrics()
+    if not env_bool('OTEL_METRICS_WORKER_PROCESS_ONLY', default=False):
+        init_metrics()
 
     _otel_initialized = True
