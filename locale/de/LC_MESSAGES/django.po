@@ -11,15 +11,16 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-23 09:47+0000\n"
-"PO-Revision-Date: 2026-07-14 15:21+0000\n"
-"Last-Translator: Bernhard Bliem <bernhard.bliem@kausal.tech>\n"
-"Language-Team: German <https://weblate.kausal.tech/projects/kausal-backend-common/django/de/>\n"
+"PO-Revision-Date: 2026-09-28 06:36+0000\n"
+"Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
+"Language-Team: German <https://weblate.kausal.tech/projects/kausal-backend-"
+"common/django/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.15.1\n"
+"X-Generator: Weblate 5.17.1\n"
 
 #: admin_site/tables.py models/modification_tracking.py
 msgid "Last modified at"
@@ -32,7 +33,9 @@ msgstr "Instanz kann nicht gelöscht werden, da andere Objekte darauf verweisen.
 #: api/exceptions.py
 #, python-format
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
-msgstr "„%s“ kann nicht gelöscht werden, da das Objekt mit anderen Objekten wie Instanzen, Personen oder Maßnahmen verknüpft ist."
+msgstr ""
+"„%s“ kann nicht gelöscht werden, da das Objekt mit anderen Objekten wie "
+"Instanzen, Personen oder Maßnahmen verknüpft ist."
 
 #: blocks/base.py
 msgid "Label"
@@ -40,7 +43,8 @@ msgstr "Beschriftung"
 
 #: blocks/base.py
 msgid "Label for the column to be used instead of the default"
-msgstr "Spaltenbeschriftung, die anstelle des Standardwerts verwendet werden soll"
+msgstr ""
+"Spaltenbeschriftung, die anstelle des Standardwerts verwendet werden soll"
 
 #: blocks/base.py blocks/fields.py
 msgid "Help text"
@@ -48,7 +52,8 @@ msgstr "Hilfetext"
 
 #: blocks/base.py
 msgid "Help text for the column to be shown in the UI"
-msgstr "Hilfetext für die Spalte, der in der Benutzeroberfläche angezeigt werden soll"
+msgstr ""
+"Hilfetext für die Spalte, der in der Benutzeroberfläche angezeigt werden soll"
 
 #: blocks/base.py blocks/fields.py
 msgid "Heading to show instead of the default"
@@ -98,7 +103,9 @@ msgstr "Dimensionen"
 
 #: datasets/models.py
 msgid "Optional identifier that, if set, must be unique within the dimension"
-msgstr "Optionale Kennung, die, falls festgelegt, innerhalb der Dimension eindeutig sein muss"
+msgstr ""
+"Optionale Kennung, die, falls festgelegt, innerhalb der Dimension eindeutig "
+"sein muss"
 
 #: datasets/models.py
 msgid "label"
@@ -118,7 +125,9 @@ msgstr "Kennung"
 
 #: datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the scope"
-msgstr "Optionale Kennung, die, falls festgelegt, innerhalb des Geltungsbereichs eindeutig sein muss"
+msgstr ""
+"Optionale Kennung, die, falls festgelegt, innerhalb des Geltungsbereichs "
+"eindeutig sein muss"
 
 #: datasets/models.py
 msgid "dimension scope"
@@ -150,7 +159,9 @@ msgstr "Beginndatum"
 
 #: datasets/models.py
 msgid "For a newly created dataset, start entering values from this year"
-msgstr "Für einen neu erstellten Datensatz beginnen Sie mit der Eingabe der Werte aus diesem Jahr"
+msgstr ""
+"Für einen neu erstellten Datensatz beginnen Sie mit der Eingabe der Werte "
+"aus diesem Jahr"
 
 #: datasets/models.py
 msgid "The meaningful category combinations for datasets using this schema"
@@ -186,7 +197,8 @@ msgstr "Messgrößen"
 
 #: datasets/models.py
 msgid "Defines the interpretation and units for the values of the dataset"
-msgstr "Legt die Interpretation und die Einheiten für die Werte des Datensatzes fest"
+msgstr ""
+"Legt die Interpretation und die Einheiten für die Werte des Datensatzes fest"
 
 #: datasets/models.py
 msgid "Dimensions"
@@ -203,7 +215,8 @@ msgstr "Berechtigungen für Personen"
 
 #: datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain persons"
-msgstr "Erteilt bestimmten Personen Berechtigungen für Datensätze dieses Schemas"
+msgstr ""
+"Erteilt bestimmten Personen Berechtigungen für Datensätze dieses Schemas"
 
 #: datasets/models.py
 msgctxt "list of person groups and their respective permissions on a dataset schema"
@@ -212,7 +225,9 @@ msgstr "Berechtigungen für Gruppen"
 
 #: datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain person groups"
-msgstr "Erteilt bestimmten Personengruppen Berechtigungen für Datensätze dieses Schemas"
+msgstr ""
+"Erteilt bestimmten Personengruppen Berechtigungen für Datensätze dieses "
+"Schemas"
 
 #: datasets/models.py
 msgid "Permissions"
@@ -334,7 +349,9 @@ msgstr "Datensatzschema-Dimensionen"
 
 #: datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the dataset's scope"
-msgstr "Optionale Kennung, die, falls gesetzt, im Geltungsbereich des Datensatzes eindeutig sein muss"
+msgstr ""
+"Optionale Kennung, die, falls gesetzt, im Geltungsbereich des Datensatzes "
+"eindeutig sein muss"
 
 #: datasets/models.py
 #, fuzzy
@@ -376,7 +393,9 @@ msgstr "Datum"
 
 #: datasets/models.py
 msgid "Date of this data point in context of the dataset's time resolution"
-msgstr "Datum dieses Datenpunkts im Zusammenhang mit der zeitlichen Auflösung des Datensatzes"
+msgstr ""
+"Datum dieses Datenpunkts im Zusammenhang mit der zeitlichen Auflösung des "
+"Datensatzes"
 
 #: datasets/models.py
 msgid "value"
@@ -524,7 +543,8 @@ msgstr ""
 
 #: organizations/forms.py
 msgid "A node cannot be moved under itself in the hierarchy."
-msgstr "Ein Knoten kann in der Hierarchie nicht unter sich selbst verschoben werden."
+msgstr ""
+"Ein Knoten kann in der Hierarchie nicht unter sich selbst verschoben werden."
 
 #: organizations/models.py
 msgctxt "node"
@@ -559,7 +579,9 @@ msgstr "Kurzname"
 
 #: organizations/models.py
 msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
-msgstr "Kurzform oder Abkürzung des Organisationsnamens, die angezeigt wird, wenn es nicht erforderlich ist, den vollständigen Namen anzuzeigen"
+msgstr ""
+"Kurzform oder Abkürzung des Organisationsnamens, die angezeigt wird, wenn es "
+"nicht erforderlich ist, den vollständigen Namen anzuzeigen"
 
 #: organizations/models.py
 msgctxt "organization"
