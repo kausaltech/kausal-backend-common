@@ -9,7 +9,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-23 09:47+0000\n"
 "PO-Revision-Date: 2026-09-28 06:35+0000\n"
-"Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
+"Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: Spanish <https://weblate.kausal.tech/projects/kausal-backend-"
 "common/django/es/>\n"
 "Language: es\n"
@@ -25,13 +25,17 @@ msgstr "Última modificación en"
 
 #: api/exceptions.py
 msgid "Cannot delete instance because other objects reference it."
-msgstr "No se puede eliminar la instancia porque otros objetos hacen referencia a ella."
+msgstr ""
+"No se puede eliminar la instancia porque otros objetos hacen referencia a "
+"ella."
 
 #: api/exceptions.py
 #, fuzzy, python-format
 #| msgid "Cannot delete \"%s\" because it is connected to other objects such as plans, persons or actions."
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
-msgstr "No se puede eliminar \"%s\" porque está conectado a otros objetos como planes, personas o acciones."
+msgstr ""
+"No se puede eliminar \"%s\" porque está conectado a otros objetos como "
+"planes, personas o acciones."
 
 #: blocks/base.py
 msgid "Label"
@@ -147,7 +151,9 @@ msgstr ""
 
 #: datasets/models.py
 msgid "Time resolution of the time stamps of data points in this dataset"
-msgstr "Resolución temporal de las marcas de tiempo de los puntos de datos en este conjunto de datos"
+msgstr ""
+"Resolución temporal de las marcas de tiempo de los puntos de datos en este "
+"conjunto de datos"
 
 #: datasets/models.py
 msgid "Whether non-superusers may modify this schema and its datasets"
@@ -419,7 +425,9 @@ msgstr "fecha"
 
 #: datasets/models.py
 msgid "Date of this data point in context of the dataset's time resolution"
-msgstr "Fecha de este punto de datos en el contexto de la resolución temporal del conjunto de datos"
+msgstr ""
+"Fecha de este punto de datos en el contexto de la resolución temporal del "
+"conjunto de datos"
 
 #: datasets/models.py
 msgid "value"
