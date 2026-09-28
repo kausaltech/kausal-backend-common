@@ -11,15 +11,16 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-23 09:47+0000\n"
-"PO-Revision-Date: 2025-04-02 12:20+0000\n"
-"Last-Translator: Matias Wargelin <matias.wargelin@kausal.tech>\n"
-"Language-Team: Swedish <https://weblate.kausal.tech/projects/watch/django/sv/>\n"
+"PO-Revision-Date: 2026-09-28 06:36+0000\n"
+"Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
+"Language-Team: Swedish <https://weblate.kausal.tech/projects/kausal-backend-"
+"common/django/sv/>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.4.2\n"
+"X-Generator: Weblate 5.17.1\n"
 
 #: admin_site/tables.py models/modification_tracking.py
 #, fuzzy
@@ -34,7 +35,9 @@ msgstr "Kan inte ta bort instans eftersom andra objekt refererar till den."
 #: api/exceptions.py
 #, fuzzy, python-format
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
-msgstr "Kan inte ta bort \"%s\" eftersom det är kopplat till andra objekt som planer, personer eller åtgärder. "
+msgstr ""
+"Kan inte ta bort \"%s\" eftersom det är kopplat till andra objekt som "
+"planer, personer eller åtgärder. "
 
 #: blocks/base.py
 msgid "Label"
