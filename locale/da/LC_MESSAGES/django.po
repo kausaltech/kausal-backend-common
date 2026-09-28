@@ -13,7 +13,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-23 09:47+0000\n"
 "PO-Revision-Date: 2026-09-28 06:36+0000\n"
-"Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
+"Last-Translator: Bernhard Bliem <bernhard.bliem@kausal.tech>\n"
 "Language-Team: Danish <https://weblate.kausal.tech/projects/kausal-backend-"
 "common/django/da/>\n"
 "Language: da\n"
@@ -113,7 +113,9 @@ msgstr "dimensioner"
 
 #: datasets/models.py
 msgid "Optional identifier that, if set, must be unique within the dimension"
-msgstr "Valgfri identifikator, som, hvis den er angivet, skal være unik inden for dimensionen"
+msgstr ""
+"Valgfri identifikator, som, hvis den er angivet, skal være unik inden for "
+"dimensionen"
 
 #: datasets/models.py
 #, fuzzy
@@ -135,7 +137,9 @@ msgstr "identifikator"
 
 #: datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the scope"
-msgstr "Valgfri identifikator, som, hvis den er angivet, skal være unik inden for omfanget"
+msgstr ""
+"Valgfri identifikator, som, hvis den er angivet, skal være unik inden for "
+"omfanget"
 
 #: datasets/models.py
 #, fuzzy
@@ -389,7 +393,9 @@ msgstr "datasætskemadimensioner"
 
 #: datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the dataset's scope"
-msgstr "Valgfri identifikator, som, hvis den er angivet, skal være unik inden for datasættets omfang"
+msgstr ""
+"Valgfri identifikator, som, hvis den er angivet, skal være unik inden for "
+"datasættets omfang"
 
 #: datasets/models.py
 #, fuzzy
@@ -672,7 +678,9 @@ msgstr "Kort navn"
 
 #: organizations/models.py
 msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
-msgstr "Kort version eller forkortelse af organisationsnavnet, der vises når det ikke er nødvendigt at vise det fulde navn"
+msgstr ""
+"Kort version eller forkortelse af organisationsnavnet, der vises når det "
+"ikke er nødvendigt at vise det fulde navn"
 
 #: organizations/models.py
 #, fuzzy
