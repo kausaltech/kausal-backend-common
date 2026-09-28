@@ -12,15 +12,16 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-23 09:47+0000\n"
-"PO-Revision-Date: 2026-03-12 09:21+0000\n"
+"PO-Revision-Date: 2026-09-28 06:36+0000\n"
 "Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
-"Language-Team: Finnish <https://weblate.kausal.tech/projects/kausal-backend-common/django/fi/>\n"
+"Language-Team: Finnish <https://weblate.kausal.tech/projects/kausal-backend-"
+"common/django/fi/>\n"
 "Language: fi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.15.1\n"
+"X-Generator: Weblate 5.17.1\n"
 
 #: admin_site/tables.py models/modification_tracking.py
 msgid "Last modified at"
@@ -33,7 +34,9 @@ msgstr "Kohdetta ei voida poistaa koska muut oliot viittaavat siihen."
 #: api/exceptions.py
 #, python-format
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
-msgstr "Kohdetta \"%s\" ei voida poistaa, koska se liittyy muihin kohteisiin, kuten instansseihin, henkilöihin tai toimenpiteisiin."
+msgstr ""
+"Kohdetta \"%s\" ei voida poistaa, koska se liittyy muihin kohteisiin, kuten "
+"instansseihin, henkilöihin tai toimenpiteisiin."
 
 #: blocks/base.py
 msgid "Label"
@@ -217,7 +220,8 @@ msgstr "Käyttöoikeudet"
 
 #: datasets/models.py
 msgid "Grants permissions on datasets of this schema to certain person groups"
-msgstr "Antaa tietyille henkilöryhmille oikeudet tämän skeeman tietoaineistoihin"
+msgstr ""
+"Antaa tietyille henkilöryhmille oikeudet tämän skeeman tietoaineistoihin"
 
 #: datasets/models.py
 msgid "Permissions"
@@ -347,7 +351,8 @@ msgstr "tietoaineiston skeeman dimensiot"
 
 #: datasets/models.py
 msgid "Optional identifier that, if set, must be unique in the dataset's scope"
-msgstr "Valinnainen tunniste, jonka on oltava uniikki tietoaineiston vaikutusalueella"
+msgstr ""
+"Valinnainen tunniste, jonka on oltava uniikki tietoaineiston vaikutusalueella"
 
 #: datasets/models.py
 #, fuzzy
@@ -615,7 +620,9 @@ msgstr "Lyhyt nimi"
 
 #: organizations/models.py
 msgid "Short version or abbreviation of the organization name to be displayed when it is not necessary to show the full name"
-msgstr "Organisaation nimen lyhyt versio tai lyhenne, jota käytetään kun koko nimeä ei tarvitse näyttää"
+msgstr ""
+"Organisaation nimen lyhyt versio tai lyhenne, jota käytetään kun koko nimeä "
+"ei tarvitse näyttää"
 
 #: organizations/models.py
 #, fuzzy
