@@ -9,7 +9,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-23 09:47+0000\n"
 "PO-Revision-Date: 2026-09-28 06:35+0000\n"
-"Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
+"Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: Greek <https://weblate.kausal.tech/projects/kausal-backend-"
 "common/django/el/>\n"
 "Language: el\n"
@@ -27,13 +27,17 @@ msgstr "Τελευταία τροποποίηση στις"
 
 #: api/exceptions.py
 msgid "Cannot delete instance because other objects reference it."
-msgstr "Δεν είναι δυνατή η διαγραφή της περίπτωσης επειδή άλλα αντικείμενα αναφέρονται σε αυτήν."
+msgstr ""
+"Δεν είναι δυνατή η διαγραφή της περίπτωσης επειδή άλλα αντικείμενα "
+"αναφέρονται σε αυτήν."
 
 #: api/exceptions.py
 #, fuzzy, python-format
 #| msgid "Cannot delete \"%s\" because it is connected to other objects such as plans, persons or actions."
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
-msgstr "Δεν μπορεί να διαγραφεί το \"%s\" επειδή συνδέεται με άλλα αντικείμενα, όπως σχέδια, πρόσωπα ή δράσεις."
+msgstr ""
+"Δεν μπορεί να διαγραφεί το \"%s\" επειδή συνδέεται με άλλα αντικείμενα, όπως "
+"σχέδια, πρόσωπα ή δράσεις."
 
 #: blocks/base.py
 msgid "Label"
@@ -149,7 +153,9 @@ msgstr ""
 
 #: datasets/models.py
 msgid "Time resolution of the time stamps of data points in this dataset"
-msgstr "Χρονική ανάλυση των χρονικών σφραγίδων των σημείων δεδομένων σε αυτό το σύνολο δεδομένων"
+msgstr ""
+"Χρονική ανάλυση των χρονικών σφραγίδων των σημείων δεδομένων σε αυτό το "
+"σύνολο δεδομένων"
 
 #: datasets/models.py
 msgid "Whether non-superusers may modify this schema and its datasets"
@@ -421,7 +427,9 @@ msgstr "ημερομηνία"
 
 #: datasets/models.py
 msgid "Date of this data point in context of the dataset's time resolution"
-msgstr "Ημερομηνία αυτού του σημείου δεδομένων στο πλαίσιο της χρονικής ανάλυσης του συνόλου δεδομένων"
+msgstr ""
+"Ημερομηνία αυτού του σημείου δεδομένων στο πλαίσιο της χρονικής ανάλυσης του "
+"συνόλου δεδομένων"
 
 #: datasets/models.py
 msgid "value"
@@ -615,7 +623,8 @@ msgstr ""
 
 #: organizations/forms.py
 msgid "A node cannot be moved under itself in the hierarchy."
-msgstr "Ένας κόμβος δεν μπορεί να μετακινηθεί κάτω από τον εαυτό του στην ιεραρχία."
+msgstr ""
+"Ένας κόμβος δεν μπορεί να μετακινηθεί κάτω από τον εαυτό του στην ιεραρχία."
 
 #: organizations/models.py
 msgctxt "node"
