@@ -9,7 +9,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-23 09:47+0000\n"
 "PO-Revision-Date: 2026-09-28 06:35+0000\n"
-"Last-Translator: Stefan Cave <stefan.cave@kausal.tech>\n"
+"Last-Translator: Anonymous <noreply@weblate.org>\n"
 "Language-Team: Portuguese (Brazil) <https://weblate.kausal.tech/projects/"
 "kausal-backend-common/django/pt_BR/>\n"
 "Language: pt_BR\n"
@@ -27,12 +27,16 @@ msgstr "Última modificação"
 #: api/exceptions.py
 #, fuzzy
 msgid "Cannot delete instance because other objects reference it."
-msgstr "Não é possível excluir a instância porque outros objetos fazem referência a ela."
+msgstr ""
+"Não é possível excluir a instância porque outros objetos fazem referência a "
+"ela."
 
 #: api/exceptions.py
 #, fuzzy, python-format
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
-msgstr "Não é possível excluir \"%s\" porque ele está conectado a outros objetos, como planos, pessoas ou ações."
+msgstr ""
+"Não é possível excluir \"%s\" porque ele está conectado a outros objetos, "
+"como planos, pessoas ou ações."
 
 #: blocks/base.py
 #, fuzzy
