@@ -151,7 +151,7 @@ msgstr "Zeitliche Auflösung der Zeitstempel der Datenpunkte in diesem Datensatz
 
 #: datasets/models.py
 msgid "Whether non-superusers may modify this schema and its datasets"
-msgstr ""
+msgstr "Ob Nicht-Superuser dieses Schema und seine Datensätze ändern dürfen"
 
 #: datasets/models.py
 msgid "start date"
@@ -165,7 +165,7 @@ msgstr ""
 
 #: datasets/models.py
 msgid "The meaningful category combinations for datasets using this schema"
-msgstr ""
+msgstr "Die sinnvollen Kategoriekombinationen für Datensätze, die dieses Schema verwenden"
 
 #: datasets/models.py templates/kausal_common/people/chooser_results.html
 msgid "Name"
@@ -291,7 +291,7 @@ msgstr "Operand A"
 
 #: datasets/models.py
 msgid "If empty, uses the indicator's own values as input"
-msgstr ""
+msgstr "Wenn leer, werden die eigenen Werte des Indikators als Eingabe verwendet"
 
 #: datasets/models.py
 msgid "operand B"
@@ -307,7 +307,7 @@ msgstr "Datensatzmessgrößenberechnungen"
 
 #: datasets/models.py
 msgid "indicator values"
-msgstr ""
+msgstr "Indikatorwerte"
 
 #: datasets/models.py
 msgid "metric"
@@ -315,29 +315,23 @@ msgstr "Messgröße"
 
 #: datasets/models.py
 msgid "rule"
-msgstr ""
+msgstr "Regel"
 
 #: datasets/models.py
-#, fuzzy
-#| msgid "dataset metric computation"
 msgid "dataset metric validation rule"
-msgstr "Datensatzmessgrößenberechnung"
+msgstr "Validierungsregel für Datensatzmessgröße"
 
 #: datasets/models.py
-#, fuzzy
-#| msgid "dataset metric computations"
 msgid "dataset metric validation rules"
-msgstr "Datensatzmessgrößenberechnungen"
+msgstr "Validierungsregeln für Datensatzmessgrößen"
 
 #: datasets/models.py
-#, fuzzy
-#| msgid "last name"
 msgid "column name"
-msgstr "Nachname"
+msgstr "Spaltenname"
 
 #: datasets/models.py
 msgid "Optional dataset-local column name for this dimension."
-msgstr ""
+msgstr "Optionaler datensatzspezifischer Spaltenname für diese Dimension."
 
 #: datasets/models.py
 msgid "dataset schema dimension"
@@ -354,22 +348,20 @@ msgstr ""
 "eindeutig sein muss"
 
 #: datasets/models.py
-#, fuzzy
-#| msgid "Data source reference"
 msgid "external reference"
-msgstr "Datenquellenreferenz"
+msgstr "externe Referenz"
 
 #: datasets/models.py
 msgid "Optional source reference for externally backed datasets."
-msgstr ""
+msgstr "Optionale Quellenreferenz für extern gespeicherte Datensätze."
 
 #: datasets/models.py
 msgid "is external placeholder"
-msgstr ""
+msgstr "ist externer Platzhalter"
 
 #: datasets/models.py
 msgid "Marks datasets that exist only as placeholder references to externally stored datasets."
-msgstr ""
+msgstr "Kennzeichnet Datensätze, die nur als Platzhalterverweise auf extern gespeicherte Datensätze existieren."
 
 #: datasets/models.py
 msgid "dataset"
@@ -539,7 +531,7 @@ msgstr "Standort"
 
 #: organizations/forms.py
 msgid "Enter a valid location."
-msgstr ""
+msgstr "Geben Sie einen gültigen Standort ein."
 
 #: organizations/forms.py
 msgid "A node cannot be moved under itself in the hierarchy."
@@ -636,11 +628,11 @@ msgstr "Hauptsprache"
 
 #: organizations/models.py
 msgid "latitude"
-msgstr ""
+msgstr "Breitengrad"
 
 #: organizations/models.py
 msgid "longitude"
-msgstr ""
+msgstr "Längengrad"
 
 #: organizations/models.py people/models.py
 msgid "organization"
@@ -740,32 +732,32 @@ msgstr "Personen"
 
 #: templates/kausal_common/admin_site/login.html
 msgid "Sign in to Kausal admin"
-msgstr ""
+msgstr "Bei der Kausal-Administration anmelden"
 
 #: templates/kausal_common/admin_site/login.html
 msgid "Your Kausal admin portal has moved."
-msgstr ""
+msgstr "Ihr Kausal-Administrationsportal ist umgezogen."
 
 #: templates/kausal_common/admin_site/login.html
 #, python-brace-format
 msgid "Redirecting to {url} in {count}&nbsp;seconds..."
-msgstr ""
+msgstr "Weiterleitung zu {url} in {count}&nbsp;Sekunden …"
 
 #: templates/kausal_common/admin_site/login.html
 msgid "Go Now"
-msgstr ""
+msgstr "Jetzt weiter"
 
 #: templates/kausal_common/admin_site/login.html
 msgid "You were successfully redirected"
-msgstr ""
+msgstr "Sie wurden erfolgreich weitergeleitet"
 
 #: templates/kausal_common/admin_site/login.html
 msgid "Please bookmark this page for future use."
-msgstr ""
+msgstr "Bitte setzen Sie ein Lesezeichen für diese Seite."
 
 #: templates/kausal_common/admin_site/login.html
 msgid "Our apologies, the server is temporarily experiencing difficulties."
-msgstr ""
+msgstr "Wir bitten um Entschuldigung, der Server hat vorübergehend Probleme."
 
 #: templates/kausal_common/people/chooser_results.html
 msgid "Organization"

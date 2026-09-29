@@ -33,7 +33,7 @@ msgstr ""
 #: api/exceptions.py
 #, python-format
 msgid "Cannot delete \"%s\" because it is connected to other objects such as instances, persons or actions."
-msgstr ""
+msgstr "„%s“ kann nicht gelöscht werden, da das Objekt mit anderen Objekten wie Instanzen, Personen oder Massnahmen verknüpft ist."
 
 #: blocks/base.py
 msgid "Label"
@@ -191,7 +191,7 @@ msgstr ""
 
 #: datasets/models.py
 msgid "Metrics"
-msgstr ""
+msgstr "Messgrössen"
 
 #: datasets/models.py
 msgid "Defines the interpretation and units for the values of the dataset"
@@ -203,7 +203,7 @@ msgstr ""
 
 #: datasets/models.py
 msgid "Used when metrics are tracked for multiple categories"
-msgstr ""
+msgstr "Wird verwendet, wenn Messgrössen für mehrere Kategorien erfasst werden"
 
 #: datasets/models.py
 msgctxt "list of persons and their respective permissions on a dataset schema"
@@ -244,16 +244,12 @@ msgid "unit"
 msgstr ""
 
 #: datasets/models.py
-#, fuzzy
-#| msgid "Choose a quantity"
 msgid "dataset metric"
-msgstr "Wähle eine Grösse"
+msgstr "Datensatzmessgrösse"
 
 #: datasets/models.py
-#, fuzzy
-#| msgid "Choose a quantity"
 msgid "dataset metrics"
-msgstr "Wähle eine Grösse"
+msgstr "Datensatzmessgrössen"
 
 #: datasets/models.py
 msgid "Multiply"
@@ -276,14 +272,12 @@ msgid "schema"
 msgstr ""
 
 #: datasets/models.py
-#, fuzzy
-#| msgid "Choose a quantity"
 msgid "target metric"
-msgstr "Wähle eine Grösse"
+msgstr "Zielmessgrösse"
 
 #: datasets/models.py
 msgid "The metric whose values are computed by this operation"
-msgstr ""
+msgstr "Die Messgrösse, deren Werte durch diese Operation berechnet werden"
 
 #: datasets/models.py
 #, fuzzy
@@ -304,16 +298,12 @@ msgid "operand B"
 msgstr ""
 
 #: datasets/models.py
-#, fuzzy
-#| msgid "Choose a quantity"
 msgid "dataset metric computation"
-msgstr "Wähle eine Grösse"
+msgstr "Datensatzmessgrössenberechnung"
 
 #: datasets/models.py
-#, fuzzy
-#| msgid "Choose a quantity"
 msgid "dataset metric computations"
-msgstr "Wähle eine Grösse"
+msgstr "Datensatzmessgrössenberechnungen"
 
 #: datasets/models.py
 msgid "indicator values"
@@ -321,23 +311,19 @@ msgstr ""
 
 #: datasets/models.py
 msgid "metric"
-msgstr ""
+msgstr "Messgrösse"
 
 #: datasets/models.py
 msgid "rule"
 msgstr ""
 
 #: datasets/models.py
-#, fuzzy
-#| msgid "Choose a quantity"
 msgid "dataset metric validation rule"
-msgstr "Wähle eine Grösse"
+msgstr "Validierungsregel für Datensatzmessgrösse"
 
 #: datasets/models.py
-#, fuzzy
-#| msgid "Choose a quantity"
 msgid "dataset metric validation rules"
-msgstr "Wähle eine Grösse"
+msgstr "Validierungsregeln für Datensatzmessgrössen"
 
 #: datasets/models.py
 msgid "column name"
