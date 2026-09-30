@@ -181,15 +181,13 @@ class ModelPermissionPolicy[
                 return False
             if not self.user_is_authenticated(user):
                 return self.anon_can_create(context)
+            if user.is_superuser:
+                return True
             return self.user_can_create(user, context)
 
         if obj is None:
             return False
-        if self.get_permission_block(action, obj=obj) is not None:
-            return False
-        if not self.user_is_authenticated(user):
-            return self.anon_has_perm(action, obj)
-        return self.user_has_perm(user, action, obj)
+        return self.user_has_permission_for_instance(user, action, obj)
 
     def user_has_permission(self, user: UserOrAnon, action: str) -> bool:
         return super().user_has_permission(user, action)
