@@ -43,7 +43,7 @@ def is_base_action(action: str) -> TypeGuard[ObjectSpecificAction]:
 class ModelPermissionPolicy[
     M: PermissionedModel[Any] = PermissionedModel[Any],
     CreateContext: Any = Any,
-    QS: PermissionedQuerySet[Any] = PermissionedQuerySet[Any],
+    QS: PermissionedQuerySet[Any] = 'PermissionedQuerySet[Any]',
 ](ABC, WagtailModelPermissionPolicy[M, 'User', QS]):
     public_fields: list[str]
     """List of fields that are public."""
@@ -267,7 +267,7 @@ class ModelPermissionPolicy[
 class ModelReadOnlyPolicy[
     M: PermissionedModel,
     CreateContext: Any = Any,
-    QS: PermissionedQuerySet[Any] = PermissionedQuerySet[M],
+    QS: PermissionedQuerySet[Any] = 'PermissionedQuerySet[M]',
 ](ModelPermissionPolicy[M, CreateContext, QS]):
     @override
     def construct_perm_q(self, user: User, action: ObjectSpecificAction) -> Q | None:
@@ -305,7 +305,7 @@ class ModelReadOnlyPolicy[
 class ParentInheritedPolicy[
     M: PermissionedModel[Any],
     ParentM: PermissionedModel[Any],
-    QS: PermissionedQuerySet[Any] = PermissionedQuerySet[M],
+    QS: PermissionedQuerySet[Any] = 'PermissionedQuerySet[M]',
     CreateContext: Any = None,
 ](ModelPermissionPolicy[M, ParentM, QS]):
     parent_model: type[ParentM]

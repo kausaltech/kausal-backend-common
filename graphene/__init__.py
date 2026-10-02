@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools
 import re
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
 
 import graphene
 from django.db.models import Model
@@ -127,6 +127,10 @@ class DjangoNode(DjangoObjectType[M], Generic[M]):
     if IS_PATHS:
         user_roles = graphene.Field(UserRolesField, resolver=resolve_user_roles)
     _meta: DjangoObjectTypeOptions[M]
+
+    @classmethod
+    def __class_getitem__(cls, item) -> type[Self]:
+        return cls
 
     @classmethod
     def _resolve_i18n_fields(cls) -> None:
