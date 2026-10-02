@@ -16,9 +16,9 @@ from wagtail.admin.ui.tables import BulkActionsCheckboxColumn, Column
 from wagtail.admin.views.generic.usage import TitleColumn, UsageView
 from wagtail.log_actions import log
 from wagtail.snippets.models import register_snippet
-from wagtail.snippets.views.snippets import CreateView, DeleteView, IndexView
+from wagtail.snippets.views.snippets import CreateView, IndexView
 
-from kausal_common.admin_site.permissioned_views import PermissionedViewSet
+from kausal_common.admin_site.permissioned_views import PermissionedDeleteView, PermissionedViewSet
 from kausal_common.const import IS_PATHS, IS_WATCH
 
 from .config import dataset_config
@@ -144,7 +144,7 @@ class DataSourceUsageView(UsageView[DataSource]):
         return super(UsageView, self).get_table(results, **kwargs)
 
 
-class DataSourceDeleteView(DeleteView[DataSource]):
+class DataSourceDeleteView(PermissionedDeleteView[DataSource]):
     def get_usage(self):
         if not self.usage_url:
             return None
