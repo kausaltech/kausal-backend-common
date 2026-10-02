@@ -154,8 +154,18 @@ def loguru_make_record(record: loguru.Record, strip_markup: bool = False):
     )
     log_rec.set_extra(record['extra'])
     if exc:
-        log_rec.exc_text = '\n'
+        # Setting `exc_text` keeps the formatter from rendering the whole traceback
+        # into a log line; a one-line summary keeps the line useful when the
+        # exception was handled and Sentry never saw it.
+        log_rec.exc_text = _exception_summary(exc.type, exc.value)
     return log_rec
+
+
+def _exception_summary(exc_type: type[BaseException] | None, exc_value: BaseException | None) -> str:
+    if exc_type is None:
+        return '\n'
+    message = ' '.join(str(exc_value).split()) if exc_value is not None else ''
+    return f'{exc_type.__qualname__}: {message}' if message else exc_type.__qualname__
 
 
 logfmt_formatter = LogFmtFormatter()
