@@ -36,7 +36,7 @@ run = "uv sync --all-groups --all-extras"
 auto = true
 description = "Install development tools with uv"
 outputs = [".mise/uv_tools_installed"]
-run = "sh -c 'uv tool install pyproject-fmt@latest && echo $(date) >> .mise/uv_tools_installed'"
+run = "sh -c 'mkdir -p .mise && uv tool install pyproject-fmt@latest && echo $(date) >> .mise/uv_tools_installed'"
 
 [tasks.vault-token]
 description = "Refresh the Vault token in the keychain"
