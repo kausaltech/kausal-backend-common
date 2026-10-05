@@ -76,6 +76,15 @@ RUN --mount=type=cache,target=${XDG_CACHE_HOME} <<EOT
   export MISE="${XDG_CACHE_HOME}/mise-bin"
   export MISE_SYSTEM_INSTALLS_DIR=/tools
 
+  if [ -x $MISE ] ; then
+    mise_ok=1
+    $MISE settings 2>&1 | grep migrate && mise_ok=0
+    if [ $mise_ok -eq 0 ] ; then
+      echo "mise failed to run, removing $MISE and reinstalling"
+      rm $MISE
+    fi
+  fi
+
   if [ ! -x $MISE ] ; then
     export MISE_INSTALL_PATH=$MISE
     curl https://mise.run | sh

@@ -1,5 +1,5 @@
 #:schema https://mise.jdx.dev/schema/mise.json
-min_version = { hard = "2026-08-01" }
+min_version = { hard = "2026.10.01" }
 
 [settings]
 idiomatic_version_file_enable_tools = ["pnpm", "node"]
