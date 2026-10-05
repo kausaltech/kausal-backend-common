@@ -210,13 +210,18 @@ def _init_logging(log_format: LogFormat, options: UserLoggingOptions | None = No
         if options.sql_queries:
             log_level = 'DEBUG'
 
+    # diagnose=True (loguru's default) calls repr() on the locals of every frame when
+    # formatting an exception. A Django QuerySet's repr() runs SQL, which deadlocks if
+    # the log call happens inside psycopg while it holds the connection lock (and then
+    # every other thread blocks on the stdlib logging handler lock). It also leaks
+    # local values such as tokens into the logs.
     loguru_handlers: list[BasicHandlerConfig]
     if log_format == 'logfmt':
-        logfmt_handler: BasicHandlerConfig = dict(sink=loguru_logfmt_sink, format='{message}', level=log_level)  # pyright: ignore
+        logfmt_handler: BasicHandlerConfig = dict(sink=loguru_logfmt_sink, format='{message}', level=log_level, diagnose=False)  # pyright: ignore
         loguru_handlers = [logfmt_handler]
     else:
         rich_handler: BasicHandlerConfig = dict(
-            sink=loguru_rich_sink, format='{message}', colorize=should_colorize(sys.stdout), level=log_level
+            sink=loguru_rich_sink, format='{message}', colorize=should_colorize(sys.stdout), level=log_level, diagnose=False
         )  # pyright: ignore
         loguru_handlers = [rich_handler]
 
