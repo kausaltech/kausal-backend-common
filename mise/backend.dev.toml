@@ -7,9 +7,9 @@ python.uv_venv_auto = "source"
 experimental = true
 
 [tools]
-prek = "0.5.2"
-vault = "2.1.0"
-fnox = "1.35.0"
+prek = "0.5.4"
+vault = "2.1.1"
+fnox = "1.36.0"
 
 [vars]
 product_name = { required = "Set product_name in the product mise config" }
