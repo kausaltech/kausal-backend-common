@@ -145,10 +145,18 @@ class DimensionCategory(OrderedModel, UUIDIdentifiedModel, UserModifiableModel):
     dimension = ParentalKey(Dimension, blank=False, on_delete=models.CASCADE, related_name='categories')
     dimension_id: int
     label = models.CharField(max_length=100, verbose_name=_('label'))
+    short_label = models.CharField(
+        max_length=30,
+        null=True,
+        blank=True,
+        verbose_name=_('short label'),
+        help_text=_('Abbreviated label for tight spaces, such as table columns'),
+    )
     spec = models.JSONField(default=dict, blank=True)
 
-    i18n = TranslationField(fields=['label'])
+    i18n = TranslationField(fields=['label', 'short_label'])
     label_i18n: str
+    short_label_i18n: str | None
 
     objects: ClassVar[DimensionCategoryManager] = DimensionCategoryManager()
     _default_manager: ClassVar[DimensionCategoryManager]
