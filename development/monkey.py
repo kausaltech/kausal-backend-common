@@ -18,6 +18,7 @@ def monkeypatch_initial() -> None:
 
 def _monkeypatch_second() -> None:
     import django_stubs_ext
+    from django.core.exceptions import AppRegistryNotReady
     from django.db.models import ManyToManyField, Model
     from django.db.models.fields.json import JSONField
     from django.views import View
@@ -74,6 +75,9 @@ def _monkeypatch_second() -> None:
         extra_classes.append(WMABaseView)
         extra_classes.append(ModelAdmin)
     except ImportError:
+        pass
+    except AppRegistryNotReady:
+        # wagtail-modeladmin >= 2.5 loads the Page model on import; KausalCommonConfig.ready() patches these
         pass
 
     try:
