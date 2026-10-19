@@ -12,6 +12,7 @@ from django.core.checks import Error
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models import Model, Q, QuerySet
 from django.db.models.fields.related import ForeignKey
+from wagtail import VERSION as WAGTAIL_VERSION
 from wagtail.models import PAGE_PERMISSION_TYPES
 
 from loguru import logger
@@ -328,6 +329,13 @@ class InstanceFieldGroupRole(InstanceSpecificRole[_ModelT], abc.ABC, Generic[_Mo
         return Q(**{q_str: user.cgroups})
 
 
+# Wagtail 8 drops the model-name suffix from PAGE_PERMISSION_TYPES ("lock" instead of "lock_page")
+if WAGTAIL_VERSION >= (8, 0):
+    PAGE_PERMISSION_CODENAMES = {f'{action}_page' for action, *_ in PAGE_PERMISSION_TYPES}
+else:
+    PAGE_PERMISSION_CODENAMES = {codename for codename, *_ in PAGE_PERMISSION_TYPES}
+
+
 class AdminRole[M: Model](InstanceSpecificRole[M], abc.ABC):
     model_perms = [
         ('wagtailadmin', 'admin', ('access',)),
@@ -335,7 +343,7 @@ class AdminRole[M: Model](InstanceSpecificRole[M], abc.ABC):
         ('wagtailimages', 'image', ALL_MODEL_PERMS),
     ]
 
-    page_perms = set(x[0] for x in PAGE_PERMISSION_TYPES)
+    page_perms = PAGE_PERMISSION_CODENAMES
 
 
 class RoleRegistry:
