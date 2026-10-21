@@ -105,7 +105,7 @@ function do_backup() {
     # No --tag filter here on purpose: legacy snapshots without tags form a single
     # group and age out under the same policy instead of lingering forever.
     restic forget --prune --group-by tags,paths \
-        --keep-within-hourly 48h --keep-within-daily 30d --keep-within-weekly 1y --keep-monthly unlimited
+        --keep-within-hourly 48h --keep-within-daily 30d --keep-within-weekly 3m --keep-monthly 1y
     rm "$datatmp"
     if [ -z "$DATABASE_URL" ] ; then
         rm "$pgpasstmp"
