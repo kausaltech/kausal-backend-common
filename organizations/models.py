@@ -21,6 +21,7 @@ from modelsearch import index
 from treebeard.mp_tree import MP_Node, MP_NodeQuerySet
 
 from kausal_common.models.language import ModelWithPrimaryLanguage
+from kausal_common.models.rich_text import RichTextEditorCompatibleMixin
 
 from ..i18n.helpers import get_supported_languages
 
@@ -102,7 +103,7 @@ else:
     class TreeModel: ...
 
 
-class BaseOrganization(index.Indexed, TreeModel, ModelWithPrimaryLanguage, models.Model):
+class BaseOrganization(RichTextEditorCompatibleMixin, index.Indexed, TreeModel, ModelWithPrimaryLanguage, models.Model):
     # Different identifiers, depending on origin (namespace), are stored in OrganizationIdentifier
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)

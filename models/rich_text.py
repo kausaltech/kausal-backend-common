@@ -82,7 +82,20 @@ def _converter_for(field: RichTextField) -> ContentstateConverter:
         return converter
 
 
-def make_editor_compatible(value: str | None, field: RichTextField) -> str | None:
+def rich_text_source(value: Any) -> str | None:
+    """
+    Return the stored DB HTML for a rich-text value.
+
+    Wagtail's native ``RichTextField`` descriptor returns a ``RichText`` wrapper whose
+    ``.source`` holds the stored HTML; django-modeltrans-managed fields return a plain str.
+    """
+    if value is None:
+        return None
+    source = getattr(value, 'source', value)
+    return source if isinstance(source, str) else str(source)
+
+
+def make_editor_compatible(value: Any, field: RichTextField) -> str | None:
     """
     Return a version of ``value`` the Draftail editor can read back.
 
@@ -90,9 +103,10 @@ def make_editor_compatible(value: str | None, field: RichTextField) -> str | Non
     against the editor's own converter; markup that still cannot be parsed (e.g. crossed
     tags) raises ``ValidationError``. Empty/plain values are returned untouched.
     """
-    if not value:
-        return value
-    cleaned = normalize_void_tags(value) if _VOID_HINT_RE.search(value) else value
+    raw = rich_text_source(value)
+    if not raw:
+        return raw
+    cleaned = normalize_void_tags(raw) if _VOID_HINT_RE.search(raw) else raw
     if '<' in cleaned:
         try:
             _converter_for(field).from_database_format(cleaned)
@@ -195,7 +209,7 @@ class RichTextEditorCompatibleMixin(models.Model):  # noqa: DJ008
                 except ValidationError as exc:
                     errors[name] = exc.messages
                 else:
-                    if cleaned != base:
+                    if cleaned != rich_text_source(base):
                         setattr(self, name, cleaned)
         if i18n is None or not check_i18n:
             return
