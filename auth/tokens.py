@@ -195,12 +195,20 @@ def authenticate_from_authorization_header(
     `request_uri` must be the absolute URI of the resource being accessed. Access tokens
     carrying an RFC 8707 resource indicator are only valid for the resource they were
     issued for, and such a token is rejected when the URI is missing.
+
+    Only the `Bearer` scheme carries a token we can validate. Any other scheme (e.g. an
+    HTTP `Basic` header forwarded from an edge access gate) carries no bearer token, so
+    the request is treated as anonymous rather than being rejected as UNAUTHENTICATED.
     """
     from oauth2_provider.oauth2_backends import get_oauthlib_core
 
     if TYPE_CHECKING:
         from oauth2_provider.oauth2_backends import OAuthLibCore
         from oauthlib.oauth2 import Server
+
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != 'bearer':
+        return TokenAuthResult()
 
     devtool_result = authenticate_devtool_id_token(authorization)
     if devtool_result is not None:

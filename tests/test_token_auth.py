@@ -114,6 +114,24 @@ def test_resource_bound_token_is_rejected_for_another_resource(token_user: User)
     assert ret.error.id == 'invalid_token'
 
 
+def test_basic_scheme_is_ignored_as_anonymous():
+    # A non-Bearer scheme (e.g. an HTTP Basic header forwarded from an edge access
+    # gate) must not be treated as a failed token. The request proceeds as anonymous
+    # instead of being rejected as UNAUTHENTICATED.
+    ret = authenticate_from_authorization_header('Basic dXNlcjpwYXNzd29yZA==', 'graphql')
+
+    assert ret.error is None
+    assert ret.user is None
+
+
+def test_malformed_authorization_is_ignored_as_anonymous():
+    # A header that is not "<scheme> <token>" is likewise ignored rather than erroring.
+    ret = authenticate_from_authorization_header('garbage', 'graphql')
+
+    assert ret.error is None
+    assert ret.user is None
+
+
 def test_build_request_uri_uses_the_host_header():
     assert build_request_uri(make_scope()) == RESOURCE_URI
 
