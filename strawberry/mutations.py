@@ -10,7 +10,7 @@ from django.utils import translation
 from strawberry.extensions import FieldExtension
 from strawberry.types.base import StrawberryOptional
 from strawberry.types.fields.resolver import StrawberryResolver
-from strawberry_django.fields.types import OperationInfo
+from strawberry_django.fields.types import OperationInfo, OperationMessage
 from strawberry_django.mutations.fields import resolvers
 
 if TYPE_CHECKING:
@@ -22,6 +22,9 @@ if TYPE_CHECKING:
     from strawberry.permission import BasePermission
     from strawberry.types.field import StrawberryField
     from strawberry_django.mutations.fields import DjangoMutationBase
+
+
+_NON_ERROR_KINDS = frozenset({OperationMessage.Kind.INFO, OperationMessage.Kind.WARNING})
 
 
 class MutationExtension(FieldExtension):
@@ -37,6 +40,12 @@ class MutationExtension(FieldExtension):
         # slots) depend on it.
         with transaction.atomic():
             ret = next_(source, info, **kwargs)
+            # With `handle_django_errors`, strawberry-django turns exceptions
+            # into an `OperationInfo` return value, so the atomic block never
+            # sees them. Roll back explicitly, or the writes made before the
+            # error would be committed.
+            if isinstance(ret, OperationInfo) and any(msg.kind not in _NON_ERROR_KINDS for msg in ret.messages):
+                transaction.set_rollback(True)
         if isinstance(ret, OperationInfo):
             # Render lazy strings into English so error messages stay stable
             # and machine-comparable regardless of the request locale.
