@@ -1,9 +1,11 @@
 """
 Temporary workarounds for bugs in third-party mypy plugins.
 
-Remove the patch below once django-stubs defers creation of related managers
-whose ``_Through`` TypeVar still contains placeholders.
+Remove these patches once django-stubs and Pydantic defer generation of
+methods whose generic type variables still contain placeholders.
 """
+
+from pydantic.mypy import PydanticModelTransformer
 
 from mypy.plugin import Plugin
 from mypy.semanal_shared import has_placeholder
@@ -28,6 +30,22 @@ def _create_many_related_manager_after_through_is_resolved(
 
 ProcessManyToManyFields.create_many_related_manager = (  # type: ignore[method-assign]
     _create_many_related_manager_after_through_is_resolved
+)
+
+_transform_pydantic_model = PydanticModelTransformer.transform
+
+
+def _transform_pydantic_model_after_type_vars_are_resolved(self: PydanticModelTransformer) -> bool:
+    """Avoid copying unresolved generic bounds into generated method signatures."""
+    if any(has_placeholder(type_var) for type_var in self._cls.info.defn.type_vars):
+        if not self._api.final_iteration:
+            self._api.defer()
+        return False
+    return _transform_pydantic_model(self)
+
+
+PydanticModelTransformer.transform = (  # type: ignore[method-assign]
+    _transform_pydantic_model_after_type_vars_are_resolved
 )
 
 
