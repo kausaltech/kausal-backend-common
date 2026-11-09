@@ -7,7 +7,7 @@ from typing import Any
 from factory import Sequence, SubFactory, post_generation
 from factory.django import DjangoModelFactory
 
-from kausal_common.const import IS_PATHS
+from kausal_common.const import IS_PATHS, IS_WATCH
 from kausal_common.datasets.models import (
     DataPoint,
     Dataset,
@@ -65,11 +65,17 @@ class DatasetFactory(DjangoModelFactory[Dataset]):
 
     @classmethod
     def _create(cls, model_class: type[Dataset], *args: Any, **kwargs: Any) -> Dataset:
-        if IS_PATHS and not {'scope', 'scope_id', 'scope_content_type'} & kwargs.keys():
-            # Every dataset has a scope; default to a fresh instance.
-            from nodes.tests.factories import InstanceConfigFactory, InstanceFactory
+        # Every dataset has a scope (scope_id is NOT NULL). Default to a fresh,
+        # host-appropriate scope instance unless the caller passes one explicitly.
+        if not {'scope', 'scope_id', 'scope_content_type'} & kwargs.keys():
+            if IS_PATHS:
+                from nodes.tests.factories import InstanceConfigFactory, InstanceFactory
 
-            kwargs['scope'] = InstanceConfigFactory.create(instance=InstanceFactory.create())
+                kwargs['scope'] = InstanceConfigFactory.create(instance=InstanceFactory.create())
+            elif IS_WATCH:
+                from actions.tests.factories import ActionFactory
+
+                kwargs['scope'] = ActionFactory.create()
         return super()._create(model_class, *args, **kwargs)
 
 
