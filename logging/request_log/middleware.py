@@ -4,7 +4,9 @@ from typing import TYPE_CHECKING, cast
 
 from django.apps import apps
 from django.conf import settings
+from django.core.exceptions import RequestDataTooBig, TooManyFieldsSent
 from django.core.files.uploadedfile import UploadedFile
+from django.http.multipartparser import MultiPartParserError
 from django.utils.deprecation import MiddlewareMixin
 
 from loguru import logger
@@ -23,6 +25,10 @@ IGNORE_PATHS = [
     '/o/token/',
 ]
 
+# Exceptions Django raises while parsing a malformed or oversized request body.
+# Touching request.FILES/POST in the logging middleware can trigger these.
+REQUEST_PARSE_ERRORS = (MultiPartParserError, RequestDataTooBig, TooManyFieldsSent)
+
 
 class LogUnsafeRequestMiddleware(MiddlewareMixin):
     def process_request(self, request: HttpRequest):
@@ -31,6 +37,12 @@ class LogUnsafeRequestMiddleware(MiddlewareMixin):
 
         try:
             self._log_request(request)
+        except REQUEST_PARSE_ERRORS:
+            # The client sent a malformed or oversized multipart body (e.g. a gzip'd
+            # Next.js server action). Accessing request.FILES/POST forces Django to
+            # parse it and raises. This is a benign, client-triggered condition, so
+            # skip logging without reporting it to Sentry as an application error.
+            logger.debug('Skipping request log for unparseable request body')
         except Exception as e:
             logger.exception('Error logging request')
             capture_exception(e)
